@@ -7,12 +7,12 @@ Format mengikuti GDD Section 191.15.
 | | |
 |---|---|
 | Milestone | 1 — Foundation, Data, Save, Input, Debug Shell |
-| Branch | `milestone/01-foundation` (commit lokal, belum di-merge ke `main`) |
-| Tag | belum dibuat; `v0.1.0-m1` dibuat setelah merge disetujui |
+| Branch | `milestone/01-foundation`, di-merge ke `main` pada 2026-11-12 |
+| Tag | `v0.1.0-m1` |
 | Engine | Godot 4.7.2 stable, renderer Compatibility |
 | Versi project | `0.1.0` |
 | Save schema berubah | tidak (schema 5 dibuat pertama kali di milestone ini) |
-| Penyimpangan GDD | **ya, satu**: D-003 (`duel_wins` di `fish_book`). Lihat di bawah |
+| Penyimpangan GDD | satu, sudah disetujui dan dimasukkan ke GDD: D-003 (`duel_wins` di `fish_book`) |
 
 ## Exit gate
 
@@ -122,14 +122,12 @@ Main Menu di 1280×720, vsync mati, mesin pengembang: 540–650 FPS, 31–57 dra
 
 ## Penyimpangan GDD
 
-**D-003 — `fish_book` menyimpan `duel_wins` per ikan.** Section 171.5 mendefinisikan `favourite_duel` sebagai mode dengan kemenangan terbanyak, tetapi skema tidak menyimpan kemenangan per mode, sehingga nilainya tidak bisa dihitung. Ditambahkan field `duel_wins` di tiap entri. Penambahan murni, schema tetap versi 5. Menunggu persetujuan pemilik project; rinciannya di `docs/implementation_decisions.md`.
+**D-003 — `fish_book` menyimpan `duel_wins` per ikan.** Section 171.5 mendefinisikan `favourite_duel` sebagai mode dengan kemenangan terbanyak, tetapi skema tidak menyimpan kemenangan per mode, sehingga nilainya tidak bisa dihitung. Ditambahkan field `duel_wins` di tiap entri. Penambahan murni, schema tetap versi 5. Disetujui pemilik project pada 2026-11-12 dan GDD Section 171.5 sudah diperbarui; rinciannya di `docs/implementation_decisions.md`.
 
 Hal lain yang diisi karena GDD tidak mengaturnya (bukan penyimpangan) tercatat sebagai D-001, D-002, D-004 sampai D-022.
 
 ## Prasyarat Milestone 2 — Fishing Vertical Slice
 
-- Keputusan pemilik project atas D-003.
-- Merge `milestone/01-foundation` ke `main` dan tag `v0.1.0-m1`.
 - Builder baru di `tools/generators/`: `mesh_builder`, `material_builder`, `character_builder` (Darto), `fish_builder` (Bruiser Catfish kualitas final), `prop_builder` (joran, pelampung, ember), `environment_builder` (LakeSet), lalu didaftarkan di `BUILDERS`.
 - `scenes/fishing/fishing.tscn` sesuai blueprint Section 168.4. Begitu file itu ada, New Game dan Continue otomatis menuju danau; hapus teks `menu.foundation.*`.
 - Tambahkan `LakeSet` dan `DartoMenuPose` ke `main_menu.tscn`.

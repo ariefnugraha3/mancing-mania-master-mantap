@@ -1,6 +1,6 @@
 # Keputusan Implementasi
 
-Catatan keputusan untuk detail yang tidak diatur GDD v6, sesuai aturan ambiguitas GDD Section 163.4. Tidak ada keputusan di sini yang mengubah aturan authoritative. Satu-satunya penyimpangan dari teks GDD adalah **D-003**, dan itu ditandai jelas.
+Catatan keputusan untuk detail yang tidak diatur GDD v6, sesuai aturan ambiguitas GDD Section 163.4. Tidak ada keputusan di sini yang mengubah aturan authoritative. Satu-satunya perubahan terhadap teks GDD adalah **D-003**, yang sudah disetujui pemilik project dan sudah dimasukkan ke GDD.
 
 Setiap entri: apa yang diputuskan, alasannya, dan bagian GDD yang terkait.
 
@@ -18,7 +18,7 @@ GDD Section 30 memberi tabel sampah (peluang dan harga) tetapi Section 170 tidak
 
 Alasan: Section 119.2 mewajibkan balancing berupa Resource, bukan angka di script.
 
-### D-003 — PENYIMPANGAN: `fish_book` menyimpan `duel_wins` per ikan
+### D-003 — REVISI GDD (disetujui): `fish_book` menyimpan `duel_wins` per ikan
 
 GDD Section 171.5 mendefinisikan `favourite_duel` sebagai mode duel dengan kemenangan terbanyak untuk ikan itu, tetapi skema entri hanya punya total `wins`. Tanpa jumlah kemenangan per mode, nilai itu tidak bisa dihitung.
 
@@ -30,7 +30,9 @@ Setiap entri `fish_book` ditambah satu field:
 
 `favourite_duel` tetap ada dan dihitung ulang dari `duel_wins` setiap kali berubah dan setiap kali save dimuat. Urutan tiebreak mengikuti GDD: `boxing`, `arm_wrestle`, `dance`, `suwit`.
 
-Dampak: penambahan murni, schema tetap versi 5, tidak ada field GDD yang berubah arti. **Perlu persetujuan pemilik project**; jika disetujui, Section 171.5 sebaiknya diperbarui.
+Dampak: penambahan murni, schema tetap versi 5, tidak ada field GDD yang berubah arti.
+
+Status: **disetujui pemilik project pada 2026-11-12.** GDD Section 171.5 sudah diperbarui dengan field ini, mengikuti alur perubahan desain Section 191.13.
 
 ### D-004 — Rentang berat empat ikan
 
