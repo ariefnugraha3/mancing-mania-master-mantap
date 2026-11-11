@@ -7127,12 +7127,20 @@ Semua integer >=0.
     "encounters": 0,
     "wins": 0,
     "losses": 0,
-    "favourite_duel": ""
+    "favourite_duel": "",
+    "duel_wins": {
+      "boxing": 0,
+      "arm_wrestle": 0,
+      "dance": 0,
+      "suwit": 0
+    }
   }
 }
 ```
 
 Entry yang sama wajib ada untuk keenam fish ID.
+
+`duel_wins` menyimpan jumlah kemenangan per mode duel untuk ikan tersebut (integer >=0) dan menjadi sumber perhitungan `favourite_duel`. Field ini ditambahkan melalui revisi yang disetujui owner pada 2026-11-12 (lihat `docs/implementation_decisions.md` D-003); schema tetap versi 5.
 
 `favourite_duel` dihitung/disimpan sebagai ID dari mode dengan kemenangan terbanyak; tie menggunakan urutan `boxing`, `arm_wrestle`, `dance`, `suwit` untuk determinism.
 

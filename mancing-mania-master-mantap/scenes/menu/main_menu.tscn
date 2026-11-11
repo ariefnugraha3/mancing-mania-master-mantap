@@ -1,0 +1,104 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="2_safe"]
+[ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="3_button"]
+[ext_resource type="Script" path="res://scripts/ui/modal_dialog.gd" id="4_dialog"]
+
+[sub_resource type="ProceduralSkyMaterial" id="menu_sky_material"]
+sky_top_color = Color(0.51, 0.67, 0.72, 1)
+sky_horizon_color = Color(0.99, 0.89, 0.7, 1)
+sky_curve = 0.2
+ground_bottom_color = Color(0.29, 0.45, 0.43, 1)
+ground_horizon_color = Color(0.72, 0.8, 0.7, 1)
+ground_curve = 0.12
+sun_angle_max = 24.0
+sun_curve = 0.1
+
+[sub_resource type="Sky" id="menu_sky"]
+sky_material = SubResource("menu_sky_material")
+
+[sub_resource type="Environment" id="menu_environment"]
+background_mode = 2
+sky = SubResource("menu_sky")
+ambient_light_source = 3
+
+[node name="MainMenu" type="Node"]
+script = ExtResource("1_menu")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="MenuCamera" type="Camera3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0.994522, 0.104528, 0, -0.104528, 0.994522, 0, 1.6, 0)
+current = true
+fov = 60.0
+
+[node name="MenuLighting" type="Node3D" parent="World"]
+
+[node name="Sun" type="DirectionalLight3D" parent="World/MenuLighting"]
+transform = Transform3D(-0.9064, -0.0879, 0.413, 0, 0.9776, 0.208, -0.4225, 0.1885, -0.886, 0, 4, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 1.1
+light_angular_distance = 3.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World/MenuLighting"]
+environment = SubResource("menu_environment")
+
+[node name="MenuCanvas" type="CanvasLayer" parent="."]
+
+[node name="SafeRoot" type="Control" parent="MenuCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_safe")
+
+[node name="TitleBlock" type="VBoxContainer" parent="MenuCanvas/SafeRoot"]
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="TitleLine1" type="Label" parent="MenuCanvas/SafeRoot/TitleBlock"]
+theme_type_variation = &"TitleLabel"
+
+[node name="TitleLine2" type="Label" parent="MenuCanvas/SafeRoot/TitleBlock"]
+theme_type_variation = &"ScreenTitleLabel"
+theme_override_colors/font_color = Color(0.721569, 0.396078, 0.305882, 1)
+
+[node name="MenuButtons" type="VBoxContainer" parent="MenuCanvas/SafeRoot"]
+theme_override_constants/separation = 12
+
+[node name="ContinueButton" type="Button" parent="MenuCanvas/SafeRoot/MenuButtons"]
+script = ExtResource("3_button")
+
+[node name="NewGameButton" type="Button" parent="MenuCanvas/SafeRoot/MenuButtons"]
+script = ExtResource("3_button")
+
+[node name="HowToButton" type="Button" parent="MenuCanvas/SafeRoot/MenuButtons"]
+script = ExtResource("3_button")
+
+[node name="SettingsButton" type="Button" parent="MenuCanvas/SafeRoot/MenuButtons"]
+script = ExtResource("3_button")
+
+[node name="CreditsButton" type="Button" parent="MenuCanvas/SafeRoot/MenuButtons"]
+script = ExtResource("3_button")
+
+[node name="VersionLabel" type="Label" parent="MenuCanvas/SafeRoot"]
+mouse_filter = 0
+theme_type_variation = &"SmallLabel"
+
+[node name="ConfirmOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("4_dialog")
+
+[node name="TransitionLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="FadeRect" type="ColorRect" parent="TransitionLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.207843, 0.184314, 0.160784, 0)

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/upgrade_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"tonic"
+name = "Herbal Tonic"
+max_level = 3
+prices = Array[int]([15000, 38000, 82000])
+stat_key = &"hp_per_tonic_level"
+effect_per_level = 25.0
+effect_unit = "max HP"
+description = "Boxing: +25 max HP per level. Arm wrestling: +20% max stamina per level."

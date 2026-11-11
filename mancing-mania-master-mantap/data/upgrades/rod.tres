@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/upgrade_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"rod"
+name = "Carbon Fibre Rod"
+max_level = 3
+prices = Array[int]([18000, 44000, 96000])
+stat_key = &"rod_half_width_per_level"
+effect_per_level = 0.035
+effect_unit = "green-zone width"
+description = "A steadier rod. The green zone grows by 0.035 per level, about 27% easier targeting."
