@@ -1,0 +1,93 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/boot_controller.gd" id="1_boot"]
+
+[node name="Boot" type="Node"]
+
+[node name="BootController" type="Node" parent="."]
+script = ExtResource("1_boot")
+
+[node name="LoadingCanvas" type="CanvasLayer" parent="."]
+
+[node name="LoadingRoot" type="Control" parent="LoadingCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Background" type="ColorRect" parent="LoadingCanvas/LoadingRoot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.968627, 0.901961, 1)
+
+[node name="LogoBlock" type="VBoxContainer" parent="LoadingCanvas/LoadingRoot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -180.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="TitleLine1" type="Label" parent="LoadingCanvas/LoadingRoot/LogoBlock"]
+theme_type_variation = &"TitleLabel"
+horizontal_alignment = 1
+
+[node name="TitleLine2" type="Label" parent="LoadingCanvas/LoadingRoot/LogoBlock"]
+theme_type_variation = &"ScreenTitleLabel"
+theme_override_colors/font_color = Color(0.721569, 0.396078, 0.305882, 1)
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="LoadingCanvas/LoadingRoot"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = -150.0
+offset_right = -32.0
+offset_bottom = -84.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_type_variation = &"SmallLabel"
+horizontal_alignment = 1
+vertical_alignment = 2
+autowrap_mode = 3
+
+[node name="ProgressBar" type="ProgressBar" parent="LoadingCanvas/LoadingRoot"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -68.0
+offset_right = 180.0
+offset_bottom = -48.0
+grow_horizontal = 2
+grow_vertical = 0
+max_value = 1.0
+show_percentage = false
+
+[node name="TransitionLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="FadeRect" type="ColorRect" parent="TransitionLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.207843, 0.184314, 0.160784, 1)

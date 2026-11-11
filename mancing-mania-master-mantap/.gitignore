@@ -1,3 +1,22 @@
 # Godot 4+ specific ignores
 .godot/
+.import/
 /android/
+
+# Build / export output (GDD Section 191.6)
+export/
+build/web/
+build/android/
+build/tmp/
+*.apk
+*.aab
+
+# Signing material and local secrets - never commit
+*.keystore
+*.jks
+.env
+.env.*
+
+# OS noise
+.DS_Store
+Thumbs.db

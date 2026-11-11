@@ -1,0 +1,187 @@
+extends Node
+## Input abstraction over the InputMap (GDD 123, 169.6, 176.1).
+##
+## Actions are tracked from *unhandled* input, so a click that a UI button
+## consumed never doubles as a gameplay action such as fish_cast. Touch buttons
+## feed the same actions through press_action()/release_action(), which keeps
+## keyboard, mouse and touch on one code path.
+
+signal input_device_changed(device_type: StringName)
+
+const DEVICE_KEYBOARD_MOUSE := &"keyboard_mouse"
+const DEVICE_TOUCH := &"touch"
+
+## A buffered press older than this is dropped, so a stale tap cannot leak into
+## the state that follows a transition (GDD 176.1).
+const PRESS_BUFFER_MSEC := 150
+
+var _device_type: StringName = DEVICE_KEYBOARD_MOUSE
+var _gameplay_enabled: bool = true
+var _tracked: Array[StringName] = []
+var _held: Dictionary[StringName, bool] = {}
+var _pressed_at_msec: Dictionary[StringName, int] = {}
+var _default_events: Dictionary[StringName, Array] = {}
+var _first_gesture_seen: bool = false
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_tracked = InputActions.get_all()
+	for action: StringName in InputActions.REMAPPABLE:
+		if InputMap.has_action(action):
+			_default_events[action] = InputMap.action_get_events(action)
+	if DisplayServer.is_touchscreen_available() and OS.has_feature("mobile"):
+		_device_type = DEVICE_TOUCH
+	GameState.state_replaced.connect(_apply_saved_remap)
+	GameState.settings_changed.connect(_on_settings_changed)
+
+
+func _input(event: InputEvent) -> void:
+	_detect_device(event)
+	if not _first_gesture_seen and _is_user_gesture(event):
+		_first_gesture_seen = true
+		AudioManager.request_web_audio_unlock()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_echo():
+		return
+	for action: StringName in _tracked:
+		if not event.is_action(action):
+			continue
+		if event.is_pressed():
+			_register_press(action)
+		else:
+			_held[action] = false
+
+
+# --- Public API (GDD 169.6) -------------------------------------------------
+
+func get_device_type() -> StringName:
+	return _device_type
+
+
+func is_touch_primary() -> bool:
+	return _device_type == DEVICE_TOUCH
+
+
+## Turns gameplay actions on or off. Turning them off also forgets anything
+## held or buffered, so nothing fires the moment they come back.
+func set_gameplay_input_enabled(enabled: bool) -> void:
+	_gameplay_enabled = enabled
+	if not enabled:
+		for action: StringName in InputActions.GAMEPLAY:
+			_held[action] = false
+			_pressed_at_msec.erase(action)
+
+
+## 1.0 while the action is held, otherwise 0.0. Unknown or currently disabled
+## actions read as 0.0 instead of raising an error.
+func get_action_strength_safe(action: StringName) -> float:
+	if not _is_available(action):
+		return 0.0
+	return 1.0 if _held.get(action, false) else 0.0
+
+
+## True exactly once per press. A second caller in the same frame, or the same
+## caller on a later frame, gets false until the action is pressed again.
+func consume_action_once(action: StringName) -> bool:
+	if not _is_available(action) or not _pressed_at_msec.has(action):
+		return false
+	var age := Time.get_ticks_msec() - _pressed_at_msec[action]
+	_pressed_at_msec.erase(action)
+	return age <= PRESS_BUFFER_MSEC
+
+
+# --- Extras -----------------------------------------------------------------
+
+func is_gameplay_input_enabled() -> bool:
+	return _gameplay_enabled
+
+
+## Entry points for on-screen touch controls.
+func press_action(action: StringName) -> void:
+	if InputMap.has_action(action):
+		_register_press(action)
+
+
+func release_action(action: StringName) -> void:
+	_held[action] = false
+
+
+## Applies keyboard/mouse overrides in the save format
+## { action: ["key:<physical keycode>", "mouse:<button index>"] }.
+## Actions without an override go back to their project defaults.
+func apply_input_remap(remap: Dictionary) -> void:
+	var clean := SaveSchema.normalize_input_remap(remap)
+	for action: StringName in _default_events:
+		InputMap.action_erase_events(action)
+		var events: Array = _default_events[action]
+		if clean.has(String(action)):
+			events = _events_from_tokens(clean[String(action)])
+		for event: InputEvent in events:
+			InputMap.action_add_event(action, event)
+
+
+func get_default_events(action: StringName) -> Array:
+	return _default_events.get(action, []).duplicate()
+
+
+# --- Internals --------------------------------------------------------------
+
+func _register_press(action: StringName) -> void:
+	if InputActions.GAMEPLAY.has(action) and not _gameplay_enabled:
+		return
+	_held[action] = true
+	_pressed_at_msec[action] = Time.get_ticks_msec()
+
+
+func _is_available(action: StringName) -> bool:
+	if not InputMap.has_action(action):
+		return false
+	return _gameplay_enabled or not InputActions.GAMEPLAY.has(action)
+
+
+func _detect_device(event: InputEvent) -> void:
+	var detected := _device_type
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		detected = DEVICE_TOUCH
+	elif event is InputEventKey:
+		detected = DEVICE_KEYBOARD_MOUSE
+	elif event is InputEventMouse and event.device != InputEvent.DEVICE_ID_EMULATION:
+		# Mouse events emulated from a touch must not flip the mode back.
+		detected = DEVICE_KEYBOARD_MOUSE
+	if detected != _device_type:
+		_device_type = detected
+		input_device_changed.emit(_device_type)
+
+
+func _is_user_gesture(event: InputEvent) -> bool:
+	if event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch:
+		return event.is_pressed()
+	return false
+
+
+func _events_from_tokens(tokens: Array) -> Array:
+	var events: Array = []
+	for token: Variant in tokens:
+		var parts := String(token).split(":")
+		var code := parts[1].to_int()
+		if parts[0] == "key":
+			var key_event := InputEventKey.new()
+			key_event.physical_keycode = code as Key
+			events.append(key_event)
+		elif parts[0] == "mouse":
+			var mouse_event := InputEventMouseButton.new()
+			mouse_event.button_index = code as MouseButton
+			events.append(mouse_event)
+	return events
+
+
+func _apply_saved_remap() -> void:
+	apply_input_remap(GameState.get_setting(&"input_remap"))
+
+
+func _on_settings_changed(key: StringName) -> void:
+	if key == &"input_remap":
+		_apply_saved_remap()
