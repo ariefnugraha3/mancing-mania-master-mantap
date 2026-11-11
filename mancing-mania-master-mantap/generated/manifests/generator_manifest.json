@@ -1,0 +1,20 @@
+{
+  "assets": {
+    "ui_app_icon": {
+      "generator": "ui_art_builder",
+      "generator_version": 1,
+      "output": "res://generated/ui/app_icon.png",
+      "seed": 0,
+      "sha256": "80486c64ed524a7994dcd50075be3cbcb820fd39afdcb4ea24258b8f1d30cd6b"
+    },
+    "ui_theme": {
+      "generator": "ui_art_builder",
+      "generator_version": 1,
+      "output": "res://generated/ui/ui_theme.tres",
+      "seed": 0,
+      "sha256": "f73645cbcc846923f4ef51570b7aa27013939c481f05ead8c2305a1ce401d25b"
+    }
+  },
+  "generator_schema": 1,
+  "project_version": "0.1.0"
+}
