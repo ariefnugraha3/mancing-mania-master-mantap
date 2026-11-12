@@ -9,8 +9,9 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | Milestone | Isi | Status |
 |---|---|---|
 | 1 | Foundation: data, save, input, audio dasar, debug, Boot, Main Menu | selesai (`0.1.0`) |
-| 2 | Fishing vertical slice | berikutnya |
-| 3–10 | Market, empat duel, cerita, art/audio final, QA dan rilis | belum |
+| 2 | Fishing vertical slice: danau, Darto, cast → strike → reel | selesai (`0.2.0`) |
+| 3 | Market, ekonomi, upgrade, Fish Book, Records | berikutnya |
+| 4–10 | Empat duel, cerita, art/audio final, QA dan rilis | belum |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -49,6 +50,14 @@ godot --headless --path . --import
 
 Hasilnya masuk ke `generated/` dan dicatat di `generated/manifests/generator_manifest.json` beserta checksum. Varian `godot --headless --editor --path . --script ...` dari GDD juga sudah diuji dan menghasilkan file yang identik.
 
+Lembar referensi visual (GDD Section 185) dirender terpisah karena butuh kartu grafis. Jalankan **tanpa** `--headless`, setelah generator di atas:
+
+```text
+godot --path . --script res://tools/generators/reference_sheet_generator.gd
+```
+
+Hasilnya ada di `generated/references/`. Folder itu diabaikan Godot (`.gdignore`) karena isinya bahan QA, bukan konten game.
+
 Jangan mengedit file di `generated/` dengan tangan. Ubah generator di `tools/generators/`, jalankan ulang, lalu commit keduanya.
 
 ## Struktur folder
@@ -57,8 +66,10 @@ Jangan mengedit file di `generated/` dengan tangan. Ubah generator di `tools/gen
 autoload/     9 service global: GameState, SaveManager, SceneRouter, AudioManager,
               InputManager, PlatformService, RNGService, StoryDirector, DebugService
 data/         data authoritative (.tres): ikan, sampah, upgrade, balance, audio, teks
-scenes/       scene per layar (boot, menu, lalu fishing, market, duel, ...)
-scripts/      gameplay/ (data, validasi, skema save), ui/, audio/, utilities/
+scenes/       scene per layar (boot, menu, fishing, lalu market, duel, ...)
+scripts/      gameplay/ (data, validasi, skema save, fishing/), actors/, ui/,
+              audio/, utilities/
+shaders/      shader buatan project (air danau, goyangan dedaunan)
 tools/        generators/ (pembuat aset) dan validation/ (pemeriksa kebijakan aset)
 generated/    output generator; boleh di-commit, bisa dibuat ulang kapan saja
 tests/        test headless
@@ -76,6 +87,7 @@ docs/         keputusan implementasi dan laporan milestone
 ## Tool debug (hanya debug build)
 
 - `F10` membuka Debug Overlay. Di Android: ketuk label versi 5 kali dalam 3 detik.
+- Overlay bisa memaksa tangkapan berikutnya (lele, arwana, sampah), memendekkan waktu tunggu gigitan, dan menampilkan nilai internal reel.
 - Mengubah cash/hutang lewat overlay menandai state sebagai `DEV DIRTY STATE`; autosave diblokir sampai Anda menekan `SAVE DEBUG STATE`.
 - Screenshot UI dari terminal dijelaskan di [README_TESTING.md](README_TESTING.md).
 

@@ -25,10 +25,11 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 | `state` | `tests/suites/test_game_state.gd` | API GameState, SAVE-012 (4.000 transaksi acak tanpa melanggar invariant) |
 | `save` | `tests/suites/test_save.gd` | SAVE-001..009, migrasi, import/export, penulisan terputus, DEV DIRTY |
 | `rng` | `tests/suites/test_rng.gd` | determinisme seed, distribusi 100.000 encounter |
-| `audio` | `tests/suites/test_audio.gd` | sintesis SFX tanpa NaN/clipping, bus, volume mengikuti setting |
+| `audio` | `tests/suites/test_audio.gd` | sintesis SFX UI dan memancing tanpa NaN/clipping, ambience danau, bus, volume mengikuti setting |
 | `services` | `tests/suites/test_services.gd` | PlatformService, InputManager, StoryDirector, DebugService, SceneRouter |
+| `fishing` | `tests/suites/test_fishing.gd` | FISH-002..016: timeline cast, waktu tunggu, jendela strike, sampah, distribusi 100.000 encounter, aturan reel, line break, landing |
 | `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate |
-| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu, New Game, Continue, konfirmasi dua langkah, pemulihan save rusak |
+| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD |
 
 Test manual (MAN) di matriks QA GDD Section 180, seperti BOOT-005/006 dan SAVE-010/011, membutuhkan build Web dan perangkat Android. Itu dikerjakan saat export preset tersedia.
 
@@ -50,12 +51,28 @@ godot --path . --resolution 540x960 -- --mm-press=MenuCanvas/SafeRoot/MenuButton
 godot --path . -- --mm-overlay --mm-shot=C:/tmp/debug.png --mm-shot-delay=1.0
 ```
 
-- `--mm-press=<path node>` menekan tombol di scene aktif. Boleh diulang; dijalankan berurutan.
-- `--mm-overlay` membuka Debug Overlay.
-- `--mm-shot=<path png>` menyimpan screenshot lalu keluar.
+Langkah dijalankan berurutan sesuai urutan di command line:
+
+| Argumen | Fungsi |
+|---|---|
+| `--mm-press=<path node>` | menekan tombol di scene aktif |
+| `--mm-action=<action>` | menekan lalu melepas satu input action, misalnya `fish_cast` |
+| `--mm-hold=<action>` / `--mm-release=<action>` | menahan dan melepas action |
+| `--mm-wait=<detik>` | menunggu |
+| `--mm-force=<id>` | memaksa tangkapan berikutnya (`catfish_bruiser`, `trash_tyre`, ...) |
+| `--mm-fast-wait` | gigitan datang setengah detik setelah cast |
+| `--mm-auto-reel` | bot memainkan reel |
+| `--mm-overlay` | membuka Debug Overlay |
+| `--mm-shot=<path png>` | menyimpan screenshot; run berhenti setelah langkah terakhir |
+
+Contoh satu tangkapan penuh di portrait:
+
+```text
+godot --path . --resolution 540x960 -- --mm-fast-wait --mm-auto-reel --mm-press=MenuCanvas/SafeRoot/MenuButtons/NewGameButton --mm-wait=2.2 --mm-action=fish_cast --mm-wait=2.0 --mm-action=fish_cast --mm-wait=3.0 --mm-shot=C:/tmp/reel.png
+```
 
 Perintah ini memakai save asli di `user://`. Menekan `NewGameButton` akan membuat save sungguhan.
 
 ## Peringatan yang boleh diabaikan
 
-`WARNING: 3 ObjectDB instances were leaked at exit` muncul di akhir suite `boot`. Suite itu membuang scene Main Menu saat dialog masih menunggu jawaban, sehingga coroutine yang tertunda masih hidup ketika proses berakhir. Ini hanya terjadi di test.
+`WARNING: ... ObjectDB instances were leaked at exit` kadang muncul di akhir suite `boot`. Suite itu membuang scene Main Menu saat dialog masih menunggu jawaban, sehingga coroutine yang tertunda masih hidup ketika proses berakhir. Ini hanya terjadi di test.
