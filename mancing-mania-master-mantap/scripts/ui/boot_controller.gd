@@ -65,7 +65,7 @@ static func collect_validation_errors() -> PackedStringArray:
 			errors.append("input: action '%s' is missing from the InputMap" % action)
 		elif InputMap.action_get_events(action).is_empty():
 			errors.append("input: action '%s' has no default binding" % action)
-	for sfx_id: StringName in AudioManager.CRITICAL_SFX_IDS:
+	for sfx_id: StringName in AudioManager.CRITICAL_SFX_IDS + AudioManager.FISHING_SFX_IDS:
 		if not ResourceLoader.exists(AudioManager.PRESET_PATH % sfx_id):
 			errors.append("audio: preset '%s' is missing" % sfx_id)
 	return errors
