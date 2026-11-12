@@ -38,16 +38,23 @@ func _build() -> void:
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(12)
 	panel.add_theme_stylebox_override(&"panel", style)
-	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	# Pinned to the right edge at full height; the content scrolls when the
+	# read-out is longer than the screen.
+	panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	panel.offset_left = -PANEL_WIDTH - 12.0
 	panel.offset_right = -12.0
 	panel.offset_top = 12.0
+	panel.offset_bottom = -12.0
 	add_child(panel)
 
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
 	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override(&"separation", 6)
-	panel.add_child(column)
+	scroll.add_child(column)
 
 	var title := Label.new()
 	title.text = "DEBUG OVERLAY - DEV BUILD"
@@ -76,6 +83,10 @@ func _build() -> void:
 	_add_button(buttons, "DEBT -100,000", _on_reduce_debt)
 	_add_button(buttons, "SAVE DEBUG STATE", _on_save_debug_state)
 	_add_button(buttons, "COPY REPRO STATE", _on_copy_repro_state)
+	_add_button(buttons, "FORCE CATFISH", DebugService.set_forced_fish.bind(&"catfish_bruiser"))
+	_add_button(buttons, "FORCE AROWANA", DebugService.set_forced_fish.bind(&"arowana_don"))
+	_add_button(buttons, "FORCE TRASH", DebugService.set_forced_fish.bind(&"trash_sandal"))
+	_add_button(buttons, "FAST WAIT", _on_toggle_fast_wait)
 	_add_button(buttons, "CLEAR FORCES", DebugService.clear_forces)
 	_add_button(buttons, "CLOSE (F10)", DebugService.toggle_overlay)
 
@@ -111,6 +122,7 @@ func _refresh() -> void:
 			_or_dash(DebugService.get_forced_fish()),
 			_or_dash(DebugService.get_forced_duel()),
 			_or_dash(DebugService.get_forced_result())],
+		"fast wait: %s" % DebugService.is_fast_wait_enabled(),
 		"[RNG]",
 		"save seed: %d   session seed: %d" % [rng["save_seed"], rng["session_seed"]],
 		"encounters: %d   duels: %d" % [rng["encounter_counter"], rng["duel_counter"]],
@@ -128,7 +140,26 @@ func _refresh() -> void:
 		"window: %dx%d   class: %s" % [window_size.x, window_size.y, PlatformService.get_viewport_class()],
 		"input: %s   audio ready: %s" % [InputManager.get_device_type(), AudioManager.is_audio_ready()],
 	])
+	lines.append_array(_fishing_lines())
 	_readout.text = "\n".join(lines)
+
+
+## Internal fishing values while the lake scene is running.
+func _fishing_lines() -> PackedStringArray:
+	var scene := get_tree().current_scene
+	var controller := scene.get_node_or_null("FishingController") as FishingController if scene != null else null
+	if controller == null:
+		return PackedStringArray()
+	var encounter := controller.get_encounter()
+	var reel := controller.get_reel()
+	return PackedStringArray([
+		"[FISHING]",
+		"state: %s   t: %.2f" % [controller.get_state(), controller.get_state_time()],
+		"encounter: %s  seed: %s" % [encounter.get("item_id", "-"), encounter.get("seed", "-")],
+		"marker: %.3f  zone: %.3f +/- %.3f" % [reel.marker, reel.zone_center, reel.zone_half_width],
+		"landing: %.1f  stress: %.1f" % [reel.landing, reel.stress],
+		"auto reel: %s" % DebugService.is_auto_reel_enabled(),
+	])
 
 
 func _or_dash(value: StringName) -> String:
@@ -147,6 +178,11 @@ func _on_reduce_debt() -> void:
 
 func _on_save_debug_state() -> void:
 	DebugService.save_debug_state()
+	_refresh()
+
+
+func _on_toggle_fast_wait() -> void:
+	DebugService.set_fast_wait(not DebugService.is_fast_wait_enabled())
 	_refresh()
 
 

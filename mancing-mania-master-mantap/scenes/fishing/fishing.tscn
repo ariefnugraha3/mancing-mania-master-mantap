@@ -1,0 +1,116 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/fishing/fishing_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/fishing/fishing_controller.gd" id="2_controller"]
+[ext_resource type="Script" path="res://scripts/actors/fishing_world.gd" id="3_world"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_lake_set.tscn" id="4_lake"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="5_darto"]
+[ext_resource type="PackedScene" path="res://generated/scenes/props/prop_fishing_rod_basic.tscn" id="6_rod"]
+[ext_resource type="PackedScene" path="res://generated/scenes/props/prop_float_basic.tscn" id="7_float"]
+[ext_resource type="PackedScene" path="res://generated/scenes/props/prop_bucket_blue.tscn" id="8_bucket"]
+[ext_resource type="Script" path="res://scripts/ui/fishing_hud.gd" id="9_hud"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="10_safe"]
+[ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="11_button"]
+[ext_resource type="Script" path="res://scripts/ui/reel_hud.gd" id="12_reel"]
+[ext_resource type="Script" path="res://scripts/ui/bucket_peek_overlay.gd" id="13_bucket_peek"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="14_pause"]
+
+[node name="Fishing" type="Node"]
+script = ExtResource("1_scene")
+
+[node name="FishingController" type="Node" parent="."]
+script = ExtResource("2_controller")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("3_world")
+
+[node name="LakeSet" parent="World" instance=ExtResource("4_lake")]
+
+[node name="Darto" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/Darto" instance=ExtResource("5_darto")]
+
+[node name="RodSocket" type="Marker3D" parent="World/Darto"]
+
+[node name="Rod" parent="World/Darto" instance=ExtResource("6_rod")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="World/Darto"]
+
+[node name="FloatRoot" type="Node3D" parent="World"]
+
+[node name="FloatMesh" parent="World/FloatRoot" instance=ExtResource("7_float")]
+
+[node name="RippleEmitter" type="Node3D" parent="World/FloatRoot"]
+
+[node name="BiteMarker" type="Label3D" parent="World/FloatRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
+pixel_size = 0.004
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.968627, 0.901961, 1)
+outline_modulate = Color(0.207843, 0.184314, 0.160784, 1)
+text = "!"
+font_size = 170
+outline_size = 40
+
+[node name="FishShadowRoot" type="Node3D" parent="World"]
+
+[node name="FishingCamera" type="Camera3D" parent="World"]
+current = true
+fov = 50.0
+far = 300.0
+
+[node name="FishingEffects" type="Node3D" parent="World"]
+
+[node name="Bucket" parent="World" instance=ExtResource("8_bucket")]
+
+[node name="FishingCanvas" type="CanvasLayer" parent="."]
+script = ExtResource("9_hud")
+
+[node name="SafeRoot" type="Control" parent="FishingCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("10_safe")
+
+[node name="TopBar" type="HBoxContainer" parent="FishingCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="CashWidget" type="PanelContainer" parent="FishingCanvas/SafeRoot/TopBar"]
+
+[node name="BucketWidget" type="Button" parent="FishingCanvas/SafeRoot/TopBar"]
+script = ExtResource("11_button")
+
+[node name="ContextPrompt" type="VBoxContainer" parent="FishingCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="ReelHUD" type="Control" parent="FishingCanvas/SafeRoot"]
+mouse_filter = 2
+script = ExtResource("12_reel")
+
+[node name="TensionBar" type="Panel" parent="FishingCanvas/SafeRoot/ReelHUD"]
+
+[node name="GreenZone" type="Panel" parent="FishingCanvas/SafeRoot/ReelHUD"]
+
+[node name="PlayerMarker" type="Control" parent="FishingCanvas/SafeRoot/ReelHUD"]
+
+[node name="LandingProgress" type="ProgressBar" parent="FishingCanvas/SafeRoot/ReelHUD"]
+
+[node name="StressWarning" type="Label" parent="FishingCanvas/SafeRoot/ReelHUD"]
+
+[node name="ContextActionButton" type="Button" parent="FishingCanvas/SafeRoot"]
+script = ExtResource("11_button")
+
+[node name="MarketButton" type="Button" parent="FishingCanvas/SafeRoot"]
+script = ExtResource("11_button")
+
+[node name="PauseButton" type="Button" parent="FishingCanvas/SafeRoot"]
+script = ExtResource("11_button")
+
+[node name="BucketPeekOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("13_bucket_peek")
+
+[node name="PauseOverlay" parent="." instance=ExtResource("14_pause")]

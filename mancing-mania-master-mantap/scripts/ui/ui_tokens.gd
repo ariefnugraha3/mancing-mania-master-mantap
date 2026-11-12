@@ -60,3 +60,20 @@ const TYPE_HEADER := &"HeaderLabel"
 const TYPE_SMALL := &"SmallLabel"
 const TYPE_CTA_BUTTON := &"CtaButton"
 const TYPE_DANGER_BUTTON := &"DangerButton"
+
+
+## Anchors a control to a layout preset at its full minimum size.
+## Godot's own "minimum size" preset mode ignores custom_minimum_size, which
+## leaves a larger control hanging off its anchor; sizing first and keeping
+## that size puts it exactly where the preset says.
+static func anchor_at(control: Control, preset: Control.LayoutPreset) -> void:
+	control.reset_size()
+	control.set_anchors_and_offsets_preset(preset, Control.PRESET_MODE_KEEP_SIZE)
+
+
+## Light text with a dark outline: readable over any part of the 3D scene.
+static func outline_text(label: Label, font_size: int, color: Color = CREAM_50, outline: int = 9) -> void:
+	label.add_theme_font_size_override(&"font_size", font_size)
+	label.add_theme_color_override(&"font_color", color)
+	label.add_theme_color_override(&"font_outline_color", INK_900)
+	label.add_theme_constant_override(&"outline_size", outline)
