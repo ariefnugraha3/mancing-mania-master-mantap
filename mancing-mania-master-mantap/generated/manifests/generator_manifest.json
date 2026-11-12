@@ -1,5 +1,173 @@
 {
   "assets": {
+    "chr_darto": {
+      "generator": "character_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/characters/chr_darto.tscn",
+      "seed": 0,
+      "sha256": "d6219e2192175be7fd0372b63e721c73531d8e1a26ce90fb14faa9e709ba29d7"
+    },
+    "env_lake_set": {
+      "generator": "environment_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/environment/env_lake_set.tscn",
+      "seed": 20261112,
+      "sha256": "a8f21ee7879278023a6ae5349e253cd7d27b73c61f258341be5456223e9834b8"
+    },
+    "fish_arowana_don": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_arowana_don.tscn",
+      "seed": 0,
+      "sha256": "795917e98e5d21db7c903c1938019c93d7bb7824902e9487d0a3094204823c3d"
+    },
+    "fish_carp_golden": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_carp_golden.tscn",
+      "seed": 0,
+      "sha256": "b4c227361f5d4014a28bae836870443789e9c01a1f455110415f343e11c50b01"
+    },
+    "fish_catfish_bruiser": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
+      "seed": 0,
+      "sha256": "8600b4ca273ed3ae36de5fb887cf53125053a24f1e6c1cfecbe5aa18b5fc606f"
+    },
+    "fish_gourami_shady": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_gourami_shady.tscn",
+      "seed": 0,
+      "sha256": "4a629e68d533374a321c8e238b21309031f44d16eab28d5b8e2e41dfc94c4bbb"
+    },
+    "fish_snakehead_sergeant": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_snakehead_sergeant.tscn",
+      "seed": 0,
+      "sha256": "867fd657fb12871204fcf1f1b27698b7a4c9a4b589efe47f371f826a7e5813b8"
+    },
+    "fish_tilapia_gym_rat": {
+      "generator": "fish_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/fish/fish_tilapia_gym_rat.tscn",
+      "seed": 0,
+      "sha256": "ad9b13ec6ffdff9a94b740263b49f34339024e830403b3c8ff49fe96ccfef62e"
+    },
+    "mat_fishing_line": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_fishing_line.tres",
+      "seed": 0,
+      "sha256": "43e689ceeae3c104da24245f8c3a92309250e9ea7d386d97fc96fc6978215c5c"
+    },
+    "mat_foliage_sway": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_foliage_sway.tres",
+      "seed": 0,
+      "sha256": "e0d977e44401b5df6ee5961878a8bad77641a9070430798e892ce2c1bed50cf6"
+    },
+    "mat_grass_sway": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_grass_sway.tres",
+      "seed": 0,
+      "sha256": "45029adbfea3bd79f5f384da7ad822f2b0772bdea42ed9b0a93d822d47f0127b"
+    },
+    "mat_lake_water": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_lake_water.tres",
+      "seed": 0,
+      "sha256": "54fe04f845d0cda93019463ef3825de392ed33d62e80e288587620be67c84d62"
+    },
+    "mat_vertex_color": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_vertex_color.tres",
+      "seed": 0,
+      "sha256": "63c40c79dbd7775c1dd99af84367befa6ee6fa75fefce9819d49f2ab3d6e3ad7"
+    },
+    "mat_water_ripple": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_water_ripple.tres",
+      "seed": 0,
+      "sha256": "cb0f014b1c40db1af0fbe3e622a674168c33da1476f3bf2910de0eb7992a4f1e"
+    },
+    "mat_water_shadow": {
+      "generator": "material_builder",
+      "generator_version": 1,
+      "output": "res://generated/materials/mat_water_shadow.tres",
+      "seed": 0,
+      "sha256": "0ebb8e0126e6229ad388cc7b59d96cbfea441fbf052762dea62411707cadcabf"
+    },
+    "prop_bucket_blue": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_bucket_blue.tscn",
+      "seed": 0,
+      "sha256": "24de2a2043ebed8358fb061ca32e5538fe4a36325744d23500a1500a69d5f842"
+    },
+    "prop_fishing_rod_basic": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_fishing_rod_basic.tscn",
+      "seed": 0,
+      "sha256": "d2af339469da2c99f35438590745b0d161c3d285e2a69307efc3958a287ef296"
+    },
+    "prop_float_basic": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_float_basic.tscn",
+      "seed": 0,
+      "sha256": "5b59065b833490809704627728e74ff72f477fbf9fe66e19f40d25f155e13409"
+    },
+    "prop_trash_ancient_tyre": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_trash_ancient_tyre.tscn",
+      "seed": 0,
+      "sha256": "fe91f72e9e4b1466c26648d9c1968e34b2c5c02817782172ec337b515d44d054"
+    },
+    "prop_trash_lost_sandal": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_trash_lost_sandal.tscn",
+      "seed": 0,
+      "sha256": "e0ebb5d1431fe786bb0360785575909fe77474fda7cc5b36e16856a276c36b59"
+    },
+    "prop_trash_rusty_can": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_trash_rusty_can.tscn",
+      "seed": 0,
+      "sha256": "1f5879bce06608d7a3f008a7b36b61ea7a4a4897b588cd2ca8e784335481b387"
+    },
+    "ref_chr_darto": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_chr_darto.png",
+      "seed": 0.0,
+      "sha256": "629ab492d57651ba17da895ef8882f7804a7c978cc8f04e62d77b5c5541e5be1"
+    },
+    "ref_fish_catfish": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_fish_catfish.png",
+      "seed": 0.0,
+      "sha256": "5326f83031b4ed77ba0eb57ac68c1be00446bbca137d27b5c3ddc5ce31ecebd7"
+    },
+    "ref_set_lake": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_set_lake.png",
+      "seed": 0.0,
+      "sha256": "6249dcaaa3dda982977fe0bf8daebacf3c4bba4daf6c476708578413744a1cdf"
+    },
     "ui_app_icon": {
       "generator": "ui_art_builder",
       "generator_version": 1,
@@ -12,9 +180,9 @@
       "generator_version": 1,
       "output": "res://generated/ui/ui_theme.tres",
       "seed": 0,
-      "sha256": "f73645cbcc846923f4ef51570b7aa27013939c481f05ead8c2305a1ce401d25b"
+      "sha256": "836f1b2e70362921fef987b0f8f8d88c6d278c4efd967ea82c744e5eced7dd3b"
     }
   },
   "generator_schema": 1,
-  "project_version": "0.1.0"
+  "project_version": "0.2.0"
 }

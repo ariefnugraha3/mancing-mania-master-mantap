@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="TrashData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="TrashData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/data/trash_data.gd" id="1_trash"]
+[ext_resource type="PackedScene" path="res://generated/scenes/props/prop_trash_rusty_can.tscn" id="2_model"]
 
 [resource]
 script = ExtResource("1_trash")
@@ -8,3 +9,4 @@ id = &"trash_can"
 display_name = "Rusty Tin Can"
 chance = 0.4
 sale_value = 300
+model_scene = ExtResource("2_model")

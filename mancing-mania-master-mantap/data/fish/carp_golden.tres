@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="FishData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="FishData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_carp_golden.tscn" id="2_model"]
 
 [resource]
 script = ExtResource("1_fish")
@@ -24,3 +25,4 @@ tell_truth_probability = 0.61
 weight_min_kg = 1.6
 weight_max_kg = 5.0
 dialogue_sequence_id = &"fish_carp_golden"
+model_scene = ExtResource("2_model")
