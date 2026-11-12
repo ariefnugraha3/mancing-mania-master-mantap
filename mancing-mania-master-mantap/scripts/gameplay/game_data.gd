@@ -125,13 +125,14 @@ static func get_config_effect(stat_key: StringName) -> float:
 
 
 ## Full data validation used by Boot (debug/test builds) and by the tests.
-## `require_assets` turns on the generated model/portrait checks; it stays off
-## until the generator milestones produce those assets.
-static func validate_all(require_assets: bool = false) -> PackedStringArray:
+## Generated models are required for every fish and trash item. Fish Book
+## portraits are checked only when `require_portraits` is set, which the
+## milestone that renders them turns on.
+static func validate_all(require_portraits: bool = false) -> PackedStringArray:
 	var errors := PackedStringArray()
 
-	errors.append_array(DataValidator.validate_fish_set(get_all_fish(), require_assets))
-	errors.append_array(DataValidator.validate_trash_set(get_all_trash()))
+	errors.append_array(DataValidator.validate_fish_set(get_all_fish(), true, require_portraits))
+	errors.append_array(DataValidator.validate_trash_set(get_all_trash(), true))
 	errors.append_array(DataValidator.validate_upgrade_set(get_all_upgrades()))
 	errors.append_array(DataValidator.validate_balance(
 		get_fishing_balance(),

@@ -20,6 +20,8 @@ var _forced_fish: StringName = &""
 var _forced_duel: StringName = &""
 var _forced_result: StringName = &""
 var _dev_dirty: bool = false
+var _fast_wait: bool = false
+var _auto_reel: bool = false
 var _overlay: CanvasLayer
 var _version_tap_times: Array[int] = []
 
@@ -94,6 +96,8 @@ func clear_forces() -> void:
 	_forced_fish = &""
 	_forced_duel = &""
 	_forced_result = &""
+	_fast_wait = false
+	_auto_reel = false
 
 
 # --- Extras -----------------------------------------------------------------
@@ -108,6 +112,26 @@ func get_forced_duel() -> StringName:
 
 func get_forced_result() -> StringName:
 	return _forced_result if is_debug_tools_allowed() else &""
+
+
+## Shortens every wait for a bite to half a second (GDD 178.2).
+func set_fast_wait(enabled: bool) -> void:
+	if is_debug_tools_allowed():
+		_fast_wait = enabled
+
+
+func is_fast_wait_enabled() -> bool:
+	return _fast_wait and is_debug_tools_allowed()
+
+
+## Lets a simple bot hold and release the reel, for unattended QA runs.
+func set_auto_reel(enabled: bool) -> void:
+	if is_debug_tools_allowed():
+		_auto_reel = enabled
+
+
+func is_auto_reel_enabled() -> bool:
+	return _auto_reel and is_debug_tools_allowed()
 
 
 ## True while the state carries debug mutations that were not explicitly saved.
@@ -182,42 +206,67 @@ func _mark_dirty() -> void:
 	_dev_dirty = true
 
 
-## UI QA helpers for debug builds, passed after `--` on the command line:
-##   --mm-press=<node path from the current scene>   (repeatable, in order)
-##   --mm-overlay                                    (open the debug overlay)
-##   --mm-shot=<absolute png path>                   (save a screenshot, then quit)
-##   --mm-shot-delay=<seconds>                       (wait before the screenshot)
+## UI QA helpers for debug builds, passed after `--` on the command line.
+## Steps run in the order given, once the first scene has finished loading:
+##   --mm-press=<node path from the current scene>   press a button
+##   --mm-action=<input action>                      tap an input action
+##   --mm-hold=<input action>                        press and keep holding
+##   --mm-release=<input action>                     release a held action
+##   --mm-wait=<seconds>                             wait
+##   --mm-force=<fish or trash id>                   force the next catch
+##   --mm-fast-wait                                  half-second bite wait
+##   --mm-auto-reel                                  a bot plays the reel
+##   --mm-overlay                                    open the debug overlay
+##   --mm-shot=<absolute png path>                   save a screenshot
+## The run quits after the last step when it took at least one screenshot.
 func _run_command_line_tools() -> void:
-	var presses: PackedStringArray = []
-	var shot_path := ""
-	var shot_delay := 1.5
-	var open_overlay := false
+	var steps: Array[PackedStringArray] = []
 	for argument: String in OS.get_cmdline_user_args():
-		if argument.begins_with("--mm-press="):
-			presses.append(argument.trim_prefix("--mm-press="))
-		elif argument.begins_with("--mm-shot="):
-			shot_path = argument.trim_prefix("--mm-shot=")
-		elif argument.begins_with("--mm-shot-delay="):
-			shot_delay = maxf(argument.trim_prefix("--mm-shot-delay=").to_float(), 0.1)
-		elif argument == "--mm-overlay":
-			open_overlay = true
-	if presses.is_empty() and shot_path == "" and not open_overlay:
+		if not argument.begins_with("--mm-"):
+			continue
+		var parts := argument.trim_prefix("--mm-").split("=", true, 1)
+		steps.append(PackedStringArray([parts[0], parts[1] if parts.size() > 1 else ""]))
+	if steps.is_empty():
 		return
 
 	await SceneRouter.transition_finished
-	if open_overlay:
-		toggle_overlay()
-	for path: String in presses:
-		await get_tree().create_timer(0.45).timeout
-		var target := get_tree().current_scene.get_node_or_null(path) as BaseButton
-		if target == null:
-			GameLog.error(&"DEBUG", "--mm-press target is not a button", {"path": path})
-		elif not target.disabled:
-			target.pressed.emit()
-	if shot_path == "":
-		return
-	await get_tree().create_timer(shot_delay).timeout
-	await RenderingServer.frame_post_draw
-	var save_error := get_viewport().get_texture().get_image().save_png(shot_path)
-	GameLog.info(&"DEBUG", "screenshot", {"path": shot_path, "error": save_error})
-	get_tree().quit(0 if save_error == OK else 1)
+	var took_shot := false
+	var failed := false
+	for step: PackedStringArray in steps:
+		var value := step[1]
+		match step[0]:
+			"press":
+				await get_tree().create_timer(0.45).timeout
+				var target := get_tree().current_scene.get_node_or_null(value) as BaseButton
+				if target == null:
+					GameLog.error(&"DEBUG", "--mm-press target is not a button", {"path": value})
+				elif not target.disabled:
+					target.pressed.emit()
+			"action":
+				InputManager.press_action(StringName(value))
+				await get_tree().create_timer(0.08).timeout
+				InputManager.release_action(StringName(value))
+			"hold":
+				InputManager.press_action(StringName(value))
+			"release":
+				InputManager.release_action(StringName(value))
+			"wait":
+				await get_tree().create_timer(maxf(value.to_float(), 0.05)).timeout
+			"force":
+				set_forced_fish(StringName(value))
+			"fast-wait":
+				set_fast_wait(true)
+			"auto-reel":
+				set_auto_reel(true)
+			"overlay":
+				toggle_overlay()
+			"shot":
+				await RenderingServer.frame_post_draw
+				var save_error := get_viewport().get_texture().get_image().save_png(value)
+				GameLog.info(&"DEBUG", "screenshot", {"path": value, "error": save_error})
+				took_shot = true
+				failed = failed or save_error != OK
+			_:
+				GameLog.error(&"DEBUG", "unknown command line step", {"step": step[0]})
+	if took_shot:
+		get_tree().quit(1 if failed else 0)
