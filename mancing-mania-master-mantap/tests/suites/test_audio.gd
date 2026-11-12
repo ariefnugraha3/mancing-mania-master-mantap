@@ -118,3 +118,83 @@ func test_state_surface() -> bool:
 	AudioManager.set_paused(false)
 	check(not AudioManager.is_paused(), "pause flag cleared")
 	return true
+
+
+# --- Fishing sounds and ambience (GDD 175.6, 175.13, 175.17) -----------------
+
+func _rms(samples: PackedFloat32Array) -> float:
+	var total := 0.0
+	for sample: float in samples:
+		total += sample * sample
+	return sqrt(total / maxf(float(samples.size()), 1.0))
+
+
+func test_fishing_sfx_render_cleanly() -> bool:
+	var mix_rate := AudioManager.get_mix_rate()
+	check_eq(AudioManager.FISHING_SFX_IDS.size(), 9, "nine fishing sounds (GDD 175.6)")
+	for sfx_id: StringName in AudioManager.FISHING_SFX_IDS:
+		var preset := AudioManager.get_preset(sfx_id)
+		if not check(preset != null, "%s preset exists" % sfx_id):
+			continue
+		check_eq(preset.id, sfx_id, "%s preset id matches its file" % sfx_id)
+		check(SfxRenderer.SUPPORTED_SYNTH_TYPES.has(preset.synth_type), "%s uses a supported synth type" % sfx_id)
+		var samples := SfxRenderer.render(preset, mix_rate, 7)
+		check(not samples.is_empty(), "%s renders samples" % sfx_id)
+		check(not SynthDsp.has_invalid_samples(samples), "%s has no NaN/Inf" % sfx_id)
+		var peak := SynthDsp.peak(samples)
+		check(peak <= 1.0, "%s peak %.3f stays within full scale" % [sfx_id, peak])
+		check(peak >= 0.03, "%s peak %.3f is audible" % [sfx_id, peak])
+		var duration := float(samples.size()) / float(mix_rate)
+		check(duration >= 0.02 and duration <= 1.0, "%s lasts %.3f s" % [sfx_id, duration])
+		check(AudioManager.get_sfx_stream(sfx_id) != null, "%s is playable through the manager" % sfx_id)
+	return true
+
+
+func test_real_bite_is_unmistakable_from_a_nibble() -> bool:
+	var mix_rate := AudioManager.get_mix_rate()
+	var bite := SfxRenderer.render(AudioManager.get_preset(&"sfx_real_bite"), mix_rate)
+	var nibble := SfxRenderer.render(AudioManager.get_preset(&"sfx_false_nibble"), mix_rate)
+	check(_rms(bite) > _rms(nibble) * 2.5, "the bite is far louder than a nibble")
+	check(bite.size() > nibble.size() * 2, "and clearly longer")
+	check(AudioManager.get_preset(&"sfx_real_bite").pitch_hz < AudioManager.get_preset(&"sfx_false_nibble").pitch_hz * 0.3, "and much lower in pitch")
+	return true
+
+
+func test_varied_sounds_follow_their_seed() -> bool:
+	var preset := AudioManager.get_preset(&"sfx_line_stress")
+	check_eq(preset.seed_mode, &"varied", "line stress varies per play")
+	var first := SfxRenderer.render(preset, 48000, 11)
+	check_eq(SfxRenderer.render(preset, 48000, 11), first, "same seed, same creak")
+	check(SfxRenderer.render(preset, 48000, 12) != first, "another seed, another creak")
+	check(AudioManager.get_sfx_stream(&"sfx_line_stress", 11) != AudioManager.get_sfx_stream(&"sfx_line_stress", 12), "varied sounds are not served from one cached stream")
+	return true
+
+
+func test_lake_ambience_is_synthesized() -> bool:
+	var engine := AudioManager.get_ambience_engine()
+	if not check(engine != null, "ambience engine exists after Boot"):
+		return true
+	AudioManager.set_ambience_state(&"lake")
+	check_eq(engine.get_state(), AmbienceEngine.STATE_LAKE, "lake state reached the engine")
+	check(await wait_until(func() -> bool: return not engine.is_rendering(), 30.0), "the loops finish rendering in the background")
+
+	for layer: StringName in AmbienceEngine.LAKE_LAYERS:
+		var player := engine.get_node_or_null("%sLoop" % String(layer).capitalize()) as AudioStreamPlayer
+		if not check(player != null and player.stream != null, "%s layer has a stream" % layer):
+			continue
+		var stream := player.stream as AudioStreamWAV
+		check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % layer)
+		check_eq(player.bus, &"Ambience", "%s plays on the Ambience bus" % layer)
+		var seconds := float(stream.data.size() / 2) / float(stream.mix_rate)
+		check_near(seconds, float(AmbienceEngine.LAKE_LAYERS[layer][0]), 0.01, "%s loop length" % layer)
+		# The loop must contain real signal, not silence.
+		var loudest := 0
+		for index: int in range(0, stream.data.size() - 1, 2):
+			loudest = maxi(loudest, absi(stream.data.decode_s16(index)))
+		check(loudest > 300 and loudest < 32767, "%s has signal without clipping (peak %d)" % [layer, loudest])
+
+	AudioManager.duck_ambience(4.0, 0.2)
+	await wait_frames(3)
+	AudioManager.set_ambience_state(&"silence")
+	check_eq(engine.get_state(), AmbienceEngine.STATE_SILENCE, "ambience can be switched off")
+	return true
