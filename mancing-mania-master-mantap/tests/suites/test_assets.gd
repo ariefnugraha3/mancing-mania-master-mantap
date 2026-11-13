@@ -262,3 +262,29 @@ func test_boxing_assets_follow_the_animation_contract() -> bool:
 	check(fish_spot.position.y > 0.5, "the fish stands on the stool")
 	ring.free()
 	return true
+
+
+# Arm wrestling content (GDD 172.3, 172.6, 174.7, 185.17).
+func test_arm_wrestle_assets() -> bool:
+	var manifest := GeneratorManifest.read()
+	var ids: PackedStringArray = manifest.get_asset_ids()
+	for asset_id: String in ["env_arm_set", "prop_arm_table", "prop_arm_elbow_pad"]:
+		check(ids.has(asset_id), "manifest lists %s" % asset_id)
+	for fish: FishData in GameData.get_all_fish():
+		var rig: Node = fish.model_scene.instantiate()
+		var player := rig.get_node("AnimationPlayer") as AnimationPlayer
+		for clip: StringName in [&"arm_idle", &"arm_burst", &"arm_win", &"arm_lose"]:
+			check(player.has_animation(clip), "%s clip %s (GDD 172.6)" % [fish.id, clip])
+		rig.free()
+	var darto: Node = (load("res://generated/scenes/characters/chr_darto.tscn") as PackedScene).instantiate()
+	var darto_player := darto.get_node("AnimationPlayer") as AnimationPlayer
+	for clip: StringName in [&"arm_idle_grip", &"arm_push_light", &"arm_push_hard", &"arm_recover", &"arm_win", &"arm_lose"]:
+		check(darto_player.has_animation(clip), "Darto clip %s (GDD 172.3)" % clip)
+	darto.free()
+	var table: Node = (load("res://generated/scenes/environment/env_arm_set.tscn") as PackedScene).instantiate()
+	for marker: String in ["DartoSpot", "FishSpot", "GripPoint", "CameraLandscape", "CameraPortrait"]:
+		check(table.get_node_or_null("Markers/%s" % marker) is Marker3D, "arm set marker %s" % marker)
+	for prop: String in ["Table", "PadDarto", "PadFish"]:
+		check(table.get_node_or_null("Props/%s" % prop) != null, "arm set prop %s" % prop)
+	table.free()
+	return true

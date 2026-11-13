@@ -130,6 +130,7 @@ func build_darto() -> Node3D:
 
 	var clips := _build_darto_clips(skeleton)
 	clips.append_array(_build_darto_boxing_clips(skeleton))
+	clips.append_array(_build_darto_arm_clips(skeleton))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -813,3 +814,91 @@ func _box_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset: 
 	clip.move("root", time, BOX_CROUCH + offset)
 	for bone: String in BOX_GUARD:
 		clip.rot(bone, time, changes.get(bone, BOX_GUARD[bone]))
+
+
+# --- Darto: arm wrestling (GDD 172.3) ---------------------------------------
+# Leaning over the table with his right elbow on the pad. The forearm's lean
+# left or right is set by the scene from the match position; these clips are
+# the effort in the rest of his body.
+
+const ARM_POSE: Dictionary = {
+	"pelvis": Vector3(0, 0, 0),
+	"spine_lower": Vector3(-14, 0, 0),
+	"spine_upper": Vector3(-16, 0, 0),
+	"neck": Vector3(0, 0, 0),
+	"head": Vector3(18, 0, 0),
+	"upper_arm_r": Vector3(74, 0, 10),
+	"forearm_r": Vector3(150, 0, 0),
+	"hand_r": Vector3(0, 0, 0),
+	"upper_arm_l": Vector3(58, 0, -18),
+	"forearm_l": Vector3(54, 0, 0),
+	"hand_l": Vector3(0, 0, 0),
+	"thigh_l": Vector3(18, 0, -4),
+	"shin_l": Vector3(-14, 0, 0),
+	"foot_l": Vector3(-4, 0, 0),
+	"thigh_r": Vector3(-10, 0, 6),
+	"shin_r": Vector3(-6, 0, 0),
+	"foot_r": Vector3(16, 0, 0),
+}
+const ARM_DROP := Vector3(0, -0.04, 0)
+
+
+func _build_darto_arm_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+
+	var grip := RigBuilder.Clip.new(skeleton, &"arm_idle_grip", 2.0, true)
+	_arm_pose(grip, 0.0)
+	_arm_pose(grip, 1.0, {"spine_upper": Vector3(-24, 0, 0), "head": Vector3(24, 0, 0)})
+	_arm_pose(grip, 2.0)
+	clips.append(grip)
+
+	var light := RigBuilder.Clip.new(skeleton, &"arm_push_light", 0.5, true)
+	var leaning := {"spine_upper": Vector3(-26, 0, -4), "spine_lower": Vector3(-20, 0, -3), "head": Vector3(18, 0, 4)}
+	_arm_pose(light, 0.0, leaning)
+	_arm_pose(light, 0.25, leaning.merged({"spine_upper": Vector3(-28, 0, -5)}, true))
+	_arm_pose(light, 0.5, leaning)
+	clips.append(light)
+
+	# Everything into it: shoulder over the grip, free hand clamped on the table.
+	var hard := RigBuilder.Clip.new(skeleton, &"arm_push_hard", 0.2, true)
+	var straining := {
+		"spine_upper": Vector3(-32, 0, -9), "spine_lower": Vector3(-22, 0, -6), "head": Vector3(10, 0, 8),
+		"upper_arm_l": Vector3(54, 0, -8), "forearm_l": Vector3(28, 0, 0),
+		"thigh_l": Vector3(24, 0, -4), "shin_l": Vector3(-20, 0, 0)}
+	_arm_pose(hard, 0.0, straining)
+	_arm_pose(hard, 0.1, straining.merged({"spine_upper": Vector3(-33, 0, -10), "head": Vector3(9, 0, 9)}, true))
+	_arm_pose(hard, 0.2, straining)
+	clips.append(hard)
+
+	# Out of breath: the body sags while the arm holds on.
+	var recover := RigBuilder.Clip.new(skeleton, &"arm_recover", 1.2, true)
+	var tired := {"spine_upper": Vector3(-14, 0, 0), "spine_lower": Vector3(-14, 0, 0), "head": Vector3(30, 0, 0),
+		"upper_arm_l": Vector3(20, 0, -10), "forearm_l": Vector3(26, 0, 0)}
+	_arm_pose(recover, 0.0, tired)
+	_arm_pose(recover, 0.6, tired.merged({"spine_upper": Vector3(-12, 0, 0), "head": Vector3(32, 0, 0)}, true))
+	_arm_pose(recover, 1.2, tired)
+	clips.append(recover)
+
+	var win := RigBuilder.Clip.new(skeleton, &"arm_win", 1.0)
+	_arm_pose(win, 0.0)
+	var upright := {"spine_upper": Vector3(-6, 0, 0), "spine_lower": Vector3(-6, 0, 0), "head": Vector3(-4, 0, 0),
+		"upper_arm_l": Vector3(150, 0, -10), "forearm_l": Vector3(20, 0, 0)}
+	_arm_pose(win, 0.5, upright, Vector3(0, 0.03, 0))
+	_arm_pose(win, 1.0, upright, Vector3(0, 0.03, 0))
+	clips.append(win)
+
+	var lose := RigBuilder.Clip.new(skeleton, &"arm_lose", 1.0)
+	_arm_pose(lose, 0.0)
+	var slumped := {"spine_upper": Vector3(-34, 0, 0), "spine_lower": Vector3(-26, 0, 0), "head": Vector3(-10, 0, 0),
+		"upper_arm_l": Vector3(20, 0, -6), "forearm_l": Vector3(10, 0, 0)}
+	_arm_pose(lose, 0.5, slumped, Vector3(0, -0.04, 0))
+	_arm_pose(lose, 1.0, slumped, Vector3(0, -0.05, 0))
+	clips.append(lose)
+	return clips
+
+
+func _arm_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset: Vector3 = Vector3.ZERO) -> void:
+	clip.rot("root", time, Vector3.ZERO)
+	clip.move("root", time, ARM_DROP + offset)
+	for bone: String in ARM_POSE:
+		clip.rot(bone, time, changes.get(bone, ARM_POSE[bone]))

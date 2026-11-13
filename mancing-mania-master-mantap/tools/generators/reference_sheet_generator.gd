@@ -88,6 +88,15 @@ const SUBJECTS: Array = [
 		],
 	},
 	{
+		"id": "ref_set_arm", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_arm_set.tscn",
+		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "arm_push_hard"},
+			{"scene": "res://generated/scenes/fish/fish_carp_golden.tscn", "marker": "Markers/FishSpot", "clip": "arm_burst"},
+		],
+	},
+	{
 		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
 		"scene": "res://generated/scenes/environment/env_market_set.tscn",
 		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,
