@@ -1,0 +1,103 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/market/market_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/market/market_controller.gd" id="2_controller"]
+[ext_resource type="Script" path="res://scripts/actors/market_world.gd" id="3_world"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_market_set.tscn" id="4_set"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_bu_yati.tscn" id="5_bu_yati"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="6_darto"]
+[ext_resource type="Script" path="res://scripts/ui/market_hud.gd" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="8_safe"]
+[ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="9_button"]
+[ext_resource type="Script" path="res://scripts/ui/market/sell_panel.gd" id="10_sell"]
+[ext_resource type="Script" path="res://scripts/ui/market/upgrade_panel.gd" id="11_upgrade"]
+[ext_resource type="Script" path="res://scripts/ui/market/debt_panel.gd" id="12_debt"]
+[ext_resource type="Script" path="res://scripts/ui/market/fish_book_panel.gd" id="13_book"]
+[ext_resource type="Script" path="res://scripts/ui/market/records_panel.gd" id="14_records"]
+[ext_resource type="Script" path="res://scripts/ui/receipt_overlay.gd" id="15_receipt"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="16_pause"]
+
+[node name="Market" type="Node"]
+script = ExtResource("1_scene")
+
+[node name="MarketController" type="Node" parent="."]
+script = ExtResource("2_controller")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("3_world")
+
+[node name="MarketSet" parent="World" instance=ExtResource("4_set")]
+
+[node name="BuYati" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/BuYati" instance=ExtResource("5_bu_yati")]
+
+[node name="DartoMarketPose" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/DartoMarketPose" instance=ExtResource("6_darto")]
+
+[node name="MarketCamera" type="Camera3D" parent="World"]
+current = true
+fov = 50.0
+far = 300.0
+
+[node name="MarketCanvas" type="CanvasLayer" parent="."]
+script = ExtResource("7_hud")
+
+[node name="SafeRoot" type="Control" parent="MarketCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_safe")
+
+[node name="HeaderBar" type="HBoxContainer" parent="MarketCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="TabBar" type="HBoxContainer" parent="MarketCanvas/SafeRoot"]
+
+[node name="SellTabButton" type="Button" parent="MarketCanvas/SafeRoot/TabBar"]
+script = ExtResource("9_button")
+
+[node name="UpgradeTabButton" type="Button" parent="MarketCanvas/SafeRoot/TabBar"]
+script = ExtResource("9_button")
+
+[node name="DebtTabButton" type="Button" parent="MarketCanvas/SafeRoot/TabBar"]
+script = ExtResource("9_button")
+
+[node name="FishBookTabButton" type="Button" parent="MarketCanvas/SafeRoot/TabBar"]
+script = ExtResource("9_button")
+
+[node name="RecordsTabButton" type="Button" parent="MarketCanvas/SafeRoot/TabBar"]
+script = ExtResource("9_button")
+
+[node name="TabContent" type="PanelContainer" parent="MarketCanvas/SafeRoot"]
+
+[node name="SellPanel" type="VBoxContainer" parent="MarketCanvas/SafeRoot/TabContent"]
+script = ExtResource("10_sell")
+
+[node name="UpgradePanel" type="VBoxContainer" parent="MarketCanvas/SafeRoot/TabContent"]
+visible = false
+script = ExtResource("11_upgrade")
+
+[node name="DebtPanel" type="VBoxContainer" parent="MarketCanvas/SafeRoot/TabContent"]
+visible = false
+script = ExtResource("12_debt")
+
+[node name="FishBookPanel" type="VBoxContainer" parent="MarketCanvas/SafeRoot/TabContent"]
+visible = false
+script = ExtResource("13_book")
+
+[node name="RecordsPanel" type="VBoxContainer" parent="MarketCanvas/SafeRoot/TabContent"]
+visible = false
+script = ExtResource("14_records")
+
+[node name="LeaveMarketButton" type="Button" parent="MarketCanvas/SafeRoot"]
+script = ExtResource("9_button")
+
+[node name="ReceiptOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("15_receipt")
+
+[node name="PauseOverlay" parent="." instance=ExtResource("16_pause")]

@@ -199,49 +199,15 @@ func _on_action_up() -> void:
 
 func _build_top_bar() -> void:
 	_top_bar.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
-	_cash_widget.add_theme_stylebox_override(&"panel", _chip_style())
+	_cash_widget.add_theme_stylebox_override(&"panel", HudChip.make_style())
 	_cash_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cash_label = _add_chip_content(_cash_widget, UiIcon.ICON_CASH)
+	_cash_label = HudChip.add_content(_cash_widget, UiIcon.ICON_CASH)
 	_cash_label.custom_minimum_size.x = 118.0
 
 	_bucket_widget.custom_minimum_size = Vector2(170.0, UiTokens.TOUCH_TARGET_MIN)
 	_bucket_widget.focus_mode = Control.FOCUS_NONE
-	_bucket_label = _add_chip_content(_bucket_widget, UiIcon.ICON_BUCKET)
+	_bucket_label = HudChip.add_content(_bucket_widget, UiIcon.ICON_BUCKET)
 	_bucket_widget.pressed.connect(func() -> void: bucket_pressed.emit())
-
-
-## Icon plus text, centred inside a chip or button.
-func _add_chip_content(parent: Control, icon_id: StringName) -> Label:
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
-	if parent is Button:
-		row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parent.add_child(row)
-	var icon := UiIcon.new()
-	icon.icon_id = icon_id
-	icon.icon_size = 26.0
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(icon)
-	var label := Label.new()
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
-	row.add_child(label)
-	return label
-
-
-func _chip_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(UiTokens.CREAM_100, 0.94)
-	box.border_color = UiTokens.INK_700
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
-	box.content_margin_left = UiTokens.SPACE_16
-	box.content_margin_right = UiTokens.SPACE_16
-	box.content_margin_top = UiTokens.SPACE_8
-	box.content_margin_bottom = UiTokens.SPACE_8
-	return box
 
 
 func _build_prompt() -> void:
@@ -286,21 +252,11 @@ func _build_buttons() -> void:
 
 	_market_button.focus_mode = Control.FOCUS_NONE
 	_market_button.custom_minimum_size = Vector2(170.0, UiTokens.TOUCH_TARGET_PREFERRED)
-	var market_label := _add_chip_content(_market_button, UiIcon.ICON_MARKET)
+	var market_label := HudChip.add_content(_market_button, UiIcon.ICON_MARKET)
 	market_label.text = TextDb.t(&"fishing.hud.market")
 	_market_button.pressed.connect(func() -> void: market_pressed.emit())
 
-	_pause_button.focus_mode = Control.FOCUS_NONE
-	_pause_button.custom_minimum_size = Vector2(UiTokens.TOUCH_TARGET_PREFERRED, UiTokens.TOUCH_TARGET_PREFERRED)
-	_pause_button.click_sfx = &"ui_back"
-	var pause_icon := UiIcon.new()
-	pause_icon.icon_id = UiIcon.ICON_PAUSE
-	pause_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pause_icon.offset_left = 14.0
-	pause_icon.offset_top = 14.0
-	pause_icon.offset_right = -14.0
-	pause_icon.offset_bottom = -14.0
-	_pause_button.add_child(pause_icon)
+	HudChip.make_pause_button(_pause_button)
 	_pause_button.pressed.connect(func() -> void: pause_pressed.emit())
 
 

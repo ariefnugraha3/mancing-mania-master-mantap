@@ -217,6 +217,12 @@ func _mark_dirty() -> void:
 ##   --mm-fast-wait                                  half-second bite wait
 ##   --mm-auto-reel                                  a bot plays the reel
 ##   --mm-overlay                                    open the debug overlay
+##   --mm-goto=<fishing|market>                      start a game if needed and go there
+##   --mm-cash=<amount>                              set cash
+##   --mm-debt-left=<amount>                         set the remaining debt
+##   --mm-bucket=<item id>:<count>                   put a catch in the Bucket
+##   --mm-win=<fish id>                              record a duel win against a fish
+##   --mm-story=<story value>                        switch a story flag on
 ##   --mm-shot=<absolute png path>                   save a screenshot
 ## The run quits after the last step when it took at least one screenshot.
 func _run_command_line_tools() -> void:
@@ -260,6 +266,30 @@ func _run_command_line_tools() -> void:
 				set_auto_reel(true)
 			"overlay":
 				toggle_overlay()
+			"goto":
+				if not GameState.has_active_game():
+					GameState.new_game()
+					_mark_dirty()
+				if value == "market":
+					SceneRouter.goto_market()
+				else:
+					SceneRouter.goto_fishing()
+				await SceneRouter.transition_finished
+			"cash":
+				set_cash(value.to_int())
+			"debt-left":
+				set_debt_remaining(value.to_int())
+			"bucket":
+				var item := value.split(":")
+				GameState.add_bucket_item(StringName(item[0]), item[1].to_int() if item.size() > 1 else 1)
+				_mark_dirty()
+			"win":
+				GameState.record_encounter(StringName(value))
+				GameState.record_fish_win(StringName(value), GameData.get_fish(StringName(value)).weight_max_kg * 0.8, &"boxing")
+				_mark_dirty()
+			"story":
+				GameState.set_story_value(StringName(value), true)
+				_mark_dirty()
 			"shot":
 				await RenderingServer.frame_post_draw
 				var save_error := get_viewport().get_texture().get_image().save_png(value)
