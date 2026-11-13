@@ -409,3 +409,53 @@ Tujuh preset Section 175.8. Enam memakai resep yang sudah ada; `box_ko` memakai 
 ### D-065 — Tool QA tinju
 
 Debug build: bot duel (`BoxingBot`, membaca snapshot yang sama dengan HUD dan hanya memakai dua permintaan yang dimiliki pemain), paksa arah serangan, paksa hasil, dan `--mm-duel` untuk langsung masuk ring.
+
+## Milestone 5 — Panco
+
+### D-066 — Dorongan ikan
+
+GDD menetapkan Arm Strength, durasi dan cooldown burst, tetapi tidak menetapkan rumusnya. Di `ArmWrestleConfig`:
+
+- Dorongan tetap ikan = Arm Strength × 0,12 posisi/detik (Bruiser Catfish 5,0; Don Arowana 10,1).
+- Sebelum burst ikan menegang 0,7 detik (peringatan). Burst menambah dorongan sebesar (0,5 + 0,2 × tier) kali dorongan tetapnya.
+- Durasi burst 0,65–1,15 detik dan cooldown 3,0–5,5 detik sesuai Section 55.
+
+Angka dipilih dari simulasi 20 seed per ikan:
+
+| Gaya pemain | Hasil |
+|---|---|
+| Tidak menekan | kalah melawan semua ikan |
+| 5 tekan/detik | menang sampai Golden Carp, kalah melawan Snakehead dan Arowana |
+| 7 tekan/detik (nyaman) | menang melawan semua ikan; Arowana tepat di detik terakhir |
+| 10 tekan/detik | menang melawan semua ikan dalam 5–8 detik |
+
+Section 176.13 meminta tidak ada keharusan melebihi kecepatan nyaman; 7 tekan/detik cukup untuk semua ikan.
+
+### D-067 — Batas 10 tekan/detik
+
+Batasnya berupa token bucket: satu token per tekan, terisi 10 per detik, maksimal 2 tersimpan. Interval minimum 0,1 detik sempat dicoba, tetapi itu membuat orang yang menekan 14 kali/detik hanya mendapat 7 karena setiap tekan kedua jatuh terlalu cepat. Itu hukuman, dan Section 176.13 melarangnya. Tekan yang diabaikan tidak memakan stamina.
+
+### D-068 — Temuan balance: istirahat tidak pernah lebih baik
+
+Dengan angka GDD (regen hanya setelah 0,35 detik tanpa tekan, tenaga minimum 42%), terus menekan selalu menghasilkan dorongan lebih besar daripada berhenti untuk memulihkan stamina. Petunjuk "stop briefly to recover" dari How To Play tetap benar dalam arti tenaga naik lagi, tetapi secara angka istirahat tidak menguntungkan. Tidak diubah; masuk ke simulasi balance Milestone 10.
+
+### D-069 — Sudden Grip dan seri
+
+- Di detik ke-32, posisi dalam ±2 masuk Sudden Grip: paling lama 5 detik tambahan, yang pertama mencapai ±5 menang.
+- Setelah itu dibandingkan posisi dengan tiga desimal ("0.000"). Bila tepat nol: ikan non-boss kalah (pemain menang), Don Arowana meminta rematch 10 detik dari tengah dengan stamina penuh.
+- Bila rematch juga berakhir tepat nol, pemain menang. GDD tidak mengatur kasus ini.
+
+### D-070 — Tampilan panco
+
+- Kamera di belakang bahu kanan Darto. Saat Darto unggul, tangan miring ke kiri Darto, yaitu kiri layar; bar posisi meletakkan ujung Darto di kiri supaya keduanya bergerak ke arah yang sama.
+- Kemiringan lengan bawah Darto ditulis setelah clip tubuh setiap frame, jadi lengan selalu menunjukkan posisi sebenarnya sementara tubuh menunjukkan usaha (push light/hard, recover). Ini menggantikan blend parameter Section 172.3 dengan hasil yang sama.
+- Sirip ikan yang menggenggam adalah tabung yang direntangkan dari tulang sirip ke kepalan Darto setiap frame, sehingga tangan selalu bertemu walaupun ukuran ikan berbeda jauh. Untuk Don Arowana tabung ini panjang dan terlihat aneh.
+- Ikan berdiri di atas meja; sarung tinjunya disembunyikan.
+
+### D-071 — Pemilihan duel sebelum Wheel
+
+Selama Wheel belum ada (Milestone 7): duel pertama selalu tinju (Section 176.10). Sesudahnya duel dipilih dari seed encounter dengan peluang sama di antara duel yang ada di build, jadi pilihannya tetap sebelum apa pun ditampilkan (Section 38).
+
+### D-072 — Audio panco
+
+Enam suara Section 175.9: derit meja (`creak`, bervariasi), regangan tangan (`noise_sweep`, bervariasi), klik MASH yang makin pelan saat laju naik, denyut naik sebelum burst (`rising_pulse`), fanfare parodi menang (`fanfare`), dan dua nada turun saat kalah (`two_note_down`). Musik panco masih diam sampai Milestone 6.

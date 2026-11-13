@@ -12,8 +12,9 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 2 | Fishing vertical slice: danau, Darto, cast → strike → reel | selesai (`0.2.0`) |
 | 3 | Market, ekonomi, upgrade, Fish Book, Records | selesai (`0.3.0`) |
 | 4 | Tinju lengkap | selesai (`0.4.0`) |
-| 5 | Panco lengkap | berikutnya |
-| 6–10 | Dua duel lain, cerita, art/audio final, QA dan rilis | belum |
+| 5 | Panco lengkap | selesai (`0.5.0`) |
+| 6 | Joget koplo dan mesin musik prosedural | berikutnya |
+| 7–10 | Suwit dan Wheel, cerita, art/audio final, QA dan rilis | belum |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -70,8 +71,8 @@ Jangan mengedit file di `generated/` dengan tangan. Ubah generator di `tools/gen
 autoload/     9 service global: GameState, SaveManager, SceneRouter, AudioManager,
               InputManager, PlatformService, RNGService, StoryDirector, DebugService
 data/         data authoritative (.tres): ikan, sampah, upgrade, balance, audio, teks
-scenes/       scene per layar (boot, menu, fishing, market, boxing, lalu duel lain, ...)
-scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, duel/), actors/,
+scenes/       scene per layar (boot, menu, fishing, market, boxing, arm_wrestle, ...)
+scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, arm_wrestle/, duel/), actors/,
               ui/ (termasuk ui/market/ untuk halaman ledger), audio/, utilities/
 shaders/      shader buatan project (air danau, goyangan dedaunan, siluet Fish Book)
 tools/        generators/ (pembuat aset) dan validation/ (pemeriksa kebijakan aset)

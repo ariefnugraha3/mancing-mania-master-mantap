@@ -12,7 +12,7 @@ godot --headless --path . --script res://tests/run_all.gd -- --suite=save
 
 - `--import` diperlukan sekali setelah checkout baru, dan setiap kali ada script baru yang memakai `class_name`. Tanpa itu test gagal dengan `Identifier "X" not declared`.
 - `--suite=<nama>` menjalankan satu suite saja.
-- Exit code `0` berarti semua lulus, `1` berarti ada yang gagal atau tidak ada test yang berjalan, `2` berarti watchdog 300 detik menghentikan run yang macet.
+- Exit code `0` berarti semua lulus, `1` berarti ada yang gagal atau tidak ada test yang berjalan, `2` berarti watchdog menghentikan suite yang berjalan lebih dari 300 detik.
 - Di CI atau script, bungkus perintah dengan batas waktu. Script yang error sebelum memanggil `quit()` membuat proses Godot tidak pernah berhenti.
 
 Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
@@ -30,8 +30,9 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 | `fishing` | `tests/suites/test_fishing.gd` | FISH-002..016: timeline cast, waktu tunggu, jendela strike, sampah, distribusi 100.000 encounter, aturan reel, line break, landing |
 | `market` | `tests/suites/test_market.gd` | MKT-001..011, STORY-001..007 dan 011, BOOK-001..005: harga jual, Sell All dan per kategori, harga upgrade, batas pembayaran hutang, double tap, autosave gagal, antrean event cerita, round-trip save |
 | `boxing` | `tests/suites/test_boxing.gd` | BOX-001..012: HP dan Tonic, nilai dan waktu jab/cross, setiap serangan ber-telegraph, dodge benar/salah, jendela perfect 180 ms, pengali 2,0× dan 2,4×, block 40%, timeout, sudden death, keenam ikan bisa dikalahkan, commit hasil duel |
+| `arm_wrestle` | `tests/suites/test_arm_wrestle.gd` | ARM-001..011: posisi awal, impuls dan biaya stamina, batas 10 tekan/detik, jeda dan laju regen, stamina Tonic, band tenaga, burst dengan peringatan, timeout, Sudden Grip, rematch Arowana, setiap ikan kalah pada 7 tekan/detik |
 | `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate, aset Market, potret Fish Book, kontrak animasi tinju |
-| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait; lalu tinju: blueprint scene, tangkapan pertama sampai ember lewat duel, kalah di pelajaran pertama, input, pause, dan empat kontrol sentuh |
+| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait; lalu tinju: blueprint scene, tangkapan pertama sampai ember lewat duel, kalah di pelajaran pertama, input, pause, dan empat kontrol sentuh; lalu panco: blueprint, aksi dan tombol MASH, arah lengan, pause, hasil, layout portrait |
 
 Test manual (MAN) di matriks QA GDD Section 180, seperti BOOT-005/006 dan SAVE-010/011, membutuhkan build Web dan perangkat Android. Itu dikerjakan saat export preset tersedia.
 
@@ -65,7 +66,7 @@ Langkah dijalankan berurutan sesuai urutan di command line:
 | `--mm-fast-wait` | gigitan datang setengah detik setelah cast |
 | `--mm-auto-reel` | bot memainkan reel |
 | `--mm-auto-duel` | bot memainkan duel |
-| `--mm-duel=<id ikan>` | memulai game bila belum ada, lalu langsung bertinju melawan ikan itu |
+| `--mm-duel=<id ikan>[:<id duel>]` | memulai game bila belum ada, lalu langsung berduel melawan ikan itu (default tinju), misalnya `carp_golden:arm_wrestle` |
 | `--mm-result=<win\|loss>` | memaksa hasil duel berikutnya |
 | `--mm-attack-side=<left\|right>` | memaksa arah serangan tinju |
 | `--mm-upgrade=<id>:<level>` | mengatur level upgrade, misalnya `tonic:3` |
