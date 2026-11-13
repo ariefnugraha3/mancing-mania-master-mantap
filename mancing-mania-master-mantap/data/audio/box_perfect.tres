@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"box_perfect"
+synth_type = &"chime"
+base_gain_db = -8.0
+attack_sec = 0.003
+decay_sec = 0.16
+sustain = 0.0
+release_sec = 0.14
+pitch_hz = 880.0
+noise_amount = 0.2
+filter_cutoff_hz = 4000.0
+seed_mode = &"fixed"
