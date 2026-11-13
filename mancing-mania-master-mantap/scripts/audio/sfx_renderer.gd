@@ -20,9 +20,13 @@ const SYNTH_PLUCK := &"pluck"
 const SYNTH_CREAK := &"creak"
 const SYNTH_SNAP := &"snap"
 const SYNTH_SPLASH := &"splash"
+const SYNTH_TWO_NOTE := &"two_note"
+const SYNTH_TICK_CLUSTER := &"tick_cluster"
+const SYNTH_CHIME := &"chime"
 const SUPPORTED_SYNTH_TYPES: Array[StringName] = [
 	SYNTH_CLICK, SYNTH_NOISE_SWEEP, SYNTH_DROPLET, SYNTH_THUMP,
 	SYNTH_PLUCK, SYNTH_CREAK, SYNTH_SNAP, SYNTH_SPLASH,
+	SYNTH_TWO_NOTE, SYNTH_TICK_CLUSTER, SYNTH_CHIME,
 ]
 const EDGE_FADE_SEC := 0.0015
 const PEAK_LIMIT := 0.98
@@ -53,6 +57,12 @@ static func render(preset: AudioPreset, mix_rate: int, seed: int = -1) -> Packed
 			samples = _render_pluck(preset, mix_rate, random, 1.0)
 		SYNTH_SPLASH:
 			samples = _render_splash(preset, mix_rate, random)
+		SYNTH_TWO_NOTE:
+			samples = _render_two_note(preset, mix_rate, random)
+		SYNTH_TICK_CLUSTER:
+			samples = _render_tick_cluster(preset, mix_rate, random)
+		SYNTH_CHIME:
+			samples = _render_chime(preset, mix_rate, random)
 		_:
 			GameLog.error(&"AUDIO", "unsupported synth type", {"preset": preset.id, "type": preset.synth_type})
 			return PackedFloat32Array()
@@ -238,6 +248,83 @@ static func _render_splash(preset: AudioPreset, mix_rate: int, random: RandomNum
 			var progress := float(index) / float(count)
 			phase += TAU * pitch * (1.0 + 0.6 * progress) / float(mix_rate)
 			samples[start + index] += sin(phase) * sin(progress * PI) * 0.22 * preset.noise_amount
+	return samples
+
+
+## Purchase (GDD 175.7): two warm plucked notes, the second a third higher.
+static func _render_two_note(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	_add_pluck(samples, 0, preset.pitch_hz, preset.decay_sec, mix_rate, random, 0.8)
+	_add_pluck(samples, int(duration * 0.3 * mix_rate), preset.pitch_hz * 1.25, preset.decay_sec, mix_rate, random, 0.8)
+	for index: int in samples.size():
+		var time_sec := float(index) / float(mix_rate)
+		var attack := minf(time_sec / maxf(preset.attack_sec, 0.000001), 1.0)
+		var release := minf((duration - time_sec) / maxf(preset.release_sec, 0.000001), 1.0)
+		samples[index] *= attack * release
+	return samples
+
+
+## One Karplus-Strong note mixed into `samples` from `start`. The string is
+## excited with smoothed noise, which makes the pluck round instead of bright.
+static func _add_pluck(samples: PackedFloat32Array, start: int, pitch_hz: float, ring_sec: float, mix_rate: int, random: RandomNumberGenerator, gain: float) -> void:
+	var period := maxi(int(float(mix_rate) / maxf(pitch_hz, 20.0)), 2)
+	var line := PackedFloat32Array()
+	line.resize(period)
+	var smooth := 0.0
+	for index: int in period:
+		smooth += 0.35 * (random.randf_range(-1.0, 1.0) - smooth)
+		line[index] = smooth * 2.0
+	var damping := clampf(0.5 - 0.004 / maxf(ring_sec, 0.02), 0.44, 0.4995)
+	var position := 0
+	for index: int in range(start, samples.size()):
+		var next := (position + 1) % period
+		var value := line[position]
+		line[position] = (value + line[next]) * damping
+		position = next
+		samples[index] += value * gain
+
+
+## Sale (GDD 175.7): a few soft paper-and-coin ticks, close together and
+## getting quieter. It is a counted handful, never a slot-machine cascade.
+static func _render_tick_cluster(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	var coefficient := SynthDsp.one_pole_coefficient(preset.filter_cutoff_hz, float(mix_rate))
+	var intervals: Array[float] = [1.0, 1.26, 0.94, 1.41]
+	var start_sec := 0.0
+	for tick: int in intervals.size():
+		var start := int(start_sec * mix_rate)
+		var count := mini(int(0.07 * mix_rate), samples.size() - start)
+		var pitch := preset.pitch_hz * intervals[tick]
+		var level := 1.0 - 0.14 * float(tick)
+		var filtered := 0.0
+		for index: int in count:
+			var time_sec := float(index) / float(mix_rate)
+			filtered += coefficient * (random.randf_range(-1.0, 1.0) - filtered)
+			var paper := filtered * SynthDsp.exp_decay(time_sec, 0.014) * preset.noise_amount * 1.8
+			var coin := sin(TAU * pitch * time_sec) * SynthDsp.exp_decay(time_sec, 0.05) * (1.0 - preset.noise_amount)
+			samples[start + index] += (paper + coin) * level
+		start_sec += random.randf_range(0.05, 0.085)
+	return samples
+
+
+## Debt payment (GDD 175.7): one clean, warm chime. A sine with two quieter
+## partials that die away sooner, and the faintest strike at the start.
+static func _render_chime(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	var coefficient := SynthDsp.one_pole_coefficient(preset.filter_cutoff_hz, float(mix_rate))
+	var filtered := 0.0
+	for index: int in samples.size():
+		var time_sec := float(index) / float(mix_rate)
+		var angle := TAU * preset.pitch_hz * time_sec
+		var tone := sin(angle) * SynthDsp.exp_decay(time_sec, duration) \
+			+ sin(angle * 2.0) * 0.32 * SynthDsp.exp_decay(time_sec, duration * 0.55) \
+			+ sin(angle * 3.01) * 0.12 * SynthDsp.exp_decay(time_sec, duration * 0.3)
+		filtered += coefficient * (random.randf_range(-1.0, 1.0) - filtered)
+		var strike := filtered * SynthDsp.exp_decay(time_sec, 0.008) * preset.noise_amount
+		samples[index] = (tone * 0.7 + strike) * minf(time_sec / maxf(preset.attack_sec, 0.000001), 1.0)
 	return samples
 
 
