@@ -70,6 +70,24 @@ const SUBJECTS: Array = [
 		],
 	},
 	{
+		"id": "ref_set_boxing", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_boxing_set.tscn",
+		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "box_idle", "show": "AccessoryMeshes/BoxingGloves"},
+			{"scene": "res://generated/scenes/fish/fish_catfish_bruiser.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_a", "time": 0.8},
+		],
+	},
+	{
+		"id": "ref_set_boxing_portrait", "kind": "set", "size": Vector2i(720, 1280),
+		"scene": "res://generated/scenes/environment/env_boxing_set.tscn",
+		"camera_marker": "Markers/CameraPortrait", "fov": 55.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "box_dodge_left", "time": 0.12, "show": "AccessoryMeshes/BoxingGloves"},
+			{"scene": "res://generated/scenes/fish/fish_arowana_don.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_c", "time": 1.0},
+		],
+	},
+	{
 		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
 		"scene": "res://generated/scenes/environment/env_market_set.tscn",
 		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,
@@ -219,10 +237,13 @@ func _render_set(subject: Dictionary) -> Image:
 		var model: Node3D = load(actor["scene"]).instantiate()
 		_stage.add_child(model)
 		model.global_transform = spot.global_transform
+		var shown := model.get_node_or_null(actor.get("show", "")) as Node3D
+		if shown != null:
+			shown.visible = true
 		var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
 		if player != null and player.has_animation(actor["clip"]):
 			player.play(actor["clip"])
-			player.seek(0.0, true)
+			player.seek(actor.get("time", 0.0), true)
 			player.pause()
 	_camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	_camera.fov = subject["fov"]
@@ -247,6 +268,10 @@ func _render_portrait(scene_path: String) -> Image:
 	_open_stage(PORTRAIT_SIZE, true, true)
 	var model: Node3D = load(scene_path).instantiate()
 	_stage.add_child(model)
+	# The book shows the fish as it lives in the lake, without its gloves.
+	var gloves := model.get_node_or_null("AccessoryMeshes/Gloves") as Node3D
+	if gloves != null:
+		gloves.visible = false
 	await process_frame
 	var bounds := AABB()
 	var first := true

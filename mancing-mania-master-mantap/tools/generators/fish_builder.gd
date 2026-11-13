@@ -6,9 +6,10 @@ extends RefCounted
 ## silhouettes differ by shape and not just by tint. The mesh is skinned along a
 ## spine, which lets the body bend smoothly when the fish swims or flops.
 ##
-## Bruiser Catfish is at final quality in this milestone. The other five have
-## their real body shapes; their signature accessories and personality clips
-## are added by the milestones that build their duels and dialogue.
+## Bruiser Catfish is at final quality. The other five have their real body
+## shapes; their signature accessories and personality clips are added by the
+## milestone that builds their dialogue. Every fish owns boxing gloves and the
+## boxing clips of the universal contract (GDD 172.6).
 
 const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
 const RigBuilder := preload("res://tools/generators/rig_builder.gd")
@@ -151,10 +152,12 @@ func build_fish(fish_id: StringName) -> Node3D:
 	var accessories := Node3D.new()
 	accessories.name = "AccessoryMeshes"
 	root.add_child(accessories)
-	if profile.get("gloves", false):
-		accessories.add_child(_mesh_instance("Gloves", _build_gloves(profile, skeleton), material))
+	# Every fish boxes, so every fish has gloves. Scenes hide them until needed.
+	accessories.add_child(_mesh_instance("Gloves", _build_gloves(profile, skeleton), material))
 
-	root.add_child(RigBuilder.make_player(_build_clips(skeleton, length)))
+	var clips := _build_clips(skeleton, length)
+	clips.append_array(_build_boxing_clips(skeleton, fish_id, length))
+	root.add_child(RigBuilder.make_player(clips))
 	return root
 
 
@@ -341,7 +344,7 @@ func _build_gloves(profile: Dictionary, skeleton: Skeleton3D) -> ArrayMesh:
 # --- Animation --------------------------------------------------------------
 
 ## The fishing-phase clips of the universal fish contract (GDD 172.6).
-## Duel clips are added by the milestone that builds each duel.
+## The clips of each duel are added by the milestone that builds it.
 func _build_clips(skeleton: Skeleton3D, length: float) -> Array:
 	var clips: Array = []
 
@@ -433,3 +436,161 @@ func _resample(sections: Array) -> Array:
 		result.append(middle)
 	result.append(sections[sections.size() - 1])
 	return result
+
+
+# --- Boxing clips (GDD 49, 172.6, 172.7) ------------------------------------
+# A boxing fish stands on its tail with its belly toward Darto. In that stance
+# node +X points at the opponent, +Y is up and the fins are the arms: fin_left
+# is on -Z, fin_right on +Z.
+#
+# Attack clips run on a normalized clock: the telegraph fills 0.0 to 1.0 and
+# is played at 1 / FishData.boxing_telegraph_sec, so every species shows the
+# same wind-up over its own telegraph time. After the impact the clip runs at
+# normal speed.
+
+const STAND_PITCH := 84.0
+const ATTACK_IMPACT_TIME := 1.0
+const ATTACK_CLIP_LENGTH := 1.5
+const MIRROR_SUFFIX := "_mirror"
+## Guard: tail curled as a foot, head tipped at the opponent, gloves up.
+const BOX_GUARD: Dictionary = {
+	"body_mid": Vector3(0, 0, 0),
+	"body_front": Vector3(0, 0, 0),
+	"jaw_or_head": Vector3(0, 0, -10),
+	"body_back": Vector3(0, 0, -12),
+	"tail_base": Vector3(0, 0, -30),
+	"tail_tip": Vector3(0, 0, 0),
+	"fin_left": Vector3(0, -64, 0),
+	"fin_right": Vector3(0, 64, 0),
+}
+## Species signature (GDD 172.7): [seconds per bounce, bounce height in body
+## lengths, sway in degrees]. Tilapia bounces fast, Arowana barely moves.
+const BOX_STYLE: Dictionary = {
+	&"catfish_bruiser": [1.0, 0.030, 4.0],
+	&"tilapia_gym_rat": [0.6, 0.050, 6.0],
+	&"gourami_shady": [1.6, 0.012, 2.0],
+	&"carp_golden": [1.4, 0.022, 3.0],
+	&"snakehead_sergeant": [0.8, 0.020, 1.5],
+	&"arowana_don": [2.0, 0.010, 1.5],
+}
+
+
+func _build_boxing_clips(skeleton: Skeleton3D, fish_id: StringName, length: float) -> Array:
+	var clips: Array = []
+	var style: Array = BOX_STYLE[fish_id]
+	var period: float = style[0]
+	var bounce: float = style[1]
+	var sway: float = style[2]
+
+	# Two bounces per loop, swaying once to each side.
+	var idle := RigBuilder.Clip.new(skeleton, &"box_idle", period * 2.0, true)
+	var lifts: Array[float] = [0.0, bounce, 0.0, bounce, 0.0]
+	var leans: Array[float] = [0.0, sway, 0.0, -sway, 0.0]
+	for step: int in 5:
+		var up := lifts[step] > 0.0
+		_box_pose(idle, length, period * 0.5 * float(step), Vector3(leans[step], 0, STAND_PITCH), Vector3(0, lifts[step], 0), {
+			"fin_left": Vector3(0, -70 if up else -64, 0), "fin_right": Vector3(0, 70 if up else 64, 0),
+			"tail_base": Vector3(0, 0, -36 if up else -30)})
+	clips.append(idle)
+
+	for variant: String in ["a", "b", "c"]:
+		clips.append(_attack_clip(skeleton, length, variant, 1.0))
+		clips.append(_attack_clip(skeleton, length, variant, -1.0))
+
+	# Both gloves in front of the face, a small lean away.
+	var block := RigBuilder.Clip.new(skeleton, &"box_block", 0.3)
+	_box_pose(block, length, 0.0)
+	_box_pose(block, length, 0.08, Vector3(0, 0, 88), Vector3(-0.03, 0, 0), {
+		"fin_left": Vector3(-38, -76, 0), "fin_right": Vector3(38, 76, 0), "jaw_or_head": Vector3(0, 0, -16)})
+	_box_pose(block, length, 0.18, Vector3(0, 0, 88), Vector3(-0.03, 0, 0), {
+		"fin_left": Vector3(-38, -76, 0), "fin_right": Vector3(38, 76, 0), "jaw_or_head": Vector3(0, 0, -16)})
+	_box_pose(block, length, 0.3)
+	clips.append(block)
+
+	# Rocked back on its tail, head snapping away, gloves flung wide.
+	var hit := RigBuilder.Clip.new(skeleton, &"box_hit", 0.4)
+	_box_pose(hit, length, 0.0)
+	_box_pose(hit, length, 0.08, Vector3(0, 0, 106), Vector3(-0.10, 0.01, 0), {
+		"fin_left": Vector3(22, -28, 0), "fin_right": Vector3(-22, 28, 0),
+		"jaw_or_head": Vector3(0, 0, 12), "body_back": Vector3(0, 0, -24)})
+	_box_pose(hit, length, 0.22, Vector3(0, 0, 96), Vector3(-0.06, 0, 0), {
+		"fin_left": Vector3(10, -46, 0), "fin_right": Vector3(-10, 46, 0), "jaw_or_head": Vector3(0, 0, 2)})
+	_box_pose(hit, length, 0.4)
+	clips.append(hit)
+
+	# Down: one stagger, then flat on its back with the gloves limp.
+	var ko := RigBuilder.Clip.new(skeleton, &"box_ko", 1.2)
+	_box_pose(ko, length, 0.0)
+	_box_pose(ko, length, 0.22, Vector3(8, 0, 112), Vector3(-0.08, 0.04, 0), {
+		"fin_left": Vector3(18, -30, 0), "fin_right": Vector3(-18, 30, 0), "jaw_or_head": Vector3(0, 0, 14)})
+	_box_pose(ko, length, 0.5, Vector3(-6, 0, 96), Vector3(-0.04, 0.0, 0), {
+		"fin_left": Vector3(0, -40, 0), "fin_right": Vector3(0, 40, 0)})
+	var down := {
+		"fin_left": Vector3(0, -12, 0), "fin_right": Vector3(0, 12, 0), "jaw_or_head": Vector3(0, 0, 6),
+		"body_back": Vector3(0, 0, 4), "tail_base": Vector3(0, 0, 14)}
+	_box_pose(ko, length, 0.85, Vector3(0, 0, 174), Vector3(-0.36, -0.34, 0), down)
+	_box_pose(ko, length, 0.95, Vector3(0, 0, 168), Vector3(-0.36, -0.31, 0), down)
+	_box_pose(ko, length, 1.2, Vector3(0, 0, 174), Vector3(-0.36, -0.35, 0), down)
+	clips.append(ko)
+	return clips
+
+
+## One attack. `side` +1 is the clip for a "dodge left" attack: the glove on
+## the player's right (fin_left) winds up and the head tips toward it, then
+## the whole fish lunges. `side` -1 is the mirror image. The wind-up pose is
+## reached early and held, so the direction is readable for the whole
+## telegraph (GDD 176.14).
+func _attack_clip(skeleton: Skeleton3D, length: float, variant: String, side: float) -> RefCounted:
+	var clip_name := "box_attack_%s%s" % [variant, "" if side > 0.0 else MIRROR_SUFFIX]
+	var clip := RigBuilder.Clip.new(skeleton, StringName(clip_name), ATTACK_CLIP_LENGTH)
+	var punching := "fin_left" if side > 0.0 else "fin_right"
+
+	# [root rotation, root offset, punching fin, head] for wind-up and strike,
+	# written for side +1.
+	var wind_up: Array
+	var strike: Array
+	match variant:
+		"a":  # straight
+			wind_up = [Vector3(-14, 20, 88), Vector3(-0.06, 0.04, 0.02), Vector3(26, -82, 0), Vector3(0, 0, -4)]
+			strike = [Vector3(6, -25, 70), Vector3(0.30, -0.02, -0.08), Vector3(-85, -10, 0), Vector3(0, 0, -18)]
+		"b":  # hook
+			wind_up = [Vector3(-10, 38, 86), Vector3(-0.04, 0.02, 0.05), Vector3(10, -22, 0), Vector3(0, 0, -6)]
+			strike = [Vector3(10, -40, 76), Vector3(0.24, 0.0, -0.14), Vector3(-60, -32, 0), Vector3(0, 0, -16)]
+		_:  # overhead
+			wind_up = [Vector3(-12, 8, 98), Vector3(-0.05, 0.16, 0.02), Vector3(0, -112, 0), Vector3(0, 0, 4)]
+			strike = [Vector3(4, -10, 56), Vector3(0.28, -0.06, -0.08), Vector3(-70, -42, 0), Vector3(0, 0, -22)]
+
+	_box_pose(clip, length, 0.0)
+	for time: float in [0.25, 0.8]:
+		# A slow creep further into the wind-up keeps the hold alive.
+		var creep := 1.0 if time < 0.5 else 1.15
+		_box_pose(clip, length, time, _side_rot(wind_up[0] * Vector3(creep, creep, 1.0), side), _side_offset(wind_up[1], side), {
+			punching: _fin_rot(wind_up[2], side), "jaw_or_head": wind_up[3]})
+	for time: float in [ATTACK_IMPACT_TIME, 1.15]:
+		_box_pose(clip, length, time, _side_rot(strike[0], side), _side_offset(strike[1], side), {
+			punching: _fin_rot(strike[2], side), "jaw_or_head": strike[3]})
+	_box_pose(clip, length, ATTACK_CLIP_LENGTH)
+	clip.mark(&"telegraph_start", 0.0).mark(&"impact", ATTACK_IMPACT_TIME).mark(&"recovery_end", ATTACK_CLIP_LENGTH)
+	return clip
+
+
+## Keys the whole fish at `time`: the guard with `changes` on top.
+func _box_pose(clip: RefCounted, length: float, time: float, root_rotation: Vector3 = Vector3(0, 0, STAND_PITCH), root_offset: Vector3 = Vector3.ZERO, changes: Dictionary = {}) -> void:
+	clip.rot("root", time, root_rotation)
+	clip.move("root", time, (Vector3(0, 0.46, 0) + root_offset) * length)
+	for bone: String in BOX_GUARD:
+		clip.rot(bone, time, changes.get(bone, BOX_GUARD[bone]))
+
+
+## Mirrors a root rotation: lean and twist flip, the upright pitch does not.
+func _side_rot(rotation: Vector3, side: float) -> Vector3:
+	return Vector3(rotation.x * side, rotation.y * side, rotation.z)
+
+
+func _side_offset(offset: Vector3, side: float) -> Vector3:
+	return Vector3(offset.x, offset.y, offset.z * side)
+
+
+## Fin angles are written for the left fin; the right fin is its mirror.
+func _fin_rot(rotation: Vector3, side: float) -> Vector3:
+	return Vector3(rotation.x * side, rotation.y * side, rotation.z)

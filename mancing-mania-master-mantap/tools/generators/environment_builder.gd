@@ -7,8 +7,9 @@ extends RefCounted
 ## poles and low-detail houses on the far side. Everything is placed from a
 ## fixed seed, so the set is identical on every run.
 ##
-## The lake and the Market are built here. The home and duel sets are added
-## by their own milestones; the motorcycles arrive with the vehicle builder.
+## The lake, the Market and the boxing ring are built here. The home and the
+## other duel sets are added by their own milestones; the motorcycles arrive
+## with the vehicle builder.
 
 const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
@@ -60,6 +61,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 	var sets: Dictionary[String, Array] = {
 		"env_lake_set": [build_lake_set, LAKE_SET_PATH],
 		"env_market_set": [build_market_set, MARKET_SET_PATH],
+		"env_boxing_set": [build_boxing_set, BOXING_SET_PATH],
 	}
 	for set_id: String in sets:
 		var root: Node3D = sets[set_id][0].call()
@@ -774,4 +776,182 @@ func _build_market_shell() -> ArrayMesh:
 	builder.box(Vector3(3.2, 0.42, 0.03), Vector3(-0.3, top - 0.32, front - 0.02))
 	builder.color = FADED_RED
 	builder.box(Vector3(2.4, 0.07, 0.035), Vector3(-0.3, top - 0.3, front - 0.018))
+	return builder.commit()
+
+
+# --- Boxing set (GDD 185.16) ------------------------------------------------
+# A ring somebody improvised on the lake bank: a patched mat, bamboo posts,
+# two ropes and a string of bulbs. The fish stands on the corner stool, which
+# puts it at Darto's chest height. The lake is behind the fish.
+
+const BOXING_SET_PATH := "res://generated/scenes/environment/env_boxing_set.tscn"
+const BOXING_STOOL_HEIGHT := 0.62
+const BOXING_FISH_SPOT := Vector3(0.36, BOXING_STOOL_HEIGHT, -0.58)
+const BOXING_DARTO_SPOT := Vector3(-0.42, 0.04, 0.78)
+const BOXING_BANK_Z := -4.6
+
+
+func build_boxing_set() -> Node3D:
+	var random := RandomNumberGenerator.new()
+	random.seed = PLACEMENT_SEED + 4
+	var solid: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var foliage: Material = load(MaterialBuilder.FOLIAGE_SWAY)
+
+	var root := Node3D.new()
+	root.name = "EnvBoxingSet"
+	var lighting := _build_lighting()
+	var sun := lighting.get_node("Sun") as DirectionalLight3D
+	sun.transform = Transform3D(Basis.looking_at(-Vector3(-0.7, 0.42, 0.5).normalized(), Vector3.UP), Vector3(0, 12, 0))
+	sun.light_energy = 0.85
+	sun.directional_shadow_max_distance = 26.0
+	root.add_child(lighting)
+
+	root.add_child(_instance("Ground", _build_boxing_ground(random), solid, false))
+	root.add_child(_instance("EnvLakeWater", _build_boxing_water(), load(MaterialBuilder.LAKE_WATER), false))
+	root.add_child(_instance("FarShore", _build_boxing_far_shore(random), solid, false))
+	root.add_child(_instance("BulbString", _build_bulb_string(), solid, false))
+
+	var trees := Node3D.new()
+	trees.name = "Trees"
+	root.add_child(trees)
+	for spot: Array in [[Vector2(-6.2, -2.4), 6.6, 3.4, 0.75], [Vector2(6.8, 1.5), 7.2, 2.6, 1.1]]:
+		var tree := _build_tree("Tree%d" % trees.get_child_count(), Vector2.ZERO, spot[1], spot[2], spot[3], random, solid, foliage)
+		tree.position = Vector3(spot[0].x, 0.0, spot[0].y)
+		trees.add_child(tree)
+
+	var props := Node3D.new()
+	props.name = "Props"
+	root.add_child(props)
+	var fish_yaw := atan2(-(BOXING_DARTO_SPOT.z - BOXING_FISH_SPOT.z), BOXING_DARTO_SPOT.x - BOXING_FISH_SPOT.x)
+	var placements: Array = [
+		["prop_boxing_mat", "Mat", Vector3(0, 0.02, 0), 0.0],
+		["prop_boxing_ropes", "Ropes", Vector3(0, 0.02, 0), 0.0],
+		["prop_boxing_corner_stool", "FishStool", Vector3(BOXING_FISH_SPOT.x, 0.04, BOXING_FISH_SPOT.z), fish_yaw + 0.5],
+		["prop_boxing_corner_stool", "CornerStool", Vector3(-1.55, 0.04, 1.5), 0.6],
+		["prop_bucket_blue", "Bucket", Vector3(-1.2, 0.04, 1.72), 0.0],
+	]
+	for placement: Array in placements:
+		var scene := load(PROP_PATH % placement[0]) as PackedScene
+		if scene == null:
+			push_error("environment_builder: missing prop scene %s" % placement[0])
+			continue
+		var prop: Node3D = scene.instantiate()
+		prop.name = placement[1]
+		prop.transform = Transform3D(Basis(Vector3.UP, placement[3]), placement[2])
+		props.add_child(prop)
+
+	# Warm practical light from the bulbs over the ring (GDD 185.16).
+	for index: int in 2:
+		var bulb := OmniLight3D.new()
+		bulb.name = "BulbLight%d" % index
+		bulb.position = Vector3(-1.1 + 2.2 * float(index), 2.25, -0.3)
+		bulb.light_color = Color(1.0, 0.82, 0.55)
+		bulb.light_energy = 0.55
+		bulb.omni_range = 4.5
+		bulb.shadow_enabled = false
+		root.add_child(bulb)
+
+	var markers := Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	var to_fish := BOXING_FISH_SPOT - BOXING_DARTO_SPOT
+	var spots: Dictionary[String, Transform3D] = {
+		# The fish's belly (+X in its boxing stance) faces Darto, and Darto
+		# (who faces -Z) is turned toward the fish.
+		"FishSpot": Transform3D(Basis(Vector3.UP, fish_yaw), BOXING_FISH_SPOT),
+		"DartoSpot": Transform3D(Basis(Vector3.UP, atan2(-to_fish.x, -to_fish.z)), BOXING_DARTO_SPOT),
+		"CameraLandscape": _look(Vector3(1.1, 1.66, 2.95), Vector3(-0.04, 1.1, -0.25)),
+		"CameraPortrait": _look(Vector3(0.6, 2.0, 3.9), Vector3(-0.08, 0.62, -0.1)),
+	}
+	for marker_name: String in spots:
+		var marker := Marker3D.new()
+		marker.name = marker_name
+		marker.transform = spots[marker_name]
+		markers.add_child(marker)
+	return root
+
+
+## Grass with worn earth around the ring, ending at the water's edge.
+func _build_boxing_ground(random: RandomNumberGenerator) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	var step := 1.4
+	var half_x := 30.8
+	var near := 14.0
+	var columns := int(half_x * 2.0 / step)
+	var rows := int((near - BOXING_BANK_Z) / step)
+	var points: Array = []
+	for row: int in rows + 1:
+		var line := PackedVector3Array()
+		for column: int in columns + 1:
+			var x := -half_x + column * step
+			var z := BOXING_BANK_Z + row * step
+			if row > 0 and row < rows and column > 0 and column < columns:
+				x += random.randf_range(-0.35, 0.35)
+				z += random.randf_range(-0.35, 0.35)
+			# The bank dips under the water along its lake-side edge.
+			var height := 0.02 * sin(x * 0.5) * sin(z * 0.6) - (0.3 if row == 0 else 0.0)
+			line.append(Vector3(x, height, z))
+		points.append(line)
+	for row: int in rows:
+		for column: int in columns:
+			var corners: Array = [points[row][column], points[row][column + 1], points[row + 1][column + 1], points[row + 1][column]]
+			var pairs: Array = [[0, 1, 2], [0, 2, 3]] if (row + column) % 2 == 0 else [[0, 1, 3], [1, 2, 3]]
+			for triangle: Array in pairs:
+				var a: Vector3 = corners[triangle[0]]
+				var b: Vector3 = corners[triangle[1]]
+				var c: Vector3 = corners[triangle[2]]
+				var centre := (a + b + c) / 3.0
+				var worn := clampf(1.0 - Vector2(centre.x, centre.z).length() / 4.4, 0.0, 1.0)
+				var wet := smoothstep(BOXING_BANK_Z + 1.6, BOXING_BANK_Z, centre.z)
+				var grass := GRASS_DARK.lerp(GRASS_LIGHT, 0.5 + 0.5 * sin(centre.x * 0.33) * sin(centre.z * 0.29 + 1.0)).lerp(GRASS, 0.4)
+				builder.color = grass.lerp(EARTH, smoothstep(0.1, 0.55, worn)).lerp(MUD, wet).lightened((random.randf() - 0.5) * 0.08)
+				builder.triangle(a, b, c, Vector3(centre.x, -100.0, centre.z))
+	return builder.commit()
+
+
+func _build_boxing_water() -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.color = Color.WHITE
+	var step := 4.0
+	var x := -60.0
+	while x < 60.0:
+		var z := -64.0
+		while z < BOXING_BANK_Z + 0.4:
+			builder.quad(Vector3(x, -0.08, z), Vector3(x + step, -0.08, z), Vector3(x + step, -0.08, z + step), Vector3(x, -0.08, z + step), Vector3(x, -10, z))
+			z += step
+		x += step
+	return builder.commit()
+
+
+## The far bank: a low strip of land with a hazy line of crowns.
+func _build_boxing_far_shore(random: RandomNumberGenerator) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.color = GRASS.lerp(FAR_HAZE, 0.45)
+	builder.quad(Vector3(-140, 0.15, -150), Vector3(140, 0.15, -150), Vector3(140, 0.15, -62), Vector3(-140, 0.15, -62), Vector3(0, -100, -100))
+	for index: int in 26:
+		var x := lerpf(-95.0, 95.0, float(index) / 25.0) + random.randf_range(-2.0, 2.0)
+		var size := random.randf_range(4.5, 8.0)
+		builder.color = LEAF_DARK.lerp(LEAF, random.randf()).lerp(FAR_HAZE, 0.5)
+		builder.blob(Vector3(x, size * 0.6, random.randf_range(-78.0, -66.0)), Vector3(size * 1.5, size * 0.8, size), 7, 4, 0.18, random.randi())
+	return builder.commit()
+
+
+## Two tall bamboo poles with a wire of bare bulbs sagging between them.
+func _build_bulb_string() -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	var left := Vector3(-2.6, 0, -0.4)
+	var right := Vector3(2.6, 0, -0.2)
+	builder.color = Color("b79a55")
+	for base: Vector3 in [left, right]:
+		builder.tube(base - Vector3(0, 0.1, 0), base + Vector3(0, 2.75, 0), 0.05, 0.04, 7, true)
+	var previous := left + Vector3(0, 2.7, 0)
+	for step: int in range(1, 11):
+		var along := float(step) / 10.0
+		var point := (left + Vector3(0, 2.7, 0)).lerp(right + Vector3(0, 2.7, 0), along) - Vector3(0, sin(along * PI) * 0.34, 0)
+		builder.color = Color("3a3631")
+		builder.tube(previous, point, 0.006, 0.006, 4, false)
+		if step < 10:
+			builder.color = Color("fff0c2")
+			builder.blob(point - Vector3(0, 0.06, 0), Vector3(0.04, 0.05, 0.04), 6, 4)
+		previous = point
 	return builder.commit()

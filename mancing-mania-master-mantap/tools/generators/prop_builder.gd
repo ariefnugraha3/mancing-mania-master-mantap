@@ -41,6 +41,9 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		HANGING_LAMP: _build_lamp,
 		MARKET_PRICE_BOARD: _build_price_board,
 		MARKET_FAN: _build_fan,
+		BOXING_STOOL: _build_stool,
+		BOXING_ROPES: _build_ropes,
+		BOXING_MAT: _build_mat,
 	}
 	for prop_id: String in props:
 		var root: Node3D = props[prop_id].call()
@@ -406,3 +409,88 @@ func _build_fan() -> Node3D:
 	blades_node.position = Vector3(0, 0.22, 0.028)
 	root.add_child(blades_node)
 	return root
+
+
+# --- Boxing props (GDD 174.7, 185.16) ---------------------------------------
+
+const BOXING_STOOL := "prop_boxing_corner_stool"
+const BOXING_ROPES := "prop_boxing_ropes"
+const BOXING_MAT := "prop_boxing_mat"
+## Height of the stool seat. The fish stands on it, at Darto's chest height.
+const STOOL_HEIGHT := 0.62
+## Half the side of the roped square.
+const RING_HALF := 2.1
+const ROPE := Color("c9b68a")
+const BAMBOO := Color("b79a55")
+
+
+## A plain wooden stool with splayed legs and a towel over one edge.
+func _build_stool() -> Node3D:
+	var builder := MeshBuilder.new()
+	var seat := 0.46
+	builder.color = WOOD
+	builder.box(Vector3(seat, 0.045, seat), Vector3(0, STOOL_HEIGHT - 0.0225, 0))
+	builder.color = WOOD_DARK
+	for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		builder.tube(
+			Vector3(corner.x * 0.17, STOOL_HEIGHT - 0.045, corner.y * 0.17),
+			Vector3(corner.x * 0.24, 0, corner.y * 0.24), 0.026, 0.02, 6)
+	builder.box(Vector3(0.4, 0.03, 0.025), Vector3(0, 0.26, 0.2))
+	builder.box(Vector3(0.4, 0.03, 0.025), Vector3(0, 0.26, -0.2))
+	builder.color = CREAM
+	builder.box(Vector3(0.16, 0.012, 0.2), Vector3(0.12, STOOL_HEIGHT + 0.006, -0.14))
+	builder.box(Vector3(0.16, 0.2, 0.012), Vector3(0.12, STOOL_HEIGHT - 0.1, -0.236))
+	return _wrap(builder)
+
+
+## Four bamboo posts and two sagging ropes on three sides of a square: a ring
+## somebody put up in an afternoon. The side toward the camera (+Z) is left
+## open, so no rope ever crosses the fight.
+func _build_ropes() -> Node3D:
+	var builder := MeshBuilder.new()
+	var corners: Array[Vector3] = [
+		Vector3(-RING_HALF, 0, -RING_HALF), Vector3(RING_HALF, 0, -RING_HALF),
+		Vector3(RING_HALF, 0, RING_HALF), Vector3(-RING_HALF, 0, RING_HALF)]
+	for index: int in corners.size():
+		var base := corners[index]
+		# No two posts are quite the same height or quite upright.
+		var top := base + Vector3(0.04 * (float(index % 2) - 0.5), 1.34 + 0.06 * float(index % 3), 0.03 * (float(index / 2) - 0.5))
+		builder.color = BAMBOO.darkened(0.06 * float(index % 2))
+		builder.tube(base - Vector3(0, 0.1, 0), top, 0.045, 0.038, 7, true)
+		builder.color = BAMBOO.darkened(0.3)
+		for knot: float in [0.45, 0.9]:
+			var at := base.lerp(top, knot / 1.4)
+			builder.tube(at, at + Vector3(0, 0.02, 0), 0.049, 0.049, 7, false)
+	for height: float in [0.62, 1.08]:
+		builder.color = ROPE if height > 1.0 else ROPE.darkened(0.12)
+		for index: int in corners.size():
+			if index == 2:
+				continue
+			var from := corners[index] + Vector3(0, height, 0)
+			var to := corners[(index + 1) % corners.size()] + Vector3(0, height, 0)
+			var previous := from
+			for step: int in range(1, 7):
+				var along := float(step) / 6.0
+				var point := from.lerp(to, along) - Vector3(0, sin(along * PI) * 0.09, 0)
+				builder.tube(previous, point, 0.016, 0.016, 5, false)
+				previous = point
+	return _wrap(builder)
+
+
+## A patched woven mat with a faded border: the ring floor.
+func _build_mat() -> Node3D:
+	var builder := MeshBuilder.new()
+	var half := RING_HALF - 0.15
+	builder.color = FADED_RED.lerp(CREAM, 0.25)
+	builder.box(Vector3(half * 2.0, 0.02, half * 2.0), Vector3(0, 0.01, 0))
+	# Woven strips in two tones.
+	var strips := 12
+	for strip: int in strips:
+		var z := -half + 0.1 + (float(strip) + 0.5) * (half * 2.0 - 0.2) / float(strips)
+		builder.color = CREAM.darkened(0.2 if strip % 2 == 0 else 0.29)
+		builder.box(Vector3(half * 2.0 - 0.2, 0.012, (half * 2.0 - 0.2) / float(strips) - 0.012), Vector3(0, 0.026, z))
+	builder.color = OLIVE.darkened(0.1)
+	builder.box(Vector3(0.7, 0.012, 0.5), Vector3(-0.9, 0.034, 0.7))
+	builder.color = FADED_RED
+	builder.box(Vector3(0.42, 0.012, 0.42), Vector3(1.1, 0.034, -0.9))
+	return _wrap(builder)
