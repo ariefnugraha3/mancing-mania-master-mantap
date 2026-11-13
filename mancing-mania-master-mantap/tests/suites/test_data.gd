@@ -295,3 +295,32 @@ func test_text_table_is_complete_and_clean() -> bool:
 	check_eq(TextDb.t(&"definitely.missing.key"), "#definitely.missing.key#", "missing key is visible, not blank")
 	check_eq(TextDb.tf(&"menu.version", {"version": "1.2.3"}), "v1.2.3", "formatted text")
 	return true
+
+
+## A script that fails to compile breaks every script that uses it, often
+## without any other test noticing. Every game script must load cleanly.
+func test_every_script_compiles() -> bool:
+	var broken := PackedStringArray()
+	var count := 0
+	for root: String in ["res://autoload", "res://scripts", "res://tools"]:
+		count += _check_scripts(root, broken)
+	check(count >= 100, "found the project's scripts (%d)" % count)
+	check_empty(broken, "scripts that fail to compile")
+	return true
+
+
+func _check_scripts(path: String, broken: PackedStringArray) -> int:
+	var count := 0
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return 0
+	for file: String in dir.get_files():
+		if not file.ends_with(".gd"):
+			continue
+		count += 1
+		var script := load(path.path_join(file)) as GDScript
+		if script == null or not script.can_instantiate():
+			broken.append(path.path_join(file))
+	for child: String in dir.get_directories():
+		count += _check_scripts(path.path_join(child), broken)
+	return count
