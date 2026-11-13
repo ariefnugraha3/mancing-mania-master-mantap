@@ -32,6 +32,10 @@ const BOXING_SFX_IDS: Array[StringName] = [
 	&"box_glove_swing", &"box_hit_light", &"box_hit_heavy", &"box_block",
 	&"box_dodge", &"box_perfect", &"box_ko",
 ]
+## Arm wrestling sounds (GDD 175.9).
+const ARM_SFX_IDS: Array[StringName] = [
+	&"arm_table_creak", &"arm_strain", &"arm_mash_click", &"arm_burst_warning", &"arm_win", &"arm_lose",
+]
 
 const UI_VOICES := 4
 const SFX_VOICES := 8
