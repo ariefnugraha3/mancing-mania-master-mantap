@@ -725,3 +725,116 @@ func test_boxing_inputs_pause_and_both_screen_shapes() -> bool:
 	await wait_frames(3)
 	DebugService.clear_forces()
 	return true
+
+
+# --- Arm wrestling (GDD 168.8, 95, 176.13) ----------------------------------
+
+const TABLE := "ArmCanvas/SafeRoot/"
+
+
+## From the lake, hand a hooked fish to any duel scene.
+func _enter_duel(duel_id: StringName, fish_id: StringName) -> bool:
+	if not await _enter_lake():
+		return false
+	GameState.set_tutorial_seen(&"boxing_seen")
+	var fish := GameData.get_fish(fish_id)
+	GameState.record_encounter(fish_id)
+	GameState.current_fish = fish_id
+	GameState.current_duel = duel_id
+	GameState.current_catch = {"fish_id": fish_id, "weight_kg": fish.weight_min_kg, "is_big_one": false, "seed": 9}
+	SceneRouter.goto_duel(duel_id, fish_id)
+	var reached := await wait_until(func() -> bool: return _finished_transitions.has(duel_id), BOOT_TIMEOUT_SEC)
+	await wait_frames(3)
+	return reached and tree.current_scene != null
+
+
+func test_arm_wrestle_scene_follows_the_blueprint_and_plays() -> bool:
+	if not check(await _enter_duel(&"arm_wrestle", &"gourami_shady"), "a hooked fish reaches the table"):
+		return true
+	var scene := tree.current_scene
+	check_eq(scene.name, &"ArmWrestle", "the Arm Wrestling scene is up")
+	for path: String in [
+		"ArmWrestleController", "World/ArmWrestleSet", "World/DartoArmRig", "World/FishArmRig", "World/ArmCamera",
+		TABLE + "PositionBar", TABLE + "StaminaBar", TABLE + "RoundTimer", TABLE + "BurstWarning", TABLE + "MashButton",
+		"PauseOverlay",
+	]:
+		check(scene.has_node(path), "node %s exists (GDD 168.8)" % path)
+	var controller := scene.get_node("ArmWrestleController") as ArmWrestleController
+	var world := scene.get_node("World") as ArmWrestleWorld
+	var hud := scene.get_node("ArmCanvas") as ArmWrestleHud
+	check_eq(controller.get_snapshot()["fish_id"], &"gourami_shady", "the table holds the fish that was hooked")
+	check(await wait_until(func() -> bool: return controller.get_state() == ArmWrestleController.STATE_PULLING, 3.0), "the pull starts")
+
+	# The MASH action and the touch button are the same input.
+	var start: float = controller.get_snapshot()["position"]
+	for _press: int in 3:
+		InputManager.press_action(&"arm_mash")
+		await wait_frames(1)
+		InputManager.release_action(&"arm_mash")
+		await wait_seconds(0.12)
+	check(controller.get_snapshot()["stamina"] < 100.0, "the MASH action is accepted")
+	var mash := scene.get_node(TABLE + "MashButton") as BaseButton
+	var stamina: float = controller.get_snapshot()["stamina"]
+	mash.button_down.emit()
+	await wait_frames(2)
+	mash.button_up.emit()
+	check(float(controller.get_snapshot()["stamina"]) < stamina, "the MASH button presses the same action")
+	check(world.get_darto_clip() == &"arm_push_hard" or world.get_darto_clip() == &"arm_push_light", "Darto pushes while pressing")
+	check(not (world.get_fish_rig_node().get_node("AccessoryMeshes/Gloves") as Node3D).visible, "no gloves at the table")
+
+	# The hands lean the way the bar moves.
+	await wait_seconds(1.5)
+	var position: float = controller.get_snapshot()["position"]
+	check(signf(world.get_shown_lean()) == signf(position) or absf(position) < 1.0, "the arm leans to the side the bar shows")
+	var bar := hud.get_position_bar()
+	check((bar.get_marker_ratio() < 0.5) == (position > 0.0) or absf(position) < 0.5, "Darto winning moves the marker toward his end")
+
+	# Pause stops the clock.
+	InputManager.press_action(InputActions.PAUSE)
+	var pause := scene.get_node("PauseOverlay") as PauseOverlay
+	check(await wait_until(pause.is_open, 2.0), "the pause action opens the pause menu")
+	InputManager.release_action(InputActions.PAUSE)
+	var frozen: float = controller.get_snapshot()["time_left"]
+	await wait_seconds(0.4)
+	check_eq(controller.get_snapshot()["time_left"], frozen, "the round clock is frozen while paused")
+	pause.resume()
+
+	# A bot finishes it; the shared result flow takes over.
+	DebugService.set_auto_duel(true)
+	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
+	check(await wait_until(overlay.is_open, 40.0), "the match ends and the result is shown")
+	check(controller.get_result()["player_won"], "a steady seven taps a second beats the gourami")
+	check_eq(GameState.get_bucket_quantity(&"gourami_shady"), 1, "the gourami is in the Bucket")
+	check_eq(GameState.get_stat(&"arm_wrestle_wins"), 1, "one arm wrestling win")
+	check(GameState.is_tutorial_seen(&"arm_wrestle_seen"), "the arm wrestling hint is done")
+	overlay.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
+	DebugService.clear_forces()
+	return true
+
+
+# ARM-012 (automatic part) and GDD Section 95.
+func test_arm_wrestle_portrait_layout() -> bool:
+	if not check(await _enter_duel(&"arm_wrestle", &"catfish_bruiser"), "reach the table"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("ArmCanvas") as ArmWrestleHud
+	var safe_root := scene.get_node("ArmCanvas/SafeRoot") as Control
+	var window := tree.root
+	var original_size := window.size
+	window.size = Vector2i(720, 1280)
+	await wait_frames(4)
+	var area := safe_root.get_global_rect()
+	var mash := (scene.get_node(TABLE + "MashButton") as Control).get_global_rect()
+	var bar := (scene.get_node(TABLE + "PositionBar") as Control).get_global_rect()
+	check(hud.uses_touch_layout() and (scene.get_node(TABLE + "MashButton") as Control).visible, "portrait shows the MASH button")
+	check(mash.position.y >= area.position.y + area.size.y * 0.69, "MASH fills the bottom 30%")
+	check(mash.size.x >= area.size.x - 2.0 and mash.size.y >= 200.0, "MASH is one large target (%dx%d)" % [int(mash.size.x), int(mash.size.y)])
+	check(area.grow(1.0).encloses(mash), "MASH is inside the safe area")
+	check(bar.position.y >= area.position.y + area.size.y * 0.55 and bar.end.y <= mash.position.y, "the bars sit in the middle, above MASH")
+	check(not bar.intersects(mash), "the bars and MASH do not overlap")
+	var camera := scene.get_node("World/ArmCamera") as Camera3D
+	check(camera.transform.is_equal_approx((scene.get_node("World/ArmWrestleSet/Markers/CameraPortrait") as Node3D).transform), "portrait uses its own camera")
+	window.size = original_size
+	await wait_frames(3)
+	return true

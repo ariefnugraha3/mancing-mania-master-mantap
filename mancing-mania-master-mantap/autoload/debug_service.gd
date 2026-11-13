@@ -242,7 +242,7 @@ func _mark_dirty() -> void:
 ##   --mm-fast-wait                                  half-second bite wait
 ##   --mm-auto-reel                                  a bot plays the reel
 ##   --mm-auto-duel                                  a bot plays the duel
-##   --mm-duel=<fish id>                             start a game if needed and box that fish
+##   --mm-duel=<fish id>[:<duel id>]                 start a game if needed and duel that fish
 ##   --mm-result=<win|loss>                          force the result of the next duel
 ##   --mm-attack-side=<left|right>                   force the boxing attack direction
 ##   --mm-upgrade=<upgrade id>:<level>               set an upgrade level
@@ -300,15 +300,17 @@ func _run_command_line_tools() -> void:
 				if not GameState.has_active_game():
 					GameState.new_game()
 				_mark_dirty()
-				var duel_fish := GameData.get_fish(StringName(value))
+				var duel_parts := value.split(":")
+				var duel_id := StringName(duel_parts[1]) if duel_parts.size() > 1 else &"boxing"
+				var duel_fish := GameData.get_fish(StringName(duel_parts[0]))
 				if duel_fish == null:
 					GameLog.error(&"DEBUG", "--mm-duel got an unknown fish", {"fish": value})
 				else:
 					GameState.record_encounter(duel_fish.id)
 					GameState.current_fish = duel_fish.id
-					GameState.current_duel = &"boxing"
+					GameState.current_duel = duel_id
 					GameState.current_catch = {"fish_id": duel_fish.id, "weight_kg": duel_fish.weight_max_kg * 0.7, "is_big_one": false, "seed": 1}
-					SceneRouter.goto_duel(&"boxing", duel_fish.id)
+					SceneRouter.goto_duel(duel_id, duel_fish.id)
 					await SceneRouter.transition_finished
 			"result":
 				set_forced_result(StringName(value))
