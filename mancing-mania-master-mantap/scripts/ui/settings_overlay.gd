@@ -1,8 +1,8 @@
 class_name SettingsOverlay
 extends OverlayPanel
-## Settings screen (GDD 86, 167.9). Milestone 1 ships the Audio section and the
-## Save section; Visual, Accessibility and Controls are added by the milestone
-## that implements those options. Every change is autosaved through GameState.
+## Settings screen (GDD 86, 167.9, 189.9, 189.10): Audio, Rhythm and Save.
+## Visual, Accessibility and Controls are added by the milestone that
+## implements those options. Every change is autosaved through GameState.
 
 ## Emitted after RESET SAVE removed the save, so the caller can refresh.
 signal save_reset()
@@ -16,6 +16,10 @@ var _reset_note: Label
 var _close_button: GameButton
 var _dialog: ModalDialog
 var _refreshing: bool = false
+var _beat_pulse: GameButton
+var _offset_labels: Dictionary[StringName, Label] = {}
+var _calibration: CalibrationOverlay
+const OFFSET_STEP_MS := 5
 
 
 func build_content() -> void:
@@ -30,6 +34,20 @@ func build_content() -> void:
 	content.add_child(grid)
 	for key: StringName in [&"master_volume", &"music_volume", &"sfx_volume", &"ambience_volume", &"ui_volume"]:
 		_add_volume_row(grid, key)
+
+	content.add_child(make_label(TextDb.t(&"settings.section.rhythm"), UiTokens.TYPE_HEADER))
+	_beat_pulse = make_button("")
+	_beat_pulse.name = "BeatPulseToggle"
+	_beat_pulse.pressed.connect(func() -> void:
+		GameState.set_setting(&"rhythm_beat_pulse", not bool(GameState.get_setting(&"rhythm_beat_pulse")))
+		_refresh())
+	content.add_child(_beat_pulse)
+	for key: StringName in [&"rhythm_input_offset_ms", &"rhythm_visual_offset_ms"]:
+		_add_offset_row(key)
+	var calibrate := make_button(TextDb.t(&"settings.rhythm.calibrate"))
+	calibrate.name = "CalibrateButton"
+	calibrate.pressed.connect(func() -> void: _calibration.open())
+	content.add_child(calibrate)
 
 	content.add_child(make_label(TextDb.t(&"settings.section.save"), UiTokens.TYPE_HEADER))
 	_reset_note = make_label(TextDb.t(&"settings.no_save"), UiTokens.TYPE_SMALL)
@@ -46,6 +64,33 @@ func build_content() -> void:
 	_dialog = ModalDialog.new()
 	_dialog.name = "SettingsDialog"
 	add_child(_dialog)
+	_calibration = CalibrationOverlay.new()
+	_calibration.name = "Calibration"
+	_calibration.finished.connect(_refresh)
+	add_child(_calibration)
+
+
+## An offset in milliseconds with - and + buttons (GDD 189.10).
+func _add_offset_row(key: StringName) -> void:
+	var row := HBoxContainer.new()
+	content.add_child(row)
+	var name_label := make_label(TextDb.t(StringName("settings.rhythm.%s" % key)))
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(name_label)
+	for step: int in [-OFFSET_STEP_MS, OFFSET_STEP_MS]:
+		var button := GameButton.new()
+		button.text = "-" if step < 0 else "+"
+		button.custom_minimum_size.x = UiTokens.TOUCH_TARGET_PREFERRED
+		button.pressed.connect(func() -> void:
+			GameState.set_setting(key, int(GameState.get_setting(key)) + step)
+			_refresh())
+		row.add_child(button)
+		if step < 0:
+			var value := Label.new()
+			value.custom_minimum_size.x = 84.0
+			value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			row.add_child(value)
+			_offset_labels[key] = value
 
 
 func open() -> void:
@@ -92,6 +137,9 @@ func _refresh() -> void:
 		_sliders[key].value = value
 		_value_labels[key].text = _percent(value)
 	_refreshing = false
+	_beat_pulse.text = TextDb.t(&"settings.rhythm.beat_pulse_on" if GameState.get_setting(&"rhythm_beat_pulse") else &"settings.rhythm.beat_pulse_off")
+	for key: StringName in _offset_labels:
+		_offset_labels[key].text = TextDb.tf(&"settings.rhythm.ms", {"ms": int(GameState.get_setting(key))})
 	var has_save := SaveManager.has_save()
 	_reset_button.disabled = not has_save
 	_reset_note.visible = not has_save
