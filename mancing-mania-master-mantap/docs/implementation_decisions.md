@@ -459,3 +459,53 @@ Selama Wheel belum ada (Milestone 7): duel pertama selalu tinju (Section 176.10)
 ### D-072 — Audio panco
 
 Enam suara Section 175.9: derit meja (`creak`, bervariasi), regangan tangan (`noise_sweep`, bervariasi), klik MASH yang makin pelan saat laju naik, denyut naik sebelum burst (`rising_pulse`), fanfare parodi menang (`fanfare`), dan dua nada turun saat kalah (`two_note_down`). Musik panco masih diam sampai Milestone 6.
+
+## Milestone 6 — Joget dan musik prosedural
+
+### D-073 — Musik dirender, bukan disintesis langsung
+
+Section 175.2 menyarankan `AudioStreamGenerator` untuk stream kontinu. Mensintesis banyak suara pada 48 kHz di GDScript setiap frame terlalu mahal untuk Web dan Android. Musik dirender lebih dulu ke `AudioStreamWAV` di memori pada 22.050 Hz mono:
+
+- setiap nada (instrumen, nada, panjang) disintesis sekali dan dipakai ulang;
+- jadwal nada dicampur sedikit demi sedikit dengan anggaran 4 ms per frame;
+- loop state (danau, menu, tinju, panco) dirender di latar saat pertama dibutuhkan;
+- lagu joget dirender saat layar "GET READY", sebelum duel dimulai.
+
+Semuanya tetap dari kode dan angka; tidak ada file audio. Jadwal musik dibuat sebelum duel (Section 175.10).
+
+### D-074 — Jam lagu
+
+Jam lagu = posisi pemutaran + waktu sejak mix terakhir − latensi output, dan tidak pernah mundur. Penilaian memakai jam ini, bukan delta frame. Tombol lajur dibaca di `_unhandled_input` dan sentuhan di `button_down`, jadi waktunya diambil saat input datang. Input tetap baru sampai ke game di awal frame berikutnya, sehingga di 30 FPS rata-rata terlambat sekitar 16 ms; offset kalibrasi mengimbanginya.
+
+### D-075 — Chart
+
+- Seed chart = seed duel (save seed + penghitung duel) dicampur id ikan (Section 58).
+- Nada diambil dari pukulan kendang, snare, dan melodi di timeline lagu, jadi setiap nada adalah sesuatu yang terdengar. Kendang rendah → lajur 1, kendang tinggi → lajur 2, snare → lajur 3, melodi → lajur 4; tiga nada beruntun di satu lajur digeser ke lajur sebelah.
+- Kepadatan naik dari 1,3 ke 2,4 nada per detik; jarak minimum seperdelapan ketukan.
+- Bar pertama adalah hitungan masuk tanpa nada. Dua bar cadangan di akhir lagu menampung encore.
+
+### D-076 — Penilaian dan skor
+
+- Tekanan menilai nada terbuka terdekat di lajurnya dalam jendela GOOD. Tekanan tanpa nada di dekatnya tidak dihukum.
+- Sebelum menilai, nada yang jendelanya sudah lewat dinyatakan MISS, sehingga combo putus dalam urutan yang benar.
+- Bonus combo dihitung dari combo setelah nada itu: nada ke-10 berturut-turut mendapat +10%.
+
+### D-077 — AI ikan
+
+Peluang per nada dari Rhythm Skill: x = (skill − 50) / 45, dibatasi 0–1; PERFECT 0,18 + 0,42x, GREAT 0,32, MISS 0,20 − 0,16x, sisanya GOOD. Bruiser Catfish (62) kira-kira 29/32/23/16%, Don Arowana (90) 55/32/7/6%. Penari yang selalu GREAT mengalahkan semua ikan; pemain yang tidak menekan selalu kalah.
+
+### D-078 — Seri dan encore
+
+Urutan Section 63: skor, jumlah PERFECT, max combo, lalu encore empat nada. Bila setelah encore masih seri sepenuhnya, pemain menang; GDD tidak mengatur kasus ini.
+
+### D-079 — Pause dan audio di Web
+
+Duel joget baru dimulai setelah lagu siap dan audio sudah bisa didengar (Section 175.16). Setiap pause, termasuk karena jendela kehilangan fokus, memulai ulang joget dari hitungan awal dengan chart yang sama.
+
+### D-080 — Kalibrasi
+
+Wizard di Settings: click track 100 BPM, 16 ketukan; dua tekanan pertama diabaikan; median selisih ke ketukan terdekat, dibatasi ±150 ms (Section 189.10). Offset input menggeser acuan penilaian; offset visual hanya menggeser gambar nada. Keduanya juga bisa diatur manual per 5 ms.
+
+### D-081 — Tampilan joget
+
+Di landscape lajur berada di kanan (lebar 460 px) agar Darto dan ikan terlihat di kiri. Di portrait lajur memenuhi lebar layar di 58% bawah. Setiap lajur punya bentuk sendiri (lingkaran, belah ketupat, kotak, segitiga) selain warnanya. Ikan diperbesar 1,5× di panggung dan menghadapkan sisinya ke kamera.

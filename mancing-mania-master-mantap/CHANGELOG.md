@@ -2,6 +2,27 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.6.0 — Milestone 6: Dance + Procedural Music Engine
+
+### Ditambahkan
+
+- Mesin musik prosedural: instrumen (kick, snare, hat, kendang rendah/tinggi, bass, pluck Karplus-Strong, pad, aksen), sequencer deterministik, renderer bertahap, dan engine yang memutar loop per state.
+- Musik untuk danau dan menu (pluck jarang dengan jeda panjang), tinju (perkusi arcade), dan panco (beat heroik parodi).
+- Joget Koplo: lagu koplo 132–156 BPM sepanjang 36–44 detik dibuat dari seed duel; chart diambil dari timeline lagu yang sama.
+- Penilaian PERFECT/GREAT/GOOD/MISS terhadap jam lagu dari posisi pemutaran audio; skor dengan bonus combo sampai +50%.
+- AI ikan menari nada per nada dari Rhythm Skill dan seed; tiebreak PERFECT, max combo, lalu encore empat nada.
+- Black Coffee memperlambat nada di layar tanpa mengubah ketukan.
+- Panggung joget di tepi danau dengan lampu untai; clip joget Darto (9) dan keenam ikan (7).
+- HUD joget: empat lajur dengan bentuk berbeda, garis pukul, skor kedua pihak, combo, penilaian, beat pulse; lajur sentuh penuh di bagian bawah.
+- Settings: bagian Rhythm dengan beat pulse, offset input dan visual, dan wizard kalibrasi dengan click track.
+- Test bahwa setiap skrip terkompilasi.
+- 18 test baru (total 217).
+
+### Diubah
+
+- `AudioManager.get_authoritative_song_time_sec()` sekarang mengembalikan posisi lagu yang sebenarnya.
+- Pause di tengah joget memulai ulang joget dari hitungan awal dengan chart yang sama.
+
 ## 0.5.0 — Milestone 5: Arm Wrestling Complete
 
 ### Ditambahkan
