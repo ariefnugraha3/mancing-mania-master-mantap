@@ -46,6 +46,8 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		BOXING_MAT: _build_mat,
 		ARM_TABLE: _build_arm_table,
 		ARM_ELBOW_PAD: _build_elbow_pad,
+		DANCE_PLATFORM: _build_dance_platform,
+		DANCE_STRING_LIGHT: _build_string_light,
 	}
 	for prop_id: String in props:
 		var root: Node3D = props[prop_id].call()
@@ -531,3 +533,66 @@ func _build_elbow_pad() -> Node3D:
 	builder.color = CREAM.darkened(0.1)
 	builder.tube(Vector3(0, 0.0, 0), Vector3(0, 0.012, 0), 0.165, 0.165, 12, true)
 	return _wrap(builder)
+
+
+# --- Dance props (GDD 174.7, 185.18) ----------------------------------------
+
+const DANCE_PLATFORM := "prop_dance_platform"
+const DANCE_STRING_LIGHT := "prop_dance_string_light"
+const DANCE_PLATFORM_HEIGHT := 0.3
+
+
+## A low wooden stage with a painted trim and two steps at the front.
+func _build_dance_platform() -> Node3D:
+	var builder := MeshBuilder.new()
+	var size := Vector3(4.2, DANCE_PLATFORM_HEIGHT, 2.6)
+	builder.color = WOOD
+	builder.box(size, Vector3(0, size.y * 0.5, 0))
+	var planks := 10
+	for plank: int in planks:
+		var x := -size.x * 0.5 + (float(plank) + 0.5) * size.x / float(planks)
+		builder.color = WOOD.lightened(0.07 if plank % 2 == 0 else -0.02)
+		builder.box(Vector3(size.x / float(planks) - 0.01, 0.012, size.z - 0.06), Vector3(x, size.y + 0.006, 0))
+	builder.color = FADED_RED
+	builder.box(Vector3(size.x + 0.04, 0.09, 0.04), Vector3(0, size.y - 0.08, size.z * 0.5 + 0.02))
+	builder.color = CREAM
+	for x: float in [-1.8, -1.2, -0.6, 0.0, 0.6, 1.2, 1.8]:
+		builder.box(Vector3(0.18, 0.05, 0.045), Vector3(x, size.y - 0.08, size.z * 0.5 + 0.025))
+	builder.color = WOOD_DARK
+	builder.box(Vector3(1.0, 0.15, 0.3), Vector3(0, 0.075, size.z * 0.5 + 0.15))
+	return _wrap(builder)
+
+
+## Bamboo poles with a sagging wire of warm bulbs. The bulbs are their own
+## mesh so the scene can give them a soft glow.
+func _build_string_light() -> Node3D:
+	var builder := MeshBuilder.new()
+	var bulbs := MeshBuilder.new()
+	var left := Vector3(-2.4, 0, 0)
+	var right := Vector3(2.4, 0, 0)
+	builder.color = Color("b79a55")
+	for base: Vector3 in [left, right]:
+		builder.tube(base, base + Vector3(0, 2.9, 0), 0.05, 0.04, 7, true)
+	var previous := left + Vector3(0, 2.85, 0)
+	for step: int in range(1, 13):
+		var along := float(step) / 12.0
+		var point := (left + Vector3(0, 2.85, 0)).lerp(right + Vector3(0, 2.85, 0), along) - Vector3(0, sin(along * PI) * 0.4, 0)
+		builder.color = Color("3a3631")
+		builder.tube(previous, point, 0.006, 0.006, 4, false)
+		if step < 12:
+			bulbs.color = [Color("fff0c2"), Color("ffd27a"), Color("ffc0a0")][step % 3]
+			bulbs.blob(point - Vector3(0, 0.06, 0), Vector3(0.045, 0.055, 0.045), 6, 4)
+		previous = point
+	var root := _wrap(builder)
+	var glow := StandardMaterial3D.new()
+	glow.vertex_color_use_as_albedo = true
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.85, 0.6)
+	glow.emission_energy_multiplier = 0.8
+	var bulb_mesh := MeshInstance3D.new()
+	bulb_mesh.name = "Bulbs"
+	bulb_mesh.mesh = bulbs.commit()
+	bulb_mesh.material_override = glow
+	bulb_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(bulb_mesh)
+	return root

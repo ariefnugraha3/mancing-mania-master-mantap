@@ -97,6 +97,15 @@ const SUBJECTS: Array = [
 		],
 	},
 	{
+		"id": "ref_set_dance", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "dance_hit_lane_2", "time": 0.12},
+			{"scene": "res://generated/scenes/fish/fish_gourami_shady.tscn", "marker": "Markers/FishSpot", "clip": "dance_great", "time": 0.15},
+		],
+	},
+	{
 		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
 		"scene": "res://generated/scenes/environment/env_market_set.tscn",
 		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,

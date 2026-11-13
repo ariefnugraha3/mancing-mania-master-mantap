@@ -288,3 +288,22 @@ func test_arm_wrestle_assets() -> bool:
 		check(table.get_node_or_null("Props/%s" % prop) != null, "arm set prop %s" % prop)
 	table.free()
 	return true
+
+
+# Dance content (GDD 172.4, 172.6, 174.7, 185.18).
+func test_dance_assets() -> bool:
+	var ids: PackedStringArray = GeneratorManifest.read().get_asset_ids()
+	for asset_id: String in ["env_dance_set", "prop_dance_platform", "prop_dance_string_light"]:
+		check(ids.has(asset_id), "manifest lists %s" % asset_id)
+	for fish: FishData in GameData.get_all_fish():
+		var rig: Node = fish.model_scene.instantiate()
+		var player := rig.get_node("AnimationPlayer") as AnimationPlayer
+		for clip: StringName in [&"dance_idle", &"dance_good", &"dance_great", &"dance_perfect", &"dance_miss", &"dance_win", &"dance_lose"]:
+			check(player.has_animation(clip), "%s clip %s (GDD 172.6)" % [fish.id, clip])
+		rig.free()
+	var darto: Node = (load("res://generated/scenes/characters/chr_darto.tscn") as PackedScene).instantiate()
+	var darto_player := darto.get_node("AnimationPlayer") as AnimationPlayer
+	for clip: StringName in [&"dance_idle_bounce", &"dance_hit_lane_1", &"dance_hit_lane_2", &"dance_hit_lane_3", &"dance_hit_lane_4", &"dance_combo_high", &"dance_miss", &"dance_win", &"dance_lose"]:
+		check(darto_player.has_animation(clip), "Darto clip %s (GDD 172.4)" % clip)
+	darto.free()
+	return true
