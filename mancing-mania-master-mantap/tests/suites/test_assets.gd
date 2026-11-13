@@ -132,3 +132,65 @@ func test_app_icon_matches_project_setting() -> bool:
 		check_eq(image.get_pixel(0, 0).a, 0.0, "corners are transparent")
 		check(image.get_pixel(256, 256).a > 0.99, "centre is opaque")
 	return true
+
+
+# Market content (GDD 72, 172.8, 174.5, 174.9, 185.15).
+func test_market_assets_are_generated() -> bool:
+	var manifest := GeneratorManifest.read()
+	if not check(manifest != null, "manifest loads"):
+		return true
+	var ids: PackedStringArray = manifest.get_asset_ids()
+	for asset_id: String in [
+		"chr_bu_yati", "env_market_set", "prop_market_table", "prop_market_scale", "prop_market_freezer",
+		"prop_market_thermos", "prop_market_jar_set", "prop_plastic_chair", "prop_hanging_lamp",
+		"prop_market_price_board", "prop_market_fan",
+	]:
+		check(ids.has(asset_id), "manifest lists %s" % asset_id)
+
+	var bu_yati: Node = (load("res://generated/scenes/characters/chr_bu_yati.tscn") as PackedScene).instantiate()
+	check(bu_yati.get_node_or_null("Skeleton3D") is Skeleton3D, "Bu Yati has a skeleton")
+	var yati_player := bu_yati.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	if check(yati_player != null, "Bu Yati has an AnimationPlayer"):
+		for clip: StringName in [&"market_idle", &"weigh_fish", &"cash_count", &"look_darto", &"deadpan_blink"]:
+			check(yati_player.has_animation(clip), "Bu Yati clip %s (GDD 172.8)" % clip)
+		check_eq(yati_player.get_animation(&"market_idle").loop_mode, Animation.LOOP_LINEAR, "her idle loops")
+	bu_yati.free()
+
+	var darto: Node = (load("res://generated/scenes/characters/chr_darto.tscn") as PackedScene).instantiate()
+	check((darto.get_node("AnimationPlayer") as AnimationPlayer).has_animation(&"market_idle"), "Darto has a Market idle")
+	darto.free()
+
+	var market: Node = (load("res://generated/scenes/environment/env_market_set.tscn") as PackedScene).instantiate()
+	for marker: String in ["BuYatiSpot", "DartoSpot", "CameraLandscape", "CameraPortrait"]:
+		check(market.get_node_or_null("Markers/%s" % marker) is Marker3D, "Market set marker %s" % marker)
+	var props := market.get_node_or_null("Props")
+	if check(props != null, "the Market set has its furniture"):
+		for prop: String in ["Counter", "Scale", "Freezer", "Thermos", "Jars", "ChairA", "ChairB", "HangingLamp", "PriceBoard", "Fan"]:
+			var node := props.get_node_or_null(prop)
+			check(node != null and node.scene_file_path.begins_with("res://generated/scenes/props/"), "%s is an instanced generated prop" % prop)
+		check(props.get_node_or_null("Fan/Blades") is MeshInstance3D, "the fan blades can turn on their own")
+	market.free()
+	return true
+
+
+func test_fish_book_portraits_are_rendered() -> bool:
+	var manifest := GeneratorManifest.read()
+	for fish: FishData in GameData.get_all_fish():
+		var path := "res://generated/textures/fish_book/tex_fishbook_%s.png" % fish.id
+		check(manifest != null and manifest.get_outputs().has(path), "%s portrait is a recorded generator output" % fish.id)
+		if not check(fish.portrait_texture != null, "%s has a portrait" % fish.id):
+			continue
+		check_eq(fish.portrait_texture.resource_path, path, "%s uses its own portrait (GDD 174.9)" % fish.id)
+		var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+		if not check(image != null, "%s portrait file loads" % fish.id):
+			continue
+		check_eq(image.get_size(), Vector2i(512, 288), "%s portrait size" % fish.id)
+		check_eq(image.get_pixel(0, 0).a, 0.0, "%s portrait has a transparent background" % fish.id)
+		var opaque := 0
+		for y: int in range(0, image.get_height(), 8):
+			for x: int in range(0, image.get_width(), 8):
+				if image.get_pixel(x, y).a > 0.9:
+					opaque += 1
+		# The fish fills a good part of the frame, but never all of it.
+		check(opaque > 180 and opaque < 1800, "%s is framed in its portrait (%d of 2304 samples)" % [fish.id, opaque])
+	return true

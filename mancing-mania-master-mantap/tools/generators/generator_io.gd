@@ -76,7 +76,9 @@ static func normalize_text(text: String) -> String:
 static func _claim(node: Node, owner: Node) -> void:
 	for child: Node in node.get_children():
 		child.owner = owner
-		_claim(child, owner)
+		# An instanced sub-scene is saved as a reference: its insides stay its own.
+		if child.scene_file_path.is_empty():
+			_claim(child, owner)
 
 
 static func _read_attribute(line: String, attribute: String) -> String:

@@ -6,8 +6,8 @@ extends RefCounted
 ## whole character is one draw call for the body and one for the accessories.
 ## Characters face -Z; their right hand is on +X.
 ##
-## Milestone 2 builds Darto with his fishing clips. Rini, Nisa and Bu Yati and
-## the home, market and duel clips are added by the milestones that need them.
+## Darto has his fishing and market clips and Bu Yati her market clips. Rini,
+## Nisa and the home and duel clips are added by the milestones that need them.
 
 const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
 const RigBuilder := preload("res://tools/generators/rig_builder.gd")
@@ -79,13 +79,19 @@ const FISHING_POSE: Dictionary = {
 
 func build(manifest: RefCounted) -> PackedStringArray:
 	var errors := PackedStringArray()
-	var root := build_darto()
-	var save_error := GeneratorIo.save_scene(root, DARTO_PATH)
-	root.free()
-	if save_error != OK:
-		errors.append("chr_darto: could not save (%s)" % error_string(save_error))
-	else:
-		manifest.register("chr_darto", GENERATOR_ID, GENERATOR_VERSION, 0, DARTO_PATH)
+	var characters: Dictionary[String, Array] = {
+		"chr_darto": [build_darto, DARTO_PATH],
+		"chr_bu_yati": [build_bu_yati, BU_YATI_PATH],
+	}
+	for character_id: String in characters:
+		var root: Node3D = characters[character_id][0].call()
+		var path: String = characters[character_id][1]
+		var save_error := GeneratorIo.save_scene(root, path)
+		root.free()
+		if save_error != OK:
+			errors.append("%s: could not save (%s)" % [character_id, error_string(save_error)])
+		else:
+			manifest.register(character_id, GENERATOR_ID, GENERATOR_VERSION, 0, path)
 	return errors
 
 
@@ -375,6 +381,18 @@ func _build_darto_clips(skeleton: Skeleton3D) -> Array:
 	_pose(bucket, 0.75)
 	bucket.mark(&"bucket_commit", 0.45)
 	clips.append(bucket)
+
+	# At the warung: arms down, weight on one leg, a slow sway.
+	var standing := {
+		"upper_arm_r": Vector3(6, 0, 7), "forearm_r": Vector3(14, 0, 0),
+		"upper_arm_l": Vector3(8, 0, -7), "forearm_l": Vector3(18, 0, 0),
+		"spine_lower": Vector3(-2, 0, 0), "spine_upper": Vector3(-3, 0, 0), "head": Vector3(-3, 0, 0),
+	}
+	var market := RigBuilder.Clip.new(skeleton, &"market_idle", 5.0, true)
+	_pose(market, 0.0, standing)
+	_pose(market, 2.5, standing.merged({"spine_upper": Vector3(-4, 3, 0), "head": Vector3(-5, 5, 0)}, true))
+	_pose(market, 5.0, standing)
+	clips.append(market)
 	return clips
 
 
@@ -383,3 +401,247 @@ func _build_darto_clips(skeleton: Skeleton3D) -> Array:
 func _pose(clip: RefCounted, time: float, changes: Dictionary = {}) -> void:
 	for bone: String in FISHING_POSE:
 		clip.rot(bone, time, changes.get(bone, FISHING_POSE[bone]))
+
+
+# --- Bu Yati (GDD 185.5) ----------------------------------------------------
+# A compact, sturdy older woman: maroon blouse, cream apron, olive skirt, grey
+# hair tied in a bun. She moves as little as possible.
+
+const BU_YATI_PATH := "res://generated/scenes/characters/chr_bu_yati.tscn"
+const YATI_SKIN := Color("b08260")
+const YATI_SKIN_SHADE := Color("996e4e")
+const YATI_BLOUSE := Color("7c4a44")
+const YATI_SKIRT := Color("6b6a4b")
+const YATI_APRON := Color("d6c4a0")
+const YATI_HAIR := Color("5a554f")
+const YATI_SLIPPER := Color("8a5a4a")
+
+## Height 1.56 m.
+const BU_YATI_BONES: Array = [
+	["root", "", Vector3(0, 0, 0)],
+	["pelvis", "root", Vector3(0, 0.84, 0)],
+	["spine_lower", "pelvis", Vector3(0, 0.925, 0)],
+	["spine_upper", "spine_lower", Vector3(0, 1.105, 0)],
+	["neck", "spine_upper", Vector3(0, 1.295, 0)],
+	["head", "neck", Vector3(0, 1.36, 0)],
+	["upper_arm_l", "spine_upper", Vector3(-0.205, 1.255, 0)],
+	["forearm_l", "upper_arm_l", Vector3(-0.215, 1.01, 0)],
+	["hand_l", "forearm_l", Vector3(-0.22, 0.795, 0)],
+	["upper_arm_r", "spine_upper", Vector3(0.205, 1.255, 0)],
+	["forearm_r", "upper_arm_r", Vector3(0.215, 1.01, 0)],
+	["hand_r", "forearm_r", Vector3(0.22, 0.795, 0)],
+	["thigh_l", "pelvis", Vector3(-0.09, 0.815, 0)],
+	["shin_l", "thigh_l", Vector3(-0.095, 0.455, 0)],
+	["foot_l", "shin_l", Vector3(-0.095, 0.085, 0)],
+	["thigh_r", "pelvis", Vector3(0.09, 0.815, 0)],
+	["shin_r", "thigh_r", Vector3(0.095, 0.455, 0)],
+	["foot_r", "shin_r", Vector3(0.095, 0.085, 0)],
+]
+
+## Standing behind the counter with both hands resting near it.
+const COUNTER_POSE: Dictionary = {
+	"pelvis": Vector3(0, 0, 0),
+	"spine_lower": Vector3(-2, 0, 0),
+	"spine_upper": Vector3(-2, 0, 0),
+	"neck": Vector3(0, 0, 0),
+	"head": Vector3(-2, 0, 0),
+	"upper_arm_r": Vector3(24, 0, 8),
+	"forearm_r": Vector3(46, 0, 0),
+	"hand_r": Vector3(0, 0, 0),
+	"upper_arm_l": Vector3(22, 0, -8),
+	"forearm_l": Vector3(50, 0, 0),
+	"hand_l": Vector3(0, 0, 0),
+	"thigh_l": Vector3(0, 0, -2),
+	"shin_l": Vector3(0, 0, 0),
+	"foot_l": Vector3(0, 0, 0),
+	"thigh_r": Vector3(0, 0, 2),
+	"shin_r": Vector3(0, 0, 0),
+	"foot_r": Vector3(0, 0, 0),
+}
+
+
+func build_bu_yati() -> Node3D:
+	var root := Node3D.new()
+	root.name = "ChrBuYati"
+	var skeleton := RigBuilder.make_skeleton(BU_YATI_BONES)
+	root.add_child(skeleton)
+
+	var material: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var body_meshes := Node3D.new()
+	body_meshes.name = "BodyMeshes"
+	root.add_child(body_meshes)
+	body_meshes.add_child(_mesh_instance("Body", _build_bu_yati_body(skeleton), material))
+	var accessories := Node3D.new()
+	accessories.name = "AccessoryMeshes"
+	root.add_child(accessories)
+	accessories.add_child(_mesh_instance("Accessories", _build_bu_yati_accessories(skeleton), material))
+
+	var face := BoneAttachment3D.new()
+	face.name = "FaceMarkers"
+	root.add_child(face)
+	face.set_use_external_skeleton(true)
+	face.set_external_skeleton(NodePath("../Skeleton3D"))
+	face.bone_name = "head"
+	for marker: Array in [["EyeLine", Vector3(0, 0.082, -0.112)], ["Mouth", Vector3(0, 0.026, -0.108)], ["HeadTop", Vector3(0, 0.23, 0)]]:
+		var node := Marker3D.new()
+		node.name = marker[0]
+		node.position = marker[1]
+		face.add_child(node)
+
+	root.add_child(RigBuilder.make_player(_build_bu_yati_clips(skeleton)))
+	return root
+
+
+func _build_bu_yati_body(skeleton: Skeleton3D) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+
+	# A practical skirt to mid-shin hides the upper legs entirely.
+	builder.set_bone(skeleton.find_bone("pelvis"))
+	builder.color = YATI_SKIRT
+	builder.loft([
+		_ring(builder, 0.30, 0.185, 0.150), _ring(builder, 0.55, 0.195, 0.158),
+		_ring(builder, 0.80, 0.190, 0.150), _ring(builder, 0.90, 0.185, 0.140)])
+
+	builder.set_bone(skeleton.find_bone("spine_lower"))
+	builder.color = YATI_BLOUSE
+	builder.loft([
+		_ring(builder, 0.86, 0.196, 0.150), _ring(builder, 0.95, 0.200, 0.158, -0.008),
+		_ring(builder, 1.04, 0.200, 0.152, -0.006), _ring(builder, 1.11, 0.198, 0.140)])
+	builder.set_bone(skeleton.find_bone("spine_upper"))
+	builder.loft([
+		_ring(builder, 1.095, 0.198, 0.140), _ring(builder, 1.19, 0.208, 0.130),
+		_ring(builder, 1.255, 0.196, 0.112), _ring(builder, 1.30, 0.088, 0.074)])
+
+	builder.set_bone(skeleton.find_bone("neck"))
+	builder.color = YATI_SKIN_SHADE
+	builder.tube(Vector3(0, 1.285, 0), Vector3(0, 1.37, 0), 0.052, 0.049, 8)
+
+	# Rounder head than Darto's, with a flat, unimpressed face.
+	builder.set_bone(skeleton.find_bone("head"))
+	builder.color = YATI_SKIN
+	builder.loft([
+		_ring(builder, 1.345, 0.072, 0.078, 0.0, 2.8), _ring(builder, 1.385, 0.096, 0.102, 0.0, 2.8),
+		_ring(builder, 1.455, 0.105, 0.112, 0.0, 2.8), _ring(builder, 1.525, 0.100, 0.106, 0.0, 2.8),
+		_ring(builder, 1.57, 0.070, 0.076, 0.0, 2.8)])
+	builder.color = YATI_SKIN_SHADE
+	for side: float in [-1.0, 1.0]:
+		builder.box(Vector3(0.02, 0.048, 0.028), Vector3(0.108 * side, 1.43, 0.004))
+	builder.color = FACE_DARK
+	for side: float in [-1.0, 1.0]:
+		builder.box(Vector3(0.028, 0.010, 0.012), Vector3(0.042 * side, 1.442, -0.109))
+		builder.box(Vector3(0.042, 0.008, 0.012), Vector3(0.043 * side, 1.463, -0.111))
+	builder.color = YATI_SKIN_SHADE
+	builder.tube(Vector3(0, 1.448, -0.106), Vector3(0, 1.412, -0.13), 0.008, 0.017, 4)
+	builder.color = Color("6e4a3a")
+	builder.box(Vector3(0.05, 0.006, 0.01), Vector3(0, 1.386, -0.102))
+
+	for side: float in [-1.0, 1.0]:
+		var suffix := "_l" if side < 0.0 else "_r"
+		var shoulder := Vector3(0.205 * side, 1.262, 0)
+		var elbow := Vector3(0.215 * side, 1.01, 0)
+		var wrist := Vector3(0.22 * side, 0.80, 0)
+		builder.set_bone(skeleton.find_bone("upper_arm" + suffix))
+		builder.color = YATI_BLOUSE
+		builder.blob(shoulder - Vector3(0.014 * side, 0.028, 0), Vector3(0.064, 0.046, 0.066), 8, 4)
+		builder.tube(shoulder - Vector3(0, 0.02, 0), elbow + Vector3(0, 0.03, 0), 0.062, 0.054, 8, true)
+		builder.set_bone(skeleton.find_bone("forearm" + suffix))
+		builder.color = YATI_SKIN
+		builder.tube(elbow + Vector3(0, 0.02, 0), wrist, 0.044, 0.035, 8)
+		builder.set_bone(skeleton.find_bone("hand" + suffix))
+		builder.box(Vector3(0.062, 0.09, 0.04), Vector3(0.22 * side, 0.755, 0))
+
+		var knee := Vector3(0.095 * side, 0.455, 0)
+		var ankle := Vector3(0.095 * side, 0.085, 0)
+		builder.set_bone(skeleton.find_bone("shin" + suffix))
+		builder.color = YATI_SKIN
+		builder.tube(knee - Vector3(0, 0.1, 0), ankle, 0.05, 0.038, 8)
+		builder.set_bone(skeleton.find_bone("foot" + suffix))
+		builder.box(Vector3(0.082, 0.05, 0.2), Vector3(0.095 * side, 0.05, -0.04))
+	return builder.commit()
+
+
+func _build_bu_yati_accessories(skeleton: Skeleton3D) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+
+	# Grey hair pulled back into a bun.
+	builder.set_bone(skeleton.find_bone("head"))
+	builder.color = YATI_HAIR
+	builder.loft([
+		_ring(builder, 1.475, 0.110, 0.098, 0.028, 2.8), _ring(builder, 1.535, 0.106, 0.108, 0.012, 2.8),
+		_ring(builder, 1.578, 0.076, 0.084, 0.006, 2.8), _ring(builder, 1.592, 0.03, 0.034, 0.004, 2.8)])
+	builder.blob(Vector3(0, 1.50, 0.128), Vector3(0.052, 0.05, 0.046), 7, 4)
+
+	# Cream apron over the blouse and skirt, tied at the waist.
+	builder.set_bone(skeleton.find_bone("spine_lower"))
+	builder.color = YATI_APRON
+	builder.box(Vector3(0.25, 0.2, 0.014), Vector3(0, 1.0, -0.158))
+	builder.color = YATI_APRON.darkened(0.12)
+	builder.loft([_ring(builder, 0.895, 0.203, 0.163), _ring(builder, 0.92, 0.203, 0.163)], false, false)
+	builder.set_bone(skeleton.find_bone("pelvis"))
+	builder.color = YATI_APRON
+	builder.box(Vector3(0.27, 0.42, 0.014), Vector3(0, 0.69, -0.162))
+	builder.color = YATI_APRON.darkened(0.1)
+	builder.box(Vector3(0.11, 0.1, 0.018), Vector3(0.05, 0.74, -0.168))
+
+	for side: float in [-1.0, 1.0]:
+		builder.set_bone(skeleton.find_bone("foot_l" if side < 0.0 else "foot_r"))
+		builder.color = YATI_SLIPPER
+		builder.box(Vector3(0.098, 0.022, 0.24), Vector3(0.095 * side, 0.011, -0.04))
+		builder.color = YATI_SLIPPER.darkened(0.2)
+		builder.box(Vector3(0.098, 0.03, 0.09), Vector3(0.095 * side, 0.062, -0.1))
+	return builder.commit()
+
+
+## Bu Yati's clips (GDD 172.8). Small, economical movements only.
+func _build_bu_yati_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+
+	var idle := RigBuilder.Clip.new(skeleton, &"market_idle", 5.0, true)
+	_pose_from(idle, COUNTER_POSE, 0.0)
+	_pose_from(idle, COUNTER_POSE, 2.5, {"spine_upper": Vector3(-3, 0, 0), "head": Vector3(-3, -4, 0)})
+	_pose_from(idle, COUNTER_POSE, 5.0)
+	clips.append(idle)
+
+	var look := RigBuilder.Clip.new(skeleton, &"look_darto", 1.2)
+	_pose_from(look, COUNTER_POSE, 0.0)
+	_pose_from(look, COUNTER_POSE, 0.35, {"head": Vector3(-4, 14, 0), "neck": Vector3(0, 6, 0)})
+	_pose_from(look, COUNTER_POSE, 0.9, {"head": Vector3(-4, 14, 0), "neck": Vector3(0, 6, 0)})
+	_pose_from(look, COUNTER_POSE, 1.2)
+	clips.append(look)
+
+	# One hand to the scale, a glance down, then back.
+	var weigh := RigBuilder.Clip.new(skeleton, &"weigh_fish", 1.6)
+	_pose_from(weigh, COUNTER_POSE, 0.0)
+	_pose_from(weigh, COUNTER_POSE, 0.5, {
+		"upper_arm_r": Vector3(46, 0, -4), "forearm_r": Vector3(40, 0, 0), "head": Vector3(-14, -6, 0), "spine_upper": Vector3(-6, 0, 0)})
+	_pose_from(weigh, COUNTER_POSE, 1.1, {
+		"upper_arm_r": Vector3(46, 0, -4), "forearm_r": Vector3(40, 0, 0), "head": Vector3(-14, -6, 0), "spine_upper": Vector3(-6, 0, 0)})
+	_pose_from(weigh, COUNTER_POSE, 1.6)
+	clips.append(weigh)
+
+	var count := RigBuilder.Clip.new(skeleton, &"cash_count", 1.4)
+	_pose_from(count, COUNTER_POSE, 0.0)
+	for step: int in 4:
+		var time := 0.25 + 0.25 * float(step)
+		var flick := 62.0 if step % 2 == 0 else 50.0
+		_pose_from(count, COUNTER_POSE, time, {
+			"upper_arm_r": Vector3(34, 0, -2), "forearm_r": Vector3(flick, 0, 0),
+			"upper_arm_l": Vector3(34, 0, 2), "forearm_l": Vector3(58, 0, 0), "head": Vector3(-12, 0, 0)})
+	_pose_from(count, COUNTER_POSE, 1.4)
+	clips.append(count)
+
+	# She has no eyelids to blink with; the deadpan beat is a tiny head settle.
+	var blink := RigBuilder.Clip.new(skeleton, &"deadpan_blink", 0.6)
+	_pose_from(blink, COUNTER_POSE, 0.0)
+	_pose_from(blink, COUNTER_POSE, 0.3, {"head": Vector3(-5, 0, 0)})
+	_pose_from(blink, COUNTER_POSE, 0.6)
+	clips.append(blink)
+	return clips
+
+
+## Keys a whole body at `time`: a base stance with `changes` on top.
+func _pose_from(clip: RefCounted, base: Dictionary, time: float, changes: Dictionary = {}) -> void:
+	for bone: String in base:
+		clip.rot(bone, time, changes.get(bone, base[bone]))

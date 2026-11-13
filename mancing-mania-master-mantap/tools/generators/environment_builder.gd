@@ -7,8 +7,8 @@ extends RefCounted
 ## poles and low-detail houses on the far side. Everything is placed from a
 ## fixed seed, so the set is identical on every run.
 ##
-## Milestone 2 builds the lake. The home, market and duel sets are added by
-## their own milestones; Darto's motorcycle arrives with the vehicle builder.
+## The lake and the Market are built here. The home and duel sets are added
+## by their own milestones; the motorcycles arrive with the vehicle builder.
 
 const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
@@ -57,13 +57,19 @@ const TO_SUN := Vector3(-0.75, 0.44, -0.2)
 
 func build(manifest: RefCounted) -> PackedStringArray:
 	var errors := PackedStringArray()
-	var root := build_lake_set()
-	var save_error := GeneratorIo.save_scene(root, LAKE_SET_PATH)
-	root.free()
-	if save_error != OK:
-		errors.append("env_lake_set: could not save (%s)" % error_string(save_error))
-	else:
-		manifest.register("env_lake_set", GENERATOR_ID, GENERATOR_VERSION, PLACEMENT_SEED, LAKE_SET_PATH)
+	var sets: Dictionary[String, Array] = {
+		"env_lake_set": [build_lake_set, LAKE_SET_PATH],
+		"env_market_set": [build_market_set, MARKET_SET_PATH],
+	}
+	for set_id: String in sets:
+		var root: Node3D = sets[set_id][0].call()
+		var path: String = sets[set_id][1]
+		var save_error := GeneratorIo.save_scene(root, path)
+		root.free()
+		if save_error != OK:
+			errors.append("%s: could not save (%s)" % [set_id, error_string(save_error)])
+		else:
+			manifest.register(set_id, GENERATOR_ID, GENERATOR_VERSION, PLACEMENT_SEED, path)
 	return errors
 
 
@@ -554,3 +560,218 @@ func _instance(node_name: String, mesh: ArrayMesh, material: Material, casts_sha
 	if not casts_shadow:
 		instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return instance
+
+
+# --- Market set (GDD 72, 185.15) --------------------------------------------
+# Bu Yati's warung up close: an open-front shed in warm wood, cream and faded
+# red, with the counter facing the customer. The open front faces +Z.
+
+const MARKET_SET_PATH := "res://generated/scenes/environment/env_market_set.tscn"
+const PROP_PATH := "res://generated/scenes/props/%s.tscn"
+const MARKET_FLOOR := Vector3(5.6, 0.14, 3.8)
+const MARKET_FLOOR_CENTRE := Vector3(0.0, 0.07, -0.7)
+const MARKET_WALL_HEIGHT := 2.5
+const BU_YATI_SPOT := Vector3(-0.25, 0.14, -0.2)
+const DARTO_MARKET_SPOT := Vector3(-1.25, 0.0, 2.05)
+## Late afternoon: the sun is lower and warmer than at the lake.
+const MARKET_TO_SUN := Vector3(-0.8, 0.34, 0.45)
+
+
+func build_market_set() -> Node3D:
+	var random := RandomNumberGenerator.new()
+	random.seed = PLACEMENT_SEED + 3
+	var solid: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var foliage: Material = load(MaterialBuilder.FOLIAGE_SWAY)
+
+	var root := Node3D.new()
+	root.name = "EnvMarketSet"
+	var lighting := _build_lighting()
+	var sun := lighting.get_node("Sun") as DirectionalLight3D
+	sun.transform = Transform3D(Basis.looking_at(-MARKET_TO_SUN.normalized(), Vector3.UP), Vector3(0, 12, 0))
+	sun.light_color = Color(1.0, 0.84, 0.62)
+	sun.light_energy = 0.78
+	sun.directional_shadow_max_distance = 24.0
+	root.add_child(lighting)
+
+	root.add_child(_instance("Ground", _build_market_ground(random), solid, false))
+	root.add_child(_instance("EnvMarketShell", _build_market_shell(), solid, true))
+	root.add_child(_instance("FarTrees", _build_market_far_trees(random), solid, false))
+
+	var trees := Node3D.new()
+	trees.name = "Trees"
+	root.add_child(trees)
+	for spot: Array in [[Vector2(-5.2, -5.5), 6.8, 3.2, 0.8], [Vector2(5.8, -6.5), 7.4, 2.6, 1.1], [Vector2(8.5, 2.5), 6.0, 2.8, 0.9]]:
+		var tree := _build_tree("Tree%d" % trees.get_child_count(), Vector2.ZERO, spot[1], spot[2], spot[3], random, solid, foliage)
+		tree.position = Vector3(spot[0].x, 0.0, spot[0].y)
+		trees.add_child(tree)
+
+	# Furniture, from the prop scenes generated earlier in the same run.
+	var props := Node3D.new()
+	props.name = "Props"
+	root.add_child(props)
+	var counter_top := MARKET_FLOOR.y + 0.82
+	var placements: Array = [
+		["prop_market_table", "Counter", Vector3(-0.2, MARKET_FLOOR.y, 0.55), 0.0],
+		["prop_market_scale", "Scale", Vector3(0.27, counter_top, 0.58), 0.0],
+		["prop_market_thermos", "Thermos", Vector3(-1.1, counter_top, 0.42), 0.4],
+		["prop_market_jar_set", "Jars", Vector3(0.7, counter_top, 0.36), -0.15],
+		["prop_market_fan", "Fan", Vector3(-0.7, counter_top, 0.36), 0.35],
+		["prop_market_freezer", "Freezer", Vector3(1.85, MARKET_FLOOR.y, -1.35), -0.12],
+		["prop_market_price_board", "PriceBoard", Vector3(-1.35, 1.75, -2.5), 0.0],
+		["prop_hanging_lamp", "HangingLamp", Vector3(0.35, 2.62, 0.25), 0.0],
+		["prop_plastic_chair", "ChairA", Vector3(2.15, 0.0, 1.75), -2.3],
+		["prop_plastic_chair", "ChairB", Vector3(1.35, 0.0, 2.25), 2.7],
+	]
+	for placement: Array in placements:
+		var scene := load(PROP_PATH % placement[0]) as PackedScene
+		if scene == null:
+			push_error("environment_builder: missing prop scene %s" % placement[0])
+			continue
+		var prop: Node3D = scene.instantiate()
+		prop.name = placement[1]
+		prop.transform = Transform3D(Basis(Vector3.UP, placement[3]), placement[2])
+		props.add_child(prop)
+
+	# The warung lamp is already on in the late afternoon (GDD Section 5).
+	var lamp_light := OmniLight3D.new()
+	lamp_light.name = "LampLight"
+	lamp_light.position = Vector3(0.35, 1.95, 0.25)
+	lamp_light.light_color = Color(1.0, 0.82, 0.55)
+	lamp_light.light_energy = 0.5
+	lamp_light.omni_range = 4.0
+	lamp_light.shadow_enabled = false
+	root.add_child(lamp_light)
+
+	var markers := Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	var spots: Dictionary[String, Transform3D] = {
+		# Characters face -Z; Bu Yati is turned to face her customers.
+		"BuYatiSpot": Transform3D(Basis(Vector3.UP, PI), BU_YATI_SPOT),
+		"DartoSpot": Transform3D(Basis(Vector3.UP, deg_to_rad(-24.0)), DARTO_MARKET_SPOT),
+		"CameraLandscape": _look(Vector3(1.6, 1.7, 6.4), Vector3(1.73, 1.15, 0.4)),
+		"CameraPortrait": _look(Vector3(-0.4, 1.6, 6.6), Vector3(-0.4, -0.45, 0.0)),
+	}
+	for marker_name: String in spots:
+		var marker := Marker3D.new()
+		marker.name = marker_name
+		marker.transform = spots[marker_name]
+		markers.add_child(marker)
+	return root
+
+
+## Packed earth around the warung fading into grass, with the road behind.
+func _build_market_ground(random: RandomNumberGenerator) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	var step := 1.5
+	var half := 21.0
+	var points: Array = []
+	var count := int(half * 2.0 / step)
+	for row: int in count + 1:
+		var line := PackedVector3Array()
+		for column: int in count + 1:
+			var x := -half + column * step
+			var z := -half + row * step
+			if row > 0 and row < count and column > 0 and column < count:
+				x += random.randf_range(-0.4, 0.4)
+				z += random.randf_range(-0.4, 0.4)
+			line.append(Vector3(x, 0.02 * sin(x * 0.6) * sin(z * 0.5), z))
+		points.append(line)
+	for row: int in count:
+		for column: int in count:
+			var corners: Array = [points[row][column], points[row][column + 1], points[row + 1][column + 1], points[row + 1][column]]
+			var pairs: Array = [[0, 1, 2], [0, 2, 3]] if (row + column) % 2 == 0 else [[0, 1, 3], [1, 2, 3]]
+			for triangle: Array in pairs:
+				var a: Vector3 = corners[triangle[0]]
+				var b: Vector3 = corners[triangle[1]]
+				var c: Vector3 = corners[triangle[2]]
+				var centre := (a + b + c) / 3.0
+				builder.color = _market_ground_color(centre.x, centre.z, random.randf())
+				builder.triangle(a, b, c, Vector3(centre.x, -100.0, centre.z))
+	# Beyond the detailed patch a plain skirt carries the grass out into the haze.
+	var far := 150.0
+	builder.color = GRASS.lerp(FAR_HAZE, 0.3)
+	var below := Vector3(0, -100.0, 0)
+	builder.quad(Vector3(-far, 0, -far), Vector3(far, 0, -far), Vector3(far, 0, -half), Vector3(-far, 0, -half), below)
+	builder.quad(Vector3(-far, 0, half), Vector3(far, 0, half), Vector3(far, 0, far), Vector3(-far, 0, far), below)
+	builder.quad(Vector3(-far, 0, -half), Vector3(-half, 0, -half), Vector3(-half, 0, half), Vector3(-far, 0, half), below)
+	builder.quad(Vector3(half, 0, -half), Vector3(far, 0, -half), Vector3(far, 0, half), Vector3(half, 0, half), below)
+	return builder.commit()
+
+
+## A hazy line of tree crowns far behind the warung, so the horizon is not bare.
+func _build_market_far_trees(random: RandomNumberGenerator) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	for index: int in 22:
+		var angle := lerpf(-0.35, PI + 0.35, float(index) / 21.0) + random.randf_range(-0.05, 0.05)
+		var distance := random.randf_range(46.0, 62.0)
+		var size := random.randf_range(5.0, 8.5)
+		builder.color = LEAF_DARK.lerp(LEAF, random.randf()).lerp(FAR_HAZE, 0.5)
+		builder.blob(Vector3(cos(angle) * distance, size * 0.55, -sin(angle) * distance), Vector3(size * 1.5, size * 0.8, size), 7, 4, 0.18, random.randi())
+	return builder.commit()
+
+
+func _market_ground_color(x: float, z: float, variation: float) -> Color:
+	# The road runs past behind the warung.
+	if z < -8.0 and z > -11.5:
+		return ASPHALT.lightened(variation * 0.08)
+	var worn := clampf(1.0 - Vector2(x, z - 0.6).length() / 6.5, 0.0, 1.0)
+	var grass := GRASS_DARK.lerp(GRASS_LIGHT, 0.5 + 0.5 * sin(x * 0.3 + 0.7) * sin(z * 0.27)).lerp(GRASS, 0.4)
+	return grass.lerp(EARTH.lerp(MUD, 0.25), smoothstep(0.15, 0.6, worn)).lightened((variation - 0.5) * 0.08)
+
+
+## Floor slab, posts, board walls, tin roof and a back shelf.
+func _build_market_shell() -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	var half_w := MARKET_FLOOR.x * 0.5
+	var back := MARKET_FLOOR_CENTRE.z - MARKET_FLOOR.z * 0.5
+	var front := MARKET_FLOOR_CENTRE.z + MARKET_FLOOR.z * 0.5
+	var top := MARKET_FLOOR.y + MARKET_WALL_HEIGHT
+
+	builder.color = Color("a39683")
+	builder.box(MARKET_FLOOR, MARKET_FLOOR_CENTRE)
+
+	builder.color = WOOD.darkened(0.12)
+	for corner: Vector2 in [Vector2(-1, 0), Vector2(1, 0), Vector2(-1, 1), Vector2(1, 1)]:
+		var z := back + 0.1 if corner.y == 0.0 else front - 0.1
+		builder.box(Vector3(0.15, MARKET_WALL_HEIGHT, 0.15), Vector3(corner.x * (half_w - 0.1), MARKET_FLOOR.y + MARKET_WALL_HEIGHT * 0.5, z))
+	builder.box(Vector3(MARKET_FLOOR.x, 0.12, 0.12), Vector3(0, top, front - 0.1))
+	builder.box(Vector3(MARKET_FLOOR.x, 0.12, 0.12), Vector3(0, top + 0.45, back + 0.1))
+
+	# Back wall of vertical boards in two cream tones, side walls waist-high.
+	var boards := 14
+	for board: int in boards:
+		var x := -half_w + (float(board) + 0.5) * MARKET_FLOOR.x / float(boards)
+		builder.color = CREAM.darkened(0.14 if board % 2 == 0 else 0.21)
+		builder.box(Vector3(MARKET_FLOOR.x / float(boards) - 0.012, MARKET_WALL_HEIGHT + 0.4, 0.05), Vector3(x, MARKET_FLOOR.y + (MARKET_WALL_HEIGHT + 0.4) * 0.5, back + 0.05))
+	builder.color = CREAM.darkened(0.2)
+	for side: float in [-1.0, 1.0]:
+		builder.box(Vector3(0.05, 1.05, MARKET_FLOOR.z - 0.3), Vector3(side * (half_w - 0.05), MARKET_FLOOR.y + 0.525, MARKET_FLOOR_CENTRE.z))
+
+	# Corrugated tin roof, faded red, sloping down toward the front.
+	var sheets := 9
+	for sheet: int in sheets:
+		var x0 := -half_w - 0.45 + float(sheet) * (MARKET_FLOOR.x + 0.9) / float(sheets)
+		var x1 := x0 + (MARKET_FLOOR.x + 0.9) / float(sheets)
+		builder.color = FADED_RED.lerp(TERRACOTTA, 0.35).darkened(0.05 if sheet % 2 == 0 else 0.14)
+		var upper := PackedVector3Array([
+			Vector3(x0, top + 0.62, back - 0.35), Vector3(x1, top + 0.62, back - 0.35),
+			Vector3(x1, top + 0.12, front + 0.95), Vector3(x0, top + 0.12, front + 0.95)])
+		var lower := PackedVector3Array()
+		for point: Vector3 in upper:
+			lower.append(point - Vector3(0, 0.05, 0))
+		builder.loft([lower, upper], true, true)
+
+	# Shelf on the back wall with a few things on it.
+	builder.color = WOOD
+	builder.box(Vector3(2.4, 0.04, 0.3), Vector3(0.7, MARKET_FLOOR.y + 1.35, back + 0.22))
+	for item: Array in [[0.0, Color("a9534d"), 0.2], [0.35, Color("778b59"), 0.26], [0.7, Color("e4ae55"), 0.16], [1.1, Color("557f7a"), 0.22], [1.45, Color("d9b56a"), 0.18]]:
+		builder.color = item[1]
+		builder.tube(Vector3(-0.2 + float(item[0]), MARKET_FLOOR.y + 1.37, back + 0.22), Vector3(-0.2 + float(item[0]), MARKET_FLOOR.y + 1.37 + float(item[2]), back + 0.22), 0.07, 0.065, 8, true)
+
+	# A faded banner across the front beam.
+	builder.color = Color("e4ae55").darkened(0.05)
+	builder.box(Vector3(3.2, 0.42, 0.03), Vector3(-0.3, top - 0.32, front - 0.02))
+	builder.color = FADED_RED
+	builder.box(Vector3(2.4, 0.07, 0.035), Vector3(-0.3, top - 0.3, front - 0.018))
+	return builder.commit()
