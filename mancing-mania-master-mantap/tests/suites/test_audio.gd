@@ -317,3 +317,50 @@ func test_arm_sfx_render_cleanly() -> bool:
 	check_eq(AudioManager.get_preset(&"arm_win").synth_type, &"fanfare", "a short fanfare for the win")
 	check_eq(AudioManager.get_preset(&"arm_lose").synth_type, &"two_note_down", "two falling notes for the loss")
 	return true
+
+
+# Procedural music (GDD 175.2, 175.10, 175.11; AUD-011).
+func test_music_engine_plays_states_and_songs() -> bool:
+	var music := AudioManager.get_music_engine()
+	if not check(music != null, "the music engine exists after Boot"):
+		return true
+	AudioManager.set_music_state(&"boxing")
+	check(await wait_until(func() -> bool: return music.get_loop_stream(&"boxing") != null, 60.0), "the boxing loop renders in the background")
+	check_eq(music.get_loop_stream(&"boxing").loop_mode, AudioStreamWAV.LOOP_FORWARD, "and loops")
+	AudioManager.set_music_state(&"market")
+	check_eq(music.get_state(), &"market", "the Market has no music of its own")
+
+	var song := MusicSequencer.build_koplo(5, 150.0, 4)
+	music.prepare_song(song)
+	check(await wait_until(music.is_song_ready, 30.0), "a song renders")
+	music.play_song(0.0)
+	var times: Array[float] = []
+	for _sample: int in 10:
+		times.append(AudioManager.get_authoritative_song_time_sec())
+		await wait_frames(3)
+	var monotonic := true
+	for index: int in range(1, times.size()):
+		monotonic = monotonic and times[index] >= times[index - 1]
+	check(monotonic, "the song clock never runs backwards")
+	check(times[-1] > times[0], "and moves while the song plays")
+	music.stop_song()
+	AudioManager.set_music_state(&"silence")
+	return true
+
+
+func test_calibration_suggests_the_median_offset() -> bool:
+	var beats: Array[float] = []
+	for count: int in 16:
+		beats.append(float(count) * 0.6)
+	var taps: Array[float] = []
+	# Two wild warm-up taps, then taps 40 ms late with one outlier.
+	taps.append(0.3)
+	taps.append(0.95)
+	for count: int in range(2, 12):
+		taps.append(beats[count] + (0.2 if count == 5 else 0.04))
+	check_eq(CalibrationOverlay.suggest_offset_ms(taps, beats), 40, "the median ignores warm-up taps and outliers")
+	var early: Array[float] = []
+	for count: int in 12:
+		early.append(beats[count] - 0.25)
+	check_eq(CalibrationOverlay.suggest_offset_ms(early, beats), -150, "the suggestion is clamped to -150 ms")
+	return true
