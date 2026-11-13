@@ -2,6 +2,28 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.4.0 — Milestone 4: Boxing Complete
+
+### Ditambahkan
+
+- Tinju Empang: ikan memberi telegraph, pemain menghindar ke arah yang ditunjukkan, lalu membalas dengan jab atau cross di jendela counter.
+- Perfect Dodge di 180 ms terakhir: freeze 70 ms, jendela counter lebih panjang, damage 2,4×.
+- Pukulan tanpa celah di-block ikan (40%). Batas waktu 60 detik, pembanding persentase HP, dan sudden death saat seri.
+- Keenam ikan bertinju dengan HP, serangan, dan telegraph masing-masing; Don Arowana menyerang lebih rapat.
+- Ring tinju di tepi danau: matras, tiang bambu, tali, lampu gantung, dan bangku tempat ikan berdiri.
+- Sarung tinju dan sembilan clip tinju Darto; sarung tinju dan sepuluh clip tinju untuk tiap ikan.
+- HUD tinju: dua bar HP, jam ronde, penunjuk arah dodge, empat tombol sentuh, dan nama tombol keyboard yang mengikuti remap.
+- Hasil duel: menang berarti ikan masuk ember, kalah berarti ikan lepas tanpa kerugian lain. Kalah di duel pertama hanya mengulang.
+- Tujuh SFX tinju.
+- Debug: bot duel, paksa arah serangan, paksa hasil, langsung masuk ring.
+- 26 test baru (total 180), termasuk tangkapan pertama yang ditinju sampai masuk ember di scene asli.
+
+### Diubah
+
+- Ikan yang mendarat sekarang dibawa ke ring tinju, tidak lagi langsung ke ember.
+- Potret Fish Book dirender tanpa sarung tinju.
+- Watchdog test dinaikkan dari 180 ke 300 detik.
+
 ## 0.3.0 — Milestone 3: Market, Economy, Upgrades, Book, Records
 
 ### Ditambahkan

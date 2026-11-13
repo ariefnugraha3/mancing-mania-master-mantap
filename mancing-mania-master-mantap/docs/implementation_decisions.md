@@ -322,3 +322,90 @@ Langkah command line baru untuk debug build: `--mm-goto`, `--mm-cash`, `--mm-deb
 ### D-052 — Banter Market ditunda
 
 Banter Bu Yati dan Darto (Section 183.17) membutuhkan kotak dialog, yang dibuat di Milestone 8. Belum ada di build ini.
+
+## Milestone 4 — Tinju
+
+### D-053 — Simulasi dengan tick tetap
+
+`BoxingController` maju dalam tick 1/120 detik, dengan frame panjang dibatasi 0,1 detik. Jendela pukulan dan dodge jadi sama panjang di frame rate berapa pun (Section 176.17), dan seed yang sama dengan input yang sama selalu menghasilkan pertarungan yang sama. Ronde dibuka dengan jeda 1,2 detik sebelum jam berjalan.
+
+### D-054 — Aturan dodge
+
+GDD menetapkan jendela perfect dan jendela counter, tetapi tidak menetapkan kapan sebuah dodge dianggap menjawab serangan. Aturannya:
+
+- Dodge pertama selama telegraph adalah jawabannya. Darto menahan posisi miring itu sampai pukulan tiba. Arah yang salah tidak bisa diperbaiki dengan menekan lagi.
+- Dodge yang ditekan pada 180 ms terakhir sebelum impact adalah Perfect Dodge; lebih awal dari itu adalah dodge biasa.
+- Dodge di luar telegraph hanya langkah 0,32 detik dan tidak menjawab apa pun.
+- Begitu pukulan meleset, Darto langsung bebas membalas.
+
+### D-055 — Block dan counter
+
+- Di luar jendela counter ikan selalu mem-block: pukulan hanya masuk 40% (Section 45).
+- Di dalam jendela counter setiap pukulan yang mendarat dikalikan 2,0× atau 2,4×. Jendela bisa memuat lebih dari satu pukulan bila waktunya cukup.
+- Pukulan pemain tidak menghentikan serangan ikan. Bila Darto terkena saat pukulannya belum mendarat, pukulan itu batal.
+
+### D-056 — Angka yang tidak ada di GDD
+
+Hit stun Darto 0,45 detik dan lama dodge 0,32 detik diambil dari panjang clip di Section 172.2. Dua angka dipilih sendiri: ikan butuh 0,55 detik untuk kembali siap setelah pukulannya masuk, dan jeda pembuka ronde 1,2 detik.
+
+### D-057 — Sudden death
+
+Saat persentase HP sama persis di detik ke-60, pertarungan lanjut tanpa jam. Pukulan ikan yang masuk mengalahkan pemain; pukulan pemain di jendela counter mengalahkan ikan. Pukulan yang di-block tidak dihitung dan tidak memberi damage, karena Section 48 meminta "serangan pertama yang berhasil".
+
+### D-058 — Temuan balance: menekan tombol terus-menerus
+
+Diukur dengan 20 seed per ikan, pemain yang hanya menekan JAB tanpa pernah menghindar:
+
+| Ikan | Hanya JAB | Hanya CROSS | Bermain benar |
+|---|---|---|---|
+| Bruiser Catfish | menang 20/20, 6,3 dtk | menang 20/20 | menang 20/20, 5,8 dtk |
+| Gym-Rat Tilapia | menang 20/20, 8,4 dtk | menang 20/20 | menang 20/20, 5,9–8,6 dtk |
+| Shady Gourami | menang 20/20, 9,7 dtk | menang 20/20 | menang 20/20, 5,8–8,4 dtk |
+| Golden Carp | menang 20/20, 11,4 dtk | menang 20/20 | menang 20/20, 6,2–11,3 dtk |
+| Snakehead Sergeant | menang 13/20 | kalah 20/20 | menang 20/20, 8,6–14,0 dtk |
+| Don Arowana | kalah 20/20 | kalah 20/20 | menang 20/20, 7,9–14,4 dtk |
+
+Dengan angka GDD apa adanya (block 40%, tanpa hukuman lain), empat ikan pertama bisa dikalahkan tanpa membaca telegraph sama sekali. Ini bertentangan dengan niat Section 41 ("player tidak diminta spam attack"), tetapi mengikuti angkanya. **Tidak ada yang diubah**; mengubah angka block atau menambah hukuman adalah revisi GDD dan menunggu keputusan pemilik project. Simulasi balance resmi ada di Milestone 10.
+
+### D-059 — Komposisi ring
+
+- Kamera berada di belakang-kanan Darto. Darto di kiri depan, ikan di kanan menghadapnya, sehingga keduanya terlihat utuh (Section 176.14).
+- Ikan berdiri di atas bangku pojok (`prop_boxing_corner_stool`), setinggi dada Darto. Tanpa itu ikan 80 cm tertutup punggung Darto.
+- Sisi ring yang menghadap kamera tidak diberi tali, supaya tidak ada tali yang melintang di depan pertarungan.
+- Ring berada di tepi danau; ambience yang terdengar adalah ambience danau.
+
+### D-060 — Clip tinju
+
+- Clip serangan ikan memakai jam ternormalisasi: telegraph mengisi 0,0–1,0 dan dimainkan pada kecepatan 1 / `boxing_telegraph_sec`, jadi lama ancang-ancang di layar selalu sama dengan hitungan aturan (Section 172.6). Setelah impact clip berjalan pada kecepatan normal.
+- Tiga variasi serangan (lurus, hook, dari atas) masing-masing punya versi cermin: clip polos untuk "dodge kiri", `_mirror` untuk "dodge kanan". Pose ancang-ancang dicapai di seperempat pertama telegraph lalu ditahan.
+- Pukulan pemain yang di-block tidak pernah memotong clip ancang-ancang.
+- Gerak khas tiap spesies (Section 172.7) baru berupa tempo dan tinggi lompatan kuda-kuda. Sisanya menyusul di Milestone 7.
+- Semua ikan sekarang punya sarung tinju. Potret Fish Book dirender tanpa sarung.
+
+### D-061 — Hasil duel sebelum Result scene ada
+
+Result scene dan Wheel adalah Milestone 7. Sampai saat itu:
+
+- Ikan yang mendarat langsung dibawa ke tinju.
+- `DuelOutcome.commit()` adalah satu-satunya tempat hasil duel mengubah game: menang menambah ikan ke ember, Fish Book, dan statistik; kalah hanya mencatat kekalahan. Lalu disimpan.
+- `DuelResultOverlay` menampilkan teks Section 88 dengan tombol CONTINUE yang menekan dirinya sendiri setelah 5 detik.
+- Keluar ke menu di tengah duel membuang ikan itu tanpa mencatat apa pun.
+
+### D-062 — Pelajaran tinju pertama
+
+Duel pertama memberi petunjuk satu baris yang diambil dari teks How To Play (Section 183.19). Kalah di duel itu tidak dicatat dan langsung diulang (Section 176.10). Dialog Catfish dan Darto untuk momen ini (Section 183.4) menunggu sistem dialog; teks layar ulang `THAT WAS ROUGH.` diambil dari dialog itu, sedangkan `No harm done. Again.` ditulis sendiri.
+
+### D-063 — HUD tinju
+
+- Arah dodge ditunjukkan dengan tiga cara sekaligus: bentuk chevron, sisi tempat chevron berada, dan tulisan `DODGE LEFT` / `DODGE RIGHT`. Momen perfect ditandai chevron kedua dan bagian akhir bar yang diberi takik dan arsiran. Tidak ada informasi yang hanya berupa warna (Section 189.5).
+- Pemain keyboard melihat nama keempat tombol di bawah layar; teksnya dibaca dari InputMap, jadi mengikuti remap.
+- Layout sentuh memberi empat tombol: dodge di kiri, pukulan di kanan. Di portrait tombol menempati 38% bawah layar (Section 94).
+- Opsi menukar kelompok tombol kiri/kanan untuk kidal (Section 189.12) belum ada.
+
+### D-064 — Audio tinju
+
+Tujuh preset Section 175.8. Enam memakai resep yang sudah ada; `box_ko` memakai resep baru `tom_sequence`. Telegraph tidak punya suara sendiri karena GDD tidak mendaftarkannya. Musik tinju masih diam sampai Milestone 6.
+
+### D-065 — Tool QA tinju
+
+Debug build: bot duel (`BoxingBot`, membaca snapshot yang sama dengan HUD dan hanya memakai dua permintaan yang dimiliki pemain), paksa arah serangan, paksa hasil, dan `--mm-duel` untuk langsung masuk ring.
