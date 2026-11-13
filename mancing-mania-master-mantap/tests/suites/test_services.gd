@@ -192,7 +192,7 @@ func test_story_queue_rules() -> bool:
 	StoryDirector.begin_market_visit()
 	StoryDirector.begin_market_visit()
 	check_eq(GameState.get_story_value(&"market_visit_serial"), 2, "each visit increments the serial")
-	check_eq(StoryDirector.resolve_market_exit_event(), &"", "no event is chosen before story data exists")
+	check_eq(StoryDirector.resolve_market_exit_event(), &"", "an empty queue resolves to no event")
 	return true
 
 

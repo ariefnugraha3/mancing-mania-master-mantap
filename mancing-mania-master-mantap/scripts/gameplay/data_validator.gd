@@ -169,6 +169,53 @@ static func validate_upgrade_set(upgrades: Array, check_config_link: bool = true
 	return errors
 
 
+## Priorities that Market-exit arbitration depends on (GDD 177.5).
+const STORY_PRIORITIES: Dictionary = {
+	&"story_debt_paid": 1000,
+	&"story_arowana_first_win": 800,
+	&"story_debt_1650k": 650,
+	&"story_debt_1400k": 600,
+	&"story_debt_1000k": 550,
+	&"story_debt_600k": 500,
+	&"story_debt_300k": 450,
+	&"story_debt_100k": 400,
+}
+
+
+static func validate_story_events(events: Array, trigger_types: Array[StringName]) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var seen: Dictionary[StringName, bool] = {}
+	for entry: Variant in events:
+		var event := entry as StoryEvent
+		if event == null:
+			errors.append("story: entry is not a StoryEvent resource")
+			continue
+		var tag := "story '%s'" % event.id
+		if seen.has(event.id):
+			errors.append("%s: duplicate id" % tag)
+		elif not ContentIds.STORY_EVENT_IDS.has(event.id):
+			errors.append("%s: id is not part of the v1.0 narrative manifest" % tag)
+		seen[event.id] = true
+		if not trigger_types.has(event.trigger_type):
+			errors.append("%s: unknown trigger_type '%s'" % [tag, event.trigger_type])
+		if event.timeline_id == &"":
+			errors.append("%s: timeline_id is empty" % tag)
+		if STORY_PRIORITIES.has(event.id):
+			if event.priority != int(STORY_PRIORITIES[event.id]):
+				errors.append("%s: priority %d does not match the arbitration table (%d)" % [tag, event.priority, STORY_PRIORITIES[event.id]])
+			if not event.market_event:
+				errors.append("%s: must be a Market event" % tag)
+		for reference: StringName in event.supersedes + event.requires_seen + event.blocks_until_seen:
+			if not ContentIds.STORY_EVENT_IDS.has(reference):
+				errors.append("%s: references unknown event '%s'" % [tag, reference])
+			elif reference == event.id:
+				errors.append("%s: references itself" % tag)
+	for event_id: StringName in ContentIds.STORY_EVENT_IDS:
+		if not seen.has(event_id):
+			errors.append("story: missing StoryEvent for '%s'" % event_id)
+	return errors
+
+
 static func validate_balance(
 	fishing: FishingBalance,
 	boxing: BoxingConfig,
