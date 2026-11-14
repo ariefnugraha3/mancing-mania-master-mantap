@@ -12,7 +12,21 @@
       "generator_version": 1.0,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
       "seed": 0.0,
-      "sha256": "c50126af5217af0066194c368966c5fbd74944d7bf08d366efce893a8a8f7691"
+      "sha256": "05e40ef75c52cebcc6132ce545eb1f9e1246ebbe4e58f117bba3326dead3eca3"
+    },
+    "chr_nisa": {
+      "generator": "character_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/characters/chr_nisa.tscn",
+      "seed": 0.0,
+      "sha256": "c74b96fa609b9d5a76dc717e2954634c769d6b07a983da9dd129b1c0223be0da"
+    },
+    "chr_rini": {
+      "generator": "character_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/characters/chr_rini.tscn",
+      "seed": 0.0,
+      "sha256": "432b17e5c74292670e38503f13abd5505c8cac840ff8e525de89be5988c11854"
     },
     "env_arm_set": {
       "generator": "environment_builder",
@@ -34,6 +48,13 @@
       "output": "res://generated/scenes/environment/env_dance_set.tscn",
       "seed": 20261112.0,
       "sha256": "b1a04149f6fbd414fd60c8a2f79b822299198d248ecbe0c0402329c87be0ebf1"
+    },
+    "env_home_set": {
+      "generator": "environment_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/environment/env_home_set.tscn",
+      "seed": 20261112.0,
+      "sha256": "8596039d7e67d73ca5baaf6ce4c972cd7852a87e7b9d5b04b57cfffc65d399cc"
     },
     "env_lake_set": {
       "generator": "environment_builder",
@@ -203,6 +224,13 @@
       "seed": 0.0,
       "sha256": "2e81c7a1024f60a5518f16d6b310d475af6faf2f3efc20b9eb6bd96e459d4999"
     },
+    "prop_drink_glass": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_drink_glass.tscn",
+      "seed": 0.0,
+      "sha256": "dde425fefa6c6bada9d9996444db0efa562d6b7bdfcae4e1357fafb96c7791ed"
+    },
     "prop_fishing_rod_basic": {
       "generator": "prop_builder",
       "generator_version": 1.0,
@@ -223,6 +251,13 @@
       "output": "res://generated/scenes/props/prop_hanging_lamp.tscn",
       "seed": 0.0,
       "sha256": "1f3cd84a03e814bbf414f2c98e7f7c86b7632fbb56674d64c30adf0c2ecfe758"
+    },
+    "prop_helmet": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_helmet.tscn",
+      "seed": 0.0,
+      "sha256": "239d5af1cd87fbc5446468c62cea1b5f7a54f374885fba599d3fb848f95e5dd8"
     },
     "prop_market_fan": {
       "generator": "prop_builder",
@@ -273,12 +308,33 @@
       "seed": 0.0,
       "sha256": "241d58f286545bc369e451134e10a87e1de9b9f9872c9a196ac412a6b3c64146"
     },
+    "prop_motorcycle_darto": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_motorcycle_darto.tscn",
+      "seed": 0.0,
+      "sha256": "507cb092ed2fdb28c580b9b452b1f00e83e32816ff958de20e8b8f0b838f3972"
+    },
+    "prop_picnic_mat": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_picnic_mat.tscn",
+      "seed": 0.0,
+      "sha256": "5eae0e99ee5ada1b41fe2dabbef59570419ae93d9878032336418be395d107c7"
+    },
     "prop_plastic_chair": {
       "generator": "prop_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/props/prop_plastic_chair.tscn",
       "seed": 0.0,
       "sha256": "5c26947b6c0e5cc0e0d3b7d65409541770c0da23b7674dc9a7f8f06a7ffce39f"
+    },
+    "prop_rice_cooker": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_rice_cooker.tscn",
+      "seed": 0.0,
+      "sha256": "f3365b3274e8711009adb21a5c99138037945c089e30d0d5fd27560c5143f19d"
     },
     "prop_suwit_table": {
       "generator": "prop_builder",
@@ -334,63 +390,70 @@
       "generator_version": 1,
       "output": "res://generated/references/ref_fish_lineup.png",
       "seed": 0,
-      "sha256": "78c1a22db81b33007fcc551a24042f10fa0c7fc2544127c3f6ff0fc8299b8c12"
+      "sha256": "0d70184a254180f2b7781300123cb30d661365d0fac37f067d940eb77f0c698f"
     },
     "ref_set_arm": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_arm.png",
       "seed": 0,
-      "sha256": "0685a48c695c89f623dabf941610e9af9fe0974f1b918c0f71d7977b280f2d47"
+      "sha256": "2beaef59a8f67cf3d674fa31aaf140a2187224bbb7e1f5d2bdb71c3efa73c125"
     },
     "ref_set_boxing": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing.png",
       "seed": 0,
-      "sha256": "2428734043b05fe1dd8d27e1fa52598b2cf15b771bc22a0fd84ff2009738a470"
+      "sha256": "f9133b137af18c6b5a21fa3b4e6c6e0b96fb0af8f879a7639eb821c76b89286c"
     },
     "ref_set_boxing_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing_portrait.png",
       "seed": 0,
-      "sha256": "cb54f1e47263246bafa2b0dd69850f560a3081a029b68c0c8bebd2f5eac2c94c"
+      "sha256": "7112a8203dc6339f179c0655101578dd00920d9cae297ad67c2430abd2b9be42"
     },
     "ref_set_dance": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_dance.png",
       "seed": 0,
-      "sha256": "6903200c41edee628952bf8cde7148b5390e6d716d420ee30d66f2728aeded77"
+      "sha256": "51428d51c445cd92bd972b5dc1b5b1f8d0ae8668a038f9e3b229daf0e7e34eaa"
+    },
+    "ref_set_home": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1,
+      "output": "res://generated/references/ref_set_home.png",
+      "seed": 0,
+      "sha256": "23e0fc97664646f9d039a2823960afd26a24177422082a9691ad840fd6a9d287"
     },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_lake.png",
       "seed": 0,
-      "sha256": "4a43bb902bb829493890036e1467cc7446a4e975de59e581fd53890145f543d2"
+      "sha256": "245afdd20e0ed9a3a4ceb1ed839da6d3519d5bff3444350eaed2d10f6aaa7164"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_market.png",
       "seed": 0,
-      "sha256": "7ef1c4b8ec7b1d2392c8f52413c6240a999fe808830f44190c18fdc6f3b49261"
+      "sha256": "5aef299d64c10aefa6ba76b4eaa3d5d02c91cbe75cec480cea2d4d349943f5dc"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_market_portrait.png",
       "seed": 0,
-      "sha256": "18539d4a4a4731a1ef6388a527841937b53352e54d4fcc580c3fcc88dae8d322"
+      "sha256": "501f920260a108606070f77b239f5db267e3a622d35e0639e000ff0c68bd4451"
     },
     "ref_set_suwit": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_suwit.png",
       "seed": 0,
-      "sha256": "64722ff4cee94ceb92374441953e702232b9896c79d45b7182ed0fc904d8c844"
+      "sha256": "9e94e7190a6f8fd9612977686a38fea414f61df3b3f6d1ac815352f778109924"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",
@@ -450,5 +513,5 @@
     }
   },
   "generator_schema": 1,
-  "project_version": "0.7.0"
+  "project_version": "0.8.0"
 }
