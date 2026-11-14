@@ -838,3 +838,84 @@ func test_arm_wrestle_portrait_layout() -> bool:
 	window.size = original_size
 	await wait_frames(3)
 	return true
+
+
+# --- Dance (GDD 168.9, 175.16, 176.12) --------------------------------------
+
+const STAGE := "DanceCanvas/SafeRoot/"
+
+
+func test_dance_scene_plays_on_the_audio_clock() -> bool:
+	if not check(await _enter_duel(&"dance", &"tilapia_gym_rat"), "a hooked fish reaches the stage"):
+		return true
+	var scene := tree.current_scene
+	check_eq(scene.name, &"Dance", "the Dance scene is up")
+	for path: String in [
+		"DanceController", "RhythmClock", "ChartGenerator", "World/DanceSet", "World/DartoDancer", "World/FishDancer",
+		"World/DanceCamera", STAGE + "LaneContainer/Lane1", STAGE + "LaneContainer/Lane2", STAGE + "LaneContainer/Lane3",
+		STAGE + "LaneContainer/Lane4", STAGE + "HitLine", STAGE + "ScoreWidget", STAGE + "ComboWidget",
+		STAGE + "JudgmentLabel", STAGE + "BeatPulse", "PauseOverlay",
+	]:
+		check(scene.has_node(path), "node %s exists (GDD 168.9)" % path)
+	var controller := scene.get_node("DanceController") as DanceController
+	var clock := scene.get_node("RhythmClock") as RhythmClock
+	var music := AudioManager.get_music_engine()
+	check_eq(clock.source, RhythmClock.SOURCE_AUDIO, "the duel is judged on the audio clock")
+	check(await wait_until(music.is_song_playing, 30.0), "the koplo track is rendered and starts")
+	var first := clock.get_time()
+	await wait_seconds(0.5)
+	var second := clock.get_time()
+	check(second > first + 0.3, "the song clock follows the playing audio (%.2f -> %.2f s)" % [first, second])
+	check_eq(music.get_song_schedule()["seed"], controller.get_chart()["seed"], "the track playing is the chart's own")
+
+	# Lane input: the key action and the touch target both reach the rules.
+	var notes := controller.get_notes()
+	check(await wait_until(func() -> bool: return clock.get_time() >= float(notes[0]["time"]) - 0.01, 10.0), "the first note arrives")
+	(scene.get_node("DanceCanvas") as DanceHud).get_lane_button(int(notes[0]["lane"])).button_down.emit()
+	await wait_frames(1)
+	check(controller.get_player_judgment(0) != &"" and controller.get_player_judgment(0) != DanceController.MISS, "a touch on the right lane hits the first note")
+
+	# Pausing restarts the dance from the count-in with the same chart.
+	var chart_seed: int = controller.get_chart()["seed"]
+	var pause := scene.get_node("PauseOverlay") as PauseOverlay
+	pause.open()
+	check(tree.paused, "the dance pauses")
+	pause.resume()
+	await wait_frames(2)
+	check_eq(controller.get_snapshot()["player_score"], 0, "after a pause the dance starts over")
+	check_eq(controller.get_chart()["seed"], chart_seed, "with the same chart")
+	check(await wait_until(music.is_song_playing, 10.0), "and the track starts again")
+
+	DebugService.set_forced_result(&"win")
+	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
+	check(await wait_until(overlay.is_open, 10.0), "the result is shown")
+	check_eq(GameState.get_stat(&"dance_wins"), 1, "one dance win")
+	check(not music.is_song_playing(), "the track stops after the dance")
+	overlay.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
+	DebugService.clear_forces()
+	return true
+
+
+func test_dance_portrait_lanes_are_full_touch_targets() -> bool:
+	if not check(await _enter_duel(&"dance", &"catfish_bruiser"), "reach the stage"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("DanceCanvas") as DanceHud
+	var window := tree.root
+	var original := window.size
+	window.size = Vector2i(720, 1280)
+	await wait_frames(4)
+	var area := (scene.get_node("DanceCanvas/SafeRoot") as Control).get_global_rect()
+	var widths: Array[float] = []
+	for lane: int in 4:
+		var rect := hud.get_lane_button(lane).get_global_rect()
+		widths.append(rect.size.x)
+		check(rect.size.y >= area.size.y * 0.3, "lane %d touch target spans the lower lane (%d px)" % [lane + 1, int(rect.size.y)])
+		check(area.grow(1.0).encloses(rect), "lane %d is inside the safe area" % (lane + 1))
+		if lane > 0:
+			check(not rect.intersects(hud.get_lane_button(lane - 1).get_global_rect()), "lanes %d and %d do not overlap" % [lane, lane + 1])
+	check(widths.max() - widths.min() < 1.0 and widths[0] >= 150.0, "four equal, wide lanes (%d px)" % int(widths[0]))
+	window.size = original
+	await wait_frames(3)
+	return true

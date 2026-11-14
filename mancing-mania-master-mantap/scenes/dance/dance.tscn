@@ -1,0 +1,84 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/dance/dance_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/dance/dance_controller.gd" id="2_controller"]
+[ext_resource type="Script" path="res://scripts/gameplay/dance/rhythm_clock.gd" id="3_clock"]
+[ext_resource type="Script" path="res://scripts/gameplay/dance/chart_generator.gd" id="4_chart"]
+[ext_resource type="Script" path="res://scripts/actors/dance_world.gd" id="5_world"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_dance_set.tscn" id="6_set"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="7_darto"]
+[ext_resource type="Script" path="res://scripts/ui/dance_hud.gd" id="8_hud"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="9_safe"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause"]
+
+[node name="Dance" type="Node"]
+script = ExtResource("1_scene")
+
+[node name="DanceController" type="Node" parent="."]
+script = ExtResource("2_controller")
+
+[node name="RhythmClock" type="Node" parent="."]
+script = ExtResource("3_clock")
+
+[node name="ChartGenerator" type="Node" parent="."]
+script = ExtResource("4_chart")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("5_world")
+
+[node name="DanceSet" parent="World" instance=ExtResource("6_set")]
+
+[node name="DartoDancer" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/DartoDancer" instance=ExtResource("7_darto")]
+
+[node name="FishDancer" type="Node3D" parent="World"]
+
+[node name="DanceCamera" type="Camera3D" parent="World"]
+current = true
+fov = 45.0
+far = 300.0
+
+[node name="DanceCanvas" type="CanvasLayer" parent="."]
+script = ExtResource("8_hud")
+
+[node name="SafeRoot" type="Control" parent="DanceCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_safe")
+
+[node name="LaneContainer" type="Control" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="Lane1" type="Control" parent="DanceCanvas/SafeRoot/LaneContainer"]
+mouse_filter = 2
+
+[node name="Lane2" type="Control" parent="DanceCanvas/SafeRoot/LaneContainer"]
+mouse_filter = 2
+
+[node name="Lane3" type="Control" parent="DanceCanvas/SafeRoot/LaneContainer"]
+mouse_filter = 2
+
+[node name="Lane4" type="Control" parent="DanceCanvas/SafeRoot/LaneContainer"]
+mouse_filter = 2
+
+[node name="HitLine" type="Control" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="ScoreWidget" type="PanelContainer" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="ComboWidget" type="Label" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="JudgmentLabel" type="Label" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="BeatPulse" type="Control" parent="DanceCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="PauseOverlay" parent="." instance=ExtResource("10_pause")]

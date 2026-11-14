@@ -158,6 +158,7 @@ func build_fish(fish_id: StringName) -> Node3D:
 	var clips := _build_clips(skeleton, length)
 	clips.append_array(_build_boxing_clips(skeleton, fish_id, length))
 	clips.append_array(_build_arm_clips(skeleton, fish_id, length))
+	clips.append_array(_build_dance_clips(skeleton, fish_id, length))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -641,5 +642,61 @@ func _build_arm_clips(skeleton: Skeleton3D, fish_id: StringName, length: float) 
 	var slump := {"fin_left": Vector3(-30, -20, 0), "fin_right": Vector3(0, 20, 0), "jaw_or_head": Vector3(0, 0, 10), "tail_base": Vector3(0, 0, 10)}
 	_box_pose(lose, length, 0.5, Vector3(-60, 0, STAND_PITCH - 10.0), Vector3(0, -0.2, 0.1), slump)
 	_box_pose(lose, length, 1.0, Vector3(-82, 0, STAND_PITCH - 12.0), Vector3(0, -0.33, 0.12), slump)
+	clips.append(lose)
+	return clips
+
+
+# --- Dance clips (GDD 172.6) ------------------------------------------------
+# The fish stands on its tail facing the audience. The better the judgment,
+# the bigger the move: GOOD is a fin wave, GREAT a twist, PERFECT a hop.
+
+func _build_dance_clips(skeleton: Skeleton3D, fish_id: StringName, length: float) -> Array:
+	var clips: Array = []
+	var style: Array = BOX_STYLE[fish_id]
+	var sway: float = style[2]
+
+	# One loop is two beats at 120 BPM; the scene scales it to the song.
+	var idle := RigBuilder.Clip.new(skeleton, &"dance_idle", 1.0, true)
+	for step: int in 5:
+		var up := step % 2 == 1
+		_box_pose(idle, length, 0.25 * float(step), Vector3((sway + 6.0) * (1.0 if step == 1 else -1.0 if step == 3 else 0.0), 0, STAND_PITCH),
+			Vector3(0, 0.04 if up else 0.0, 0), {
+				"fin_left": Vector3(0, -40 if up else -20, 0), "fin_right": Vector3(0, 40 if up else 20, 0),
+				"tail_base": Vector3(0, 0, -38 if up else -30)})
+	clips.append(idle)
+
+	var moves: Dictionary = {
+		&"dance_good": [Vector3(8, 0, STAND_PITCH), Vector3(0, 0.03, 0), {"fin_left": Vector3(-50, -70, 0), "fin_right": Vector3(0, 30, 0)}],
+		&"dance_great": [Vector3(-14, 40, STAND_PITCH), Vector3(0, 0.06, 0), {"fin_left": Vector3(0, -110, 0), "fin_right": Vector3(0, 110, 0), "jaw_or_head": Vector3(0, 0, 10)}],
+		&"dance_perfect": [Vector3(0, 0, STAND_PITCH + 20.0), Vector3(0, 0.22, 0), {"fin_left": Vector3(-40, -130, 0), "fin_right": Vector3(40, 130, 0), "tail_base": Vector3(0, 0, -60), "jaw_or_head": Vector3(0, 0, 16)}],
+	}
+	for clip_name: StringName in moves:
+		var move: Array = moves[clip_name]
+		var clip := RigBuilder.Clip.new(skeleton, clip_name, 0.4)
+		_box_pose(clip, length, 0.0)
+		_box_pose(clip, length, 0.12, move[0], move[1], move[2])
+		_box_pose(clip, length, 0.22, move[0], move[1], move[2])
+		_box_pose(clip, length, 0.4)
+		clips.append(clip)
+
+	var miss := RigBuilder.Clip.new(skeleton, &"dance_miss", 0.5)
+	_box_pose(miss, length, 0.0)
+	_box_pose(miss, length, 0.15, Vector3(24, 0, STAND_PITCH - 14.0), Vector3(0, -0.02, 0), {"fin_left": Vector3(30, -10, 0), "fin_right": Vector3(-30, 10, 0), "jaw_or_head": Vector3(0, 0, 12)})
+	_box_pose(miss, length, 0.3, Vector3(-10, 0, STAND_PITCH - 6.0), Vector3.ZERO, {"fin_left": Vector3(10, -20, 0)})
+	_box_pose(miss, length, 0.5)
+	clips.append(miss)
+
+	var win := RigBuilder.Clip.new(skeleton, &"dance_win", 1.2, true)
+	for step: int in 5:
+		var spin := 90.0 * float(step)
+		_box_pose(win, length, 0.3 * float(step), Vector3(0, spin, STAND_PITCH), Vector3(0, 0.08 if step % 2 == 1 else 0.0, 0),
+			{"fin_left": Vector3(0, -130, 0), "fin_right": Vector3(0, 130, 0)})
+	clips.append(win)
+
+	var lose := RigBuilder.Clip.new(skeleton, &"dance_lose", 1.0)
+	_box_pose(lose, length, 0.0)
+	var slump := {"fin_left": Vector3(10, -6, 0), "fin_right": Vector3(-10, 6, 0), "jaw_or_head": Vector3(0, 0, 20), "body_back": Vector3(0, 0, 8)}
+	_box_pose(lose, length, 0.5, Vector3(0, 0, STAND_PITCH - 30.0), Vector3(0, -0.05, 0), slump)
+	_box_pose(lose, length, 1.0, Vector3(0, 0, STAND_PITCH - 34.0), Vector3(0, -0.06, 0), slump)
 	clips.append(lose)
 	return clips

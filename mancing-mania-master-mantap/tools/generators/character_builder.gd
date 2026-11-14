@@ -131,6 +131,7 @@ func build_darto() -> Node3D:
 	var clips := _build_darto_clips(skeleton)
 	clips.append_array(_build_darto_boxing_clips(skeleton))
 	clips.append_array(_build_darto_arm_clips(skeleton))
+	clips.append_array(_build_darto_dance_clips(skeleton))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -902,3 +903,103 @@ func _arm_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset: 
 	clip.move("root", time, ARM_DROP + offset)
 	for bone: String in ARM_POSE:
 		clip.rot(bone, time, changes.get(bone, ARM_POSE[bone]))
+
+
+# --- Darto: dance (GDD 172.4) -----------------------------------------------
+# Standing, facing the audience. One move per lane: lanes 1 and 2 are his
+# left arm (low, then high), lanes 3 and 4 his right (high, then low), so the
+# body echoes where the note was on screen.
+
+const DANCE_POSE: Dictionary = {
+	"pelvis": Vector3(0, 0, 0),
+	"spine_lower": Vector3(-2, 0, 0),
+	"spine_upper": Vector3(-2, 0, 0),
+	"neck": Vector3(0, 0, 0),
+	"head": Vector3(-2, 0, 0),
+	"upper_arm_r": Vector3(10, 0, 18),
+	"forearm_r": Vector3(40, 0, 0),
+	"hand_r": Vector3(0, 0, 0),
+	"upper_arm_l": Vector3(10, 0, -18),
+	"forearm_l": Vector3(40, 0, 0),
+	"hand_l": Vector3(0, 0, 0),
+	"thigh_l": Vector3(6, 0, -4),
+	"shin_l": Vector3(-10, 0, 0),
+	"foot_l": Vector3(4, 0, 0),
+	"thigh_r": Vector3(6, 0, 4),
+	"shin_r": Vector3(-10, 0, 0),
+	"foot_r": Vector3(4, 0, 0),
+}
+
+
+func _build_darto_dance_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+
+	# Two beats at 120 BPM per loop; the scene scales it to the song tempo.
+	var idle := RigBuilder.Clip.new(skeleton, &"dance_idle_bounce", 1.0, true)
+	for step: int in 5:
+		var down := step % 2 == 1
+		var lean := 6.0 * (1.0 if step == 1 else -1.0 if step == 3 else 0.0)
+		_dance_pose(idle, 0.25 * float(step), {
+			"spine_upper": Vector3(-4 if down else -2, 0, lean), "pelvis": Vector3(0, 0, -lean * 0.5),
+			"thigh_l": Vector3(14 if down else 6, 0, -4), "shin_l": Vector3(-22 if down else -10, 0, 0),
+			"thigh_r": Vector3(14 if down else 6, 0, 4), "shin_r": Vector3(-22 if down else -10, 0, 0),
+		}, Vector3(0, -0.035 if down else 0.0, 0))
+	clips.append(idle)
+
+	var lanes: Array = [
+		{"upper_arm_l": Vector3(20, 0, -70), "forearm_l": Vector3(10, 0, 0), "spine_upper": Vector3(-2, 0, -8)},
+		{"upper_arm_l": Vector3(20, 0, -160), "forearm_l": Vector3(20, 0, 0), "spine_upper": Vector3(-2, 0, -4)},
+		{"upper_arm_r": Vector3(20, 0, 160), "forearm_r": Vector3(20, 0, 0), "spine_upper": Vector3(-2, 0, 4)},
+		{"upper_arm_r": Vector3(20, 0, 70), "forearm_r": Vector3(10, 0, 0), "spine_upper": Vector3(-2, 0, 8)},
+	]
+	for lane: int in lanes.size():
+		var clip := RigBuilder.Clip.new(skeleton, StringName("dance_hit_lane_%d" % (lane + 1)), 0.3)
+		_dance_pose(clip, 0.0)
+		_dance_pose(clip, 0.08, lanes[lane], Vector3(0, -0.02, 0))
+		_dance_pose(clip, 0.16, lanes[lane], Vector3(0, -0.02, 0))
+		_dance_pose(clip, 0.3)
+		clips.append(clip)
+
+	# High combo: both arms up, hips going.
+	var combo := RigBuilder.Clip.new(skeleton, &"dance_combo_high", 1.0, true)
+	for step: int in 5:
+		var side := 1.0 if step % 2 == 1 else -1.0
+		_dance_pose(combo, 0.25 * float(step), {
+			"upper_arm_l": Vector3(10, 0, -150 - 10 * side), "upper_arm_r": Vector3(10, 0, 150 - 10 * side),
+			"forearm_l": Vector3(30, 0, 0), "forearm_r": Vector3(30, 0, 0),
+			"pelvis": Vector3(0, 0, 8 * side), "spine_upper": Vector3(-2, 0, -10 * side),
+		}, Vector3(0, -0.02 if step % 2 == 1 else 0.0, 0))
+	clips.append(combo)
+
+	var miss := RigBuilder.Clip.new(skeleton, &"dance_miss", 0.5)
+	_dance_pose(miss, 0.0)
+	var stumble := {"spine_upper": Vector3(10, 0, 10), "head": Vector3(10, 0, 8), "thigh_r": Vector3(-14, 0, 10),
+		"upper_arm_l": Vector3(30, 0, -40), "upper_arm_r": Vector3(30, 0, 40)}
+	_dance_pose(miss, 0.15, stumble, Vector3(0.04, -0.03, 0))
+	_dance_pose(miss, 0.5)
+	clips.append(miss)
+
+	var win := RigBuilder.Clip.new(skeleton, &"dance_win", 1.0, true)
+	for step: int in 5:
+		var up := step % 2 == 1
+		_dance_pose(win, 0.25 * float(step), {
+			"upper_arm_r": Vector3(20, 0, 170 if up else 150), "forearm_r": Vector3(10, 0, 0),
+			"upper_arm_l": Vector3(40, 0, -30), "forearm_l": Vector3(90, 0, 0),
+		}, Vector3(0, 0.04 if up else 0.0, 0))
+	clips.append(win)
+
+	var lose := RigBuilder.Clip.new(skeleton, &"dance_lose", 1.0)
+	_dance_pose(lose, 0.0)
+	var defeated := {"spine_upper": Vector3(18, 0, 0), "spine_lower": Vector3(8, 0, 0), "head": Vector3(20, 0, 0),
+		"upper_arm_l": Vector3(4, 0, -6), "upper_arm_r": Vector3(4, 0, 6), "forearm_l": Vector3(6, 0, 0), "forearm_r": Vector3(6, 0, 0)}
+	_dance_pose(lose, 0.6, defeated, Vector3(0, -0.02, 0))
+	_dance_pose(lose, 1.0, defeated, Vector3(0, -0.02, 0))
+	clips.append(lose)
+	return clips
+
+
+func _dance_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset: Vector3 = Vector3.ZERO) -> void:
+	clip.rot("root", time, Vector3.ZERO)
+	clip.move("root", time, offset)
+	for bone: String in DANCE_POSE:
+		clip.rot(bone, time, changes.get(bone, DANCE_POSE[bone]))

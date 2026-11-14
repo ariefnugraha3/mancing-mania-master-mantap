@@ -64,6 +64,7 @@ var _music_state: StringName = &"silence"
 var _ambience_state: StringName = &"silence"
 var _rhythm_offset_ms: int = 0
 var _ambience: AmbienceEngine
+var _music: MusicEngine
 
 
 func _ready() -> void:
@@ -85,6 +86,10 @@ func initialize_procedural_audio() -> void:
 	_ambience.name = "AmbienceEngine"
 	add_child(_ambience)
 	_ambience.set_state(_ambience_state)
+	_music = MusicEngine.new()
+	_music.name = "MusicEngine"
+	add_child(_music)
+	_music.set_state(_music_state)
 	for sfx_id: StringName in CRITICAL_SFX_IDS:
 		_get_stream(sfx_id, -1)
 	_apply_all_volumes()
@@ -124,13 +129,16 @@ func set_ambience_state(state_id: StringName, _seed: int = -1) -> void:
 		_ambience.set_state(state_id)
 
 
-## Music generators arrive with the procedural music milestone. Until then
-## every music state is silent, which is a valid state at the lake
-## (GDD 175.11); the state and its signal are live so scenes can depend on them.
+## Switches the background music: &"menu", &"fishing", &"boxing",
+## &"arm_wrestle" loop; any other state (&"market", &"dance", &"silence") is
+## silent, which is a valid music state (GDD 175.11). The Dance track is a
+## song, started with prepare_song() and play_song().
 func set_music_state(state_id: StringName, _seed: int = -1, _bpm_override: float = -1.0) -> void:
 	if _music_state == state_id:
 		return
 	_music_state = state_id
+	if _music != null:
+		_music.set_state(state_id)
 	music_state_changed.emit(_music_state)
 
 
@@ -143,6 +151,8 @@ func duck_ambience(amount_db: float, seconds: float) -> void:
 
 func stop_music(_fade_sec: float = 0.5) -> void:
 	set_music_state(&"silence")
+	if _music != null:
+		_music.stop_song()
 
 
 func set_bus_volume(bus_id: StringName, linear: float) -> void:
@@ -162,11 +172,18 @@ func set_paused(paused: bool) -> void:
 		player.stream_paused = paused
 	if _ambience != null:
 		_ambience.set_paused(paused)
+	if _music != null:
+		_music.set_paused(paused)
 
 
-## Position of the current song on the audio clock. 0.0 while no song plays.
+## Position of the current song on the audio clock (GDD 62). Never runs
+## backwards; holds its last value while no song plays.
 func get_authoritative_song_time_sec() -> float:
-	return 0.0
+	return _music.get_song_time() if _music != null else 0.0
+
+
+func get_music_engine() -> MusicEngine:
+	return _music
 
 
 func apply_rhythm_calibration(offset_ms: int) -> void:

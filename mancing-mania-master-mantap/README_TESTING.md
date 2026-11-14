@@ -21,7 +21,7 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 
 | Suite | File | Cakupan |
 |---|---|---|
-| `data` | `tests/suites/test_data.gd` | BOOT-001..004, tabel ikan/sampah/upgrade/balance sesuai GDD, InputMap, tabel teks |
+| `data` | `tests/suites/test_data.gd` | setiap skrip terkompilasi, BOOT-001..004, tabel ikan/sampah/upgrade/balance sesuai GDD, InputMap, tabel teks |
 | `state` | `tests/suites/test_game_state.gd` | API GameState, SAVE-012 (4.000 transaksi acak tanpa melanggar invariant) |
 | `save` | `tests/suites/test_save.gd` | SAVE-001..009, migrasi, import/export, penulisan terputus, DEV DIRTY |
 | `rng` | `tests/suites/test_rng.gd` | determinisme seed, distribusi 100.000 encounter |
@@ -31,6 +31,7 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 | `market` | `tests/suites/test_market.gd` | MKT-001..011, STORY-001..007 dan 011, BOOK-001..005: harga jual, Sell All dan per kategori, harga upgrade, batas pembayaran hutang, double tap, autosave gagal, antrean event cerita, round-trip save |
 | `boxing` | `tests/suites/test_boxing.gd` | BOX-001..012: HP dan Tonic, nilai dan waktu jab/cross, setiap serangan ber-telegraph, dodge benar/salah, jendela perfect 180 ms, pengali 2,0× dan 2,4×, block 40%, timeout, sudden death, keenam ikan bisa dikalahkan, commit hasil duel |
 | `arm_wrestle` | `tests/suites/test_arm_wrestle.gd` | ARM-001..011: posisi awal, impuls dan biaya stamina, batas 10 tekan/detik, jeda dan laju regen, stamina Tonic, band tenaga, burst dengan peringatan, timeout, Sudden Grip, rematch Arowana, setiap ikan kalah pada 7 tekan/detik |
+| `dance` | `tests/suites/test_dance.gd` | DANCE-001..011, AUD-011: rentang BPM dan durasi, seed yang sama menghasilkan chart dan jadwal musik yang sama, jendela PERFECT/GREAT/GOOD, skor dan bonus combo, Coffee hanya visual, penilaian tidak bergantung FPS, offset kalibrasi, AI ikan per nada, tiebreak dan encore, loop musik |
 | `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate, aset Market, potret Fish Book, kontrak animasi tinju |
 | `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait; lalu tinju: blueprint scene, tangkapan pertama sampai ember lewat duel, kalah di pelajaran pertama, input, pause, dan empat kontrol sentuh; lalu panco: blueprint, aksi dan tombol MASH, arah lengan, pause, hasil, layout portrait |
 
