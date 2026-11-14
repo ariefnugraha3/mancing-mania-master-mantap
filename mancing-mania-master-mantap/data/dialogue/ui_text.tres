@@ -691,5 +691,6 @@ entries = Dictionary[String, String]({
 "controls.action.ui_confirm": "Confirm",
 "controls.action.ui_cancel": "Back",
 "arm.button.hold": "HOLD!",
-"arm.tutorial.hold": "HOLD TO PUSH THE HANDS TOWARD YOUR SIDE"
+"arm.tutorial.hold": "HOLD TO PUSH THE HANDS TOWARD YOUR SIDE",
+"suwit.hud.fish": "FISH"
 })

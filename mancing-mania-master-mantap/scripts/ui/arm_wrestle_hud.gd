@@ -209,7 +209,7 @@ func _outlined(font_size: int) -> Label:
 
 
 func _build_mash() -> void:
-	_mash.text = TextDb.t(&"arm.button.mash")
+	_mash.text = TextDb.t(&"arm.button.hold" if HoldAssist.is_enabled() else &"arm.button.mash")
 	_mash.theme_type_variation = UiTokens.TYPE_CTA_BUTTON
 	_mash.focus_mode = Control.FOCUS_NONE
 	_mash.click_sfx = &""

@@ -8,9 +8,9 @@ extends RefCounted
 ## Background of a chip that is not a button.
 static func make_style() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color(UiTokens.CREAM_100, 0.94)
-	box.border_color = UiTokens.INK_700
-	box.set_border_width_all(2)
+	box.bg_color = Color(UiTokens.CREAM_100, 1.0 if UiTokens.is_high_contrast() else 0.94)
+	box.border_color = UiTokens.INK_900 if UiTokens.is_high_contrast() else UiTokens.INK_700
+	box.set_border_width_all(UiTokens.hud_border(2))
 	box.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
 	box.content_margin_left = UiTokens.SPACE_16
 	box.content_margin_right = UiTokens.SPACE_16

@@ -45,6 +45,9 @@ func _ready() -> void:
 	if _fish == null:
 		_fish = GameData.get_fish(DEFAULT_FISH)
 	_seed = RNGService.next_duel_seed()
+	# Opened without Boot (debug tools, probes): build the audio first.
+	if AudioManager.get_music_engine() == null:
+		AudioManager.initialize_procedural_audio()
 	_music = AudioManager.get_music_engine()
 	_controller.clock = _clock
 	_controller.note_judged.connect(_on_note_judged)

@@ -58,6 +58,9 @@ func _draw() -> void:
 		var label := TextDb.t(StringName("duel.%s.upper" % duel))
 		var font := get_theme_default_font()
 		var font_size := int(radius * 0.085)
+		if font_size < 1:
+			# Not laid out yet: nothing readable to draw.
+			continue
 		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		draw_set_transform(text_at, middle + PI * 0.5, Vector2.ONE)
 		draw_string_outline(font, Vector2(-width * 0.5, font_size * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 4, UiTokens.INK_900)

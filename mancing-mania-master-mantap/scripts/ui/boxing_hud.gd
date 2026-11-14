@@ -311,24 +311,30 @@ func _layout() -> void:
 	_layout_controls(portrait)
 
 
-## Dodge buttons sit under the left thumb, punches under the right.
+## Dodge buttons sit under the left thumb, punches under the right; a
+## left-handed layout swaps the two groups (GDD 189.12). Inside a group the
+## order never changes, so DODGE LEFT is always the left one of the pair.
 func _layout_controls(portrait: bool) -> void:
 	var box := _controls.size
 	var gap := float(UiTokens.SPACE_12)
+	var dodges := [_dodge_left, _dodge_right]
+	var punches := [_jab, _cross]
+	var first: Array = punches if UiTokens.is_left_handed() else dodges
+	var second: Array = dodges if UiTokens.is_left_handed() else punches
 	if portrait:
 		var half := (box.x - gap) * 0.5
 		var button := Vector2((half - gap) * 0.5, minf(box.y, 220.0))
 		var top := (box.y - button.y) * 0.5
-		_place(_dodge_left, Rect2(0.0, top, button.x, button.y))
-		_place(_dodge_right, Rect2(button.x + gap, top, button.x, button.y))
-		_place(_jab, Rect2(half + gap, top, button.x, button.y))
-		_place(_cross, Rect2(half + gap * 2.0 + button.x, top, button.x, button.y))
+		_place(first[0], Rect2(0.0, top, button.x, button.y))
+		_place(first[1], Rect2(button.x + gap, top, button.x, button.y))
+		_place(second[0], Rect2(half + gap, top, button.x, button.y))
+		_place(second[1], Rect2(half + gap * 2.0 + button.x, top, button.x, button.y))
 	else:
 		var button := Vector2(168.0, box.y)
-		_place(_dodge_left, Rect2(0.0, 0.0, button.x, button.y))
-		_place(_dodge_right, Rect2(button.x + gap, 0.0, button.x, button.y))
-		_place(_cross, Rect2(box.x - button.x, 0.0, button.x, button.y))
-		_place(_jab, Rect2(box.x - button.x * 2.0 - gap, 0.0, button.x, button.y))
+		_place(first[0], Rect2(0.0, 0.0, button.x, button.y))
+		_place(first[1], Rect2(button.x + gap, 0.0, button.x, button.y))
+		_place(second[0], Rect2(box.x - button.x * 2.0 - gap, 0.0, button.x, button.y))
+		_place(second[1], Rect2(box.x - button.x, 0.0, button.x, button.y))
 
 
 func _place(control: Control, rect: Rect2) -> void:

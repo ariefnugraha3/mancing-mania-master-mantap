@@ -10,7 +10,7 @@ signal finished()
 
 const BOX_WIDTH := 760.0
 ## Text appears this many characters per second at the "normal" setting.
-const CHARS_PER_SEC: Dictionary = {"slow": 30.0, "normal": 55.0, "fast": 110.0, "instant": 0.0}
+const CHARS_PER_SEC: Dictionary = {"relaxed": 30.0, "normal": 55.0, "fast": 110.0, "instant": 0.0}
 
 var _panel: PanelContainer
 var _speaker: Label

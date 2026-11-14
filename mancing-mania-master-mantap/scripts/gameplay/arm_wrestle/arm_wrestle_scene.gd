@@ -71,7 +71,12 @@ func _process(delta: float) -> void:
 	if InputManager.consume_action_once(InputActions.PAUSE):
 		_open_pause()
 		return
-	if InputManager.consume_action_once(&"arm_mash"):
+	if HoldAssist.is_enabled():
+		InputManager.consume_action_once(&"arm_mash")
+		var held := InputManager.get_action_strength_safe(&"arm_mash") > 0.0
+		for push: int in _hold_assist.step(held, minf(delta, MAX_TIME_STEP_SEC)):
+			_controller.request_mash()
+	elif InputManager.consume_action_once(&"arm_mash"):
 		_controller.request_mash()
 	if DebugService.is_auto_duel_enabled():
 		_bot().play(_controller)
@@ -94,6 +99,7 @@ func _open_pause() -> void:
 
 
 var _auto_bot: ArmWrestleBot
+var _hold_assist := HoldAssist.new()
 
 
 func _bot() -> ArmWrestleBot:
@@ -107,7 +113,7 @@ func _bot() -> ArmWrestleBot:
 func _on_duel_started(_snapshot: Dictionary) -> void:
 	_hud.show_banner(_fish.display_name.to_upper(), TextDb.t(&"arm.intro.subtitle"), INTRO_BANNER_SEC)
 	if not GameState.is_tutorial_seen(TUTORIAL_ID):
-		_hud.show_hint(TextDb.t(&"arm.tutorial.mash"))
+		_hud.show_hint(TextDb.t(&"arm.tutorial.hold" if HoldAssist.is_enabled() else &"arm.tutorial.mash"))
 
 
 func _on_press_accepted(_power: float) -> void:
