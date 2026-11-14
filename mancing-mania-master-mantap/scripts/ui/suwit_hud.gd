@@ -24,8 +24,8 @@ const BUTTON_SIZE := Vector2(180.0, 150.0)
 
 var _tell_icon: MoveIcon
 var _tell_label: Label
-var _player_dots: Array[ColorRect] = []
-var _fish_dots: Array[ColorRect] = []
+var _player_dots: Array[Panel] = []
+var _fish_dots: Array[Panel] = []
 var _banner: Label
 var _banner_body: Label
 var _banner_left: float = 0.0
@@ -168,7 +168,7 @@ func _build_dots() -> void:
 	var wins := GameData.get_suwit_config().wins_required
 	for side: int in 2:
 		var label := Label.new()
-		label.text = TextDb.t(&"boxing.hud.player") if side == 0 else "FISH"
+		label.text = TextDb.t(&"boxing.hud.player" if side == 0 else &"suwit.hud.fish")
 		UiTokens.outline_text(label, UiTokens.FONT_SMALL, UiTokens.CREAM_50, 6)
 		if side == 1:
 			var spacer := Control.new()
@@ -176,15 +176,25 @@ func _build_dots() -> void:
 			_dots.add_child(spacer)
 		_dots.add_child(label)
 		for index: int in wins:
-			var dot := ColorRect.new()
-			dot.custom_minimum_size = Vector2(22.0, 22.0)
+			var dot := Panel.new()
+			dot.name = "Dot%d_%d" % [side, index]
+			dot.custom_minimum_size = Vector2(26.0, 26.0)
+			dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_dots.add_child(dot)
 			(_player_dots if side == 0 else _fish_dots).append(dot)
 
 
-## A won point is a filled dot with a thick border; an open one is hollow.
-func _style_dot(dot: ColorRect, filled: bool, color: Color) -> void:
-	dot.color = color if filled else Color(UiTokens.CREAM_50, 0.35)
+## A won point is a filled round dot with a thick border; an open one is a
+## hollow ring. Filled versus hollow reads without the colours (GDD 189.5).
+func _style_dot(dot: Panel, filled: bool, color: Color) -> void:
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(13)
+	box.border_color = UiTokens.INK_900 if filled else UiTokens.CREAM_50
+	box.set_border_width_all(UiTokens.hud_border(4) if filled else UiTokens.hud_border(3))
+	box.bg_color = color if filled else Color(UiTokens.INK_900, 0.35)
+	dot.add_theme_stylebox_override(&"panel", box)
+	dot.set_meta(&"filled", filled)
 
 
 func _outlined(font_size: int) -> Label:

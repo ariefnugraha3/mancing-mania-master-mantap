@@ -146,7 +146,7 @@ func _draw_marker() -> void:
 	var middle := size.y * 0.5
 	var fill := UiTokens.SUN_500 if _held else UiTokens.CREAM_50
 	var bar := Rect2(12.0, middle - 4.0, size.x - 24.0, 8.0)
-	_marker.draw_rect(bar.grow(2.0), UiTokens.INK_900)
+	_marker.draw_rect(bar.grow(float(UiTokens.hud_border(2))), UiTokens.INK_900)
 	_marker.draw_rect(bar, fill)
 	for side: float in [0.0, 1.0]:
 		var tip_x := lerpf(12.0, size.x - 12.0, side)
@@ -159,7 +159,7 @@ func _box(fill: Color, border: Color, radius: int) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = fill
 	box.border_color = border
-	box.set_border_width_all(2)
+	box.set_border_width_all(UiTokens.hud_border(2))
 	box.set_corner_radius_all(radius)
 	return box
 

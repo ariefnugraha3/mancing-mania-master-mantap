@@ -22,6 +22,8 @@ const PEOPLE: Dictionary = {
 }
 const PROP_PATH := "res://generated/scenes/props/%s.tscn"
 const TITLE_HOLD_SEC := 3.2
+const PHONE_IN_HAND_OFFSET := Vector3(0.0, -0.08, -0.02)
+const PHONE_IN_HAND_ROTATION := Vector3(0.0, 0.0, 0.0)
 ## QA only: how long a line stays up when dialogue advances by itself.
 const AUTO_STEP_SEC := 0.5
 
@@ -242,9 +244,10 @@ func _spawn_actor(actor: Dictionary) -> void:
 		if gloves != null:
 			gloves.visible = false
 	_actors_root.add_child(node)
+	# A character built smaller (Nisa) keeps its own scale on its mark.
+	var built_scale := node.scale
 	node.transform = _placement(actor)
-	if actor.has("scale"):
-		node.scale = Vector3.ONE * float(actor["scale"])
+	node.scale = built_scale * float(actor.get("scale", 1.0))
 	node.visible = not bool(actor.get("hidden", false))
 	_actors[who] = node
 	if actor.has("clip"):
@@ -288,6 +291,28 @@ func _play_clip(who: String, clip: StringName) -> void:
 	var player := actor.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	if player != null and player.has_animation(clip):
 		player.play(clip, 0.2)
+	_hold_phone(actor, String(clip).contains("phone"))
+
+
+## Phone clips put a phone in the right hand; other clips put it away.
+func _hold_phone(actor: Node3D, holding: bool) -> void:
+	var skeleton := actor.find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null or skeleton.find_bone("hand_r") < 0:
+		return
+	var grip := skeleton.get_node_or_null("PhoneGrip") as BoneAttachment3D
+	if grip == null:
+		if not holding:
+			return
+		grip = BoneAttachment3D.new()
+		grip.name = "PhoneGrip"
+		grip.bone_name = "hand_r"
+		skeleton.add_child(grip)
+		var phone: Node3D = (load(PROP_PATH % "prop_phone") as PackedScene).instantiate()
+		phone.name = "Phone"
+		grip.add_child(phone)
+		phone.position = PHONE_IN_HAND_OFFSET
+		phone.rotation_degrees = PHONE_IN_HAND_ROTATION
+	grip.visible = holding
 
 
 func _set_actor_visible(who: String, shown: bool) -> void:

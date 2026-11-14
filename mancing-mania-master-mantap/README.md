@@ -16,8 +16,8 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 6 | Joget koplo dan mesin musik prosedural | selesai (`0.6.0`) |
 | 7 | Suwit, Wheel, Result, kepribadian ikan | selesai (`0.7.0`) |
 | 8 | Cerita, cutscene, ending | selesai (`0.8.0`) |
-| 9 | Art/UI/audio final, aksesibilitas, performa | berikutnya |
-| 10 | Balance, QA penuh, export, rilis | belum |
+| 9 | Art/UI/audio final, aksesibilitas, performa | selesai (`0.9.0`) |
+| 10 | Balance, QA penuh, export, rilis | berikutnya |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -74,11 +74,11 @@ Jangan mengedit file di `generated/` dengan tangan. Ubah generator di `tools/gen
 autoload/     9 service global: GameState, SaveManager, SceneRouter, AudioManager,
               InputManager, PlatformService, RNGService, StoryDirector, DebugService
 data/         data authoritative (.tres): ikan, sampah, upgrade, balance, audio, teks
-scenes/       scene per layar (boot, menu, fishing, market, wheel, empat duel, result, ...)
+scenes/       scene per layar (boot, menu, fishing, market, wheel, empat duel, result, story, credits)
 scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, arm_wrestle/, duel/), actors/,
               ui/ (termasuk ui/market/ untuk halaman ledger), audio/, utilities/
 shaders/      shader buatan project (air danau, goyangan dedaunan, siluet Fish Book)
-tools/        generators/ (pembuat aset) dan validation/ (pemeriksa kebijakan aset)
+tools/        generators/ (pembuat aset), validation/ (pemeriksa kebijakan aset), perf/ (probe performa)
 generated/    output generator; boleh di-commit, bisa dibuat ulang kapan saja
 tests/        test headless
 docs/         keputusan implementasi dan laporan milestone
@@ -98,7 +98,18 @@ docs/         keputusan implementasi dan laporan milestone
 - Overlay bisa memaksa tangkapan berikutnya (lele, arwana, sampah), memendekkan waktu tunggu gigitan, dan menampilkan nilai internal reel.
 - Dari command line: bot yang memainkan duel, paksa arah serangan tinju, paksa hasil duel, dan langsung masuk ring melawan ikan tertentu.
 - Mengubah cash/hutang lewat overlay menandai state sebagai `DEV DIRTY STATE`; autosave diblokir sampai Anda menekan `SAVE DEBUG STATE`. Halaman Market ikut diperbarui saat nilainya diubah dari overlay.
+- `--mm-event=<id>` memutar event cerita, `--mm-credits` memutar credits, `--mm-auto-dialogue` memajukan dialog dan cerita sendiri.
 - Screenshot UI dari terminal dijelaskan di [README_TESTING.md](README_TESTING.md).
+
+## Mengukur performa
+
+Jalankan di jendela (bukan headless) agar renderer nyata dipakai:
+
+```text
+godot --path . --resolution 1280x720 --script res://tools/perf/perf_probe.gd -- --out=C:/tmp/perf.json
+```
+
+Hasil dan pembacaannya ada di `docs/performance_report.md`.
 
 ## Belum tersedia
 

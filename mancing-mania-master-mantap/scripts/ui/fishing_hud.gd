@@ -150,7 +150,7 @@ func _refresh_prompt() -> void:
 func _show(title: String, subtitle: String, accent: bool) -> void:
 	_prompt_label.text = title
 	_prompt_label.visible = title != ""
-	_prompt_label.add_theme_font_size_override(&"font_size", 34 if accent else UiTokens.FONT_HEADER)
+	_prompt_label.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(34 if accent else UiTokens.FONT_HEADER))
 	_sub_label.text = subtitle
 	_sub_label.visible = subtitle != ""
 
@@ -229,6 +229,13 @@ func _build_prompt() -> void:
 	_strike_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_strike_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_strike_bar.visible = false
+	if UiTokens.is_high_contrast():
+		# The strike prompt gets a strong border (GDD 189.4).
+		var frame := StyleBoxFlat.new()
+		frame.bg_color = UiTokens.INK_900
+		frame.border_color = UiTokens.CREAM_50
+		frame.set_border_width_all(3)
+		_strike_bar.add_theme_stylebox_override(&"background", frame)
 	_prompt.add_child(_strike_bar)
 
 
@@ -276,7 +283,7 @@ func _layout() -> void:
 
 	UiTokens.anchor_at(_top_bar, Control.PRESET_TOP_LEFT)
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
-	UiTokens.anchor_at(_market_button, Control.PRESET_BOTTOM_LEFT)
+	UiTokens.anchor_at(_market_button, Control.PRESET_BOTTOM_RIGHT if UiTokens.is_left_handed() else Control.PRESET_BOTTOM_LEFT)
 	UiTokens.anchor_at(_action_button, Control.PRESET_CENTER_BOTTOM)
 	if portrait:
 		# Keep the big button clear of the Market button on narrow screens.

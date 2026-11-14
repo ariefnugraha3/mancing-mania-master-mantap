@@ -538,7 +538,8 @@ const RING := "BoxingCanvas/SafeRoot/"
 ## Waits for the Result scene; returns it (or null).
 func _await_result() -> Node:
 	var before := _finished_transitions.count(&"result")
-	if not await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 20.0):
+	# A Suwit match with several drawn rounds can run past 20 seconds.
+	if not await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 60.0):
 		return null
 	await wait_frames(3)
 	return tree.current_scene

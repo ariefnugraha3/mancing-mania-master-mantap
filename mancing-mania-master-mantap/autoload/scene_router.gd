@@ -50,6 +50,10 @@ var _loading_label: Label
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_overlay()
+	# Display settings follow the save: UI and text scale, graphics quality.
+	GameState.settings_changed.connect(func(key: StringName) -> void: DisplaySettings.apply_setting(get_tree(), key))
+	GameState.state_replaced.connect(func() -> void: DisplaySettings.apply_all(get_tree()))
+	DisplaySettings.apply_all.call_deferred(get_tree())
 
 
 # --- Public API (GDD 169.4) -------------------------------------------------
@@ -147,6 +151,8 @@ func _route(scene_id: StringName, context: Dictionary) -> void:
 	# The swap happens at the end of the frame; wait until the new scene is in.
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if get_tree().current_scene != null:
+		DisplaySettings.apply_quality_to(get_tree().current_scene)
 
 	await _fade_to(0.0, FADE_IN_SEC)
 	InputManager.set_gameplay_input_enabled(true)

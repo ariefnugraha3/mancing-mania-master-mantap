@@ -72,8 +72,26 @@ static func anchor_at(control: Control, preset: Control.LayoutPreset) -> void:
 
 
 ## Light text with a dark outline: readable over any part of the 3D scene.
+## High Contrast HUD (GDD 189.4): stronger panels, outlines and borders.
+## World art never changes.
+static func is_high_contrast() -> bool:
+	return bool(GameState.get_setting(&"high_contrast_hud"))
+
+
+## MOBILE HANDEDNESS (GDD 189.12): left-handed layouts swap the side clusters.
+static func is_left_handed() -> bool:
+	return str(GameState.get_setting(&"mobile_handedness")) == "left"
+
+
+## Border width of a HUD element, thicker in High Contrast.
+static func hud_border(base: int) -> int:
+	return base + 2 if is_high_contrast() else base
+
+
 static func outline_text(label: Label, font_size: int, color: Color = CREAM_50, outline: int = 9) -> void:
-	label.add_theme_font_size_override(&"font_size", font_size)
+	label.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(font_size))
+	if is_high_contrast():
+		outline += 4
 	label.add_theme_color_override(&"font_color", color)
 	label.add_theme_color_override(&"font_outline_color", INK_900)
 	label.add_theme_constant_override(&"outline_size", outline)

@@ -1158,6 +1158,18 @@
 				{
 					"fade": "out"
 				}
+			],
+			"props": [
+				{
+					"prop": "prop_plastic_chair",
+					"spot": "DartoSpot",
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"yaw": 0
+				}
 			]
 		},
 		"story_arowana_first_win": {
@@ -1515,6 +1527,36 @@
 						0.1
 					],
 					"yaw": 90
+				},
+				{
+					"prop": "prop_plastic_chair",
+					"spot": "DartoSpot",
+					"offset": [
+						-0.3,
+						0.0,
+						0.5
+					],
+					"yaw": 30
+				},
+				{
+					"prop": "prop_plastic_chair",
+					"spot": "DartoSpot",
+					"offset": [
+						0.5,
+						0.0,
+						0.9
+					],
+					"yaw": 340
+				},
+				{
+					"prop": "prop_plastic_chair",
+					"spot": "DartoSpot",
+					"offset": [
+						-1.1,
+						0.0,
+						1.1
+					],
+					"yaw": 40
 				}
 			],
 			"cameras": {

@@ -53,7 +53,11 @@ func _draw() -> void:
 	for lane: int in LANES:
 		var rect := get_lane_rect(lane)
 		draw_rect(rect, Color(UiTokens.INK_900, 0.5 + 0.25 * lane_flash[lane]))
-		draw_rect(rect, Color(LANE_COLORS[lane], 0.5), false, 2.0)
+		# High Contrast: an opaque lane edge as well as its colour (GDD 189.4).
+		if UiTokens.is_high_contrast():
+			draw_rect(rect, UiTokens.CREAM_50, false, 4.0)
+		else:
+			draw_rect(rect, Color(LANE_COLORS[lane], 0.5), false, 2.0)
 		# Hit target: the lane's shape, outlined, on the hit line.
 		_draw_shape(lane, Vector2(rect.get_center().x, hit_y), rect.size.x * 0.34, Color(UiTokens.CREAM_50, 0.9), false)
 		var label_pos := Vector2(rect.position.x, hit_y + 40.0)
@@ -102,4 +106,4 @@ func _draw_shape(lane: int, centre: Vector2, half: float, color: Color, filled: 
 		draw_colored_polygon(points, color)
 	var outline := points.duplicate()
 	outline.append(points[0])
-	draw_polyline(outline, UiTokens.INK_900 if filled else color, 3.0, true)
+	draw_polyline(outline, UiTokens.INK_900 if filled else color, 5.0 if UiTokens.is_high_contrast() else 3.0, true)
