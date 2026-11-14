@@ -4,21 +4,29 @@
 
 ### Definitive Game Design Document — Version 6.0 (Final Authoritative Production, Release & Maintenance Specification — Godot Edition)
 
+**Revisi Visual 6.1 (2026-11-14):** seluruh visual, grafis, dan art style dirombak mengikuti `VISUAL_STYLE_GUIDE.md` (gaya "Warm, Cozy & Cute": diorama mini low-poly yang bulat dan empuk, warna solid hangat tanpa tekstur, cahaya keemasan, karakter chibi 0,90 m, kamera ortografis yaw 45° / pitch 35°). Gameplay, balancing, cerita, audio, dan save schema tidak berubah. Bagian yang direvisi: header, Section 5, 6, 99–106, 122, 125, 126, 131, 161.1, 167, 168, 172, 173, 174, 184, 185, 186.6.
+
+**Revisi Mobile 6.2 (2026-11-15):** game ini menjadi **game HP**: dimainkan **tegak (portrait) saja** di **Android dan iOS/iPadOS, di HP maupun tablet**. Kanvas UI kini diukur dalam *point* setara dp/pt (HP ±390 pt lebar, tablet 600 pt), sehingga tombol 48 pt benar-benar memenuhi target sentuh 48 dp (Android) / 44 pt (iOS) dan teks badan terbaca seukuran teks badan HP. Mode landscape dihapus; layar yang lebih lebar dari tablet (desktop, browser landscape, foldable terbuka) menampilkan kanvas portrait terlebar dengan bilah di samping. Safe area (notch, Dynamic Island, status bar, home indicator, gesture bar) dihormati di semua layar. Build Web tetap ada sebagai build sekunder berbentuk portrait. Gameplay, balance, cerita, audio, art, dan save schema tidak berubah (kecuali nilai platform `ios`). Bagian yang direvisi: header, Section 92–96, 122, 123, 135, 167.7, 167.8, 169.7, 186.
+
+**Revisi UI 6.1 (2026-11-14):** seluruh UI 2D (menu, tombol, overlay, HUD, Market, dialog, Wheel) dirombak ke gaya **"cozy warung card"** agar serasi dengan dunia diorama: palet hangat yang sama, sudut lebih bulat, setiap benda yang bisa ditekan punya "bibir" (lip) gelap di bawahnya dan tenggelam saat ditekan, judul pita (ribbon) di atas kartu, ikon prosedural, logo emblem, dan teks judul bergaya cat papan. Tetap tanpa file font/gambar UI eksternal. Bagian yang direvisi: Section 167.2–167.6, 167.9, 185.20. Perubahan art direction setelah RC1 ini disetujui eksplisit oleh pemilik proyek (Section 194.4); build berikutnya harus melewati QA dan human playtest ulang sebagai `v1.0.0-rc2` sebelum Gold Master.
+
 **Alternate Working Title:** *Baku Hantam Empang*  
 **Genre:** Cozy Fishing / Casual Arcade / Comedy / Minigame Collection / Light Narrative Progression  
 **Engine:** Godot Engine 4.7 atau versi stable terbaru yang lebih baru  
 **Primary Scripting Language:** Typed GDScript  
 **Renderer Baseline:** Godot Compatibility Renderer  
-**Distribution Platform:** Android native (Google Play Store) + Web (itch.io)  
+**Distribution Platform:** Game HP portrait — Android native (Google Play Store) dan iOS/iPadOS native (App Store), untuk HP dan tablet; Web (itch.io) sebagai build sekunder berbentuk portrait  
+**Orientation:** Portrait saja (dikunci); HP dan tablet  
 **Android Package:** Signed release `.aab` (Android App Bundle)  
+**iOS Package:** `.ipa` (iPhone + iPad, iOS 14+), ditandatangani di macOS/Xcode  
 **Web Package:** Godot Web export, `index.html` di root paket itch.io  
-**Visual Style:** Stylized 3D Low-Poly modern dengan detail menengah, clean silhouettes, warm lighting  
+**Visual Style:** "Warm, Cozy & Cute" — diorama mini 3D low-poly, bentuk bulat empuk, warna solid hangat tanpa tekstur gambar, cahaya keemasan lembut, karakter chibi (lihat `VISUAL_STYLE_GUIDE.md` dan Section 99)  
 **Primary Mood:** Cozy, Warm, Sunday Afternoon, Nostalgic, Absurdly Funny  
 **Setting:** Indonesia  
 **In-Game Language:** English only  
 **GDD Language:** Bahasa Indonesia  
 **Language Policy:** Game release v1.0 tetap English-only; Bahasa Indonesia hanya digunakan di dokumen desain/development  
-**Camera:** Mostly fixed/cinematic third-person composition depending on scene  
+**Camera:** Satu kamera diorama ortografis tetap — yaw 45°, pitch 35°, roll 0°, rotasi dikunci, `KEEP_WIDTH` (Section 173)  
 **Business Model:** Single-player premium/free game without IAP, gacha, loot boxes, energy systems, ad SDK, or microtransactions
 **Network Model:** Offline-first single-player; no multiplayer/network gameplay
 **Audio Policy:** 100% code-generated procedural audio; no external audio media files in v1.0
@@ -306,6 +314,16 @@ Namun tidak ada sistem siang-malam realistis.
 
 Player tidak pernah dipaksa berhenti karena malam.
 
+Implementasi cahaya (revisi visual 6.1): waktu hanya mengubah warna, energi, dan elevasi matahari; material tidak pernah berubah. Titik kunci mengikuti `VISUAL_STYLE_GUIDE.md` Section 6.3 dan diinterpolasi smoothstep:
+
+| Pemakaian | Jam kunci | Matahari | Ambient | Lampu interior | Latar |
+|---|---|---|---|---|---|
+| Gameplay normal (Early/Golden Afternoon) | 15:00 | `#FFE3A8` × 0,95, elevasi 52° | `#FFE3A8` × 0,55 | 0,55 | `#F5E6CA` |
+| Ending keluarga dan Main Menu setelah ending | 17:36 | `#FFB276` × 0,64, elevasi 28° | `#F4C9A8` × 0,48 | 0,80 | `#E9CDB2` |
+| Credits (senja) | 18:00 | `#F89C74` × 0,44, elevasi 20° | `#DCB6B3` × 0,45 | 0,95 | `#DCC0B0` |
+
+Arah horizontal matahari selalu -135° (searah pandangan kamera) sehingga sisi benda yang menghadap pemain selalu terang.
+
 ---
 
 # 6. TOKOH UTAMA
@@ -365,9 +383,9 @@ Darto tidak terlihat seperti hero.
 
 Warna pakaian hangat dan sedikit faded.
 
-Tidak banyak detail tekstur.
+Tidak ada tekstur gambar; setiap bagian punya satu warna.
 
-Semua low-poly.
+Semua low-poly, dalam proporsi chibi 0,90 m: kepala besar (±42% tinggi), mata manik gelap dengan titik kilau, alis kecil yang sedikit turun di ujung (lelah tapi ramah), pipi merona, tangan dan kaki bulat. Poni berakhir di atas alis dan tepi topi di atas poni, jadi ekspresinya selalu terbaca (Section 185.2).
 
 ---
 
@@ -2975,28 +2993,28 @@ Suwit:
 
 # 92. MOBILE CONTROL PRINCIPLES
 
-Android native menggunakan **portrait orientation** sebagai layout utama.
+Revisi Mobile 6.2: game dimainkan **portrait saja** di Android dan iOS/iPadOS, pada HP dan tablet. Tidak ada layout landscape. Build Web memakai layout portrait yang sama (di jendela landscape tampil sebagai kolom portrait dengan bilah di samping).
 
-Web build di itch.io menggunakan layout landscape responsif sebagai default, tetapi seluruh UI wajib tetap mampu beradaptasi saat viewport menjadi sempit.
+Satuan layout adalah *point* kanvas (setara dp Android / pt iOS, lihat Section 122).
 
 Minimum interactive target:
 
-48 logical pixels.
+48 pt (≥ 48 dp Android, ≥ 44 pt iOS).
 
 Preferred:
 
-56–72 logical pixels.
+56–84 pt; aksi utama berada di **zona jempol** (sepertiga bawah layar), status dan Pause di atas.
 
 Semua `Control` memakai anchor, container, dan theme sizing Godot; posisi tombol penting tidak boleh ditulis sebagai koordinat layar absolut.
 
-Android harus menghormati safe area perangkat, cutout/notch, serta area gesture/navigation menggunakan informasi safe area dari `DisplayServer`.
+Android dan iOS harus menghormati safe area perangkat (cutout/notch, Dynamic Island, status bar, home indicator, gesture bar) menggunakan `DisplayServer.get_display_safe_area()`, dipetakan ke kanvas lewat transform akhir jendela. Di atas safe area ada margin tepi 12 pt (HP) / 24 pt (tablet).
 
-Untuk Web, UI juga harus memberi margin aman agar tidak terasa menempel pada tepi viewport atau browser chrome.
+Untuk Web, UI memakai margin yang sama agar tidak menempel pada tepi viewport atau browser chrome.
 
 Input parity wajib:
 
-- keyboard + mouse pada Web/Desktop,
-- touchscreen pada Android,
+- touchscreen pada Android dan iOS (utama),
+- keyboard + mouse pada Web/Desktop: tombol sentuh tetap tampil; nama tombol keyboard ditampilkan di atasnya selama keyboard sedang dipakai,
 - mouse/touch hybrid tetap diperbolehkan bila perangkat mendukung.
 
 ---
@@ -3004,7 +3022,7 @@ Input parity wajib:
 
 Top:
 
-money + bucket.
+chip uang + chip ember (ikon ember + jumlah) yang mengalir ke baris kedua bila sempit; Pause bulat di kanan atas.
 
 Center:
 
@@ -3012,11 +3030,11 @@ Center:
 
 Right side:
 
-Tension Bar.
+Tension Bar (tegak, di tengah ruang bebas di atas baris jempol).
 
-Bottom center:
+Bottom (baris jempol, tinggi 84 pt, maks. lebar 520 pt):
 
-large contextual button:
+tombol MARKET persegi (ikon di atas label, 96 pt) di sisi jempol lemah, dan tombol kontekstual besar mengisi sisanya:
 
 CAST
 
@@ -3024,39 +3042,33 @@ CAST
 
 → HOLD REEL.
 
-Bottom-left:
-
-MARKET.
-
-Pause:
-
-top-right.
+Left-handed menukar sisi MARKET dan tombol kontekstual.
 
 ---
 
 # 94. MOBILE BOXING
 
-Upper 62%:
+Atas:
+
+jam ronde di tengah, Pause di kanan; di bawahnya dua bar HP berdampingan (Darto kiri, ikan kanan), lalu read-out telegraph.
+
+Upper 68%:
 
 fight viewport.
 
-Bottom 38%:
+Bottom 32%:
 
-four controls.
+four thumb controls (tinggi maks. 168 pt), ikon besar di atas label pendek.
 
-Left:
+Left thumb:
 
-DODGE <
+panah ◀ DODGE, panah ▶ DODGE.
 
-> DODGE.
+Right thumb:
 
-Right:
+sarung tinju JAB, CROSS.
 
-JAB
-
-CROSS.
-
-Controls tidak overlap fight HUD.
+Jarak antar pasangan lebih lebar daripada jarak di dalam pasangan. Left-handed menukar kedua pasangan. Controls tidak overlap fight HUD.
 
 ---
 
@@ -3064,31 +3076,31 @@ Controls tidak overlap fight HUD.
 
 Character viewport:
 
-top 60%.
+bagian atas (jam dan Pause di baris paling atas).
 
 Bars:
 
-middle.
+tepat di atas MASH (position bar, lalu stamina), terbaca sekilas tanpa melepas jempol.
 
 Large:
 
-MASH!
-
-bottom 30%.
+MASH! selebar layar, 28% tinggi layar (150–240 pt).
 
 ---
 
 # 96. MOBILE DANCE
 
-Four lanes menggunakan hampir seluruh vertical viewport.
+Panggung dan kedua penari di bagian atas; skor di kiri atas, Pause di kanan atas.
+
+Four lanes adalah *bottom sheet* yang mengisi 58% bawah layar (mulai 42% tinggi), selebar layar (maks. 560 pt pada tablet).
 
 Hit line:
 
-sekitar 72% screen height.
+96 pt di atas dasar lajur; key cap huruf di bawahnya.
 
 Touch zones:
 
-bottom.
+bagian bawah setiap lajur (55% bawah lajur), satu target besar per lajur.
 
 Setiap lane memiliki:
 
@@ -3162,214 +3174,174 @@ Minimum UI body:
 
 ## STYLE
 
-Visual utama adalah **stylized 3D low-poly modern**.
+Visual utama adalah **"Warm, Cozy & Cute"**: dunia tampak seperti **diorama mini yang hangat**, rumah boneka kecil yang dilihat dari atas sudut. Sumber kebenaran visual adalah `VISUAL_STYLE_GUIDE.md` di root repository; Section 99–106, 173, 184, dan 185 menerapkannya untuk game ini. Aturan bertanda **HARUS** atau **JANGAN** di dokumen itu berlaku sebagai syarat.
 
-Low-poly di sini berarti bentuk disederhanakan secara sengaja, bukan grafis retro dan bukan simulasi keterbatasan konsol lama.
+Prinsip:
 
-Target visual:
-
-- silhouette karakter dan ikan mudah dikenali,
-- prop mempunyai bentuk dan detail yang cukup untuk dibaca dari dekat,
-- edge dan plane tetap terlihat artistik,
-- material sederhana tetapi tidak terlihat kosong,
-- lighting lembut dan hangat,
-- environment mempunyai depth yang cukup,
-- komposisi tetap bersih dan tidak terlalu ramai.
+1. **Diorama mini yang hangat.** Setiap set adalah satu "ruangan" atau sepetak lanskap yang dibingkai utuh. Dinding yang dekat kamera dipotong rendah (0,16 m) supaya isi terbaca.
+2. **Bulat dan empuk seperti adonan.** Bentuk dasar dibulatkan atau dipangkas tepinya (rounded slab, kapsul, bola, lathe). Tidak ada sudut tajam yang mencolok. Karakter chibi berkepala besar.
+3. **Warna solid hangat, tanpa tekstur gambar.** Setiap bagian punya satu warna; pola (kotak-kotak tirai, anyaman tikar, ubin lantai, sisik arwana, belang gabus) dibuat dari geometri atau warna verteks.
+4. **Cahaya keemasan dan lembut.** Tidak ada cahaya neon dingin, bayangan tajam, atau efek layar penuh. Bayangan berupa cakram gelap lembut di lantai.
+5. **Low-poly yang rapi.** Jumlah segmen sengaja rendah (bola 12 sisi), siluet terbaca di layar ponsel, shading halus.
+6. **Semuanya dibuat lewat kode** (Section 184): tidak ada impor `.png`, `.jpg`, `.gltf`, `.fbx`, atau `.obj`.
 
 Yang **tidak digunakan**:
 
-- vertex wobble,
-- affine texture warping,
-- pixelated internal resolution sebagai gaya wajib,
-- dithering retro yang berat,
-- texture jitter,
-- deliberate low frame-rate animation,
-- imitasi PS1/PS2/N64.
+- vertex wobble, affine texture warping, pixelated internal resolution, dithering retro, texture jitter;
+- deliberate low frame-rate animation, imitasi PS1/PS2/N64;
+- tekstur gambar apa pun pada dunia 3D, normal map, AO map, rim, clearcoat, SSS, refraksi;
+- shader kustom pada material 3D;
+- shadow map, SSAO, glow, fog, dan efek layar penuh lain.
 
-Low-poly harus terasa sebagai **pilihan seni modern**, bukan keterbatasan teknis.
+Low-poly harus terasa sebagai **pilihan seni modern yang lucu dan hangat**, bukan keterbatasan teknis.
 
 ---
 
 # 100. LOW-POLY DETAIL LANGUAGE
 
-Detail tidak ditambahkan dengan membuat semua mesh sangat padat.
+Detail tidak ditambahkan dengan membuat mesh padat.
 
 Prioritas detail:
 
-1. silhouette,
-2. proporsi,
-3. layer pakaian/aksesori,
-4. bentuk wajah sederhana,
-5. material separation,
-6. vertex color/albedo variation,
-7. selected texture detail,
-8. environmental dressing.
+1. silhouette yang terbaca dari kamera diorama;
+2. proporsi chibi / mainan yang sedikit dilebih-lebihkan;
+3. lapis pakaian dan aksesori yang dibangun dari bentuk bulat;
+4. wajah sederhana: mata manik, alis kecil, mulut sederhana, pipi merona;
+5. pemisahan warna yang tegas (garis warna dari pasangan titik profil yang hampir sama);
+6. pola dari geometri atau warna verteks;
+7. dressing lingkungan yang menghidupkan (alang-alang, bunga kecil, daun teratai, batu bulat).
 
 Contoh Darto:
 
-kaus bukan hanya satu kubus; harus mempunyai bahu, lipatan bentuk besar, kerah, lengan, serta separation yang jelas dengan tubuh.
+kaus adalah bagian torso lathe dengan batas warna tegas di pinggang dan kerah, lengan kaus adalah undakan kecil di kapsul lengan atas, tas pinggang adalah rounded slab dengan tali torus.
 
 Contoh ikan:
 
-sirip, mulut, insang, mata, ekor, bentuk tubuh, dan aksesori karakter harus terbaca jelas.
+tubuh montok yang mulus, mata manik besar dengan kilau putih, sirip "empuk" (outline yang diberi ketebalan dan tepi membulat), aksesori khas yang cukup besar untuk terbaca dari kamera.
 
 Contoh motor:
 
-ban, velg, lampu, tangki, jok, knalpot, mesin, suspensi, stang, spion, dan panel utama harus terbaca, tetapi baut kecil tidak perlu dimodel satu per satu.
+ban torus, velg, garpu, lampu bulat, tameng kaki, jok panjang, knalpot — chunky seperti mainan; baut kecil tidak dimodel.
 
 Filosofi:
 
-> **Enough detail to feel intentional; few enough polygons to keep the shape charming and performant.**
+> **Cukup detail untuk terasa disengaja; cukup sedikit poligon untuk tetap menggemaskan dan ringan.**
 
 ---
 
 # 101. GEOMETRY & SCENE BUDGET
 
-Budget merupakan guideline awal untuk target Web + Android dan harus divalidasi dengan profiler.
+Satuan dunia meter; karakter acuan 0,90 m; grid 1 ubin = 0,5 × 0,5 m (`VISUAL_STYLE_GUIDE.md` Section 3).
 
-### Hero Characters
+Anggaran per objek rakitan: **500–2.000 segitiga**.
 
-Darto:
+| Objek | Anggaran | Hasil generator 6.1 |
+|---|---:|---:|
+| Darto / Rini / Nisa / Bu Yati (satu mesh tubuh) | 500–2.000 | 1.728–1.992 |
+| Ikan biasa (tubuh + aksesori + sarung tinju tersembunyi) | 500–2.000 | 1.498–1.844 |
+| Don Arowana | 500–2.000 | ±2.000 |
+| Motor Darto | 500–2.000 | 1.616 |
+| Prop kecil | 50–800 | 88–798 |
+| Prop sedang (meja, panggung, joran) | 300–2.000 | 700–1.536 |
+| Set lengkap (tanah + air + vegetasi + prop) | ≤ 35.000 | 11.900–30.000 |
 
-8,000–14,000 triangles.
+Segmen primitif (HARUS): bola 12 × 6, silinder/kerucut 10, kapsul 10 × 4, torus 12 × 8, rounded slab 44 segitiga, lathe ≤ 32 segmen. Bagian kecil (mata, alis, kumis, tali) boleh memakai segmen lebih rendah demi anggaran. JANGAN memakai jumlah segmen bawaan engine.
 
-Rini / Nisa / Bu Yati:
+Jumlah draw call, material switch, transparency, dan overdraw dianggap sama pentingnya dengan jumlah segitiga. Karakter dan ikan dirender sebagai satu mesh berwarna verteks (ditambah cakram bayangan), jadi jauh di bawah batas ±12 draw call per karakter dari panduan.
 
-6,000–12,000 triangles.
-
-### Fish
-
-Regular fish:
-
-3,000–6,000 triangles.
-
-Don Arowana:
-
-5,000–8,000 triangles.
-
-### Motorcycle
-
-8,000–14,000 triangles.
-
-### Props
-
-Small prop:
-
-50–800 triangles.
-
-Medium prop:
-
-500–3,000 triangles.
-
-Hero prop:
-
-2,000–8,000 triangles.
-
-### Visible Environment
-
-Preferred:
-
-120,000–220,000 visible triangles.
-
-Soft upper guideline:
-
-300,000 visible triangles.
-
-Jumlah draw call, material switch, transparency, shadow caster, dan overdraw dianggap sama pentingnya dengan jumlah triangle.
-
-Repeated vegetation seperti grass, reeds, stone, dan small foliage harus memakai instancing / `MultiMeshInstance3D` jika jumlahnya besar.
-
-LOD atau manual distance culling digunakan pada objek yang cukup jauh untuk membutuhkannya.
+Rumput yang berulang memakai `MultiMeshInstance3D` (`ScatterField`).
 
 ---
 
 # 102. PROGRAMMATIC ASSET & MATERIAL PIPELINE
 
-Section ini menggantikan pipeline imported-DCC lama. Production v1.0 memakai **zero-internet-asset pipeline** sesuai Section 184.
+Production v1.0 memakai **zero-internet-asset pipeline** sesuai Section 184:
 
-Semua visual production asset dibuat dari source project sendiri melalui Typed `@tool` GDScript dan Godot native resource/mesh APIs. Tidak ada download model, texture, UI icon, font, animation, atau stock visual dari internet.
+**GDScript generator → mesh berwarna verteks + material bersama → generated `.tscn` / `.tres` → runtime load**
 
-Pipeline resmi:
+Material standar (HARUS, `VISUAL_STYLE_GUIDE.md` 5.1): `StandardMaterial3D`, shading per-pixel, diffuse Lambert, specular SchlickGGX, cull back, `metallic_specular` 0,5, `vertex_color_use_as_albedo` sRGB.
 
-**GDScript generator source → Godot native mesh/material/image/animation resources → generated `.tscn` / `.tres` / project-created images → runtime load**
+Material bersama (semua dibuat `material_builder.gd`):
 
-Full generator contract, deterministic seed, validation, generated-output rules, dan prohibited asset list mengikuti Section 184.
+| File | Fungsi |
+|---|---|
+| `mat_vertex_color.tres` | permukaan umum, roughness 0,85 |
+| `mat_vertex_color_round.tres` | karakter dan ikan (bola/kapsul), roughness 0,9 |
+| `mat_metal_soft.tres` | krom/baja (velg, garpu motor), metallic 0,45, roughness 0,55 |
+| `mat_glow_warm.tres` | benda yang memang menyala (bohlam), emisi `#FFAA44` |
+| `mat_glass.tres` | kaca tipis (toples, gelas), unshaded transparan |
+| `mat_fake_shadow.tres` | cakram bayangan palsu, unshaded transparan, alfa di warna verteks |
+| `mat_water_shadow.tres`, `mat_water_ripple.tres`, `mat_fishing_line.tres` | bayangan ikan di air, riak, senar; unshaded transparan |
 
-Material utama:
+Aturan:
 
-`StandardMaterial3D` + project-authored shader bila benar-benar dibutuhkan.
-
-Guideline:
-
-- geometry + color blocking adalah sumber detail utama;
-- 1–3 material slot per hero;
-- vertex color diprioritaskan bila efektif;
-- generated texture 256–1024 px untuk mayoritas runtime use;
-- 2048 px hanya jika justified;
-- no 4K runtime dependency;
-- transparency dibatasi;
-- material reuse wajib;
-- no external PBR/material library;
+- detail dari geometri dan warna verteks; satu warna per bagian;
+- semua bagian statis satu model digabung menjadi satu mesh per material (MeshBake);
+- material dibagi pakai, tidak dibuat baru setiap objek muncul; kombinasi fitur material dunia 3D ≤ 12;
+- JANGAN memakai material transparan yang menerima cahaya;
+- emisi hanya untuk benda yang memang menyala;
+- tidak ada shader kustom di dunia 3D (shader `lake_water` dan `foliage_sway` versi lama dihapus); satu-satunya shader project adalah `ui_silhouette.gdshader` untuk UI Fish Book;
 - Godot built-in default font adalah baseline font v1.0.
 
-Generated asset bukan placeholder. Hero object tetap harus memenuhi art direction, silhouette, geometry budget, dan reference lock Sections 99–101 serta 185.
+Generated asset bukan placeholder. Hero object tetap harus memenuhi Section 99–101 dan 185.
 
 ---
 
 # 103. LIGHTING & COLOR PALETTE
 
-Dominant palette:
+## 103.1 Rig cahaya (HARUS)
 
-- warm grass green,
-- muted lake blue-green,
-- sunset cream,
-- terracotta,
-- faded red,
-- warm yellow,
-- wood brown,
-- soft sky blue.
+Setiap set membawa node `Lighting`:
 
-Shadow tidak menggunakan pure black.
+- `WorldEnvironment`: background warna polos `#F5E6CA`; ambient dari warna `#FFE3A8` × 0,55; tonemap Filmic, white 1,2; SSAO, glow, dan fog mati;
+- `DirectionalLight3D` "Sun": `#FFE3A8` × 0,95, rotasi (-52°, -135°, 0°), **tanpa shadow**; matahari menyinari searah pandangan kamera;
+- ruangan dalam (warung, rumah) dan meja Suwit: `OmniLight3D` `#FFAA44` × 0,55, satu lampu per 9 m² lantai (minimal satu), jangkauan `max(3, 0,6 × sisi terpanjang)`, digantung di 0,9 × tinggi dinding, tanpa bayangan.
 
-Lighting baseline:
+Waktu (Section 5) hanya mengubah warna, energi, dan elevasi cahaya lewat `DioramaStyle.apply_daylight()`.
 
-- satu `DirectionalLight3D` sebagai matahari,
-- environment ambient light yang hangat,
-- local light hanya pada lokasi yang benar-benar membutuhkan,
-- shadow distance dibatasi,
-- jumlah shadow-casting light minimal.
+## 103.2 Palet
 
-Target utama bukan photorealism.
+Palet dasar mengikuti `VISUAL_STYLE_GUIDE.md` 5.2 (krem vanila `#F5E6CA`, putih tepung `#FFFBF5`, kerak roti `#D9822B`, karamel `#8C4A1E`, cokelat tua `#5A2E12`, mentega `#FCE38A`, custard `#F9D371`, kayu pinus `#C99A62`, terakota `#C4693D`, stroberi `#FFB7B2`, mint `#B5EAD7`, periwinkle `#C7CEEA`, pipi `#FF9AA2`, emas `#F5B301`). Warna khas danau diturunkan dari aturan panduan (hijau dan biru hanya pastel lembut) dan dikompensasi terhadap cahaya hangat:
 
-Material dapat memiliki roughness dan subtle specular response agar objek mempunyai depth, tetapi tidak boleh berubah menjadi realistic PBR showcase.
+| Peran | Hex |
+|---|---|
+| Rumput / rumput terang / rumput gelap | `#A3CC94` / `#B6D49E` / `#86B884` |
+| Daun / daun terang / daun gelap | `#94C48C` / `#AFD39A` / `#74A97C` |
+| Pasir tepian / tanah | `#EEDCBC` / `#CFA57A` |
+| Air dangkal → air → air dalam | `#ACDCDF` → `#93CDD6` → `#7DBBCC` |
+| Garis air | `#EEF8F6` |
+| Batu / batu gelap | `#D6CAB6` / `#B9AA92` |
+| Aspal jalan jauh | `#CBBFAE` |
+| Mata dan garis wajah | `#3B2A20` |
+| Bayangan palsu | `rgba(75, 45, 27, 0.30)` |
 
-Baked AO ke texture/vertex color dapat digunakan untuk memberi kedalaman ringan pada asset.
+Semua kode memakai satu sumber palet: `scripts/visual/diorama_style.gd` (`DioramaStyle`).
 
-Post-processing harus ringan dan diuji pada Compatibility renderer.
+Aturan warna:
+
+- nada keseluruhan hangat; biru dan hijau hanya pastel atau aksen kecil;
+- shadow tidak pernah hitam pekat;
+- kontras dibangun dari terang-gelap, bukan hanya beda warna (aman untuk buta warna);
+- lingkungan luar (seberang danau, jalan, rumah tetangga, pohon jauh) ditarik ke warna latar (`DioramaStyle.muted()`, hingga ±35%) supaya diorama utama jadi pusat perhatian.
 
 ---
 
 # 104. COMPOSITION
 
-Jangan memenuhi setiap pixel.
+Setiap scene adalah **satu diorama yang dibingkai utuh** oleh kamera tetap (Section 173).
 
-Setiap shot harus punya ruang kosong.
+- Ruangan dalam (warung, rumah) adalah potongan rumah boneka 3,0 × 2,5 m: dinding depan (z = 0) dan kiri (x = 0) rendah 0,16 m, dinding belakang dan kanan setinggi penuh (warung 2,0 m, rumah 1,8 m) dengan jendela bertirai kotak-kotak.
+- Set luar (danau, ring, meja panco, panggung, meja Suwit) berdiri di petak lanskap luas sehingga tepi dunia tidak pernah terlihat.
+- Diorama ditempatkan di tengah ruang **di antara bar HUD**, bukan di tengah layar (Section 122).
+- Jangan memenuhi setiap pixel; air danau menjadi ruang kosong yang bermakna.
+- Vegetasi ditempatkan dalam cluster dan negative space, bukan menyebar merata.
+- Setiap elemen di depan objek penting HARUS dicek dari sudut kamera 45°/35° supaya tidak menutupi karakter, ikan, atau teks.
 
-Motor Darto:
+Motor Darto: bagian lingkungan danau (parkir di tepian di belakang Darto), bukan hero prop.
 
-bagian environment.
+Warung: rumah boneka kecil yang terasa dipakai sehari-hari.
 
-Bukan hero prop pada seluruh gameplay.
-
-Warung:
-
-sederhana tetapi cukup detail untuk terasa digunakan sehari-hari.
-
-Background:
-
-tidak penuh NPC.
-
-Vegetasi ditempatkan dalam cluster dan negative space, bukan menyebar merata.
+Background: tidak penuh NPC.
 
 Game harus terlihat handcrafted, bukan procedural clutter.
 
@@ -3381,39 +3353,40 @@ Motor Darto tua tetapi masih layak dan terawat secara wajar.
 
 Fungsi:
 
-- visual continuity,
-- simbol kehidupan Darto,
-- establishing shot,
-- background prop di danau.
+- visual continuity;
+- simbol kehidupan Darto;
+- dressing tetap di set danau (diparkir di belakang tempat mancing);
+- latar pada ending.
 
 Tidak ada brand/logo nyata.
 
 Tidak menjadi vehicle gameplay.
 
-Model tetap low-poly namun harus mempunyai detail bentuk yang cukup untuk dikenali sebagai motor tua yang realistis secara proporsi.
+Model berupa motor bebek mainan yang chunky (±0,8 m panjang, ±0,5 m tinggi pada skala chibi): ban torus, velg logam lembut, garpu, lampu bulat, tameng kaki, jok, knalpot; tetap jelas terbaca sebagai motor tua.
 
 ---
 
 # 106. CHARACTER ANIMATION
 
-Animasi tidak meniru frame-rate retro.
+Animasi tidak meniru frame-rate retro dan harus halus pada 30/60 FPS.
 
-Animation playback harus terasa halus pada 30/60 FPS.
+Gaya gerak:
 
-Gaya gerak tetap stylized:
-
-- pose kuat,
-- timing komedi jelas,
-- anticipation,
-- overshoot ringan,
-- exaggeration pada ikan,
+- pose kuat dan terbaca pada karakter chibi;
+- timing komedi jelas, anticipation, overshoot ringan;
+- exaggeration pada ikan;
 - reaction pause untuk punchline.
 
-Godot `AnimationPlayer` dan `AnimationTree` digunakan untuk karakter yang membutuhkan blend/state transition.
+Struktur:
 
-Beberapa gerakan dapat deliberately stepped hanya jika digunakan sebagai punchline spesifik, bukan sebagai style global.
+- Klip duel dan cerita adalah `AnimationPlayer` hasil generator (Section 172). Rig berupa `Skeleton3D` kecil dengan **binding kaku** (setiap segmen mengikuti satu tulang), jadi setiap tulang berfungsi seperti pivot node pada panduan; tidak ada deformasi realistis dan tidak ada file animasi.
+- Lapisan prosedural (`VISUAL_STYLE_GUIDE.md` Section 10): klip idle adalah gelombang napas 1,35 rad/s (±13 napas per menit) dengan dada naik 0,012 m dan ayunan lengan 0,05 rad.
+- Reaksi (mendarat, menang, kena pukul, dibeli, dibayar) memakai **squash & stretch** yang kembali dengan easing `TRANS_BACK` (`DioramaMotion`), seperti adonan.
+- Semua gerak besar dimatikan saat **Reduced Motion** aktif.
 
-Camera movement tetap lembut dan stabil.
+Beberapa gerakan boleh deliberately stepped hanya sebagai punchline spesifik.
+
+Kamera tidak pernah bergerak untuk kejadian rutin (Section 173).
 
 ---
 
@@ -3992,17 +3965,21 @@ Tidak ada countdown yang tetap berjalan di background.
 
 # 122. VIEWPORT, RESOLUTION & RESPONSIVE UI
 
-Reference desktop/web resolution:
+Revisi Mobile 6.2: **portrait saja**, HP dan tablet, Android dan iOS.
 
-**1280 × 720 (16:9 landscape).**
+Kanvas UI diukur dalam *point* yang setara dp (Android) / pt (iOS):
 
-Reference Android resolution:
+| Bentuk layar | Rasio lebar/tinggi | Kanvas dasar | Hasil |
+|---|---|---|---|
+| HP | < 0,62 | **390 × 694 pt** (9:16) | lebar tetap 390 pt; HP yang lebih tinggi mendapat kanvas lebih tinggi (mis. 390 × 845 pt pada 19,5:9) |
+| Tablet | 0,62–0,80 | **600 × 800 pt** (3:4) | tinggi 800 pt; tablet yang lebih ramping mendapat kanvas lebih tinggi (mis. 600 × 960 pt pada 10:16) |
+| Lebih lebar dari 0,80 | > 0,80 | **640 × 800 pt** | desktop, browser landscape, foldable terbuka: kanvas portrait terlebar dengan bilah di samping (`KEEP`) |
 
-**720 × 1280 (9:16 portrait).**
+`window/stretch/mode = canvas_items`, aspect `expand` (HP dan tablet mengisi layar penuh). `PlatformService` memilih kanvas dan mode aspek setiap kali ukuran jendela berubah. Orientasi dikunci portrait (`display/window/handheld/orientation = 1`). Jendela desktop untuk pengembangan berukuran 540 × 960.
 
-Rendering dan UI harus mendukung resolusi lain.
+Pada HP ±390 pt lebar, satu point kanvas ≈ 0,9–1,1 dp/pt, sehingga token UI (teks badan 18 pt, tombol 48–56 pt) sesuai ukuran fisik pedoman Android/iOS. Pada tablet satu point kanvas ≈ 1,2–1,7 pt: tampilan sedikit lebih besar dan lebih lega.
 
-Godot Project Settings menggunakan stretch configuration yang menjaga UI scale konsisten.
+Rendering dan UI harus mendukung resolusi lain dalam rentang itu.
 
 Semua UI:
 
@@ -4013,11 +3990,27 @@ Semua UI:
 
 Responsive mode ditentukan dari:
 
-- viewport aspect ratio,
-- platform,
-- active input device.
+- viewport aspect ratio (HP atau tablet),
+- safe area perangkat,
+- active input device (hanya untuk teks petunjuk: nama tombol keyboard atau tombol sentuh).
+
+Aturan layout portrait:
+
+- status (uang, ember, jam, skor) dan Pause di baris atas;
+- dunia 3D di tengah;
+- aksi utama di zona jempol bawah; panel kerja (ledger Market, lajur Dance) sebagai *bottom sheet*;
+- kolom dan panel berhenti melebar pada tablet (mis. tombol menu 400 pt, ledger 640 pt, baris jempol 520 pt) dan berpusat;
+- teks panjang membungkus, tidak terpotong; baris tombol yang tidak muat turun baris (flow), dan halaman yang terlalu pendek (teks 150% + UI 130% pada HP kecil) menggulir tombol aksinya bersama isi halaman.
 
 Tidak menggunakan browser user-agent sebagai satu-satunya sumber keputusan.
+
+Pembingkaian 3D (revisi visual 6.1):
+
+- kamera memakai `KEEP_WIDTH`: `camera.size` adalah lebar dunia yang terlihat; layar yang lebih tinggi hanya melihat lebih banyak di atas dan bawah;
+- setiap set punya marker `CameraFocus` dengan lebar bingkai HP (`width_portrait`, opsional `focus_portrait`), selalu di rentang zoom panduan 5,6–11,0 m (langkah 0,6 m, bawaan 6,8 m); metadata `width_landscape` hanya dipakai lembar referensi;
+- tablet menampilkan irisan dunia 1,25× lebih lebar (`DioramaCamera.TABLET_WIDTH_SCALE`, dibulatkan ke langkah zoom) agar diorama tetap kebagian porsi layar yang sama;
+- setiap scene memberi tinggi bar HUD atas/bawah ke kamera dalam point kanvas, atau sebagai porsi tinggi layar (nilai ≤ 1,0) untuk bottom sheet yang ikut membesar; kamera bergeser sepanjang sumbu Y lokalnya sebesar `(bawah - atas) / 2` supaya diorama berada di tengah ruang bebas;
+- pada HP 390 pt, karakter 0,90 m tampil ±52–63 pt (±16% lebar layar, sama dengan proporsi panduan untuk bingkai portrait 720 px).
 
 ---
 
@@ -4027,6 +4020,7 @@ Platform branching menggunakan API Godot seperti:
 
 - `OS.has_feature("web")`,
 - `OS.has_feature("android")`,
+- `OS.has_feature("ios")` (iPhone dan iPad),
 - `DisplayServer`,
 - current input events.
 
@@ -4100,29 +4094,19 @@ Tidak boleh mengorbankan readability hanya untuk mengejar 60 FPS; gunakan scalab
 
 # 125. GRAPHICS QUALITY & RENDER SCALE
 
-Quality presets:
+Quality presets hanya menukar resolusi, kepadatan rumput, dan anti-aliasing. Art direction sama di semua level, dan **tidak ada level yang menyalakan shadow map** (`VISUAL_STYLE_GUIDE.md` 6.1).
 
-### LOW
+| Preset | 3D scale | Rumput (scatter) | MSAA 3D |
+|---|---:|---:|---|
+| LOW | 0,75 | 50% | mati |
+| MEDIUM (default Android) | 1,0 | 100% | 2× |
+| HIGH (default Web/Desktop bila mampu) | 1,0 | 100% | 4× desktop, dibatasi 2× di Android |
 
-- reduced shadow distance,
-- reduced vegetation density,
-- reduced particles,
-- lower internal scale jika diperlukan,
-- simplified water.
+Elemen 2D digambar dengan antialiasing sendiri (renderer Compatibility tidak punya MSAA 2D).
 
-### MEDIUM
-
-Default Android.
-
-### HIGH
-
-Default Web/Desktop bila device mampu.
-
-Karena Compatibility renderer merupakan baseline, semua preset harus tetap memakai feature set yang tersedia di target Web.
+Karena Compatibility renderer merupakan baseline, semua preset tetap memakai feature set yang tersedia di target Web.
 
 Dynamic resolution bukan requirement v1.0.
-
-Resolution scale option boleh ditambahkan jika profiling menunjukkan kebutuhan.
 
 ---
 
@@ -4130,32 +4114,27 @@ Resolution scale option boleh ditambahkan jika profiling menunjukkan kebutuhan.
 
 Shadow:
 
-- satu sun directional shadow sebagai default,
-- shadow distance konservatif,
-- small props tidak wajib cast shadow,
-- vegetation shadow dipilih selektif.
+- **tidak ada shadow map** pada matahari maupun lampu;
+- bayangan palsu: cakram 14 segmen, jari-jari 0,20 m (ikan 0,3 × panjang tubuh), warna `rgba(75, 45, 27, 0.30)` di tengah memudar ke alfa 0 di tepi, 0,004 m di atas lantai, di bawah setiap karakter dan ikan;
+- di bawah perabot dan pohon: cakram 24 segmen, alfa tengah 0,42, 1,5 × footprint, 0,006 m di atas lantai.
 
 Water:
 
-stylized low-poly water surface.
-
-Water dapat menggunakan:
-
-- simple vertex movement,
-- normal/albedo variation,
-- shoreline ripple mesh/particle.
-
-Hindari shader berat yang hanya bekerja pada renderer tertentu.
+- bidang air berwarna verteks dengan material standar (bukan shader kustom): pastel dangkal di tepi, lebih dalam di tengah;
+- tepian berpasir pucat; kedalaman dibaca dari warna, bukan dari refleksi;
+- gerak air berupa garis air pucat (kapsul pipih) yang melayang pelan, daun teratai, dan riak torus unshaded saat pelampung jatuh, ikan menggigit, atau mendarat;
+- bayangan ikan di air adalah cakram gelap transparan yang berenang.
 
 Reflection real-time bukan requirement.
 
 Environment depth dibuat melalui:
 
-- lighting,
-- fog/depth cue bila kompatibel dan performant,
-- overlapping low-poly foliage,
-- color/value separation,
-- carefully placed props.
+- cahaya hangat searah kamera;
+- pemisahan nilai warna dan peredaman warna sekeliling ke arah latar;
+- dinding dekat yang dipotong rendah;
+- dressing yang ditempatkan dengan sengaja.
+
+Tanpa fog, SSAO, glow, atau efek layar penuh.
 
 ---
 
@@ -4289,11 +4268,11 @@ Character root:
 
 Camera:
 
-`Camera3D`.
+`Camera3D` dengan script `res://scripts/visual/diorama_camera.gd` (`DioramaCamera`): ortografis, yaw 45°, pitch 35°, `KEEP_WIDTH`, near 0,05, far 200. Scene hanya memberi titik fokus dan lebar bingkai (`frame()`, `frame_marker()`).
 
 Animation:
 
-`AnimationPlayer` / `AnimationTree`.
+`AnimationPlayer` / `AnimationTree`; reaksi squash & stretch lewat `DioramaMotion`; gerak lingkungan lewat node `AmbientMotion`.
 
 Repeated environmental mesh:
 
@@ -4301,7 +4280,11 @@ Repeated environmental mesh:
 
 Particles:
 
-`GPUParticles3D` jika feature/performance sesuai Compatibility renderer; fallback sederhana wajib tersedia jika efek tertentu terlalu mahal di Web.
+`CPUParticles3D` (`VISUAL_STYLE_GUIDE.md` 11).
+
+Set markers:
+
+`Markers/CameraFocus` (wajib di setiap set) dan marker framing cerita (`StoryWide`, `StoryDarto`, dsb.). Spot karakter (`DartoSpot`, `FishSpot`, ...) membawa rotasi hadap.
 
 Naming:
 
@@ -4417,7 +4400,7 @@ Boleh upgrade ke versi stable lebih baru.
 
 Tidak memakai nightly/dev build untuk release production kecuali ada blocker kritis dan keputusan tersebut didokumentasikan.
 
-Setiap engine upgrade wajib menjalankan full regression test pada Android + Web.
+Setiap engine upgrade wajib menjalankan full regression test pada Android + iOS + Web.
 
 ---
 
@@ -4442,8 +4425,8 @@ Upload itch.io:
 - project type: HTML,
 - "This file will be played in the browser",
 - enable fullscreen button,
-- recommended viewport 1280×720,
-- responsive sizing diperbolehkan.
+- recommended viewport 540×960 (portrait; revisi Mobile 6.2),
+- responsive sizing diperbolehkan; jendela landscape menampilkan kolom portrait dengan bilah di samping.
 
 Web build menggunakan WebAssembly/WebGL 2 melalui Godot Web export.
 
@@ -4487,9 +4470,49 @@ kecuali fitur masa depan benar-benar membutuhkannya dan GDD direvisi.
 
 Orientation Android:
 
-**Portrait.**
+**Portrait** (dikunci), HP dan tablet (`screen/support_xlarge = true`).
 
-Back gesture/button:
+---
+
+## iOS / iPadOS / APP STORE (revisi Mobile 6.2)
+
+Export preset:
+
+**iOS** (`application/targeted_device_family = 2`: iPhone dan iPad)
+
+Release output:
+
+`build/ios/MancingManiaGelut.ipa`
+
+Bundle identifier:
+
+`com.mancingmania.gelutedition` (sama dengan Android).
+
+Versi:
+
+`application/short_version` = MAJOR.MINOR.PATCH dari versi proyek (App Store tidak menerima suffix `-rc.N`); `application/version` = nomor build yang naik tiap upload.
+
+Minimum:
+
+iOS 14.0, `arm64`.
+
+Export dan signing hanya bisa dilakukan di macOS dengan Xcode dan akun Apple Developer (Team ID, provisioning profile, distribution certificate); semua itu milik pemilik proyek dan tidak disimpan di repository (`*.p12`, `*.mobileprovision` diabaikan git).
+
+Game tidak membutuhkan izin kamera, mikrofon, foto, lokasi, atau tracking; usage description kosong dan App Privacy = Data Not Collected.
+
+Orientation iOS:
+
+**Portrait** saja (dari `display/window/handheld/orientation`), iPhone dan iPad. Safe area iPhone (notch, Dynamic Island, home indicator) dihormati lewat `DisplayServer.get_display_safe_area()`.
+
+Launch screen:
+
+warna latar cream `#FFF9EE`.
+
+Swipe-back / home gesture iOS tidak dipakai sebagai input game; Pause selalu tersedia lewat tombol di kanan atas.
+
+---
+
+Back gesture/button (Android):
 
 - saat gameplay → membuka pause/confirmation,
 - saat menu child → kembali satu level,
@@ -4560,13 +4583,13 @@ Distribution tolerance ditentukan per test.
 
 ### UI
 
-Dedicated debug scenes untuk:
+Dedicated debug scenes untuk (revisi Mobile 6.2, portrait saja):
 
-- 1280×720,
-- 1920×1080,
-- 720×1280,
-- 1080×2400,
-- common Android notched safe areas.
+- 720×1280 (HP 9:16),
+- 1080×2400 dan 1170×2532 (HP tinggi Android / iPhone),
+- 1536×2048 dan 1640×2360 (iPad), 1600×2560 (tablet Android),
+- jendela desktop/browser landscape (kolom portrait dengan bilah),
+- common Android/iOS notch, Dynamic Island, dan home indicator (`--mm-insets`).
 
 ### Export Smoke Test
 
@@ -5143,6 +5166,8 @@ Jika Section 0–160 menggunakan wording lama yang bertentangan dengan Sections 
 Untuk visual asset pipeline, Section 184 secara eksplisit menggantikan semua izin lama mengenai imported/downloaded production assets.
 
 Untuk narrative copy, Section 183 menggantikan contoh wording lama jika berbeda, tanpa mengubah fakta cerita utama.
+
+Untuk visual, grafis, kamera, dan art style, revisi 6.1 menggunakan `VISUAL_STYLE_GUIDE.md` sebagai sumber kebenaran. Jika wording lama di Section mana pun (mis. "perspective Camera3D", FOV, tinggi manusia 1,52–1,72 m, shadow map, shader air/dedaunan, anggaran 8.000–14.000 segitiga) bertentangan dengan panduan itu atau dengan Section 99–106, 122, 125–126, 131, 168, 172–174, 184–185 versi 6.1, versi 6.1 yang berlaku.
 
 ---
 
@@ -5908,23 +5933,41 @@ Gunakan token terpusat di `Theme`/resource:
 
 | Token | Hex | Fungsi |
 |---|---|---|
-| `cream_50` | `#FFF7E6` | light surface |
-| `cream_100` | `#F3E3C2` | primary panel |
-| `paper_200` | `#E6CC9D` | secondary panel |
-| `ink_900` | `#352F29` | primary text |
-| `ink_700` | `#5A5046` | secondary text |
-| `lake_500` | `#557F7A` | calm accent |
-| `grass_500` | `#778B59` | success/nature accent |
-| `sun_500` | `#E4AE55` | highlight/reward |
-| `terracotta_500` | `#B8654E` | primary CTA |
-| `red_500` | `#A9534D` | danger/stress |
-| `blue_400` | `#7195A2` | neutral info |
+| `cream_50` | `#FFF9EE` | light surface (flour) |
+| `cream_100` | `#FCEFD6` | primary panel (vanilla card) |
+| `paper_200` | `#F2D9AE` | secondary panel (custard paper) |
+| `ink_900` | `#3F2A1E` | primary text (cocoa) |
+| `ink_700` | `#6E5241` | secondary text |
+| `lake_500` | `#4F9A91` | calm accent (pastel teal) |
+| `grass_500` | `#7FA65A` | success/nature accent |
+| `sun_500` | `#F2B44A` | highlight/reward, focus ring |
+| `terracotta_500` | `#E0784C` | primary CTA (crust) |
+| `red_500` | `#CF5B4C` | danger/stress |
+| `blue_400` | `#7FA6C9` | neutral info (periwinkle) |
+
+Token kedalaman (revisi UI 6.1):
+
+| Token | Nilai | Fungsi |
+|---|---|---|
+| `edge_cream` | `#D9AB72` | rim + lip permukaan terang (tombol cream, chip, kartu) |
+| `edge_paper` | `#C8935A` | rim permukaan paper dan well |
+| `shadow` | cocoa `#3F2A1E` @ 26% | bayangan lembut di bawah kartu/tombol |
+| `backdrop` | cocoa @ 48% | peredup layar di belakang overlay |
+
+Rim/lip permukaan berwarna = warna permukaan itu digelapkan ke arah `ink_900` (42%), bukan hitam. Palet UI sama dengan palet diorama `VISUAL_STYLE_GUIDE.md` (vanilla, flour, crust, caramel, cocoa, pastel teal).
 
 Critical information tidak pernah bergantung pada warna saja.
 
 ## 167.3 TYPOGRAPHY
 
 Untuk menghindari dependency eksternal, v1.0 menggunakan Godot built-in/default readable sans fallback melalui Theme sebagai baseline.
+
+Revisi UI 6.1 menambah dua potongan tebal yang dibuat dari font bawaan yang sama lewat `FontVariation.variation_embolden` (tanpa file font):
+
+- **bold** (embolden 0,55): tombol, tab, header, name tag, nilai chip;
+- **heavy** (embolden 0,9, spacing +1): logo dan judul besar.
+
+Teks besar di atas scene 3D memakai gaya **"cat papan"** (`UiSkin.sign_text`): isi cream/butter, outline cocoa tebal, dan drop shadow lembut. Label HUD yang lebih kecil (`outline_text`) memakai potongan bold, outline cocoa, dan shadow tipis.
 
 Hierarchy pada reference scale:
 
@@ -5953,21 +5996,35 @@ Allowed spacing:
 
 `4 / 8 / 12 / 16 / 24 / 32 / 48`.
 
-Panel corner radius visual:
+Panel corner radius visual (revisi UI 6.1):
 
-`10–14 px equivalent`.
+`24 px` (kartu/panel), `16 px` (kartu kecil, tab, well).
 
 Button corner radius:
 
-`10 px`.
+`18 px`; chip dan pita `22–24 px` (ujung bulat); tombol Pause bulat penuh.
 
 Panel shadow:
 
-soft, offset 0–4 px, low opacity.
+soft cocoa (`shadow`), offset 3–7 px, blur 6–16 px. Kartu di dalam area yang di-scroll/clip tidak memakai shadow (shadow terpotong terlihat seperti pita persegi).
 
 Border:
 
-1–2 px equivalent, warm dark neutral.
+`3 px` rim warna `edge_*`, bukan garis hitam; kartu memakai rim 4 px dengan tepi bawah +3 px.
+
+Lip (bibir) benda yang bisa ditekan:
+
+`6 px` di bawah tombol (rim bawah lebih tebal). Saat ditekan lip menjadi `2 px` dan wajah tombol turun 4 px, sehingga tombol terasa seperti label harga kayu/tombol mainan yang benar-benar masuk. Ukuran minimum tombol tidak berubah saat ditekan.
+
+Komponen bentuk:
+
+- **kartu** (panel, dialog, ledger) dengan **pita judul** terracotta yang menumpuk di tepi atas kartu;
+- **chip HUD**: pil cream dengan **badge bulat berwarna** berisi ikon (emas = uang, periwinkle = ember, crust = Market, teal = joran);
+- **name tag** pembicara: pil crust kecil;
+- **header seksi** (Settings): tab paper kecil selebar teksnya;
+- **tab ledger**: tab map; tab aktif lebih tinggi dan menyatu dengan kartu, tab tertutup tetap memperlihatkan rim atas kartu;
+- **bar HUD** (HP, stamina, strike, stress): track cocoa gelap dengan rim cream di luarnya dan isi bulat dengan lip sendiri;
+- **ikon**: digambar prosedural pada grid 24 unit (play, sparkle, buku, gear, hati, kunci, musik, suara, pintu, centang, perisai, peringatan, kembali, uang, ember, Market, joran, ikan, dan lain-lain), diwarnai oleh theme.
 
 ## 167.5 INTERACTION STATES
 
@@ -5990,8 +6047,12 @@ Disabled:
 
 - opacity turun;
 - text tetap readable;
-- tidak hanya berubah warna;
+- tidak hanya berubah warna (lip menipis dan permukaan memudar ke paper);
 - jika ditekan/tap tidak melakukan action.
+
+Focus (keyboard/gamepad): cincin emas `sun_500` 4 px di luar tombol, mengikuti sudut tombol.
+
+Hover: wajah tombol sedikit lebih terang (8%). Pressed: wajah sedikit lebih gelap dan tenggelam (lihat 167.4).
 
 ## 167.6 MOTION
 
@@ -6019,39 +6080,44 @@ Sell receipt:
 
 satisfying tetapi understated: item rows collapse/clear, total naik, satu cash accent pulse.
 
-## 167.7 WEB RESPONSIVE BREAKPOINTS
+Gerak dekoratif revisi UI 6.1 (semuanya mati saat Reduced Motion, dan tidak berjalan pada run headless):
 
-Layout mode bukan berdasarkan user-agent.
+- overlay muncul dengan pop kecil (skala ~0,92 → 1, ease back) 220–260 ms;
+- Main Menu: logo turun dengan pantulan kecil, tombol muncul berurutan (jeda ~70 ms);
+- emblem logo bergoyang pelan ±4°;
+- panah "lanjut" pada kartu dialog memantul pelan.
 
-- `LANDSCAPE_WIDE`: aspect >= 1.45;
-- `LANDSCAPE_COMPACT`: 1.0–1.449;
-- `PORTRAIT`: aspect < 1.0.
+## 167.7 PHONE & TABLET BREAKPOINTS (PORTRAIT)
 
-Web default:
+Layout mode bukan berdasarkan user-agent. Revisi Mobile 6.2 menghapus `LANDSCAPE_WIDE` dan `LANDSCAPE_COMPACT`.
 
-1280×720 reference.
+- `PHONE`: lebar/tinggi < 0,62 → kanvas 390 × 694 pt (+ tinggi ekstra pada HP tinggi);
+- `TABLET`: lebar/tinggi ≥ 0,62 → kanvas 600 × 800 pt (+ tinggi ekstra pada tablet ramping);
+- lebih lebar dari 0,80 → kanvas 640 × 800 pt dengan bilah di samping.
 
-Minimum supported practical viewport:
+Minimum supported practical canvas:
 
-960×540 desktop-style; di bawahnya berpindah ke compact/portrait arrangement sesuai aspect.
+300 × 534 pt (HP 9:16 terkecil dengan UI SCALE 130%); semua tombol kritis tetap utuh dan terjangkau (di layar atau di halaman yang bisa digulir).
 
-## 167.8 ANDROID PORTRAIT
+## 167.8 MOBILE PORTRAIT (ANDROID & iOS)
 
 Reference:
 
-720×1280.
+HP 390 × 694 pt (dan 390 × 845 pt untuk HP 19,5:9), tablet 600 × 800 pt.
 
-Semua critical control harus berada di safe area.
+Semua critical control harus berada di safe area (notch, Dynamic Island, status bar, home indicator, gesture bar). Argumen debug `--mm-insets=<kiri>,<atas>,<kanan>,<bawah>` mensimulasikan inset tersebut untuk QA di desktop (mis. `0,47,0,34` seperti iPhone).
 
 Minimum touch target:
 
-48 logical px.
+48 pt.
 
 Preferred action target:
 
-56–72 logical px.
+56–84 pt; tombol jempol duel 120–170 pt tinggi.
 
-Jangan menaruh dua critical action berdekatan tanpa minimal 8–12 px gap.
+Jangan menaruh dua critical action berdekatan tanpa minimal 8–12 pt gap; pilihan Suwit dipisah 20 pt (HP) / 24 pt (tablet).
+
+Zona jempol: aksi utama di sepertiga bawah; Pause dan status di atas; tidak ada aksi kritis di sudut atas yang sulit dijangkau satu tangan, kecuali Pause.
 
 ## 167.9 SCREEN-SPECIFIC UX
 
@@ -6062,6 +6128,8 @@ Jangan menaruh dua critical action berdekatan tanpa minimal 8–12 px gap.
 - Continue paling atas jika save ada;
 - after-ending menu hanya berubah subtle sesuai Section 157;
 - versi build kecil di sudut untuk debug, hidden pada release jika tidak diperlukan.
+- logo = emblem bulat (matahari, ikan bersarung tinju) + judul "MANCING MANIA" bergaya cat papan butter + "GELUT EDITION" pada pita crust yang miring −3°;
+- tombol menu memakai ikon (Continue ▶, New Game ✦, How to Play buku, Settings gear, Credits hati); tombol utama sedikit lebih tinggi (68 vs 58 px).
 
 ### Fishing HUD
 
@@ -6080,7 +6148,7 @@ Jangan tampilkan semua stats sekaligus.
 
 Wheel harus lucu tetapi bukan kasino:
 
-- paper/painted-wheel visual;
+- paper/painted-wheel visual: roda kayu dicat dengan rim cream, pasak kayu kecil di antara segmen, hub matahari, dan pin penunjuk crust; segmen memakai palet UI (Boxing crust, Arm grass, Dance sun, Suwit teal) dan nama duel mengecil agar muat di segmennya;
 - tidak ada coin shower;
 - tidak ada “BIG WIN” language;
 - reveal singkat dan jelas;
@@ -6094,10 +6162,11 @@ Informasi utama selalu dekat area perhatian player.
 - Arm: position + stamina + burst warning.
 - Dance: lanes + judgment + score.
 - Suwit: countdown + tell + choice row.
+- Dance (revisi UI 6.1): lajur bulat bernuansa warna lajurnya, penerima nada (cakram lembut + bentuk lajur) di garis hit, tombol huruf kecil (key cap) di bawahnya, nada dengan bayangan dan kilau yang memudar masuk di atas lajur.
 
 ### Market
 
-Market UI terasa seperti ledger/kartu harga, bukan e-commerce app.
+Market UI terasa seperti ledger/kartu harga, bukan e-commerce app. Kartu upgrade adalah slip kertas dengan tag level emas seperti stiker harga; judul "BU YATI'S WARUNG" bergaya cat papan.
 
 Tab order:
 
@@ -6107,8 +6176,8 @@ Default first visit membuka SELL.
 
 ### Dialogue
 
-- bottom safe-area box;
-- speaker label;
+- bottom safe-area box (kartu cream; menempel ke bawah dan tumbuh ke atas bila baris panjang);
+- speaker label sebagai name tag crust;
 - max 3 visible text lines jika memungkinkan;
 - confirm/tap untuk lanjut;
 - hold skip indicator untuk scene;
@@ -6195,7 +6264,7 @@ MainMenu (Node)
 ├── World (Node3D)
 │   ├── LakeSet (instance)
 │   ├── DartoMenuPose (Node3D)
-│   ├── MenuCamera (Camera3D)
+│   ├── MenuCamera (DioramaCamera)
 │   └── MenuLighting (Node3D)
 ├── MenuCanvas (CanvasLayer)
 │   └── SafeRoot (Control)
@@ -6220,7 +6289,7 @@ Story (Node)
 │   ├── ActiveSetAnchor (Node3D)
 │   ├── Actors (Node3D)
 │   ├── Props (Node3D)
-│   └── StoryCamera (Camera3D)
+│   └── StoryCamera (DioramaCamera)
 ├── StoryCanvas (CanvasLayer)
 │   └── StoryUI (Control)
 │       ├── DialoguePanel
@@ -6252,7 +6321,7 @@ Fishing (Node)
 │   │   ├── RippleEmitter
 │   │   └── BiteMarker
 │   ├── FishShadowRoot (Node3D)
-│   ├── FishingCamera (Camera3D)
+│   ├── FishingCamera (DioramaCamera)
 │   └── FishingEffects (Node3D)
 ├── FishingCanvas (CanvasLayer)
 │   └── SafeRoot (Control)
@@ -6288,7 +6357,7 @@ Market (Node)
 │   ├── MarketSet (instance)
 │   ├── BuYati (Node3D)
 │   ├── DartoMarketPose (Node3D)
-│   └── MarketCamera (Camera3D)
+│   └── MarketCamera (DioramaCamera)
 ├── MarketCanvas (CanvasLayer)
 │   └── SafeRoot (Control)
 │       ├── HeaderBar
@@ -6318,7 +6387,7 @@ Wheel (Node)
 ├── WheelController (Node)
 ├── World (Node3D)
 │   ├── FishDisplayAnchor
-│   └── WheelCamera
+│   └── WheelCamera (DioramaCamera)
 └── WheelCanvas (CanvasLayer)
     └── SafeRoot
         ├── FishTitle
@@ -6339,7 +6408,7 @@ Boxing (Node)
 │   ├── BoxingSet (instance)
 │   ├── DartoFighter
 │   ├── FishFighter
-│   └── BoxingCamera
+│   └── BoxingCamera (DioramaCamera)
 ├── BoxingCanvas (CanvasLayer)
 │   └── SafeRoot
 │       ├── PlayerHP
@@ -6363,7 +6432,7 @@ ArmWrestle (Node)
 │   ├── ArmWrestleSet
 │   ├── DartoArmRig
 │   ├── FishArmRig
-│   └── ArmCamera
+│   └── ArmCamera (DioramaCamera)
 ├── ArmCanvas
 │   └── SafeRoot
 │       ├── PositionBar
@@ -6385,7 +6454,7 @@ Dance (Node)
 │   ├── DanceSet
 │   ├── DartoDancer
 │   ├── FishDancer
-│   └── DanceCamera
+│   └── DanceCamera (DioramaCamera)
 ├── DanceCanvas
 │   └── SafeRoot
 │       ├── LaneContainer
@@ -6410,7 +6479,7 @@ Suwit (Node)
 │   ├── SuwitSet
 │   ├── DartoSuwitPose
 │   ├── FishSuwitPose
-│   └── SuwitCamera
+│   └── SuwitCamera (DioramaCamera)
 ├── SuwitCanvas
 │   └── SafeRoot
 │       ├── ScoreDots
@@ -6433,7 +6502,7 @@ Result (Node)
 │   ├── ResultStageAnchor
 │   ├── DartoResultPose
 │   ├── FishResultPose
-│   └── ResultCamera
+│   └── ResultCamera (DioramaCamera)
 └── ResultCanvas
     └── SafeRoot
         ├── ResultTitle
@@ -6621,15 +6690,29 @@ func consume_action_once(action: StringName) -> bool
 ## 169.7 `PlatformService`
 
 ```gdscript
-signal viewport_class_changed(viewport_class: StringName)
+signal viewport_class_changed(viewport_class: StringName)  # PHONE / TABLET
+signal safe_area_changed()
+
+const PHONE := &"phone"
+const TABLET := &"tablet"
+const PHONE_CANVAS := Vector2i(390, 694)
+const TABLET_CANVAS := Vector2i(600, 800)
 
 func is_web() -> bool
 func is_android() -> bool
+func is_ios() -> bool
+func is_mobile() -> bool
+func get_form_factor() -> StringName
+func is_tablet() -> bool
 func get_viewport_class() -> StringName
 func get_safe_rect() -> Rect2i
+func set_simulated_insets(insets: Vector4) -> void  # QA: notch + home indicator
 func get_reference_scale() -> float
 func supports_file_import_export() -> bool
 func request_fullscreen(enable: bool) -> void
+static func classify_aspect(width: float, height: float) -> StringName
+static func canvas_size_for(width: float, height: float) -> Vector2i
+static func aspect_mode_for(width: float, height: float) -> Window.ContentScaleAspect
 ```
 
 ## 169.8 `RNGService`
@@ -7328,7 +7411,7 @@ Semua clip name menggunakan `snake_case` dan event marker deterministic. Playbac
 | `empty_pull` | 0.80s | no | — |
 | `fish_escape_react` | 1.00s | no | — |
 | `bucket_add` | 0.75s | no | `bucket_commit` |
-| `market_idle` | 5.0s | yes | — |
+| `market_idle` | 4.65s (napas 1,35 rad/s) | yes | — |
 | `phone_check` | 1.5s | no | — |
 | `sit_home` | 5.0s | yes | — |
 | `stand_home` | 1.4s | no | — |
@@ -7456,15 +7539,33 @@ Bu Yati:
 
 ## 172.9 ENVIRONMENT ANIMATION
 
-- tree leaves: low-amplitude looping sway;
-- grass clusters: staggered sway;
-- water: slow procedural movement;
-- hanging lamp: almost static, optional subtle sway;
-- market fan: rotating when visible;
-- smoke: slow procedural particle;
-- distant birds: occasional one-shot.
+Semua gerak lingkungan adalah transform node berbasis sinus di node `AmbientMotion` milik set (tanpa shader), masing-masing dengan fase sendiri:
+
+- mahkota pohon: sway 0,018 rad;
+- rumpun alang-alang: sway 0,05 rad;
+- garis air: melayang 0,12–0,25 m bolak-balik;
+- lampu gantung: diam;
+- kipas warung: berputar saat terlihat;
+- asap dan burung jauh: opsional, one-shot.
 
 Rule Section 158 tetap berlaku: jangan semua bergerak bersamaan.
+
+## 172.10 PROCEDURAL MOTION LAYER
+
+Lapisan di atas klip (`VISUAL_STYLE_GUIDE.md` Section 10):
+
+| Parameter | Nilai |
+|---|---|
+| Napas klip idle (`idle_fishing`, `market_idle`, `idle_home`, `sit_lake`) | 1,35 rad/s, dada naik 0,012 m, ayunan lengan 0,05 rad, anggukan kepala 1,5° |
+| Squash & stretch | skala (1 + a, 1 − a, 1 + a) atau kebalikannya, kembali dalam 0,32 s dengan `TRANS_BACK` / `EASE_OUT` |
+| Ikan mendarat di tepian | squash 0,16 lalu stretch 0,14 saat menantang |
+| Ember menerima tangkapan | squash 0,14 |
+| Tinju: Darto kena pukul / ikan kena pukul / Darto menang | squash 0,10 / squash 0,12 / stretch 0,10 |
+| Panco, joget, Suwit: pemenang | stretch 0,10–0,12 |
+| Warung: penjualan / pembelian / pembayaran hutang | Bu Yati squash 0,06 / Bu Yati squash 0,06 / Darto stretch 0,08 |
+| Result menang | Darto stretch 0,12 |
+
+Squash & stretch dilewati seluruhnya saat Reduced Motion aktif.
 
 
 ---
@@ -7475,18 +7576,46 @@ Camera harus stabil, understated, dan tidak mencoba membuat cerita sederhana ter
 
 ## 173.1 GLOBAL CAMERA RULES
 
-- Perspective `Camera3D`.
-- Default FOV gameplay sekitar 45°–55° sesuai set.
-- Dialogue medium shot sekitar 40°–48°.
-- Emotional close-up jarang; FOV 35°–42° hanya jika dibutuhkan.
-- No handheld shake untuk narrative.
-- No dutch angle kecuali satu joke visual yang sangat jelas dan tidak mengganggu readability; default tidak digunakan.
-- Camera move memakai ease-in/out lembut.
-- Cut lebih disukai daripada camera orbit panjang.
-- Establishing shot 2.5–5 sec.
-- Reaction hold setelah punchline 0.4–1.2 sec.
-- Tidak ada fast montage pada prologue.
-- Fishing camera tidak shake akibat stress.
+Profil kamera (HARUS, `VISUAL_STYLE_GUIDE.md` Section 2):
+
+| Properti | Nilai |
+|---|---|
+| Proyeksi | Ortografis |
+| Yaw | 45° (kamera di sisi -X, -Z, memandang ke +X, +Z) |
+| Pitch | 35° menunduk |
+| Roll | 0° |
+| Rotasi | Dikunci; pemain tidak bisa memutar kamera |
+| `keep_aspect` | `KEEP_WIDTH` (`camera.size` = lebar dunia terlihat) |
+| Lebar bingkai | 6,8 m bawaan; 5,6–11,0 m, langkah 0,6 m |
+| Jarak ke titik fokus | 30 m (tidak mengubah ukuran) |
+| Near / far | 0,05 / 200 m |
+
+Rumus posisi: `offset = (-sin(yaw)·cos(pitch), sin(pitch), -cos(yaw)·cos(pitch)) × 30`, `camera.position = focus + offset`, `look_at(focus)`. Arah layar: +X dunia ke kiri-atas, +Z dunia ke kanan-atas, kanan layar = (-X, +Z) dinormalisasi.
+
+Aturan:
+
+- satu `DioramaCamera` per scene; scene hanya memilih titik fokus dan lebar bingkai;
+- diorama dibingkai di tengah ruang antara bar HUD (Section 122);
+- kamera **tidak pernah shake**, termasuk saat line stress (stress diekspresikan HUD);
+- kamera tidak bergerak untuk kejadian rutin; pindah layout hanya mengganti lebar/fokus;
+- cerita memakai **cut** antar-framing; satu "sorotan lembut" (`glide_to`, ease in/out ±0,6 s) boleh untuk momen penting dan berubah menjadi cut saat Reduced Motion aktif;
+- tidak ada dutch angle, orbit, atau handheld shake;
+- establishing shot 2,5–5 s; reaction hold setelah punchline 0,4–1,2 s; tidak ada fast montage pada prologue.
+
+Framing per scene (lebar referensi landscape / HP, meter; revisi Mobile 6.2 hanya memakai lebar HP, tablet ×1,25):
+
+| Scene | Fokus | Lebar |
+|---|---|---|
+| Fishing | `CameraFocus` danau (antara Darto dan pelampung) | 8,6 / 6,8 |
+| Main Menu | `MenuFocus` (Darto di kanan panel menu; portrait di tengah) | 9,8 / 6,8 |
+| Market | `CameraFocus` warung (landscape digeser ke kiri panel ledger) | 9,2 / 6,2 |
+| Wheel | ikan di tengah ring, kiri roda (portrait: di atas roda) | 5,6 / 5,6 |
+| Boxing | ring, Darto kiri-dekat dan ikan kanan-jauh secara diagonal | 6,2 / 5,6 |
+| Arm Wrestle | meja di tengah, Darto kiri, ikan kanan | 5,6 / 5,6 |
+| Dance | panggung (landscape di kiri lajur nada) | 6,2 / 5,6 |
+| Suwit | meja bundar di dek kayu | 5,6 / 5,6 |
+| Result | Darto di tempat mancing, ember dan ikan di sisinya | 5,6 / 5,6 |
+| Credits | `StoryWide` danau saat senja | 11,0 / 8,0 |
 
 ## 173.2 SHOT ID CONVENTION
 
@@ -7496,31 +7625,33 @@ Timeline setiap shot menyimpan:
 
 ```text
 shot_id
-camera_anchor
-fov
+focus (marker framing set, mis. StoryWide/StoryDarto/StoryTwoShot) atau spot + offset layar [kanan, atas, ke dalam]
+width (lebar bingkai 5,6–11,0 m; opsional width_portrait)
+glide (opsional: sorotan lembut)
 start_duration
-move_type
-look_target
-actor_cues
+actor_cues (spot + offset layar + arah hadap: camera / in / left / right / camera_left / camera_right)
 dialogue_id
 sfx_id
 music_state
+hour (opsional: jam cahaya, Section 5)
 end_transition
 ```
+
+Kolom "Lebar" pada tabel di bawah menggantikan FOV lama: lebar besar = wide, 6,2 m = medium, 5,6 m = close.
 
 ## 173.3 PROLOGUE `story_prologue_zero`
 
 Target total: 38–52 sec tanpa player skip.
 
-| Shot | FOV | Durasi | Deskripsi |
+| Shot | Lebar (m) | Durasi | Deskripsi |
 |---|---:|---:|---|
-| `ZERO_S01` | 50 | 3.0s | black → fade ke wide rumah sederhana; kipas dan room tone |
-| `ZERO_S02` | 42 | 4.0s | medium Darto duduk di lantai, ponsel di foreground |
-| `ZERO_S03` | 38 | 3.0s | insert phone: BANK BALANCE dan TOTAL DEBT |
-| `ZERO_S04` | 45 | 12–18s | two-shot Darto/Rini untuk dialogue utama; camera static |
-| `ZERO_S05` | 50 | 3.0s | pintu menutup; Darto tetap frame, pause |
-| `ZERO_S06` | 45 | 4.0s | insert joran, ember, helm, kunci motor |
-| `ZERO_S07` | 50 | 3.0s | Darto berdiri; hard cut ke luar |
+| `ZERO_S01` | 6,2 | 3.0s | black → fade ke diorama rumah sederhana; kipas dan room tone |
+| `ZERO_S02` | 5,6 | 4.0s | Darto di lantai, ponsel di tangan (`StoryDarto`) |
+| `ZERO_S03` | UI | 3.0s | insert phone UI: BANK BALANCE dan TOTAL DEBT |
+| `ZERO_S04` | 6,2 | 12–18s | two-shot Darto/Rini untuk dialogue utama; kamera diam |
+| `ZERO_S05` | 5,6 | 3.0s | pintu (`StoryDoor`); Darto tetap di frame, pause |
+| `ZERO_S06` | 5,6 | 4.0s | sudut joran, ember, helm |
+| `ZERO_S07` | 6,2 | 3.0s | Darto berdiri; hard cut ke luar |
 
 Music:
 
@@ -7534,9 +7665,9 @@ procedural fan, distant motor, room tone, door click.
 
 Target total: 10–14 sec.
 
-- `MOTOR_S01`: wide roadside static, FOV 52, motor masuk frame 4 sec.
-- `MOTOR_S02`: trailing side composition, FOV 48, 4 sec, no dramatic acceleration.
-- `MOTOR_S03`: wider lake approach, FOV 55, title appears, then `SUNDAY — 3:17 PM`.
+- `MOTOR_S01`: diorama danau lebar (`StoryWide`, 11,0 m), 4 sec.
+- `MOTOR_S02`: tetap statis, motor di tepian; no dramatic acceleration.
+- `MOTOR_S03`: title appears, then `SUNDAY — 3:17 PM`.
 
 Motor bukan hero product shot.
 
@@ -7544,9 +7675,9 @@ Motor bukan hero product shot.
 
 Target total setelah landing: 28–40 sec.
 
-- `FIRSTFISH_S01`: fish lift reveal; FOV 48.
-- `FIRSTFISH_S02`: medium Darto reaction; FOV 42.
-- `FIRSTFISH_S03`: fish close-medium, Catfish speaks; FOV 40.
+- `FIRSTFISH_S01`: fish lift reveal; `StoryMedium` 6,2 m.
+- `FIRSTFISH_S02`: Darto reaction; sorotan lembut ke `StoryDarto` 5,6 m.
+- `FIRSTFISH_S03`: Catfish speaks; 5,6 m.
 - `FIRSTFISH_S04`: alternating static cuts; no orbit.
 - `FIRSTFISH_S05`: glove reveal with small sting; hold 0.7 sec after “Square up.”
 - transition to Wheel tutorial.
@@ -7632,7 +7763,7 @@ Nisa phone call.
 
 22–32 sec.
 
-1. Don Arowana defeated pose, low but not heroic angle, FOV 42.
+1. Don Arowana defeated pose, framing dekat 5,6 m (sudut kamera tetap; kepahlawanan tidak dibangun lewat kamera).
 2. Darto lifts Arowana; medium two-shot style.
 3. dialogue Section 155/166.
 4. pause after “Does the lake pay three hundred thousand?”
@@ -7675,7 +7806,7 @@ No music until final small laugh; then optional one soft warm motif.
 
 Final wide composition:
 
-lake approximately 60% frame; family small in composition; no fireworks.
+lake approximately 60% frame; family small in composition; no fireworks. Cahaya golden 17:36 (Section 5).
 
 ## 173.11 SKIP BEHAVIOR
 
@@ -7809,6 +7940,24 @@ prop_trash_lost_sandal
 prop_trash_rusty_can
 prop_trash_ancient_tyre
 ```
+
+## 174.8a MATERIALS & SHARED MESHES
+
+```text
+generated/materials/mat_vertex_color.tres
+generated/materials/mat_vertex_color_round.tres
+generated/materials/mat_metal_soft.tres
+generated/materials/mat_glow_warm.tres
+generated/materials/mat_glass.tres
+generated/materials/mat_fake_shadow.tres
+generated/materials/mat_water_shadow.tres
+generated/materials/mat_water_ripple.tres
+generated/materials/mat_fishing_line.tres
+generated/meshes/mesh_shadow_character.tres
+generated/meshes/mesh_shadow_furniture.tres
+```
+
+Material berbasis shader kustom (`mat_lake_water`, `mat_foliage_sway`, `mat_grass_sway`) dihapus pada revisi visual 6.1.
 
 ## 174.9 FISH BOOK PORTRAITS
 
@@ -8589,12 +8738,11 @@ Display:
 
 ### PLATFORM/UI
 
-- simulate 1280×720;
-- 1920×1080;
-- 720×1280;
-- 1080×2400;
-- narrow Web portrait;
-- safe-area inset presets;
+- simulate 720×1280 (HP 9:16);
+- 1080×2400 / 1170×2532 (HP tinggi);
+- 1536×2048 (tablet 3:4);
+- landscape window (kolom portrait dengan bilah);
+- safe-area inset presets (`--mm-insets`);
 - mouse mode;
 - touch mode;
 - Web focus lost simulation.
@@ -8992,12 +9140,12 @@ Legend:
 
 | ID | P | Type | Test | Expected |
 |---|---|---|---|---|
-| UI-001 | P0 | MAN | 1280×720 | no overlap/crop |
-| UI-002 | P0 | MAN | 1920×1080 | anchors scale correctly |
-| UI-003 | P0 | MAN | 720×1280 | portrait usable |
-| UI-004 | P0 | MAN | 1080×2400 | safe area usable |
-| UI-005 | P0 | MAN | notch simulation | controls inside safe rect |
-| UI-006 | P1 | MAN | min touch target | >=48 logical px |
+| UI-001 | P0 | MAN | 720×1280 (HP 9:16) | no overlap/crop |
+| UI-002 | P0 | MAN | 1536×2048 (tablet) | columns centred, scale correctly |
+| UI-003 | P0 | MAN | 1080×2400 / 1170×2532 | portrait usable, thumb zone reachable |
+| UI-004 | P0 | MAN | landscape window | portrait column with side bars |
+| UI-005 | P0 | MAN | notch / Dynamic Island / home indicator simulation | controls inside safe rect |
+| UI-006 | P1 | MAN | min touch target | >=48 pt (48 dp / 44 pt) |
 | UI-007 | P1 | MAN | no color-only critical cue | pass |
 | UI-008 | P1 | MAN | reduced flash | effect reduced |
 | UI-009 | P1 | MAN | HUD shake off/reduced | honored |
@@ -11044,175 +11192,109 @@ Menjalankan generator dua kali dengan source/seed sama harus menghasilkan visual
 
 ## 184.5 MESH CONSTRUCTION RULES
 
-Gunakan Godot native APIs seperti:
+Semua mesh dibangun oleh `tools/generators/soft_mesh.gd` (indexed `ArrayMesh`, normal halus, warna verteks):
 
-- `ArrayMesh`;
-- `SurfaceTool`;
-- `MeshDataTool` jika perlu;
-- `BoxMesh`;
-- `CylinderMesh`;
-- `SphereMesh`/custom low-segment sphere;
-- `CapsuleMesh` hanya jika silhouette sesuai;
-- `PrismMesh`;
-- `QuadMesh`;
-- generated indexed triangle arrays.
+| Primitif | Pengaturan | Kira-kira segitiga |
+|---|---|---:|
+| `sphere` | 12 × 6 (opsional jitter untuk semak/batu) | 120 |
+| `cylinder` / `cone` | 10 segmen radial | ±40 |
+| `capsule` | 10 radial × 4 ring per ujung | ±160 |
+| `torus` | 12 ring × 8 segmen (busur untuk mulut, gagang, tali) | 192 |
+| `rounded_slab` | balok dengan 12 rusuk dipangkas `bevel` (≤ 90% setengah dimensi terkecil); sisi rata, pita rusuk dan sudut halus | 44 |
+| `lathe` | profil (jari-jari, tinggi) diputar ≤ 32 segmen; lipatan < 40° dihaluskan, ≥ 40° tetap tegas | segmen × (titik − 1) × 2 |
+| `puffy_outline` | outline 2D diberi ketebalan dengan tepi membulat (sirip, brim topi, sol sandal, bendera) | — |
+| `loft` | cincin tertutup dengan normal halus (tubuh ikan) | — |
+| `grid`, `disc`, `flat_quad` | tanah/air, cakram bayangan, ubin dan pola kotak-kotak | — |
 
-Primitive default tidak boleh dibiarkan terlihat seperti placeholder pada hero asset.
+Aturan:
 
-Hero bentuk dibangun melalui:
-
-- low-segment custom profile;
-- taper/frustum;
-- vertex displacement terkontrol;
-- asymmetric proportions;
-- merged or layered parts;
-- custom silhouette geometry;
-- vertex color/material blocking.
+- winding segitiga ditentukan dari normal verteks, jadi bagian tidak pernah terbalik;
+- satu model memanggang semua bagian statisnya ke **satu mesh per material** (MeshBake), memakai surface `solid`, `round`, `metal`, `glow`, `glass`;
+- bagian yang bergerak (bilah kipas, mahkota pohon, alang-alang, garis air) menjadi node terpisah dengan pivot sendiri;
+- model yang sama dibuat sekali lalu dipakai ulang lewat instancing `.tscn`;
+- skala diikat ke karakter 0,90 m dan grid 0,5 m; meja tempat orang berdiri melayani di bawah garis dada 0,44 m (meja warung 0,42 m);
+- setiap model punya satu sisi depan tetap: manusia menghadap -Z lokal, ikan berdiri dengan perut ke +X lokal, perabot menghadap +Z/-Z lalu diputar saat dipasang.
 
 ## 184.6 CHARACTER GENERATION STRATEGY
 
-Human characters menggunakan **stylized rigid-part/semi-rigid low-poly rig** yang mudah direproduksi dengan code.
+Keempat manusia memakai **satu build chibi 0,90 m** (`character_builder.gd`) yang divariasikan oleh data (rambut, topi, pakaian, kulit, tinggi):
 
-Setiap character generated scene minimal:
+| Bagian | Nilai |
+|---|---|
+| Kepala | elipsoid 0,205 × 0,19 × 0,196 m, pusat y 0,70 (±42% tinggi) |
+| Torso | satu lathe dari pinggul ke leher (±30%) dengan batas warna celana/baju/kerah yang tegas |
+| Pinggul / leher / bahu | y 0,25 / 0,505 / 0,44 (x ±0,142) |
+| Lengan | 0,15 m (atas + bawah) + tangan bulat |
+| Kaki | 0,17 m, jari-jari ±0,058 m, kaki bulat + sandal/sepatu |
+| Mata | manik gelap dengan titik kilau, garis mata 45% tinggi kepala dari dagu |
+| Wajah | alis kecil, mulut sederhana (datar/senyum/turun), hidung bulat kecil, pipi `#FF9AA2` |
+| Rambut / topi | kubah elipsoid yang dimiringkan ke belakang; poni berakhir di atas alis, tepi topi di atas poni |
+
+Tinggi: Darto 0,90 m; Rini ×0,93; Nisa ×0,885; Bu Yati ×0,91 (skala root).
+
+Struktur scene:
 
 ```text
 CharacterRoot (Node3D)
-├── Skeleton3D
-├── BodyMeshes
-├── AccessoryMeshes
+├── Skeleton3D            (tulang = pivot segmen, binding kaku)
+├── BodyMeshes/Body       (satu mesh berwarna verteks, ≤ 2.000 segitiga)
+├── AccessoryMeshes       (Darto: BoxingGloves, tersembunyi)
 ├── FaceMarkers
-├── AnimationPlayer
-└── AnimationTree (jika dibutuhkan)
+├── ShadowBlob            (cakram bayangan palsu)
+└── AnimationPlayer
 ```
 
-Skeleton minimum bones:
+Skeleton minimum bones tetap:
 
 ```text
-root
-pelvis
-spine_lower
-spine_upper
-neck
-head
-upper_arm_l
-forearm_l
-hand_l
-upper_arm_r
-forearm_r
-hand_r
-thigh_l
-shin_l
-foot_l
-thigh_r
-shin_r
-foot_r
+root, pelvis, spine_lower, spine_upper, neck, head,
+upper_arm_l/r, forearm_l/r, hand_l/r, thigh_l/r, shin_l/r, foot_l/r
 ```
 
-Mesh body part dapat menggunakan weighted skin sederhana atau rigid bone-attached segment jika visual lebih stabil/performatif.
-
-Tidak mengejar deformation realism.
-
-Prioritas:
-
-1. silhouette;
-2. pose readability;
-3. animation clarity;
-4. performance;
-5. reproducibility.
+Torso dan celemek di-blend sepanjang tulang punggung; bagian lain terikat kaku pada satu tulang. Tidak mengejar deformation realism.
 
 ## 184.7 FISH GENERATION STRATEGY
 
-Fish dibuat dari procedural body profile + fins + tail + eyes + character accessory.
+Ikan adalah ikan mainan yang montok: tubuh loft halus dari profil penampang per spesies, mata manik besar berbingkai putih dengan titik kilau, pipi merona tipis, sirip `puffy_outline` yang tebal, mulut kapsul yang melingkari moncong.
 
-Minimum fish rig:
+Minimum fish rig tetap:
 
 ```text
-root
-body_front
-body_mid
-body_back
-tail_base
-tail_tip
-fin_left
-fin_right
-jaw_or_head
+root, body_front, body_mid, body_back, tail_base, tail_tip, fin_left, fin_right, jaw_or_head
 ```
 
-Fish body harus berbeda secara nyata per species, bukan satu mesh yang hanya diganti warna.
+Panjang tubuh: Catfish 0,72 m; Tilapia 0,56; Gourami 0,58; Carp 0,62; Snakehead 0,76; Arowana 0,90. Semua klip memakai satuan panjang tubuh, sehingga ikan berdiri setinggi ±0,7–0,9 m di samping Darto tanpa skala tambahan di scene.
 
 Species profile:
 
-- Catfish: long low body, broad head, whiskers, muted dark-grey/olive;
-- Tilapia: taller compressed oval body, strong cheek/body exaggeration;
-- Gourami: tall broad body, longer ventral feel, calmer silhouette;
-- Carp: rounded/arched back, gold blocking, visible large-fin silhouette;
-- Snakehead: long torpedo body, flat-ish head, dark band accents;
-- Arowana: long premium silhouette, upward mouth, large scale-like color blocking through geometry/material zones.
+- Catfish: lebar di kepala, panjang, empat pasang kumis kapsul, kelopak tebal, zaitun gelap;
+- Tilapia: oval tinggi, sirip dada besar seperti otot, headband merah bergaris putih;
+- Gourami: badan tinggi dan lebar, kacamata hitam bundar dengan tangkai;
+- Carp: punggung melengkung emas, ekor lebar, kalung manik emas besar dengan medali;
+- Snakehead: torpedo dengan kepala pipih, belang lembut, headband khaki tanpa insignia dengan lencana kuningan polos;
+- Arowana: paling panjang dan elegan, mulut menghadap atas, pola sisik dari warna verteks, rantai emas pudar tipis, bekas luka, tepi ekor gelap.
 
-Whiskers, headbands, glasses, gloves, chains, scar mark, dan accessories juga dihasilkan project sendiri.
+Gloves (bola merah dengan cuff putih) dimiliki setiap ikan dan disembunyikan sampai dibutuhkan.
 
 ## 184.8 MOTORCYCLE GENERATION STRATEGY
 
-Motor Darto dibuat dari procedural modular primitives/custom meshes:
-
-- front/rear tyre;
-- rims;
-- fork;
-- headlamp;
-- handlebar;
-- mirrors;
-- fuel tank;
-- seat;
-- engine block;
-- exhaust;
-- rear shocks;
-- frame;
-- side panels;
-- fenders;
-- kickstand.
-
-Target tetap motor tua awal-2000-an secara generik tanpa menyalin logo/model proprietary secara literal.
-
-Tidak ada brand/logo.
+Motor Darto (`prop_motorcycle_darto`) dibangun dari ban torus, velg (`mat_metal_soft`), spakbor busur, rangka kapsul, tutup mesin dan bodi rounded slab, tameng kaki, jok, garpu dan setang logam, lampu bulat, lampu belakang, knalpot panjang. Generik, tanpa brand/logo.
 
 ## 184.9 ENVIRONMENT GENERATION STRATEGY
 
-Environment menggunakan modular generated assets:
+`environment_builder.gd` membangun tujuh diorama. Posisi dihitung dalam koordinat layar `uv(u, v)` (u ke kanan layar, v masuk ke gambar):
 
-- terrain/shore profile meshes;
-- water plane/shader;
-- procedural trees dari trunk branch frustum + foliage clusters;
-- grass/reeds from low-poly blade clusters;
-- road strip;
-- power poles;
-- lamps;
-- distant house silhouettes;
-- market shell;
-- home room shell;
-- plastic chairs;
-- tables;
-- thermos;
-- jars;
-- fan;
-- signs;
-- fishing props;
-- duel set dressing.
+- **Danau:** kolam elips dengan tepian berpasir, tanah grid bergelombang lembut, air berwarna verteks, garis air yang melayang, alang-alang, daun teratai, bunga kecil, batu bulat, satu pohon peneduh besar, motor di belakang Darto, rumput MultiMesh; di seberang: deretan pohon, jalan, tiang listrik dengan kabel melengkung, rumah-rumah kecil, dan warung Bu Yati berkanopi kotak-kotak, semuanya diredam ke warna latar.
+- **Warung** dan **rumah:** ruangan 3,0 × 2,5 m (6 × 5 ubin) dengan lantai ubin terakota / papan, dinding dekat 0,16 m, dinding jauh penuh dengan jendela 0,78 m bertirai kotak-kotak, pintu, lampu interior; di luar halaman berpasir, jalan, pohon, semak.
+- **Ring, meja panco, panggung joget, dek Suwit:** di petak tepi danau dengan garis pantai bergelombang, pohon, semak, rumput, bunga, alang-alang.
 
-Vegetation random placement menggunakan fixed seed per set agar reproducible.
+Penempatan acak memakai seed tetap per set (`PLACEMENT_SEED` 20261114).
 
 ## 184.10 MATERIAL & TEXTURE GENERATION
 
-Primary visual style mengandalkan geometry + material color blocking.
+Visual dunia 3D **tidak memakai tekstur**: detail dari geometri dan warna verteks; material standar Section 102.
 
-Allowed texture generation:
-
-- flat color image;
-- gradients;
-- procedural noise;
-- subtle speckle;
-- baked-like AO approximation generated from rule/vertex color;
-- simple line/shape decals drawn with `Image`;
-- UI illustration rendered from generated 3D.
+Tekstur yang masih dibuat generator hanya untuk UI: ikon aplikasi dan potret Fish Book (render 3D dari model ikan generator, latar transparan).
 
 Forbidden:
 
@@ -11220,9 +11302,8 @@ Forbidden:
 - stock texture;
 - scanned material pack;
 - external PBR material library;
-- AI-cloud-generated texture dependency.
-
-Material source adalah `StandardMaterial3D` atau project shader.
+- AI-cloud-generated texture dependency;
+- shader kustom pada material dunia 3D.
 
 ## 184.11 UI ART GENERATION
 
@@ -11268,8 +11349,8 @@ Jika di masa depan custom font ditambahkan, itu perubahan post-v1.0 dan memerluk
 
 Animation resources dibuat oleh code/project:
 
-- transform keyframes;
-- bone rotation/translation tracks;
+- bone rotation/translation tracks pada rig kaku chibi (semua klip mengunci setiap sendi, termasuk `root` dan posisi `spine_lower` untuk napas, supaya blend bersih);
+- transform node berbasis sinus (`AmbientMotion`) dan Tween squash & stretch (`DioramaMotion`) di runtime;
 - material parameter tracks bila perlu;
 - call-method event markers;
 - blend setup.
@@ -11282,16 +11363,11 @@ Procedural generator dapat membuat base clips, lalu nilai numeric boleh di-tune 
 
 Reference sheet PNG bukan external art.
 
-`reference_sheet_generator.gd` membuat output dari final generated asset:
+`reference_sheet_generator.gd` (dijalankan tanpa `--headless`) membuat output dari final generated asset:
 
-- front;
-- side;
-- back;
-- 3/4;
-- silhouette;
-- palette swatches;
-- scale reference;
-- hero pose.
+- model sheet: samping, depan, belakang, tampilan kamera game (pitch 35°, ortografis), siluet, pose hero tiga-perempat dari kamera game, palet, skala 0,5 m, di atas latar `#F5E6CA` dengan cahaya hangat panduan;
+- set sheet: set lengkap dengan cast di marker, melalui rig cahaya set sendiri dan kamera diorama ortografis yang dibingkai di `CameraFocus` / marker framing;
+- potret Fish Book.
 
 Output disimpan ke:
 
@@ -11341,14 +11417,18 @@ Godot world convention:
 
 `1 unit = 1 meter`.
 
-Approximate human height:
+Grid: 1 ubin = 0,5 × 0,5 m. Semua ukuran diikat ke karakter chibi 0,90 m (`VISUAL_STYLE_GUIDE.md` Section 3, 9).
 
-- Darto: 1.72 m;
-- Rini: 1.60 m;
-- Nisa: 1.52 m;
-- Bu Yati: 1.56 m.
+Approximate chibi height:
 
-Scale tidak perlu anatomically exact, tetapi relative height harus konsisten antar-scene.
+- Darto: 0.90 m;
+- Rini: 0.84 m;
+- Nisa: 0.80 m;
+- Bu Yati: 0.82 m.
+
+Ikan berdiri: ±0,7–0,9 m (Don Arowana paling tinggi). Meja warung 0,42 m; meja panco 0,28 m; meja Suwit 0,30 m; kursi plastik dudukan 0,13 m.
+
+Relative height harus konsisten antar-scene.
 
 ## 185.2 DARTO — FINAL SHEET
 
@@ -11383,16 +11463,26 @@ Clothing:
 - brown/grey sandals;
 - muted waist bag.
 
-Palette target:
+Palette target (6.1, dikompensasi untuk cahaya hangat):
 
-- shirt `#A78D68` family;
-- trousers `#4F554E` family;
-- skin warm medium tan range;
-- cap faded `#6A6655`.
+- shirt `#B7A68C`;
+- shorts `#67706B`;
+- skin `#DCA982`;
+- cap faded `#7B7B66`;
+- hair `#3B2A20`;
+- waist bag `#727D6A`;
+- sandals `#8C6248`.
+
+Chibi:
+
+- kepala besar dengan topi lama yang menutup ubun-ubun, rambut gelap terlihat di samping dan sebagai poni pendek di atas alis;
+- mata manik dengan kilau, alis kecil yang turun di ujung (lelah tapi ramah), mulut datar;
+- perut sedikit bulat;
+- joran panjang (1,15 m) tetap siluet sekunder terkuat.
 
 Readability:
 
-Darto must still be identifiable as silhouette at 128 px character height.
+Darto must still be identifiable as silhouette at ±78 px character height (portrait, lebar bingkai 6,8 m).
 
 Never:
 
@@ -11417,7 +11507,8 @@ Silhouette:
 
 Clothing:
 
-- muted blue-grey/terracotta work-casual palette;
+- muted blue-grey/terracotta work-casual palette (6.1: atasan lengan panjang `#7F9BC7`, rok panjang `#A86A55`, sepatu `#6B4A3A`, kulit `#E2B18A`);
+- rambut gelap diikat rendah di belakang dengan ikat `#C96A5C`;
 - practical shoes/sandals;
 - no glamorized factory uniform requirement.
 
@@ -11448,9 +11539,10 @@ Silhouette:
 
 Palette:
 
-- soft sky blue;
-- warm cream;
-- small muted red accent.
+- soft sky blue (atasan `#8FC0EA`);
+- warm cream (celana `#EEE6D8`);
+- small muted red accent (sepatu dan ikat kuncir `#C2675A`);
+- dua kuncir pendek, senyum kecil.
 
 Body proportion must clearly read as teenager and never sexualized.
 
@@ -11475,9 +11567,10 @@ Silhouette:
 
 Palette:
 
-- muted maroon/brown;
-- warm cream;
-- olive accent.
+- muted maroon/brown (blus `#93504A`);
+- warm cream (celemek kain `#F7EAD0` dengan kantong dan tali pinggang);
+- olive accent (rok `#80845F`);
+- rambut abu hangat `#A7A5A5` dengan sanggul bulat, mulut sedikit turun (deadpan).
 
 Pose:
 
@@ -11500,9 +11593,10 @@ Silhouette:
 
 Palette:
 
-- charcoal olive body;
-- lighter belly;
-- faded red gloves.
+- charcoal olive body `#6B7360`;
+- lighter belly `#E6DCBF`;
+- sirip `#545B4A`;
+- faded red gloves `#C8574A` dengan cuff `#FFFBF5`.
 
 Expression:
 
@@ -11651,98 +11745,84 @@ Never:
 
 ## 185.13 DANAU CEMPAKA — GOLDEN REFERENCE
 
-Composition target:
+Composition target (diorama):
 
-- water occupies meaningful negative space;
-- near bank grass/reeds cluster;
-- one major shade tree;
-- Darto small in frame;
-- motorcycle secondary;
-- Market distant but readable;
-- road/power pole hint Indonesia without sign overload;
-- distant houses/garden low detail.
+- kolam elips menempati ruang kosong bermakna di atas Darto; tepian berpasir pucat;
+- tepi dekat dengan rumput, bunga kecil, alang-alang, batu bulat;
+- satu pohon peneduh besar di kiri Darto;
+- Darto kecil di frame, membelakangi kamera menghadap air;
+- motor diparkir di belakang-kanan Darto (sekunder);
+- seberang danau: deretan pohon, warung berkanopi kotak-kotak, jalan dan tiang listrik, rumah-rumah kecil, semuanya diredam ke warna latar.
 
-Golden Afternoon baseline:
+Afternoon baseline:
 
-- warm sun elevation low-medium;
-- soft cream highlights;
-- blue-green water;
-- green foliage with warm edge light;
-- shadows long but not black.
+- cahaya 15:00 panduan; golden 17:36 hanya untuk ending;
+- air pastel biru-hijau, garis air pucat yang melayang;
+- bayangan berupa cakram lembut, tidak pernah hitam.
 
 Scene must feel lived-in, not tourist postcard.
 
 ## 185.14 HOME SET — GOLDEN REFERENCE
 
-Small modest room:
+Rumah boneka kecil 3,0 × 2,5 m:
 
-- floor mat;
-- low table;
-- old fan;
-- phone;
-- shoes near doorway;
-- fishing gear in corner;
-- enough empty space to avoid poverty-porn clutter.
+- lantai papan, tikar anyaman kotak-kotak;
+- meja rendah dengan rice cooker dan kipas tua;
+- sepatu dekat pintu (dinding kanan);
+- joran bersandar di sudut, ember, helm;
+- jendela bertirai kotak-kotak periwinkle;
+- cukup ruang kosong untuk menghindari kesan kumuh.
 
-Lighting:
-
-- indirect warm daylight;
-- quiet;
-- no dramatic darkness.
+Lighting: cahaya hangat panduan + satu lampu interior; tenang; tanpa kegelapan dramatis.
 
 ## 185.15 MARKET SET — GOLDEN REFERENCE
 
-Warung open-front feeling:
+Warung rumah boneka 3,0 × 2,5 m:
 
-- rough wood table;
-- scale;
-- freezer;
-- thermos;
-- jars;
-- plastic chairs;
-- faded price board;
-- hanging lamp;
-- small fan;
-- Bu Yati behind/near counter.
+- lantai ubin terakota;
+- meja warung papan kasar setinggi 0,42 m dengan rok papan menghadap pembeli;
+- timbangan, toples (bahu kaca), termos, kipas di atas meja;
+- freezer di dinding kanan;
+- dua kursi plastik merah pudar di dekat sudut rendah;
+- papan harga di dinding belakang;
+- lampu gantung pada lengan kayu;
+- dua jendela bertirai kotak-kotak merah-putih;
+- Bu Yati di belakang meja, Darto di depan.
 
-Palette:
-
-warm wood + cream + faded red + olive.
+Palette: warm wood + cream + faded red + olive.
 
 Not a clean supermarket UI environment.
 
 ## 185.16 BOXING SET — GOLDEN REFERENCE
 
-Small absurd improvised ring feeling.
+Ring improvisasi kecil (2,4 m) di rumput tepi danau:
 
-- compact rope/mat area;
-- warm practical lights;
-- lake-world material language retained;
-- not professional stadium;
-- no crowd wall;
-- fish and Darto remain primary focal points.
+- tikar anyaman kotak-kotak dengan tambalan;
+- tiang bambu; tali hanya di dua sisi jauh, dua tiang dekat kamera dipotong pendek (seperti dinding dekat rumah boneka);
+- untaian bohlam hangat di belakang;
+- bangku kecil untuk ikan; Darto kiri-dekat membelakangi kamera, ikan kanan-jauh menghadapnya;
+- not professional stadium; no crowd wall.
 
 ## 185.17 ARM WRESTLING SET — GOLDEN REFERENCE
 
-- single sturdy table;
-- exaggerated elbow pads;
-- intimate camera;
-- background simple/quiet;
-- heroic-comedy framing, not esports arena.
+- satu meja kokoh persegi 0,42 m, tinggi 0,28 m, dilihat dari sudut;
+- bantalan siku besar;
+- Darto di kiri layar, ikan di kanan, tangan terkunci di tengah;
+- latar sederhana dan tenang.
 
 ## 185.18 DANCE SET — GOLDEN REFERENCE
 
-- simple warm-lit platform;
-- string-light feeling made from generated emissive geometry if performant;
-- koplo celebration energy;
-- no nightclub/casino neon overload;
-- lane UI remains highest readability priority.
+- panggung kayu persegi 2,0 m rendah (0,12 m) dengan bendera segitiga warna-warni di dua sisi dekat;
+- dua untaian bohlam yang benar-benar menyala di sisi jauh;
+- kursi plastik penonton;
+- Darto menghadap penonton; ikan tiga-perempat menghadap kamera dan Darto;
+- lane UI tetap prioritas readability tertinggi.
 
 ## 185.19 SUWIT SET — GOLDEN REFERENCE
 
-- calm table/platform;
-- theatrical but understated suspense lighting;
-- large readable hand/choice symbols in UI;
+- dek kayu kecil dengan meja bundar dan taplak anyaman;
+- satu lampu hangat tergantung dari tiang di samping;
+- Darto kiri, ikan kanan, saling berhadapan;
 - no roulette/casino imagery.
 
 ## 185.20 UI GOLDEN REFERENCE
@@ -11751,15 +11831,19 @@ Visual metaphor:
 
 > A tidy handwritten-price-card / warm warung ledger translated into clean digital UI.
 
+Revisi UI 6.1 ("cozy warung card"): kartu dan tombol terasa seperti label harga kayu dan tombol mainan di dunia diorama yang sama.
+
 Must contain:
 
-- cream/paper panels;
-- warm dark text;
-- terracotta CTA;
-- lake-green calm accent;
-- low-opacity shadow;
-- rounded but not bubbly corners;
-- procedural line icons;
+- cream/paper panels dengan rim caramel;
+- warm dark (cocoa) text;
+- terracotta (crust) CTA;
+- lake-teal calm accent;
+- low-opacity cocoa shadow;
+- rounded, soft corners (seperti adonan), tetapi tetap rapi;
+- lip gelap di bawah setiap benda yang bisa ditekan;
+- pita judul di atas kartu;
+- procedural icons (badge bulat pada chip HUD);
 - simple motion.
 
 Must not contain:
@@ -11773,7 +11857,7 @@ Must not contain:
 
 ## 185.21 REFERENCE SHEET OUTPUT SET
 
-Generator wajib menghasilkan minimal:
+Generator wajib menghasilkan:
 
 ```text
 generated/references/ref_chr_darto.png
@@ -11786,28 +11870,33 @@ generated/references/ref_fish_gourami.png
 generated/references/ref_fish_carp.png
 generated/references/ref_fish_snakehead.png
 generated/references/ref_fish_arowana.png
+generated/references/ref_fish_lineup.png
 generated/references/ref_motor_darto.png
 generated/references/ref_set_lake.png
 generated/references/ref_set_home.png
 generated/references/ref_set_market.png
+generated/references/ref_set_market_portrait.png
 generated/references/ref_set_boxing.png
+generated/references/ref_set_boxing_portrait.png
 generated/references/ref_set_arm.png
 generated/references/ref_set_dance.png
 generated/references/ref_set_suwit.png
-generated/references/ref_ui_master.png
 ```
 
-Reference render background neutral cream, except environment reference yang memakai final WorldEnvironment.
+`ref_ui_master.png` tetap target opsional; screenshot QA UI diambil lewat argumen debug `--mm-shot` (Main Menu, Settings, Pause, How to Play, modal, Fishing/strike/reel HUD, Market semua tab, Boxing, Arm Wrestle, Dance, Suwit, Wheel, Result, dialog cerita, ponsel cerita) pada HP pendek, HP tinggi dengan `--mm-insets=0,47,0,34`, dan tablet.
+
+Reference render background `#F5E6CA`, kecuali environment reference yang memakai WorldEnvironment set (warna yang sama).
 
 ## 185.22 VISUAL LOCK TEST
 
-Milestone 9 tidak boleh selesai sebelum reference render:
+Revisi visual tidak boleh selesai sebelum:
 
-- generated;
-- dibandingkan side-by-side dengan Section 185 spec;
-- tidak memiliki placeholder primitive look pada hero object;
+- reference render dibuat ulang dan dibandingkan dengan Section 185 dan `VISUAL_STYLE_GUIDE.md`;
+- test otomatis lulus: profil kamera (ortografis, 45°/35°, `KEEP_WIDTH`, near/far, rentang zoom), rig cahaya setiap set (latar, ambient, filmic, rotasi matahari, tanpa shadow map/SSAO/glow/fog, lampu interior), material standar, tanpa shader kustom atau tekstur di dunia 3D, karakter chibi ≤ 2.000 segitiga dengan cakram bayangan, meja warung di bawah garis dada;
+- tidak ada placeholder primitive look pada hero object;
 - silhouette semua fish jelas berbeda;
 - Darto/Rini/Nisa/Bu Yati mudah dibedakan;
+- setiap scene gameplay sudah dicek pada HP dan tablet portrait, tidak ada objek yang menutupi karakter penting atau teks;
 - environment tetap cozy dan tidak terlalu ramai;
 - UI terlihat satu keluarga visual.
 
@@ -11878,7 +11967,7 @@ Renderer:
 
 Orientation:
 
-**Portrait**.
+**Portrait** (HP dan tablet). Revisi Mobile 6.2 menambah iOS/iPadOS dengan baseline yang sama (Section 135, iOS 14.0+, iPhone dan iPad).
 
 Minimum OS design baseline:
 
@@ -11969,7 +12058,7 @@ Store art tidak boleh menampilkan fitur yang tidak ada dalam game.
 
 Screenshot 01:
 
-**Fishing calm moment** — lake, Darto, float, warm environment.
+**Fishing calm moment** — diorama danau, Darto, pelampung, cahaya hangat.
 
 Screenshot 02:
 
@@ -12511,15 +12600,14 @@ Options:
 130%
 ```
 
-UI scale mengubah container/control scale, bukan render world FOV.
+UI scale mengubah container/control scale, bukan lebar bingkai kamera dunia 3D.
 
-Layout wajib lulus regression test pada:
+Layout wajib lulus regression test pada (revisi Mobile 6.2):
 
-- 1280×720;
-- 1920×1080;
-- 720×1280;
-- 1080×2400;
-- 130% UI scale;
+- 720×1280 (HP 9:16);
+- 1080×2400 (HP tinggi);
+- 1536×2048 (tablet);
+- 130% UI scale dengan 150% text scale (kanvas terkecil 300 × 534 pt);
 - notch/safe-area simulation.
 
 ## 189.3 TEXT SCALE

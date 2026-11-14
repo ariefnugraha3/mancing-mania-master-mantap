@@ -1,11 +1,13 @@
 class_name SafeAreaRoot
 extends Control
 ## Root for UI that must stay inside the device safe area (GDD 92, 167.8).
-## It fills the canvas, then insets itself by the notch/gesture areas reported
-## by PlatformService plus a comfortable margin. Children simply anchor to it.
+## It fills the canvas, then insets itself by the notch, status bar and home
+## indicator or gesture bar reported by PlatformService, plus a comfortable
+## edge margin. Children simply anchor to it.
 
-@export var margin_landscape: int = UiTokens.SPACE_32
-@export var margin_portrait: int = UiTokens.SPACE_24
+## Edge margin on a phone and on a tablet, in canvas points.
+@export var margin_phone: int = UiTokens.SPACE_12
+@export var margin_tablet: int = UiTokens.SPACE_24
 
 
 func _ready() -> void:
@@ -13,6 +15,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	get_viewport().size_changed.connect(apply_safe_area)
 	PlatformService.viewport_class_changed.connect(_on_viewport_class_changed)
+	PlatformService.safe_area_changed.connect(apply_safe_area)
 	apply_safe_area()
 
 
@@ -27,9 +30,7 @@ func apply_safe_area() -> void:
 
 
 func get_margin() -> int:
-	if PlatformService.get_viewport_class() == PlatformService.PORTRAIT:
-		return margin_portrait
-	return margin_landscape
+	return margin_tablet if PlatformService.is_tablet() else margin_phone
 
 
 func _on_viewport_class_changed(_viewport_class: StringName) -> void:

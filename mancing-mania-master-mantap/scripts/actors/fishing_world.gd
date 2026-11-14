@@ -4,23 +4,30 @@ extends Node3D
 ## shadow, splashes and the catch reveal (GDD 24-27, 37, 168.4).
 ##
 ## The world only shows what FishingController decided. It has no rules of its
-## own, so nothing here can change an outcome. The camera is fixed and never
-## shakes; line stress is expressed by the rod and the HUD (GDD 36, 173.1).
+## own, so nothing here can change an outcome. The camera is the fixed
+## diorama camera and never shakes; line stress is expressed by the rod and
+## the HUD (GDD 36, 173.1). Distances are in the chibi world's metres
+## (VISUAL_STYLE_GUIDE 3): Darto is 0.90 m tall.
 
 const HAND_BONE := "hand_r"
-## The rod sits in the right hand, angled so the fishing stance points it out
-## over the water instead of straight up.
-const ROD_GRIP := Transform3D(Basis(Vector3(1, 0, 0), deg_to_rad(-60.0)), Vector3(0.0, -0.05, -0.02))
+## The rod sits in the round right hand, angled so the fishing stance points
+## it out over the water instead of straight up.
+const ROD_GRIP := Transform3D(Basis(Vector3(1, 0, 0), deg_to_rad(-60.0)), Vector3(0.0, -0.026, -0.006))
 const FLOAT_FLIGHT_SEC := 0.57
-const FLOAT_ARC_HEIGHT := 1.5
+const FLOAT_ARC_HEIGHT := 0.9
 const LINE_POINTS := 10
-const CAMERA_FOV_LANDSCAPE := 50.0
-const CAMERA_FOV_PORTRAIT := 62.0
 const RIPPLE_COUNT := 4
 const RIPPLE_SEC := 1.3
-## Where a hooked fish is dragged to by the end of the reel, relative to the bank.
-const PULL_SPOT := Vector3(0.3, 0.0, 0.7)
-const BANK_OFFSET := Vector3(1.45, 0.16, -0.5)
+## Where a hooked fish is dragged to by the end of the reel, in screen terms
+## from Darto's spot: a little right of him and just past the water's edge.
+const PULL_ACROSS := 0.25
+const PULL_OUT := 0.85
+## Where a landed catch comes down on the bank, beside Darto on the screen.
+const BANK_ACROSS := 0.62
+const BANK_OUT := -0.12
+## HUD bars (top, bottom) in reference pixels, landscape then portrait.
+## HUD bars of the portrait screen (top, bottom) in canvas points.
+const HUD_INSETS := Vector2(64.0, 150.0)
 
 enum FloatMode { HIDDEN, FLYING, FLOATING, SUNK, REELING }
 
@@ -34,7 +41,7 @@ enum FloatMode { HIDDEN, FLYING, FLOATING, SUNK, REELING }
 @onready var _float_root: Node3D = $FloatRoot
 @onready var _bite_marker: Label3D = $FloatRoot/BiteMarker
 @onready var _shadow_root: Node3D = $FishShadowRoot
-@onready var _camera: Camera3D = $FishingCamera
+@onready var _camera: DioramaCamera = $FishingCamera
 @onready var _effects: Node3D = $FishingEffects
 @onready var _bucket: Node3D = $Bucket
 
@@ -68,7 +75,7 @@ func _ready() -> void:
 	var markers := _lake_set.get_node("Markers")
 	_darto_spot = (markers.get_node("DartoSpot") as Node3D).position
 	_float_spot = (markers.get_node("FloatSpot") as Node3D).position
-	_darto.position = _darto_spot
+	_darto.transform = (markers.get_node("DartoSpot") as Node3D).transform
 	_bucket.transform = (markers.get_node("BucketSpot") as Node3D).transform
 
 	_skeleton = _rig.get_node("Skeleton3D")
@@ -81,14 +88,14 @@ func _ready() -> void:
 	_build_line()
 	_build_ripples()
 	_build_shadow()
-	_splash_small = _build_splash(26, 2.2)
-	_splash_large = _build_splash(64, 4.2)
+	_splash_small = _build_splash(22, 1.5)
+	_splash_large = _build_splash(48, 2.6)
 	_bite_marker.visible = false
 	_float_root.visible = false
 	_float_root.position = _float_spot
 
-	PlatformService.viewport_class_changed.connect(_frame_camera)
-	_frame_camera(PlatformService.get_viewport_class())
+	_camera.set_hud_insets(HUD_INSETS)
+	_camera.frame_marker(markers.get_node("CameraFocus") as Node3D)
 
 
 func _process(delta: float) -> void:
@@ -134,15 +141,15 @@ func land_float() -> void:
 
 
 func show_nibble() -> void:
-	_float_dip = -0.035
+	_float_dip = -0.022
 	_spawn_ripple(_float_spot)
 
 
 ## The shadow drifts in from the side and starts circling the float.
 func show_bite_warning() -> void:
 	var side := -1.0 if RNGService.cosmetic.randf() < 0.5 else 1.0
-	_shadow_root.position = _float_spot + Vector3(2.4 * side, 0.012, -1.6)
-	_shadow_target = _float_spot + Vector3(0.25 * side, 0.012, -0.2)
+	_shadow_root.position = _float_spot + DioramaStyle.screen_right() * 1.6 * side + DioramaStyle.screen_in() * 0.9 + Vector3(0.0, 0.012, 0.0)
+	_shadow_target = _float_spot + DioramaStyle.screen_right() * 0.18 * side + DioramaStyle.screen_in() * 0.12 + Vector3(0.0, 0.012, 0.0)
 	_shadow_visible = true
 
 
@@ -157,10 +164,10 @@ func show_bite() -> void:
 func show_false_strike() -> void:
 	_animation.play(&"empty_pull", 0.05)
 	_animation.queue(&"idle_fishing")
-	_float_dip = 0.06
+	_float_dip = 0.035
 	_spawn_ripple(_float_spot)
 	if _shadow_visible:
-		_shadow_target = _shadow_root.position + Vector3(0.0, 0.0, -2.2)
+		_shadow_target = _shadow_root.position + DioramaStyle.screen_in() * 1.6
 		_shadow_visible = false
 
 
@@ -181,7 +188,7 @@ func show_strike(is_trash: bool) -> void:
 func update_reel(reel: ReelSimulation, held: bool) -> void:
 	_reel_ratio = reel.get_landing_ratio()
 	_reel_stress = reel.get_stress_ratio()
-	_shadow_target = _reel_position() + Vector3(0.0, 0.012, -0.25)
+	_shadow_target = _reel_position() + DioramaStyle.screen_in() * 0.12 + Vector3(0.0, 0.012, 0.0)
 	if held != _reel_was_held:
 		_reel_was_held = held
 		_animation.play(&"reel_hold" if held else &"reel_release_relax", 0.12)
@@ -206,17 +213,19 @@ func show_fish_landed(fish_id: StringName) -> void:
 	_catch = fish.model_scene.instantiate()
 	_effects.add_child(_catch)
 	_catch.global_position = origin
-	# Fish are modelled facing +X; turn it to face Darto once it is on the bank.
-	_catch.rotation.y = PI
+	# Fish are modelled with the belly toward +X; on the bank it turns half
+	# toward Darto and half toward the camera, so its face reads.
+	_catch.rotation.y = PI * 0.5
 	var gloves := _catch.get_node_or_null("AccessoryMeshes/Gloves") as Node3D
 	if gloves != null:
 		gloves.visible = false
 	var player := _catch.get_node("AnimationPlayer") as AnimationPlayer
 	player.play(&"fish_hooked_pull")
 
-	var bank := _darto_spot + BANK_OFFSET
+	var bank := _bank_spot()
 	_catch_tween = create_tween()
-	_catch_tween.tween_method(_arc_catch.bind(origin, bank, 1.9), 0.0, 1.0, 0.7).set_ease(Tween.EASE_OUT)
+	_catch_tween.tween_method(_arc_catch.bind(origin, bank, 1.0), 0.0, 1.0, 0.7).set_ease(Tween.EASE_OUT)
+	_catch_tween.tween_callback(DioramaMotion.squash.bind(_catch, 0.16))
 	_catch_tween.tween_callback(player.play.bind(&"fish_land_flop"))
 	_catch_tween.tween_interval(0.75)
 	# The fish gets up, and gloves it had no business owning are simply there.
@@ -238,9 +247,10 @@ func show_trash_landed(item_id: StringName) -> void:
 	_catch = trash.model_scene.instantiate()
 	_effects.add_child(_catch)
 	_catch.global_position = origin
-	var bank := _darto_spot + BANK_OFFSET + Vector3(0.0, -0.1, 0.0)
+	var bank := _bank_spot()
 	_catch_tween = create_tween()
-	_catch_tween.tween_method(_arc_catch.bind(origin, bank, 2.1), 0.0, 1.0, 0.8).set_ease(Tween.EASE_OUT)
+	_catch_tween.tween_method(_arc_catch.bind(origin, bank, 1.1), 0.0, 1.0, 0.8).set_ease(Tween.EASE_OUT)
+	_catch_tween.tween_callback(DioramaMotion.squash.bind(_catch, 0.14))
 
 
 ## The catch goes into the bucket and Darto bends to see it in.
@@ -255,20 +265,21 @@ func show_catch_to_bucket() -> void:
 	if player != null and player.has_animation(&"fish_bucket_defeat"):
 		player.play(&"fish_bucket_defeat", 0.1)
 	var from := _catch.global_position
-	var into := _bucket.global_position + Vector3(0.0, 0.2, 0.0)
+	var into := _bucket.global_position + Vector3(0.0, 0.16, 0.0)
 	var leaving := _catch
 	_catch = null
 	_catch_tween = create_tween()
-	_catch_tween.tween_method(_arc_node.bind(leaving, from, into, 0.7), 0.0, 1.0, 0.45)
-	_catch_tween.parallel().tween_property(leaving, "scale", Vector3.ONE * 0.35, 0.45)
+	_catch_tween.tween_method(_arc_node.bind(leaving, from, into, 0.45), 0.0, 1.0, 0.45)
+	_catch_tween.parallel().tween_property(leaving, "scale", Vector3.ONE * 0.3, 0.45)
 	_catch_tween.tween_callback(leaving.queue_free)
+	_catch_tween.tween_callback(DioramaMotion.squash.bind(_bucket, 0.14))
 
 
 func show_escape(_reason: StringName) -> void:
 	var where := _float_root.global_position
 	_set_float_mode(FloatMode.HIDDEN)
 	_bite_marker.visible = false
-	_shadow_target = where + Vector3(0.0, 0.012, -4.0)
+	_shadow_target = where + DioramaStyle.screen_in() * 2.6 + Vector3(0.0, 0.012, 0.0)
 	_shadow_visible = false
 	_spawn_ripple(where)
 	_burst(_splash_small, where)
@@ -306,19 +317,25 @@ func _update_float(delta: float) -> void:
 			point.y += sin(progress * PI) * FLOAT_ARC_HEIGHT
 			_float_root.global_position = point
 		FloatMode.FLOATING:
-			_float_root.global_position = _float_spot + Vector3(0.0, sin(_clock * 1.7) * 0.012 + _float_dip, 0.0)
+			_float_root.global_position = _float_spot + Vector3(0.0, sin(_clock * 1.7) * 0.008 + _float_dip, 0.0)
 		FloatMode.SUNK:
-			_float_root.global_position = _float_spot + Vector3(sin(_clock * 31.0) * 0.012, -0.1, 0.0)
+			_float_root.global_position = _float_spot + Vector3(sin(_clock * 31.0) * 0.008, -0.06, 0.0)
 		FloatMode.REELING:
-			var tremble := _reel_stress * 0.035
+			var tremble := _reel_stress * 0.022
 			_float_root.global_position = _reel_position() + Vector3(
-				sin(_clock * 23.0) * tremble, -0.06 + sin(_clock * 9.0) * 0.02, cos(_clock * 19.0) * tremble)
+				sin(_clock * 23.0) * tremble, -0.035 + sin(_clock * 9.0) * 0.012, cos(_clock * 19.0) * tremble)
 
 
 ## Where the hooked fish is right now: it comes in as landing progress grows.
 func _reel_position() -> Vector3:
-	var near := Vector3(_darto_spot.x + PULL_SPOT.x, 0.0, PULL_SPOT.z)
+	var near := _darto_spot + DioramaStyle.screen_right() * PULL_ACROSS + DioramaStyle.screen_in() * PULL_OUT
+	near.y = _float_spot.y
 	return _float_spot.lerp(near, _reel_ratio)
+
+
+## Where a landed catch comes down: on the bank, to Darto's right on screen.
+func _bank_spot() -> Vector3:
+	return _darto_spot + DioramaStyle.screen_right() * BANK_ACROSS + DioramaStyle.screen_in() * BANK_OUT
 
 
 func _build_line() -> void:
@@ -336,9 +353,9 @@ func _update_line() -> void:
 	if _float_mode == FloatMode.HIDDEN:
 		return
 	var from := _rod_tip.global_position
-	var to := _float_root.global_position + Vector3(0.0, 0.07, 0.0)
+	var to := _float_root.global_position + Vector3(0.0, 0.1, 0.0)
 	# A waiting line hangs slack; a fighting one is pulled straight.
-	var sag := 0.05 if _float_mode == FloatMode.REELING or _float_mode == FloatMode.FLYING else 0.32
+	var sag := 0.03 if _float_mode == FloatMode.REELING or _float_mode == FloatMode.FLYING else 0.16
 	_line_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 	for index: int in LINE_POINTS + 1:
 		var along := float(index) / float(LINE_POINTS)
@@ -374,7 +391,7 @@ func _spawn_ripple(at: Vector3) -> void:
 	var ripple := _ripples[_next_ripple]
 	_ripple_ages[_next_ripple] = 0.0
 	_next_ripple = (_next_ripple + 1) % RIPPLE_COUNT
-	ripple.global_position = Vector3(at.x, 0.03, at.z)
+	ripple.global_position = Vector3(at.x, _float_spot.y + 0.012, at.z)
 	ripple.visible = true
 
 
@@ -387,7 +404,7 @@ func _update_ripples(delta: float) -> void:
 		if progress >= 1.0:
 			_ripples[index].visible = false
 			continue
-		var spread := lerpf(0.25, 1.9, ease(progress, 0.5))
+		var spread := lerpf(0.14, 0.95, ease(progress, 0.5))
 		_ripples[index].scale = Vector3(spread, 0.04, spread)
 		var material := _ripples[index].material_override as StandardMaterial3D
 		material.albedo_color.a = 0.65 * (1.0 - progress)
@@ -395,10 +412,10 @@ func _update_ripples(delta: float) -> void:
 
 func _build_splash(amount: int, speed: float) -> CPUParticles3D:
 	var drop := SphereMesh.new()
-	drop.radius = 0.022
-	drop.height = 0.044
-	drop.radial_segments = 4
-	drop.rings = 2
+	drop.radius = 0.016
+	drop.height = 0.032
+	drop.radial_segments = 8
+	drop.rings = 4
 	var particles := CPUParticles3D.new()
 	particles.mesh = drop
 	particles.material_override = load("res://generated/materials/mat_water_ripple.tres")
@@ -420,7 +437,7 @@ func _build_splash(amount: int, speed: float) -> CPUParticles3D:
 
 
 func _burst(particles: CPUParticles3D, at: Vector3) -> void:
-	particles.global_position = Vector3(at.x, 0.03, at.z)
+	particles.global_position = Vector3(at.x, _float_spot.y + 0.02, at.z)
 	particles.restart()
 	particles.emitting = true
 
@@ -435,7 +452,7 @@ func _build_shadow() -> void:
 	disc.height = 0.004
 	disc.radial_segments = 14
 	disc.rings = 1
-	for part: Array in [[Vector3(0.0, 0.0, 0.0), Vector3(0.95, 1.0, 0.36)], [Vector3(-0.58, 0.0, 0.0), Vector3(0.42, 1.0, 0.26)]]:
+	for part: Array in [[Vector3(0.0, 0.0, 0.0), Vector3(0.5, 1.0, 0.2)], [Vector3(-0.31, 0.0, 0.0), Vector3(0.22, 1.0, 0.14)]]:
 		var piece := MeshInstance3D.new()
 		piece.mesh = disc
 		piece.material_override = material
@@ -453,12 +470,12 @@ func _update_shadow(delta: float) -> void:
 	if _shadow_visible:
 		_shadow_root.visible = true
 		# Circle the target instead of parking on it.
-		var orbit := Vector3(cos(_clock * 1.4), 0.0, sin(_clock * 1.4)) * 0.35
+		var orbit := Vector3(cos(_clock * 1.4), 0.0, sin(_clock * 1.4)) * 0.2
 		to_target += orbit
 	elif to_target.length() < 0.2:
 		_shadow_root.visible = false
 		return
-	var travel := minf(to_target.length(), 2.6 * delta)
+	var travel := minf(to_target.length(), 1.5 * delta)
 	if to_target.length() > 0.001:
 		_shadow_root.position = here + to_target.normalized() * travel
 		_shadow_root.rotation.y = lerp_angle(_shadow_root.rotation.y, atan2(-to_target.z, to_target.x), 6.0 * delta)
@@ -472,6 +489,8 @@ func _start_challenge(player: AnimationPlayer, gloves: Node3D) -> void:
 	if gloves != null:
 		gloves.visible = true
 	player.play(&"fish_challenge", 0.1)
+	if is_instance_valid(_catch):
+		DioramaMotion.stretch(_catch, 0.14)
 
 
 func _arc_catch(progress: float, from: Vector3, to: Vector3, height: float) -> void:
@@ -493,12 +512,3 @@ func _clear_catch() -> void:
 		_catch.queue_free()
 	_catch = null
 
-
-# --- Camera -----------------------------------------------------------------
-
-## The camera is fixed per layout; it only moves when the layout changes.
-func _frame_camera(viewport_class: StringName) -> void:
-	var portrait := viewport_class == PlatformService.PORTRAIT
-	var marker := _lake_set.get_node("Markers/CameraPortrait" if portrait else "Markers/CameraLandscape") as Node3D
-	_camera.global_transform = marker.global_transform
-	_camera.fov = CAMERA_FOV_PORTRAIT if portrait else CAMERA_FOV_LANDSCAPE

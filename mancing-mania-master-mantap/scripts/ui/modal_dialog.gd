@@ -40,8 +40,9 @@ func prompt(title: String, body: String, options: Array[Dictionary]) -> StringNa
 	for child: Node in footer.get_children():
 		footer.remove_child(child)
 		child.queue_free()
-	# Stack the buttons on narrow screens so long labels never get cut off.
-	footer.vertical = PlatformService.get_viewport_class() == PlatformService.PORTRAIT or options.size() > 2
+	# On a phone the buttons stack full width so long labels never get cut
+	# off; a tablet puts two side by side.
+	footer.vertical = not PlatformService.is_tablet() or options.size() > 2
 
 	var focus_target: GameButton = null
 	for entry: Dictionary in options:

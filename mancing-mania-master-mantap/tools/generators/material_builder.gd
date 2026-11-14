@@ -1,36 +1,55 @@
 @tool
 extends RefCounted
-## Generates the small set of shared materials (GDD 102, 184.10).
-## Detail comes from geometry and vertex colour, so almost everything in the
-## game renders with `mat_vertex_color`; the rest are special-purpose.
+## Generates the small set of shared materials (VISUAL_STYLE_GUIDE 5.1,
+## GDD 102, 184.10).
+##
+## Detail comes from geometry and vertex colour, so almost everything renders
+## with `mat_vertex_color` (roughness 0.85) or `mat_vertex_color_round` (0.9,
+## for spheres and capsules: characters and fish). The rest are the few
+## special cases the guide allows: soft metal, things that really glow, and
+## unshaded transparent surfaces for glass, ripples, the line and fake shadows.
+## No custom shader is used in the 3D world.
 
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
+const SoftMesh := preload("res://tools/generators/soft_mesh.gd")
+const Style := preload("res://scripts/visual/diorama_style.gd")
 
 const GENERATOR_ID := "material_builder"
-const GENERATOR_VERSION := 1
+const GENERATOR_VERSION := 2
 
 const VERTEX_COLOR := "res://generated/materials/mat_vertex_color.tres"
-const FOLIAGE_SWAY := "res://generated/materials/mat_foliage_sway.tres"
-const GRASS_SWAY := "res://generated/materials/mat_grass_sway.tres"
-const LAKE_WATER := "res://generated/materials/mat_lake_water.tres"
+const VERTEX_COLOR_ROUND := "res://generated/materials/mat_vertex_color_round.tres"
+const METAL := "res://generated/materials/mat_metal_soft.tres"
+const GLOW := "res://generated/materials/mat_glow_warm.tres"
+const GLASS := "res://generated/materials/mat_glass.tres"
+const FAKE_SHADOW := "res://generated/materials/mat_fake_shadow.tres"
 const WATER_SHADOW := "res://generated/materials/mat_water_shadow.tres"
 const WATER_RIPPLE := "res://generated/materials/mat_water_ripple.tres"
 const FISHING_LINE := "res://generated/materials/mat_fishing_line.tres"
+## The two shared fake-shadow discs (guide 6.2), unit radius.
+const SHADOW_CHARACTER_MESH := "res://generated/meshes/mesh_shadow_character.tres"
+const SHADOW_FURNITURE_MESH := "res://generated/meshes/mesh_shadow_furniture.tres"
 
-const FOLIAGE_SHADER := "res://shaders/foliage_sway.gdshader"
-const WATER_SHADER := "res://shaders/lake_water.gdshader"
+## Surface keys used by the mesh builders, one per shared material.
+const SURFACE_SOLID := "solid"
+const SURFACE_ROUND := "round"
+const SURFACE_METAL := "metal"
+const SURFACE_GLOW := "glow"
+const SURFACE_GLASS := "glass"
 
 
 func build(manifest: RefCounted) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var outputs: Dictionary[String, Resource] = {
-		VERTEX_COLOR: _vertex_color(),
-		FOLIAGE_SWAY: _foliage(0.035, 0.9, 5.0),
-		GRASS_SWAY: _foliage(0.06, 1.3, 0.6),
-		LAKE_WATER: _lake_water(),
-		WATER_SHADOW: _flat_transparent(Color(0.09, 0.13, 0.13, 0.5)),
-		WATER_RIPPLE: _flat_transparent(Color(1.0, 0.97, 0.9, 0.7)),
-		FISHING_LINE: _flat_transparent(Color(0.97, 0.95, 0.9, 0.85)),
+		VERTEX_COLOR: Style.material(Color.WHITE, Style.ROUGHNESS),
+		VERTEX_COLOR_ROUND: Style.material(Color.WHITE, Style.ROUGHNESS_ROUND),
+		METAL: Style.material(Color.WHITE, 0.55, 0.45),
+		GLOW: Style.material(Color.WHITE, Style.ROUGHNESS, 0.0, Style.LAMP_WARM),
+		GLASS: _glass(),
+		FAKE_SHADOW: _fake_shadow(),
+		WATER_SHADOW: Style.unshaded_transparent(Color(0.33, 0.45, 0.45, 0.42), false),
+		WATER_RIPPLE: Style.unshaded_transparent(Color(1.0, 0.98, 0.94, 0.75), false),
+		FISHING_LINE: Style.unshaded_transparent(Color(1.0, 0.98, 0.94, 0.9), false),
 	}
 	for path: String in outputs:
 		var save_error := GeneratorIo.save_text_resource(outputs[path], path)
@@ -38,41 +57,49 @@ func build(manifest: RefCounted) -> PackedStringArray:
 			errors.append("%s: could not save (%s)" % [path.get_file(), error_string(save_error)])
 		else:
 			manifest.register(path.get_file().get_basename(), GENERATOR_ID, GENERATOR_VERSION, 0, path)
+
+	# The shadow discs reference the saved shadow material, so they come after.
+	var shadow_material: Material = load(FAKE_SHADOW)
+	for spec: Array in [
+		[SHADOW_CHARACTER_MESH, Style.CHARACTER_SHADOW_SEGMENTS, Style.CHARACTER_SHADOW_ALPHA],
+		[SHADOW_FURNITURE_MESH, Style.FURNITURE_SHADOW_SEGMENTS, Style.FURNITURE_SHADOW_ALPHA],
+	]:
+		var path: String = spec[0]
+		var builder := SoftMesh.new()
+		var dark := Style.SHADOW
+		dark.a = spec[2]
+		var clear := dark
+		clear.a = 0.0
+		builder.disc(Vector3.ZERO, 1.0, spec[1], dark, clear, 2)
+		var save_error := GeneratorIo.save_text_resource(builder.commit({SoftMesh.DEFAULT_SURFACE: shadow_material}), path)
+		if save_error != OK:
+			errors.append("%s: could not save (%s)" % [path.get_file(), error_string(save_error)])
+		else:
+			manifest.register(path.get_file().get_basename(), GENERATOR_ID, GENERATOR_VERSION, 0, path)
 	return errors
 
 
-## Matte, vertex-coloured surface used by characters, fish, props and terrain.
-func _vertex_color() -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.vertex_color_is_srgb = true
-	material.roughness = 0.9
-	material.metallic = 0.0
-	material.metallic_specular = 0.25
-	return material
+## The materials a builder hands to SoftMesh.commit(), by surface key.
+static func surface_materials() -> Dictionary:
+	return {
+		SURFACE_SOLID: load(VERTEX_COLOR),
+		SURFACE_ROUND: load(VERTEX_COLOR_ROUND),
+		SURFACE_METAL: load(METAL),
+		SURFACE_GLOW: load(GLOW),
+		SURFACE_GLASS: load(GLASS),
+	}
 
 
-func _foliage(amount: float, speed: float, height: float) -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.shader = load(FOLIAGE_SHADER)
-	material.set_shader_parameter(&"sway_amount", amount)
-	material.set_shader_parameter(&"sway_speed", speed)
-	material.set_shader_parameter(&"sway_height", height)
-	return material
+## Thin glass: unshaded, see-through, tinted by vertex colour (guide 5.1).
+func _glass() -> StandardMaterial3D:
+	var glass := Style.unshaded_transparent(Color(1.0, 1.0, 1.0, 0.38), true)
+	glass.cull_mode = BaseMaterial3D.CULL_BACK
+	return glass
 
 
-func _lake_water() -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.shader = load(WATER_SHADER)
-	return material
-
-
-## Unshaded see-through colour for fish shadows, ripples and the fishing line.
-func _flat_transparent(tint: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = tint
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	material.vertex_color_use_as_albedo = false
-	return material
+## A soft dark disc on the floor (guide 6.2); the fade lives in vertex alpha.
+func _fake_shadow() -> StandardMaterial3D:
+	var shadow := Style.unshaded_transparent(Color.WHITE, true)
+	shadow.cull_mode = BaseMaterial3D.CULL_BACK
+	shadow.render_priority = -1
+	return shadow

@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/story/story_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/story/story_controller.gd" id="2_controller"]
 [ext_resource type="Script" path="res://scripts/ui/story_ui.gd" id="3_ui"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Story" type="Node"]
 script = ExtResource("1_scene")
@@ -19,9 +20,8 @@ script = ExtResource("2_controller")
 [node name="Props" type="Node3D" parent="StageRoot"]
 
 [node name="StoryCamera" type="Camera3D" parent="StageRoot"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 45.0
-far = 300.0
 
 [node name="StoryCanvas" type="CanvasLayer" parent="."]
 

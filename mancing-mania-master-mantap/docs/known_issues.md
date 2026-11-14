@@ -22,9 +22,15 @@ Section 193.13: P1 core-flow harus nol atau diberi waiver eksplisit oleh pemilik
 | KI-007 | P2 | Rhythm offset: setting visual offset belum diuji manusia di perangkat dengan latensi tinggi. | Wizard kalibrasi. | Butuh playtest. |
 | KI-008 | P3 | Screenshot toko portrait dirender 590×1049 lalu diperbesar ke 1080×1920. | Ambil ulang di perangkat 1080×1920. | Tugas rilis. |
 | KI-009 | P3 | Gerak khas spesies ikan masih terbatas pada tempo, lompatan, dan goyangan. | — | Deferred. |
+| KI-010 | P1 (rilis) | Revisi Visual 6.1: build Web di `build/web/` dan ZIP itch.io masih hasil `1.0.0-rc.1` dengan visual lama. | — | Ekspor ulang Web (dan Android) sebagai `1.0.0-rc.2` setelah QA visual dan human playtest ulang. |
+| KI-011 | P2 | Revisi Mobile 6.2: bar HUD per scene dikalibrasi lewat screenshot HP 9:16 (540×960), HP 19,5:9 dengan inset iPhone (450×975, `--mm-insets=0,47,0,34`) dan tablet 3:4 (720×960); foldable dan tablet 10:16 belum dicek visual. | Kamera `KEEP_WIDTH` tetap memperlihatkan seluruh lebar diorama. | Cek di Section 193 device matrix. |
+| KI-013 | P2 | Revisi Mobile 6.2: di HP kecil 9:16 dengan UI SCALE 130% + TEXT SCALE 150%, halaman Market menggulir tombol aksinya bersama isi halaman dan warung tertutup sheet. | Gulir halaman; atau pakai skala lebih kecil. | Disengaja (D-126). |
+| KI-014 | P3 | Revisi Mobile 6.2: karakter chibi di HP tampil ±52–63 pt karena zoom terdekat panduan visual 5,6 m. | — | Sesuai panduan; dievaluasi saat playtest HP. |
+| KI-012 | P3 | Revisi Visual 6.1: shader material diorama baru belum dipanaskan di layar loading; frame pertama scene baru di Web bisa sedikit tersendat (panduan 11). | — | Deferred bersama KI-004. |
 
 ## Belum diverifikasi (bukan bug yang diketahui)
 
-- Android: belum ada build (butuh SDK di Editor Settings, template build, keystore pemilik); belum diuji di perangkat fisik, termasuk tombol/gesture back dan suspend.
+- Android: belum ada build (butuh SDK di Editor Settings, template build, keystore pemilik); belum diuji di perangkat fisik, termasuk tombol/gesture back, suspend, cutout, dan tablet.
+- iOS/iPadOS: preset ada, tetapi belum pernah diekspor (butuh macOS, Xcode, akun Apple Developer); safe area iPhone baru diuji lewat simulasi `--mm-insets`.
 - Web: belum diuji di Firefox dan Safari; fokus/resume tab hanya diuji otomatis.
 - Belum ada playtest manusia (Section 192).

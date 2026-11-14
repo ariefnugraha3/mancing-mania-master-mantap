@@ -10,8 +10,10 @@ extends CanvasLayer
 signal lane_pressed(lane: int)
 signal pause_pressed()
 
-const LANE_WIDTH_LANDSCAPE := 460.0
+## The lanes fill the lower part of the portrait screen, from this share of
+## its height down, and stop growing wider on a tablet.
 const LANES_TOP_PORTRAIT := 0.42
+const LANES_MAX_WIDTH := 560.0
 const JUDGMENT_HOLD_SEC := 0.5
 const FLASH_DECAY := 6.0
 
@@ -60,9 +62,10 @@ func _ready() -> void:
 	UiTokens.outline_text(_combo, UiTokens.FONT_HEADER)
 	_judgment.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_judgment.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiTokens.outline_text(_judgment, 34)
+	UiSkin.sign_text(_judgment, 38, DioramaStyle.BUTTER, 12)
 	_judgment.visible = false
 	_banner = _outlined(40)
+	UiSkin.sign_text(_banner, 44, DioramaStyle.BUTTER, 12)
 	_banner_body = _outlined(UiTokens.FONT_HEADER)
 	_hint = _outlined(UiTokens.FONT_BUTTON)
 	for label: Label in [_banner, _banner_body, _hint]:
@@ -157,7 +160,11 @@ func get_lane_button(lane: int) -> Button:
 
 func _build_scores() -> void:
 	_score.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_score.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	var score_style := HudChip.make_style()
+	score_style.content_margin_left = UiTokens.SPACE_16
+	score_style.content_margin_top = UiTokens.SPACE_4
+	score_style.set_corner_radius_all(20)
+	_score.add_theme_stylebox_override(&"panel", score_style)
 	var row := HBoxContainer.new()
 	row.name = "Row"
 	row.add_theme_constant_override(&"separation", UiTokens.SPACE_24)
@@ -175,11 +182,14 @@ func _score_column(row: HBoxContainer, node_name: String, title: String) -> Labe
 	name_label.name = "Name"
 	name_label.text = title
 	name_label.theme_type_variation = UiTokens.TYPE_SMALL
+	name_label.add_theme_font_override(&"font", UiSkin.bold_font())
 	column.add_child(name_label)
 	var value := Label.new()
 	value.name = "Score"
 	value.text = "0"
 	value.add_theme_font_size_override(&"font_size", UiTokens.FONT_HEADER)
+	value.add_theme_font_override(&"font", UiSkin.heavy_font())
+	value.add_theme_color_override(&"font_color", UiTokens.LAKE_500.darkened(0.25) if node_name == "Player" else UiTokens.TERRACOTTA_500.darkened(0.2))
 	column.add_child(value)
 	return value
 
@@ -209,16 +219,14 @@ func _on_lane_down(lane: int) -> void:
 # --- Layout -----------------------------------------------------------------
 
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := _safe_root.size
 	var row := float(UiTokens.TOUCH_TARGET_PREFERRED)
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
 	_score.reset_size()
 	_place(_score, Rect2(0.0, 0.0, _score.get_combined_minimum_size().x, _score.get_combined_minimum_size().y))
-	var width := area.x if portrait else minf(LANE_WIDTH_LANDSCAPE, area.x * 0.4)
-	var top := roundf(area.y * LANES_TOP_PORTRAIT) if portrait else row + float(UiTokens.SPACE_12)
-	# Landscape puts the lanes on the right so the dancers stay in view.
-	var left := 0.0 if portrait else area.x - width
+	var width := minf(area.x, LANES_MAX_WIDTH)
+	var top := maxf(roundf(area.y * LANES_TOP_PORTRAIT), row + float(UiTokens.SPACE_48))
+	var left := (area.x - width) * 0.5
 	var lanes_rect := Rect2(left, top, width, area.y - top)
 	_place(_lanes, lanes_rect)
 	for lane: int in NoteField.LANES:
@@ -234,9 +242,9 @@ func _layout() -> void:
 	_place(_beat, Rect2(lanes_rect.end.x - 28.0, lanes_rect.end.y - NoteField.HIT_LINE_FROM_BOTTOM - 50.0, 28.0, 28.0))
 	_place(_judgment, Rect2(lanes_rect.position.x, lanes_rect.position.y + lanes_rect.size.y * 0.3, width, 48.0))
 	_place(_combo, Rect2(lanes_rect.position.x, lanes_rect.position.y + lanes_rect.size.y * 0.3 + 48.0, width, 36.0))
-	_place(_banner, Rect2(0.0, area.y * 0.18, area.x, 56.0))
-	_place(_banner_body, Rect2(0.0, area.y * 0.18 + 58.0, area.x, 40.0))
-	_place(_hint, Rect2(0.0, top - 40.0, area.x, 32.0) if portrait else Rect2(0.0, area.y - 40.0, area.x - width, 32.0))
+	UiTokens.place_banner(_banner, _banner_body, area.y * 0.1, area.x)
+	_place(_hint, Rect2(0.0, top - 68.0, area.x, 64.0))
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 
 
 func _place(control: Control, rect: Rect2) -> void:

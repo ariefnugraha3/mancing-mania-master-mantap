@@ -4,14 +4,16 @@ extends CanvasLayer
 ## stamina with its power bands, the round clock, the burst warning and the
 ## big MASH button.
 ##
-## The MASH button is one large target in the bottom part of the screen on
-## touch layouts (GDD Section 95) and feeds the same `arm_mash` action as the
-## keyboard. Keyboard players see their key named instead.
+## The portrait screen keeps Darto and the fish at the table in the upper
+## part, the bars just above the thumbs, and one large MASH button across the
+## bottom (GDD Section 95). It feeds the same `arm_mash` action as the
+## keyboard; the key is named above it while a keyboard is in use.
 
 signal pause_pressed()
 
-const MASH_HEIGHT_PORTRAIT_SHARE := 0.3
-const MASH_SIZE_LANDSCAPE := Vector2(420.0, 120.0)
+## MASH fills this share of the screen height, within MASH_HEIGHT_RANGE.
+const MASH_HEIGHT_PORTRAIT_SHARE := 0.28
+const MASH_HEIGHT_RANGE := Vector2(150.0, 240.0)
 const STAMINA_HEIGHT := 22.0
 const LOW_TIME_SEC := 8.0
 const WARNING_PULSE_HZ := 5.0
@@ -86,12 +88,7 @@ func refresh(snapshot: Dictionary) -> void:
 	var urgent: bool = snapshot["sudden_grip"] or float(snapshot["time_left"]) <= LOW_TIME_SEC
 	if urgent != _timer_urgent:
 		_timer_urgent = urgent
-		var box := HudChip.make_style()
-		if urgent:
-			box.bg_color = UiTokens.SUN_500
-			box.border_color = UiTokens.INK_900
-			box.set_border_width_all(4)
-		_timer.add_theme_stylebox_override(&"panel", box)
+		_timer.add_theme_stylebox_override(&"panel", HudChip.timer_style(urgent))
 
 	var warning: bool = snapshot["burst_warning"] or snapshot["bursting"]
 	_warning_on = warning
@@ -126,8 +123,9 @@ func get_position_bar() -> PositionBar:
 	return _position_bar
 
 
+## The portrait screen always shows the MASH button.
 func uses_touch_layout() -> bool:
-	return InputManager.is_touch_primary() or PlatformService.get_viewport_class() == PlatformService.PORTRAIT
+	return true
 
 
 # --- Construction -----------------------------------------------------------
@@ -149,33 +147,23 @@ func _build_stamina() -> void:
 	_stamina_bar.show_percentage = false
 	_stamina_bar.custom_minimum_size.y = STAMINA_HEIGHT
 	_stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = UiTokens.LAKE_500
-	fill.border_color = UiTokens.INK_900
-	fill.set_border_width_all(2)
-	fill.set_corner_radius_all(5)
-	_stamina_bar.add_theme_stylebox_override(&"fill", fill)
-	var back := StyleBoxFlat.new()
-	back.bg_color = Color(UiTokens.INK_900, 0.7)
-	back.border_color = UiTokens.INK_900
-	back.set_border_width_all(2)
-	back.set_corner_radius_all(5)
-	_stamina_bar.add_theme_stylebox_override(&"background", back)
+	HudChip.style_bar(_stamina_bar, UiTokens.LAKE_500)
 	_stamina_box.add_child(_stamina_bar)
 	# Notches where the power bands change (GDD Section 53).
 	_stamina_bar.draw.connect(func() -> void:
 		for share: float in [0.1, 0.3, 0.6]:
 			var x := _stamina_bar.size.x * share
-			_stamina_bar.draw_line(Vector2(x, 0.0), Vector2(x, _stamina_bar.size.y), UiTokens.CREAM_50, 2.0))
+			_stamina_bar.draw_line(Vector2(x, 3.0), Vector2(x, _stamina_bar.size.y - 3.0), Color(UiTokens.CREAM_50, 0.85), 3.0))
 
 
 func _build_timer() -> void:
 	_timer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_timer.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	_timer.add_theme_stylebox_override(&"panel", HudChip.timer_style(false))
 	_timer_label = Label.new()
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer_label.custom_minimum_size.x = 64.0
 	_timer_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_HEADER)
+	_timer_label.add_theme_font_override(&"font", UiSkin.heavy_font())
 	_timer.add_child(_timer_label)
 	_pause_button = GameButton.new()
 	_pause_button.name = "PauseButton"
@@ -190,6 +178,7 @@ func _build_labels() -> void:
 	_warning.visible = false
 	UiTokens.outline_text(_warning, 30, UiTokens.SUN_500)
 	_banner_title = _outlined(40)
+	UiSkin.sign_text(_banner_title, 44, DioramaStyle.BUTTER, 12)
 	_banner_body = _outlined(UiTokens.FONT_HEADER)
 	_hint = _outlined(UiTokens.FONT_BUTTON)
 	_keys = _outlined(UiTokens.FONT_SMALL)
@@ -229,40 +218,36 @@ func _key_name(action: StringName) -> String:
 
 # --- Layout -----------------------------------------------------------------
 
-func _on_layout_changed(_value: StringName) -> void:
+func _on_layout_changed(_value: StringName = &"") -> void:
 	_layout()
 
 
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
-	var touch := uses_touch_layout()
 	var area := _safe_root.size
 	var row := float(UiTokens.TOUCH_TARGET_PREFERRED)
 	var gap := float(UiTokens.SPACE_12)
 
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
-	_place(_timer, Rect2((area.x - 96.0) * 0.5, 0.0, 96.0, row))
-	var bar_width := minf(area.x, 640.0)
-	if portrait:
-		# Characters in the top 60%, bars in the middle, MASH in the bottom 30%.
-		var mash_top := roundf(area.y * (1.0 - MASH_HEIGHT_PORTRAIT_SHARE))
-		_place(_mash, Rect2(0.0, mash_top, area.x, area.y - mash_top))
-		var bars_top := roundf(area.y * 0.6)
-		_place(_position_bar, Rect2(0.0, bars_top, area.x, 60.0))
-		_place(_stamina_box, Rect2(0.0, bars_top + 66.0, area.x * 0.6, 46.0))
-		_place(_warning, Rect2(0.0, bars_top - 56.0, area.x, 48.0))
-	else:
-		_place(_position_bar, Rect2((area.x - bar_width) * 0.5, row + gap, bar_width, 60.0))
-		_place(_stamina_box, Rect2((area.x - bar_width) * 0.5, row + gap + 66.0, bar_width * 0.5, 46.0))
-		_place(_warning, Rect2(0.0, row + gap + 120.0, area.x, 48.0))
-		_place(_mash, Rect2(area.x - MASH_SIZE_LANDSCAPE.x, area.y - MASH_SIZE_LANDSCAPE.y, MASH_SIZE_LANDSCAPE.x, MASH_SIZE_LANDSCAPE.y))
-	_mash.visible = touch
-	_keys.visible = not touch
+	_place(_timer, Rect2((area.x - 88.0) * 0.5, 0.0, 88.0, row))
+	# Bottom: MASH across the full width, in reach of both thumbs.
+	var mash_height := clampf(roundf(area.y * MASH_HEIGHT_PORTRAIT_SHARE), MASH_HEIGHT_RANGE.x, MASH_HEIGHT_RANGE.y)
+	var mash_top := area.y - mash_height
+	_place(_mash, Rect2(0.0, mash_top, area.x, mash_height))
+	_mash.visible = true
+	# Just above it: the position bar, then Darto's stamina, read at a glance.
+	var bar_width := minf(area.x, 560.0)
+	var bar_left := (area.x - bar_width) * 0.5
+	var stamina_top := mash_top - gap - 46.0
+	var bars_top := stamina_top - UiTokens.SPACE_8 - 60.0
+	_place(_position_bar, Rect2(bar_left, bars_top, bar_width, 60.0))
+	_place(_stamina_box, Rect2(bar_left, stamina_top, bar_width * 0.66, 46.0))
+	_place(_warning, Rect2(0.0, bars_top - 100.0, area.x, 48.0))
+	_keys.visible = InputManager.is_keyboard_active()
 	_keys.text = TextDb.tf(&"arm.keys", {"key": _key_name(&"arm_mash")})
-	_place(_keys, Rect2(0.0, area.y - 30.0, area.x, 30.0))
-	_place(_hint, Rect2(0.0, (area.y * 0.6 - 100.0) if portrait else (area.y - 72.0), area.x, 32.0))
-	_place(_banner_title, Rect2(0.0, area.y * 0.25, area.x, 56.0))
-	_place(_banner_body, Rect2(0.0, area.y * 0.25 + 58.0, area.x, 40.0))
+	_place(_keys, Rect2(0.0, mash_top - 30.0, area.x, 28.0))
+	_place(_hint, Rect2(0.0, bars_top - 72.0, area.x, 64.0))
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	UiTokens.place_banner(_banner_title, _banner_body, area.y * 0.12, area.x)
 
 
 func _place(control: Control, rect: Rect2) -> void:

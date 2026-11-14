@@ -27,10 +27,12 @@ func build_content() -> void:
 	content.add_child(_notice)
 
 	_resume_button = make_button(TextDb.t(&"pause.resume"), UiTokens.TYPE_CTA_BUTTON)
+	_resume_button.icon_id = IconPainter.PLAY
 	_resume_button.pressed.connect(resume)
 	content.add_child(_resume_button)
 
 	var controls_button := make_button(TextDb.t(&"pause.controls"))
+	controls_button.icon_id = IconPainter.KEYS
 	controls_button.pressed.connect(_on_controls_pressed)
 	content.add_child(controls_button)
 	_controls = make_label(TextDb.t(&"controls.body"), UiTokens.TYPE_SMALL)
@@ -38,17 +40,21 @@ func build_content() -> void:
 	content.add_child(_controls)
 
 	_music_button = make_button("")
+	_music_button.icon_id = IconPainter.MUSIC
 	_music_button.pressed.connect(_toggle_volume.bind(&"music_volume"))
 	content.add_child(_music_button)
 	_sound_button = make_button("")
+	_sound_button.icon_id = IconPainter.SOUND
 	_sound_button.pressed.connect(_toggle_volume.bind(&"sfx_volume"))
 	content.add_child(_sound_button)
 
 	var settings_button := make_button(TextDb.t(&"pause.settings"))
+	settings_button.icon_id = IconPainter.GEAR
 	settings_button.pressed.connect(_on_settings_pressed)
 	content.add_child(settings_button)
 
 	var quit_button := make_button(TextDb.t(&"pause.quit"), UiTokens.TYPE_DANGER_BUTTON)
+	quit_button.icon_id = IconPainter.DOOR
 	quit_button.pressed.connect(_on_quit_pressed)
 	footer.add_child(quit_button)
 

@@ -1,16 +1,22 @@
 class_name OverlayPanel
 extends CanvasLayer
-## Shared base for modal overlays: a dimmed backdrop that blocks the screen
-## behind it and a centred panel that always fits inside the safe area.
+## Shared base for modal overlays: a warm dimmed backdrop that blocks the
+## screen behind it and a centred card that always fits inside the safe area.
 ##
-## The panel has a fixed title, a body that scrolls when it is taller than the
-## screen, and a fixed footer for the main buttons. Subclasses fill `content`
-## and `footer` in build_content() and call show_overlay()/hide_overlay().
+## The card wears its title on a ribbon that overlaps its top edge, has a body
+## that scrolls when it is taller than the screen, and a fixed footer for the
+## main buttons. It pops in with a small springy scale (skipped with Reduced
+## Motion). Subclasses fill `content` and `footer` in build_content() and call
+## show_overlay()/hide_overlay().
 
 signal closed()
 
-const DIM_COLOR := Color(0.208, 0.184, 0.161, 0.55)
-const SCREEN_MARGIN := UiTokens.SPACE_24
+const DIM_COLOR := UiTokens.BACKDROP
+## Gap between the card and the safe area's edges (phone, tablet).
+const SCREEN_MARGIN := UiTokens.SPACE_12
+const SCREEN_MARGIN_TABLET := UiTokens.SPACE_32
+## How far the ribbon reaches down over the card's top edge.
+const RIBBON_OVERLAP := 22
 
 ## Preferred panel width at the reference resolution; it shrinks on narrow screens.
 @export var panel_width: float = 520.0
@@ -21,6 +27,9 @@ var content: VBoxContainer
 var footer: BoxContainer
 
 var _dim: ColorRect
+var _centre: CenterContainer
+var _stack: VBoxContainer
+var _ribbon: PanelContainer
 var _panel: PanelContainer
 var _title_label: Label
 var _scroll: ScrollContainer
@@ -34,6 +43,7 @@ func _ready() -> void:
 	_build_frame()
 	build_content()
 	get_viewport().size_changed.connect(fit_to_screen)
+	PlatformService.safe_area_changed.connect(fit_to_screen)
 	content.minimum_size_changed.connect(fit_to_screen)
 	fit_to_screen()
 
@@ -54,10 +64,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		on_cancel()
 
 
+## The ribbon title. A header-sized title (small dialogs) gets a smaller ribbon.
 func set_title(text: String, type_variation: StringName = UiTokens.TYPE_SCREEN_TITLE) -> void:
 	_title_label.text = text
-	_title_label.theme_type_variation = type_variation
+	_title_label.theme_type_variation = UiTokens.TYPE_RIBBON_LABEL
+	var small := type_variation == UiTokens.TYPE_HEADER or type_variation == UiTokens.TYPE_SMALL
+	_title_label.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_HEADER - 2 if small else UiTokens.FONT_SCREEN_TITLE - 4))
+	_ribbon.visible = text != ""
 	_title_label.visible = text != ""
+	_apply_overlap()
 
 
 func show_overlay() -> void:
@@ -117,11 +132,26 @@ func fit_to_screen() -> void:
 	if _panel == null:
 		return
 	var safe := PlatformService.get_safe_rect()
-	_panel.custom_minimum_size.x = minf(panel_width, float(safe.size.x) - SCREEN_MARGIN * 2.0)
+	var margin := float(SCREEN_MARGIN_TABLET if PlatformService.is_tablet() else SCREEN_MARGIN)
+	# The card centres in the safe area, clear of a notch and a home indicator.
+	if _centre != null:
+		var canvas := get_viewport().get_visible_rect().size
+		_centre.offset_left = float(safe.position.x)
+		_centre.offset_top = float(safe.position.y)
+		_centre.offset_right = -(canvas.x - float(safe.end.x))
+		_centre.offset_bottom = -(canvas.y - float(safe.end.y))
+	_panel.custom_minimum_size.x = minf(panel_width, float(safe.size.x) - margin * 2.0)
+
+	_title_label.custom_minimum_size.x = 0.0
+	_title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var ribbon_room := _panel.custom_minimum_size.x - UiTokens.SPACE_48
+	if _title_label.get_minimum_size().x > ribbon_room:
+		_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_title_label.custom_minimum_size.x = ribbon_room
 
 	_scroll.custom_minimum_size.y = 0.0
-	var chrome_height := _panel.get_combined_minimum_size().y
-	var body_room := float(safe.size.y) - SCREEN_MARGIN * 2.0 - chrome_height
+	var chrome_height := _stack.get_combined_minimum_size().y
+	var body_room := float(safe.size.y) - margin * 2.0 - chrome_height
 	var body_height := content.get_combined_minimum_size().y
 	_scroll.custom_minimum_size.y = maxf(minf(body_height, body_room), 0.0)
 
@@ -139,21 +169,38 @@ func _build_frame() -> void:
 	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(centre)
+	_centre = centre
+
+	# The ribbon and the card share a column; a negative gap lets the ribbon
+	# hang over the card's top edge, and it draws on top of it.
+	_stack = VBoxContainer.new()
+	_stack.name = "Stack"
+	_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	centre.add_child(_stack)
+
+	_ribbon = PanelContainer.new()
+	_ribbon.name = "Ribbon"
+	_ribbon.theme_type_variation = UiTokens.TYPE_RIBBON_PANEL
+	_ribbon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_ribbon.z_index = 1
+	_ribbon.visible = false
+	_stack.add_child(_ribbon)
+
+	_title_label = Label.new()
+	_title_label.name = "Title"
+	_title_label.theme_type_variation = UiTokens.TYPE_RIBBON_LABEL
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.visible = false
+	_ribbon.add_child(_title_label)
 
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
-	centre.add_child(_panel)
+	_stack.add_child(_panel)
 
 	var layout := VBoxContainer.new()
 	layout.name = "Layout"
 	layout.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
 	_panel.add_child(layout)
-
-	_title_label = Label.new()
-	_title_label.name = "Title"
-	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_title_label.visible = false
-	layout.add_child(_title_label)
 
 	_scroll = ScrollContainer.new()
 	_scroll.name = "Body"
@@ -173,17 +220,32 @@ func _build_frame() -> void:
 	layout.add_child(footer)
 
 
+## The card overlaps the ribbon's lower half only when there is a title.
+func _apply_overlap() -> void:
+	var card := _panel.get_theme_stylebox(&"panel").duplicate() as StyleBoxFlat
+	if card == null:
+		return
+	var base := UiSkin.card()
+	card.content_margin_top = base.content_margin_top + (float(RIBBON_OVERLAP) - 4.0 if _ribbon.visible else 0.0)
+	_panel.add_theme_stylebox_override(&"panel", card)
+	_stack.add_theme_constant_override(&"separation", -RIBBON_OVERLAP if _ribbon.visible else 0)
+
+
 func _animate() -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
 	_dim.modulate.a = 1.0
-	_panel.modulate.a = 1.0
+	_stack.modulate.a = 1.0
+	_stack.scale = Vector2.ONE
 	if GameState.get_setting(&"reduced_motion"):
 		return
 	_dim.modulate.a = 0.0
-	_panel.modulate.a = 0.0
+	_stack.modulate.a = 0.0
+	_stack.pivot_offset = _stack.get_combined_minimum_size() * 0.5
+	_stack.scale = Vector2.ONE * 0.92
 	_tween = create_tween()
 	_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_tween.set_parallel(true)
 	_tween.tween_property(_dim, "modulate:a", 1.0, UiTokens.MODAL_SEC).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(_panel, "modulate:a", 1.0, UiTokens.MODAL_SEC).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_stack, "modulate:a", 1.0, UiTokens.MODAL_SEC * 0.7).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_stack, "scale", Vector2.ONE, UiTokens.MODAL_SEC + 0.04).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

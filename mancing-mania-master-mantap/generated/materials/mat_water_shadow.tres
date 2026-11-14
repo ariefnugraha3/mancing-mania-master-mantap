@@ -4,4 +4,5 @@
 transparency = 1
 cull_mode = 2
 shading_mode = 0
-albedo_color = Color(0.09, 0.13, 0.13, 0.5)
+vertex_color_is_srgb = true
+albedo_color = Color(0.33, 0.45, 0.45, 0.42)

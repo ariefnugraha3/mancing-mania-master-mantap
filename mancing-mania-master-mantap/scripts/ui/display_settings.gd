@@ -5,13 +5,16 @@ extends RefCounted
 ## - UI SCALE scales every control, never the 3D world (canvas content scale).
 ## - TEXT SCALE scales the project theme's font sizes; labels sized in code go
 ##   through text_size().
-## - QUALITY LOW/MEDIUM/HIGH changes 3D resolution, shadows, scatter density
-##   and anti-aliasing. Art direction stays the same at every level.
+## - QUALITY LOW/MEDIUM/HIGH changes 3D resolution, scatter density and
+##   anti-aliasing. Art direction stays the same at every level: there are no
+##   real shadows at any level, only the fake shadow discs, and no screen
+##   effects (VISUAL_STYLE_GUIDE 6.1). HIGH uses 4x MSAA on desktop and 2x on
+##   phones, as the guide asks.
 
 const QUALITY: Dictionary = {
-	"low": {"scale_3d": 0.75, "shadows": false, "scatter": 0.5, "msaa": Viewport.MSAA_DISABLED},
-	"medium": {"scale_3d": 1.0, "shadows": true, "scatter": 1.0, "msaa": Viewport.MSAA_DISABLED},
-	"high": {"scale_3d": 1.0, "shadows": true, "scatter": 1.0, "msaa": Viewport.MSAA_2X},
+	"low": {"scale_3d": 0.75, "scatter": 0.5, "msaa": Viewport.MSAA_DISABLED},
+	"medium": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_2X},
+	"high": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_4X},
 }
 
 static var _base_font_sizes: Dictionary = {}
@@ -78,19 +81,24 @@ static func apply_quality(tree: SceneTree) -> void:
 	var quality := get_quality()
 	var root := tree.root
 	root.scaling_3d_scale = float(quality["scale_3d"])
-	root.msaa_3d = quality["msaa"]
+	root.msaa_3d = msaa_for(quality)
 	if tree.current_scene != null:
 		apply_quality_to(tree.current_scene)
 
 
-## Shadows and scatter density of a freshly opened scene.
+## Phones and tablets cap anti-aliasing at 2x (VISUAL_STYLE_GUIDE 6.1).
+static func msaa_for(quality: Dictionary) -> Viewport.MSAA:
+	var wanted: Viewport.MSAA = quality["msaa"]
+	if OS.has_feature("mobile") and wanted > Viewport.MSAA_2X:
+		return Viewport.MSAA_2X
+	return wanted
+
+
+## Scatter density of a freshly opened scene. Lights never cast real shadows.
 static func apply_quality_to(scene: Node) -> void:
 	var quality := get_quality()
-	for light: Node in scene.find_children("*", "DirectionalLight3D", true, false):
-		var sun := light as DirectionalLight3D
-		if not sun.has_meta(&"quality_shadow"):
-			sun.set_meta(&"quality_shadow", sun.shadow_enabled)
-		sun.shadow_enabled = bool(sun.get_meta(&"quality_shadow")) and bool(quality["shadows"])
+	for light: Node in scene.find_children("*", "Light3D", true, false):
+		(light as Light3D).shadow_enabled = false
 	for field: Node in scene.find_children("*", "MultiMeshInstance3D", true, false):
 		var multimesh := (field as MultiMeshInstance3D).multimesh
 		if multimesh == null:

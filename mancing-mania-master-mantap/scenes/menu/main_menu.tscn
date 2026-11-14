@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_menu"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="2_safe"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="6_darto"]
 [ext_resource type="PackedScene" path="res://generated/scenes/props/prop_fishing_rod_basic.tscn" id="7_rod"]
 [ext_resource type="Script" path="res://scripts/actors/darto_menu_pose.gd" id="8_pose"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="MainMenu" type="Node"]
 script = ExtResource("1_menu")
@@ -24,9 +25,8 @@ script = ExtResource("8_pose")
 [node name="Rod" parent="World/DartoMenuPose" instance=ExtResource("7_rod")]
 
 [node name="MenuCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 50.0
-far = 300.0
 
 [node name="MenuLighting" type="Node3D" parent="World"]
 

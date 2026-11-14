@@ -22,7 +22,7 @@ const PEOPLE: Dictionary = {
 }
 const PROP_PATH := "res://generated/scenes/props/%s.tscn"
 const TITLE_HOLD_SEC := 3.2
-const PHONE_IN_HAND_OFFSET := Vector3(0.0, -0.08, -0.02)
+const PHONE_IN_HAND_OFFSET := Vector3(0.0, -0.036, -0.012)
 const PHONE_IN_HAND_ROTATION := Vector3(0.0, 0.0, 0.0)
 ## QA only: how long a line stays up when dialogue advances by itself.
 const AUTO_STEP_SEC := 0.5
@@ -33,7 +33,7 @@ var _stage_root: Node3D
 var _set_anchor: Node3D
 var _actors_root: Node3D
 var _props_root: Node3D
-var _camera: Camera3D
+var _camera: DioramaCamera
 var _ui: StoryUi
 var _set: Node3D
 var _actors: Dictionary = {}
@@ -217,6 +217,10 @@ func _build_stage(set_name: String) -> void:
 		var node: Node3D = (load(PROP_PATH % prop["prop"]) as PackedScene).instantiate()
 		_props_root.add_child(node)
 		node.transform = _placement(prop)
+	if _set != null:
+		DioramaStyle.apply_daylight(_set, float(_timeline.get("hour", DioramaStyle.HOUR_DEFAULT)))
+		if _set.has_node("Markers/CameraFocus"):
+			_camera.frame_marker(_set.get_node("Markers/CameraFocus") as Node3D)
 
 
 ## The prologue's second shot: the road past the lake, wide, for the title.
@@ -225,8 +229,7 @@ func _build_lake_road() -> void:
 	_ui.set_black(false)
 	_set = (load(SETS["lake"]) as PackedScene).instantiate()
 	_set_anchor.add_child(_set)
-	_camera.transform = (_set.get_node("Markers/CameraMenu") as Node3D).transform
-	_camera.fov = 50.0
+	_camera.frame_marker(_set.get_node("Markers/StoryWide") as Node3D)
 	AudioManager.set_ambience_state(&"lake")
 
 
@@ -255,6 +258,10 @@ func _spawn_actor(actor: Dictionary) -> void:
 
 
 ## Where something stands: on a set marker, or relative to one ("spot").
+## Offsets are in screen terms [across, up, out]: across runs to the right
+## of the screen, out into the picture (VISUAL_STYLE_GUIDE 2.2). A "face"
+## of camera, in, left or right turns a person to look that way; a fish
+## ("fish": true) turns its belly that way. "yaw" adds degrees.
 func _placement(entry: Dictionary) -> Transform3D:
 	if entry.has("marker") and _set != null:
 		return (_set.get_node("Markers/%s" % entry["marker"]) as Node3D).transform
@@ -262,26 +269,57 @@ func _placement(entry: Dictionary) -> Transform3D:
 	if entry.has("spot") and _set != null:
 		origin = (_set.get_node("Markers/%s" % entry["spot"]) as Node3D).position
 	var offset: Array = entry.get("offset", [0, 0, 0])
+	var place := origin + DioramaStyle.screen_right() * float(offset[0]) + Vector3(0.0, float(offset[1]), 0.0) + DioramaStyle.screen_in() * float(offset[2])
 	var yaw := deg_to_rad(float(entry.get("yaw", 0.0)))
-	return Transform3D(Basis(Vector3.UP, yaw), origin + Vector3(offset[0], offset[1], offset[2]))
+	if entry.has("face"):
+		yaw += facing_yaw(str(entry["face"]), bool(entry.get("fish", false)))
+	return Transform3D(Basis(Vector3.UP, yaw), place)
 
 
+## The yaw that turns a person (facing -Z) or a standing fish (belly +X)
+## toward a screen direction.
+static func facing_yaw(face: String, fish: bool) -> float:
+	var direction := -DioramaStyle.screen_in()
+	match face:
+		"in":
+			direction = DioramaStyle.screen_in()
+		"left":
+			direction = -DioramaStyle.screen_right()
+		"right":
+			direction = DioramaStyle.screen_right()
+		"camera_left":
+			direction = (-DioramaStyle.screen_in() - DioramaStyle.screen_right()).normalized()
+		"camera_right":
+			direction = (-DioramaStyle.screen_in() + DioramaStyle.screen_right()).normalized()
+	return atan2(-direction.z, direction.x) if fish else atan2(-direction.x, -direction.z)
+
+
+## A shot is a framing of the same fixed diorama camera (GDD 173.1): a focus
+## marker of the set, or a point relative to a spot with a frame width.
+## "glide" eases there instead of cutting (a cut under Reduced Motion).
 func _cut_to(name: String) -> void:
 	var spec: Dictionary = _cameras.get(name, {})
 	if spec.is_empty() or _set == null:
 		return
-	if spec.has("marker"):
-		_camera.transform = (_set.get_node("Markers/%s" % spec["marker"]) as Node3D).transform
+	if spec.has("focus"):
+		var marker := _set.get_node_or_null("Markers/%s" % spec["focus"]) as Node3D
+		if marker == null:
+			return
+		if bool(spec.get("glide", false)):
+			_camera.glide_to(DioramaCamera.marker_focus(marker), DioramaCamera.marker_width(marker))
+		else:
+			_camera.frame_marker(marker)
+		return
+	var base := Vector3.ZERO
+	if spec.has("spot"):
+		base = (_set.get_node("Markers/%s" % spec["spot"]) as Node3D).position
+	var offset: Array = spec.get("offset", [0, 0, 0])
+	var focus := base + DioramaStyle.screen_right() * float(offset[0]) + Vector3(0.0, float(offset[1]), 0.0) + DioramaStyle.screen_in() * float(offset[2])
+	var width := float(spec.get("width", DioramaStyle.WIDTH_DEFAULT))
+	if bool(spec.get("glide", false)):
+		_camera.glide_to(focus, width)
 	else:
-		var base := Vector3.ZERO
-		var from: Array = spec.get("from", [0, 0, 0])
-		var to: Array = spec.get("to", [0, 0, -1])
-		if spec.has("offset_from"):
-			base = (_set.get_node("Markers/DartoSpot") as Node3D).position
-			from = spec["offset_from"]
-			to = spec["offset_to"]
-		_camera.look_at_from_position(base + Vector3(from[0], from[1], from[2]), base + Vector3(to[0], to[1], to[2]), Vector3.UP)
-	_camera.fov = float(spec.get("fov", 45.0))
+		_camera.frame(focus, float(spec.get("width_portrait", width)))
 
 
 func _play_clip(who: String, clip: StringName) -> void:

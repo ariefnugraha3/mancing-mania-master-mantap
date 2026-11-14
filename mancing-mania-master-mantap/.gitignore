@@ -7,15 +7,19 @@
 export/
 build/web/
 build/android/
+build/ios/
 build/itch/
 build/store/
 build/tmp/
 *.apk
 *.aab
+*.ipa
 
 # Signing material and local secrets - never commit
 *.keystore
 *.jks
+*.p12
+*.mobileprovision
 .env
 .env.*
 # Publisher contact data stays with the owner (GDD 186.10)

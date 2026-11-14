@@ -41,6 +41,7 @@ func build_content() -> void:
 	_retry.pressed.connect(start)
 	footer.add_child(_retry)
 	_close = make_button(TextDb.t(&"common.close"))
+	_close.icon_id = IconPainter.CHECK
 	_close.click_sfx = &"ui_back"
 	_close.pressed.connect(_on_close)
 	footer.add_child(_close)

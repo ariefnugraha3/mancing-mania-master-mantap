@@ -16,7 +16,7 @@ const OUT_DIR := "res://build/store/google_play"
 const SHOT_SIZE := Vector2i(1080, 1920)
 const FEATURE_SIZE := Vector2i(1024, 500)
 const ICON_SOURCE := "res://generated/ui/app_icon.png"
-const ICON_BACKGROUND := Color("fff7e6")
+const ICON_BACKGROUND := Color("fff9ee")  # UiTokens.CREAM_50 (a literal: this script compiles before autoloads exist)
 
 var _finished: Array[StringName] = []
 
@@ -104,6 +104,13 @@ func _screenshots(router: Node, state: Node) -> void:
 
 
 func _feature(router: Node) -> void:
+	# The game is portrait only; the store banner alone is landscape, so it
+	# lays the title and the lake out on a 1024x500 canvas of its own instead
+	# of the portrait column with side bars (PlatformService, GDD 122).
+	# PlatformService would put the portrait canvas back on every resize.
+	root.get_node("PlatformService").set_canvas_locked(true)
+	root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	root.content_scale_size = FEATURE_SIZE
 	await _go(func() -> void: router.goto_main_menu(), &"main_menu", 2.5)
 	# The title over the lake, without the menu buttons.
 	for path: String in ["MenuCanvas/SafeRoot/MenuButtons", "MenuCanvas/SafeRoot/VersionLabel"]:

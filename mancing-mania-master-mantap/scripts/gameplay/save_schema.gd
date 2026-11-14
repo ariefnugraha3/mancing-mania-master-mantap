@@ -19,7 +19,7 @@ const HANDEDNESS_MODES: Array[String] = ["right", "left"]
 const DIALOGUE_SPEEDS: Array[String] = ["instant", "fast", "normal", "relaxed"]
 const SKIP_HOLD_OPTIONS: Array[float] = [0.4, 0.8, 1.2]
 const QUALITY_PRESETS: Array[String] = ["low", "medium", "high"]
-const PLATFORMS: Array[String] = ["web", "android", "other"]
+const PLATFORMS: Array[String] = ["web", "android", "ios", "other"]
 const RHYTHM_OFFSET_LIMIT_MS := 150
 ## Seeds stay inside 31 bits so they survive the JSON float round trip exactly.
 const MAX_SAVE_SEED := 0x7FFFFFFF
@@ -200,6 +200,8 @@ static func current_platform() -> String:
 		return "web"
 	if OS.has_feature("android"):
 		return "android"
+	if OS.has_feature("ios"):
+		return "ios"
 	return "other"
 
 

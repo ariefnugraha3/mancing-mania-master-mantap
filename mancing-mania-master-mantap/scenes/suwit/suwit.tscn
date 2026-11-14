@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/suwit/suwit_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/suwit/suwit_controller.gd" id="2_controller"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="7_safe"]
 [ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="8_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="9_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Suwit" type="Node"]
 script = ExtResource("1_scene")
@@ -28,9 +29,8 @@ script = ExtResource("3_world")
 [node name="FishSuwitPose" type="Node3D" parent="World"]
 
 [node name="SuwitCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 45.0
-far = 300.0
 
 [node name="SuwitCanvas" type="CanvasLayer" parent="."]
 script = ExtResource("6_hud")

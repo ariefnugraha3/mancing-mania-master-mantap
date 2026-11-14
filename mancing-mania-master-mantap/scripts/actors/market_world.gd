@@ -3,11 +3,15 @@ extends Node3D
 ## Everything you see at Bu Yati's warung (GDD 72, 168.5, 185.15): the set,
 ## Bu Yati behind her counter and Darto in front of it.
 ##
-## The world has no rules. It stands the cast on the set's markers, picks the
-## camera for the screen shape and lets Bu Yati react to what the player did.
-## The camera is fixed: the Market is a place to do business, not to explore.
+## The world has no rules. It stands the cast on the set's markers, frames
+## the dollhouse room with the diorama camera and lets Bu Yati react to what
+## the player did. The camera is fixed: the Market is a place to do business,
+## not to explore.
 
-const CAMERA_FOV := 50.0
+## HUD bars (top, bottom) in reference pixels, landscape then portrait.
+## HUD bars of the portrait screen: top in canvas points, bottom as a share
+## of the screen height (the bottom sheet scales with it).
+const HUD_INSETS := Vector2(70.0, 0.67)
 const BLEND_SEC := 0.18
 const IDLE_CLIP := &"market_idle"
 ## The little counter fan turns the whole time (GDD 172.9).
@@ -18,7 +22,7 @@ const BEAT_GAP_SEC := Vector2(4.0, 9.0)
 @onready var _set: Node3D = $MarketSet
 @onready var _bu_yati: Node3D = $BuYati
 @onready var _darto: Node3D = $DartoMarketPose
-@onready var _camera: Camera3D = $MarketCamera
+@onready var _camera: DioramaCamera = $MarketCamera
 
 var _yati_player: AnimationPlayer
 var _darto_player: AnimationPlayer
@@ -40,8 +44,8 @@ func _ready() -> void:
 	_beat_left = RNGService.cosmetic.randf_range(BEAT_GAP_SEC.x, BEAT_GAP_SEC.y)
 	_fan_blades = _set.get_node_or_null("Props/Fan/Blades")
 
-	PlatformService.viewport_class_changed.connect(_apply_camera)
-	_apply_camera(PlatformService.get_viewport_class())
+	_camera.set_hud_insets(HUD_INSETS)
+	_camera.frame_marker(markers.get_node("CameraFocus") as Node3D)
 
 
 func _process(delta: float) -> void:
@@ -60,16 +64,19 @@ func _process(delta: float) -> void:
 ## A sale: she weighs the catch, then counts out the money.
 func react_sale() -> void:
 	_play_sequence([&"weigh_fish", &"cash_count"])
+	DioramaMotion.squash(_bu_yati.get_node("Rig") as Node3D, 0.06)
 
 
 ## An upgrade bought: she counts what Darto handed over.
 func react_purchase() -> void:
 	_play_sequence([&"cash_count"])
+	DioramaMotion.squash(_bu_yati.get_node("Rig") as Node3D, 0.06)
 
 
 ## A debt payment: one look at Darto. That is the whole celebration.
 func react_payment() -> void:
 	_play_sequence([&"look_darto"])
+	DioramaMotion.stretch(_darto.get_node("Rig") as Node3D, 0.08)
 
 
 ## The clip Bu Yati is playing right now.
@@ -94,9 +101,3 @@ func _play_next() -> void:
 func _on_yati_clip_finished(_clip: StringName) -> void:
 	_play_next()
 
-
-## The set carries one camera position per screen shape.
-func _apply_camera(viewport_class: StringName) -> void:
-	var marker_name := "CameraPortrait" if viewport_class == PlatformService.PORTRAIT else "CameraLandscape"
-	_camera.transform = (_set.get_node("Markers/%s" % marker_name) as Node3D).transform
-	_camera.fov = CAMERA_FOV

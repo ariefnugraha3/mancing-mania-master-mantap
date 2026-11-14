@@ -660,3 +660,96 @@ Screenshot toko diambil dari scene asli lewat router. Jendela desktop tidak bisa
 ### D-108 — Privasi di dalam game
 
 Settings → PRIVACY AND LICENSES menampilkan ringkasan Section 187.7, kebijakan lengkap Section 187.6, dan teks lisensi Godot beserta daftar komponennya dari `Engine`, semuanya offline; tidak ada tombol yang membuka URL karena game tidak membuka koneksi apa pun. Email dukungan tetap placeholder `[PUBLISHER SUPPORT EMAIL]` sampai pemilik mengisinya; validator rilis menolak build publik selama placeholder itu ada.
+
+## Revisi Visual 6.1 — Diorama "Warm, Cozy & Cute"
+
+Seluruh visual dirombak mengikuti `../VISUAL_STYLE_GUIDE.md` atas permintaan pemilik (GDD header revisi 6.1, Section 194.4). Gameplay, balance, cerita, audio, dan save tidak berubah; UI 2D menyusul dirombak pada D-117–D-121.
+
+### D-109 — Satu kamera diorama untuk semua scene
+
+`scripts/visual/diorama_camera.gd` (`DioramaCamera`) menggantikan semua kamera perspektif: ortografis, yaw 45°, pitch 35°, `KEEP_WIDTH`, jarak 30 m, near 0,05, far 200. Setiap set membawa marker `CameraFocus` dengan metadata `width_landscape` / `width_portrait` (dan opsional `focus_portrait`), selalu di rentang zoom panduan 5,6–11,0 m. Panduan ditulis untuk bingkai portrait 720 px; game ini juga punya landscape 1280 × 720, jadi lebar landscape dipilih per scene agar diorama pas di ruang antara bar HUD (karakter ±100–170 px). Kamera tidak pernah shake; story memakai cut, dengan satu `glide_to` lembut yang menjadi cut saat Reduced Motion.
+
+### D-110 — Rig tulang kaku, bukan node terpisah
+
+Panduan Section 9.2 menyusun karakter dari node berpivot tanpa skeleton. Di sini tetap dipakai `Skeleton3D` kecil dengan **binding kaku** (setiap verteks ke satu tulang, kecuali torso/celemek yang di-blend di tulang punggung): tiap tulang berfungsi sebagai pivot node, hasil visualnya sama, satu karakter cukup satu draw call, dan seluruh klip duel GDD 172 (nama tulang, marker, durasi yang dikunci test) tetap berlaku. Klip tetap generated `AnimationPlayer`; napas idle dan squash & stretch adalah lapisan prosedural panduan Section 10.
+
+### D-111 — Skala chibi dan anggaran
+
+Darto 0,90 m (Rini ×0,93, Nisa ×0,885, Bu Yati ×0,91 lewat skala root). Panjang ikan 0,56–0,90 m sehingga ikan berdiri setinggi ±0,7–0,9 m tanpa `FISH_SCALE` di scene. Offset posisi di klip (jongkok, menghindar, duduk, KO) dihitung ulang untuk kaki chibi 0,17 m. Anggaran 500–2.000 segitiga dipenuhi dengan menurunkan segmen bagian kecil (mata, alis, kumis, tali); primitif utama memakai segmen panduan.
+
+### D-112 — Tanpa shader kustom di dunia 3D
+
+`lake_water.gdshader` dan `foliage_sway.gdshader` dihapus karena panduan 5.1 mewajibkan `StandardMaterial3D`. Air menjadi bidang berwarna verteks (dangkal → dalam) dengan garis air geometri yang melayang; goyangan pohon dan alang-alang menjadi transform node berbasis sinus di `AmbientMotion` (GDD 172.9). Satu-satunya shader yang tersisa adalah `ui_silhouette.gdshader` untuk UI Fish Book (2D, di luar cakupan panduan).
+
+### D-113 — Kompensasi palet terhadap cahaya hangat
+
+Matahari dan ambient sama-sama `#FFE3A8`, sehingga warna dasar bergeser ke kuning saat dirender. Hijau dan biru turunan (rumput, daun, air) dipilih sedikit lebih sejuk di data supaya hasil di layar tetap hijau hangat dan biru-hijau pastel. Warna khas tokoh di GDD 185 diperbarui dengan cara yang sama.
+
+### D-114 — Komposisi duel
+
+Tinju: Darto kiri-dekat dan ikan kanan-jauh secara diagonal agar tidak saling menutupi dan tidak tertutup widget telegraph; panah DODGE LEFT/RIGHT di HUD tetap acuan arah. Panco: meja persegi kecil dilihat dari sudut, Darto kiri dan ikan kanan, lengan sirip direntangkan sepanjang sumbunya sendiri (perbaikan `Basis.scaled()` yang sebelumnya menskalakan sumbu dunia). Joget dan Wheel: ikan tiga-perempat ke kamera supaya profil dan matanya terbaca. Ring tinju memakai potongan rumah boneka: tali hanya di dua sisi jauh.
+
+### D-115 — Waktu cahaya
+
+`DioramaStyle.apply_daylight()` menerapkan titik kunci panduan 6.3. Gameplay memakai 15:00; ending keluarga dan Main Menu setelah ending 17:36; Credits 18:00. Timeline cerita boleh memberi `"hour"`.
+
+### D-116 — Test dan pemeriksaan visual
+
+Test baru di suite `assets`: profil kamera, rig cahaya tiap set, larangan shader kustom/tekstur di aset 3D, material standar, tinggi dan anggaran karakter, cakram bayangan, meja warung di bawah garis dada. Test kamera lama (marker `CameraLandscape/CameraPortrait`, FOV) diganti pemeriksaan lebar bingkai `CameraFocus`. Preset grafis tidak lagi menyalakan bayangan; MEDIUM 2× MSAA, HIGH 4× (Android dibatasi 2×). Pemeriksaan visual dilakukan lewat screenshot `--mm-shot` di 1280 × 720 dan portrait untuk setiap scene, ditambah lembar referensi baru.
+
+## Revisi UI 6.1 — "Cozy warung card"
+
+Atas permintaan pemilik, UI 2D (menu, tombol, overlay, HUD, Market, dialog, Wheel) dirombak agar tidak lagi terlihat seperti placeholder dan serasi dengan dunia diorama (GDD header revisi UI 6.1, Section 167, 185.20).
+
+### D-117 — Satu sumber gaya: `UiTokens` + `UiSkin`
+
+Token warna mengikuti palet diorama (cream/vanilla, crust, caramel, cocoa, teal pastel) ditambah token kedalaman `EDGE_CREAM`, `EDGE_PAPER`, `SHADOW`, `BACKDROP`. `scripts/ui/ui_skin.gd` membuat semua StyleBox (tombol berlip, cincin fokus, kartu, well, pil, pita, badge, tab, bar) dan potongan font tebal. Generator theme (`ui_art_builder.gd`, versi 2) dan setiap HUD yang menata kontrol lewat kode memakai fungsi yang sama, sehingga rim, lip, sudut, dan bayangan selalu konsisten. Hampir semua `StyleBoxFlat.new()` buatan tangan di HUD diganti.
+
+### D-118 — Tombol berlip yang tenggelam
+
+Tombol digambar sebagai wajah dengan rim 3 px dan rim bawah 6 px (lip). State pressed menipiskan lip menjadi 2 px dan memakai `expand_margin_top` negatif sehingga wajah turun 4 px; content margin ikut bergeser agar label turun bersama wajah. Ukuran minimum normal dan pressed sama (dikunci test), jadi layout tidak melompat. Animasi skala tekan `GameButton` tetap berjalan di atasnya.
+
+### D-119 — Font tebal dan ikon tanpa file
+
+Tetap tanpa file font (GDD 184.12, test `default_font == null`): potongan bold/heavy adalah `FontVariation` tanpa `base_font` dengan `variation_embolden`. Ikon digambar prosedural oleh `IconPainter` pada grid 24 unit; `IconTexture` (subkelas `Texture2D`) membuatnya bisa dipakai sebagai `Button.icon` dan diwarnai theme, `UiIcon` memakainya untuk badge chip HUD. `GameButton.icon_id` memasang ikon cukup dengan id.
+
+### D-120 — Gerak dekoratif dan run headless
+
+Pop overlay, masuknya logo dan tombol Main Menu, goyang emblem, dan pantulan panah dialog dilewati saat Reduced Motion dan saat `DisplayServer` headless, supaya test tetap deterministik. Container mereset rotasi saat menata anak, jadi kemiringan pita subjudul diterapkan ulang pada `sort_children`.
+
+### D-121 — Perbaikan yang ditemukan saat QA screenshot UI
+
+- Bayangan kartu di dalam area yang di-clip (panel TabContainer di How to Play, ponsel cerita) terpotong menjadi pita persegi; kartu tersebut kini tanpa bayangan.
+- Kartu dialog cerita kini menempel ke bawah dan tumbuh ke atas (`GROW_DIRECTION_BEGIN`), sebelumnya baris panjang mendorong kartu keluar layar; panah lanjut kini satu baris dengan prompt, tidak menimpanya.
+- Pesan chat cerita menampilkan kunci mentah (mis. `story.story_debt_300k.01`) karena baris genap di `ui_text.tres` adalah alias ke baris sebelumnya. `TextDb.t()` kini mengikuti alias (maksimal 4 langkah). Bug ini sudah ada sejak RC1; test baru memeriksa setiap baris cerita.
+- Tab ledger Market menimpa rim atas kartu sebesar `MarketHud.LEDGER_RIM` (4 px); toleransi test tata letak mengikuti konstanta itu, bukan angka 3 yang tertanam.
+- Nama duel pada Wheel mengecil agar muat di segmennya ("ARM WRESTLING" sebelumnya terpotong).
+
+## Revisi Mobile 6.2 — Game HP portrait
+
+Atas permintaan pemilik, game ini menjadi game HP: portrait saja, Android dan iOS, HP dan tablet (GDD header revisi Mobile 6.2, Section 92–96, 122, 135, 167.7, 167.8, 169.7).
+
+### D-122 — Kanvas dalam point, bukan piksel referensi 720
+
+Kanvas portrait lama 720 × 1280 membuat satu "px" UI hanya ±0,54 pt di HP sungguhan: teks badan 18 px menjadi ±10 pt dan tombol 48 px ±26 pt, jauh di bawah pedoman (44 pt iOS, 48 dp Android). Kanvas kini 390 × 694 pt untuk HP dan 600 × 800 pt untuk tablet (`expand`), sehingga token UI yang ada (teks 18, tombol 48–56) langsung bermakna dp/pt. Alternatifnya, mengalikan semua token dan angka layout ×1,8 di kanvas 720, memberi hasil sama dengan perubahan jauh lebih banyak. Pembagian HP/tablet memakai rasio layar (≥ 0,62 = tablet) karena DPI tidak andal di desktop dan Web; kanvas tablet yang lebih lebar memberi ruang lebih dan tampilan sedikit lebih besar.
+
+### D-123 — Jendela lebar menjadi kolom portrait
+
+Desktop, browser landscape, dan foldable terbuka (> 0,8) memakai mode `KEEP` dengan kanvas 640 × 800, sehingga tampil sebagai kolom portrait dengan bilah di samping. Tidak ada lagi layout landscape untuk dirawat; build Web tetap ada sebagai build sekunder.
+
+### D-124 — Safe area untuk Android dan iOS
+
+`get_safe_rect()` memetakan `DisplayServer.get_display_safe_area()` ke kanvas lewat `get_final_transform()` (benar juga saat ada bilah), untuk Android dan iOS. `SafeAreaRoot`, overlay (CenterContainer di safe area), dialog cerita, dan ponsel cerita memakainya. `--mm-insets` dan `set_simulated_insets()` mensimulasikan notch dan home indicator di desktop untuk QA dan test.
+
+### D-125 — Kamera: satu bingkai HP, tablet lebih lebar
+
+`DioramaCamera` kini hanya punya `frame(focus, width)` dengan lebar HP dari metadata `width_portrait`; tablet memakai lebar × 1,25 (dibulatkan ke langkah zoom panduan) agar diorama tetap kebagian porsi layar. `width_landscape` di marker hanya dipakai lembar referensi. Inset HUD dalam point, atau porsi tinggi layar (≤ 1,0) untuk bottom sheet Market, Dance, dan Panco.
+
+### D-126 — Layout jempol dan konten yang mengalir
+
+Status dan Pause di atas, dunia di tengah, aksi di sepertiga bawah. Baris yang bisa terlalu lebar memakai `HFlowContainer` (chip memancing, tombol Sell/Debt) sehingga turun baris alih-alih terpotong; pada HP terkecil dengan UI 130% + teks 150% (kanvas 300 × 534 pt) halaman Market memindahkan deretan aksinya ke dalam area gulir (`MarketPanel.set_actions_scroll`) dan sheet naik menutupi warung. Test aksesibilitas menganggap tombol di halaman yang bisa digulir terjangkau bila halamannya di layar. `GameButton.set_side_padding()` diterapkan setelah tombol masuk tree agar memakai gaya variasinya (CTA/danger).
+
+### D-127 — Preset iOS tanpa rahasia
+
+Preset iOS berisi bundle ID, keluarga perangkat iPhone + iPad, iOS 14, ikon 1024, latar launch screen cream, dan tanpa usage description. Team ID, sertifikat, dan provisioning profile milik pemilik dan diisi di mesin macOS; `*.p12`, `*.mobileprovision`, `build/ios/`, dan `*.ipa` diabaikan git. `application/short_version` = MAJOR.MINOR.PATCH karena App Store menolak suffix `-rc`.
+

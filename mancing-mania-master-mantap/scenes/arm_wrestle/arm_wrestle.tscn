@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/arm_wrestle/arm_wrestle_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/arm_wrestle/arm_wrestle_controller.gd" id="2_controller"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/ui/position_bar.gd" id="8_position"]
 [ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="9_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="ArmWrestle" type="Node"]
 script = ExtResource("1_scene")
@@ -29,9 +30,8 @@ script = ExtResource("3_world")
 [node name="FishArmRig" type="Node3D" parent="World"]
 
 [node name="ArmCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 45.0
-far = 300.0
 
 [node name="ArmCanvas" type="CanvasLayer" parent="."]
 script = ExtResource("6_hud")

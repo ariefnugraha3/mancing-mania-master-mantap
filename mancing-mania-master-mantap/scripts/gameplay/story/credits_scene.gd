@@ -10,7 +10,7 @@ const LINE_GAP := {"heading": 18, "sub": 54, "role": 30, "name": 6, "final": 40}
 const FONT_SIZES := {"heading": 40, "sub": 20, "role": 16, "name": 26, "final": 22}
 
 @onready var _lake_set: Node3D = $World/LakeSet
-@onready var _camera: Camera3D = $World/CreditsCamera
+@onready var _camera: DioramaCamera = $World/CreditsCamera
 @onready var _roll: VBoxContainer = $CreditsCanvas/SafeRoot/Roll
 @onready var _safe_root: Control = $CreditsCanvas/SafeRoot
 @onready var _skip: ProgressBar = $CreditsCanvas/SafeRoot/SkipHoldIndicator
@@ -26,8 +26,9 @@ var _done: bool = false
 
 func _ready() -> void:
 	_from_menu = bool(SceneRouter.get_context().get("from_menu", false))
-	_camera.transform = (_lake_set.get_node("Markers/CameraMenu") as Node3D).transform
-	_camera.fov = 50.0
+	_camera.frame_marker(_lake_set.get_node("Markers/StoryWide") as Node3D)
+	# The credits roll over the lake at dusk (guide 6.3, 18:00).
+	DioramaStyle.apply_daylight(_lake_set, DioramaStyle.HOUR_DUSK)
 	AudioManager.set_music_state(&"silence")
 	AudioManager.set_ambience_state(&"lake")
 	for line: Dictionary in StoryTimelines.get_credits():
@@ -40,6 +41,8 @@ func _ready() -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		UiTokens.outline_text(label, int(FONT_SIZES.get(kind, 22)), UiTokens.SUN_500 if kind == "role" else UiTokens.CREAM_50, 7)
+		if kind == "heading":
+			UiSkin.sign_text(label, 46, DioramaStyle.BUTTER, 12)
 		_roll.add_child(label)
 	_skip.show_percentage = false
 	_skip.max_value = 1.0

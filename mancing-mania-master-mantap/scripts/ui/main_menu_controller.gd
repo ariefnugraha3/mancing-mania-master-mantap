@@ -3,15 +3,20 @@ extends Node
 ## overwrite confirmation, How To Play and Settings, plus save recovery when
 ## the save on disk could not be read.
 
-const BUTTON_WIDTH_LANDSCAPE := 300.0
-const BUTTON_WIDTH_PORTRAIT := 380.0
+## The button column fills a phone's width and stops growing on a tablet.
+const BUTTON_COLUMN_MAX_WIDTH := 400.0
+## The leading button stands a little taller than the rest.
+const LEAD_BUTTON_HEIGHT := 64.0
+const BUTTON_HEIGHT := 54.0
 const PROLOGUE_EVENT := &"story_prologue_zero"
 const PROP_PATH := "res://generated/scenes/props/%s.tscn"
+## After the ending: a picnic mat and three glasses beside Darto's spot, in
+## screen terms [prop, across, out, yaw] (right of him on the screen).
 const ENDING_PROPS: Array[Array] = [
-	[&"prop_picnic_mat", Vector3(1.5, 0.0, 0.4), 12.0],
-	[&"prop_drink_glass", Vector3(1.25, 0.02, 0.25), 0.0],
-	[&"prop_drink_glass", Vector3(1.55, 0.02, 0.6), 0.0],
-	[&"prop_drink_glass", Vector3(1.85, 0.02, 0.3), 0.0],
+	[&"prop_picnic_mat", 0.95, -0.25, 12.0],
+	[&"prop_drink_glass", 0.78, -0.3, 0.0],
+	[&"prop_drink_glass", 0.98, -0.1, 0.0],
+	[&"prop_drink_glass", 1.16, -0.32, 0.0],
 ]
 
 @onready var _title_block: VBoxContainer = $MenuCanvas/SafeRoot/TitleBlock
@@ -27,10 +32,13 @@ const ENDING_PROPS: Array[Array] = [
 @onready var _dialog: ModalDialog = $ConfirmOverlay
 @onready var _lake_set: Node3D = $World/LakeSet
 @onready var _darto_pose: Node3D = $World/DartoMenuPose
-@onready var _camera: Camera3D = $World/MenuCamera
+@onready var _camera: DioramaCamera = $World/MenuCamera
 
 var _settings: SettingsOverlay
 var _how_to: HowToOverlay
+var _emblem: LogoEmblem
+var _ribbon: PanelContainer
+var _title_text: VBoxContainer
 ## Blocks a second action while a dialog or transition from the first is open.
 var _busy: bool = false
 
@@ -44,6 +52,12 @@ func _ready() -> void:
 	_settings_button.text = TextDb.t(&"menu.settings")
 	_credits_button.text = TextDb.t(&"menu.credits")
 	_credits_button.pressed.connect(_on_credits_pressed)
+	_continue_button.icon_id = IconPainter.PLAY
+	_new_game_button.icon_id = IconPainter.SPARKLE
+	_how_to_button.icon_id = IconPainter.BOOK
+	_settings_button.icon_id = IconPainter.GEAR
+	_credits_button.icon_id = IconPainter.HEART
+	_build_logo()
 
 	_version_label.text = TextDb.tf(&"menu.version", {"version": SaveSchema.build_version()})
 	_version_label.visible = DebugService.is_debug_tools_allowed()
@@ -63,53 +77,52 @@ func _ready() -> void:
 	_how_to.name = "HowToOverlay"
 	add_child(_how_to)
 
-	_darto_pose.position = (_lake_set.get_node("Markers/DartoSpot") as Node3D).position
+	_darto_pose.transform = (_lake_set.get_node("Markers/DartoSpot") as Node3D).transform
+	_camera.frame_marker(_lake_set.get_node("Markers/MenuFocus") as Node3D)
 	_dress_for_ending()
 	PlatformService.viewport_class_changed.connect(_apply_layout)
-	_apply_layout(PlatformService.get_viewport_class())
+	_safe_root().resized.connect(_apply_layout)
+	_apply_layout()
 	_refresh()
 
 	AudioManager.set_music_state(&"menu")
 	AudioManager.set_ambience_state(&"lake")
 	_report_failed_boot_load.call_deferred()
+	_play_entrance.call_deferred()
 
 
 # --- Layout -----------------------------------------------------------------
 
-## Landscape keeps the menu on the left so the lake stays the focal point;
-## portrait centres the title at the top and the buttons at the bottom.
-func _apply_layout(viewport_class: StringName) -> void:
-	var portrait := viewport_class == PlatformService.PORTRAIT
-	# The lake set carries its own camera marks, so Darto and the water stay
-	# clear of the menu in both layouts.
-	var camera_mark := _lake_set.get_node("Markers/CameraPortrait" if portrait else "Markers/CameraMenu") as Node3D
-	_camera.global_transform = camera_mark.global_transform
-	_camera.fov = 62.0 if portrait else 50.0
-	var button_width := BUTTON_WIDTH_PORTRAIT if portrait else BUTTON_WIDTH_LANDSCAPE
+## The portrait menu: the logo at the top, the lake and Darto in the middle,
+## and the buttons in one column at the bottom, in thumb reach.
+func _apply_layout(_viewport_class: StringName = &"") -> void:
+	var area := _safe_root().size
+	var column_width := minf(area.x, BUTTON_COLUMN_MAX_WIDTH)
 	for button: Control in _menu_buttons.get_children():
-		button.custom_minimum_size.x = button_width
-
-	var title_alignment := HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
-	_title_line_1.horizontal_alignment = title_alignment
-	_title_line_2.horizontal_alignment = title_alignment
-	# The title sits over the lake scene, so it is light text with an outline.
-	UiTokens.outline_text(_title_line_1, UiTokens.FONT_HERO_PORTRAIT if portrait else UiTokens.FONT_HERO, UiTokens.CREAM_50, 12)
-	UiTokens.outline_text(
-		_title_line_2, UiTokens.FONT_SCREEN_TITLE_PORTRAIT if portrait else UiTokens.FONT_SCREEN_TITLE, Color("f2b79f"), 10)
-
+		button.custom_minimum_size.x = column_width
+	_title_line_1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_line_2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# The logo sits over the lake scene: painted butter letters with a thick
+	# cocoa rim and shadow, sized to the screen's width, and the subtitle on a
+	# tilted crust ribbon.
+	var title_size := int(clampf(area.x * 0.105, 30.0, 52.0))
+	UiSkin.sign_text(_title_line_1, title_size, DioramaStyle.BUTTER, 12)
+	_title_line_2.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(int(clampf(title_size * 0.5, 17.0, 26.0))))
+	_emblem.diameter = clampf(area.x * 0.2, 64.0, 104.0)
 	# Presets size each block to its content, so they run after the content changed.
-	_place.call_deferred(portrait)
+	_place.call_deferred()
 
 
-func _place(portrait: bool) -> void:
-	if portrait:
-		UiTokens.anchor_at(_title_block, Control.PRESET_CENTER_TOP)
-		UiTokens.anchor_at(_menu_buttons, Control.PRESET_CENTER_BOTTOM)
-		UiTokens.anchor_at(_version_label, Control.PRESET_TOP_RIGHT)
-	else:
-		UiTokens.anchor_at(_title_block, Control.PRESET_TOP_LEFT)
-		UiTokens.anchor_at(_menu_buttons, Control.PRESET_BOTTOM_LEFT)
-		UiTokens.anchor_at(_version_label, Control.PRESET_BOTTOM_RIGHT)
+func _place() -> void:
+	UiTokens.anchor_at(_title_block, Control.PRESET_CENTER_TOP)
+	UiTokens.anchor_at(_menu_buttons, Control.PRESET_CENTER_BOTTOM)
+	UiTokens.anchor_at(_version_label, Control.PRESET_BOTTOM_RIGHT)
+	# The version note sits just above the buttons, out of their way.
+	_version_label.position.y = _menu_buttons.position.y - _version_label.size.y - UiTokens.SPACE_4
+
+
+func _safe_root() -> Control:
+	return _menu_buttons.get_parent() as Control
 
 
 ## Continue leads when there is a save; otherwise New Game does.
@@ -118,6 +131,10 @@ func _refresh() -> void:
 	_continue_button.disabled = not has_save
 	_continue_button.theme_type_variation = UiTokens.TYPE_CTA_BUTTON if has_save else &""
 	_new_game_button.theme_type_variation = &"" if has_save else UiTokens.TYPE_CTA_BUTTON
+	for button: GameButton in [_continue_button, _new_game_button, _how_to_button, _settings_button, _credits_button]:
+		var leads := button.theme_type_variation == UiTokens.TYPE_CTA_BUTTON
+		button.custom_minimum_size.y = LEAD_BUTTON_HEIGHT if leads else BUTTON_HEIGHT
+		button.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BUTTON + (2 if leads else 0)))
 	if not InputManager.is_touch_primary():
 		_focus_later(_continue_button if has_save else _new_game_button)
 
@@ -128,6 +145,68 @@ func _focus_later(button: GameButton) -> void:
 	await get_tree().process_frame
 	if is_inside_tree() and button.is_inside_tree() and not _dialog.is_open():
 		button.grab_focus()
+
+
+# --- Logo and entrance -------------------------------------------------------
+
+## The title becomes a small logo: the round emblem above the big painted
+## title, with GELUT EDITION on a tilted ribbon under it.
+func _build_logo() -> void:
+	var row := VBoxContainer.new()
+	row.name = "TitleRow"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override(&"separation", UiTokens.SPACE_4)
+	_title_block.add_child(row)
+	_title_block.move_child(row, 0)
+	_emblem = LogoEmblem.new()
+	_emblem.name = "Emblem"
+	_emblem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	row.add_child(_emblem)
+	_title_text = VBoxContainer.new()
+	_title_text.name = "TitleText"
+	_title_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_title_text.add_theme_constant_override(&"separation", -4)
+	_title_text.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(_title_text)
+	_title_line_1.reparent(_title_text, false)
+	_ribbon = PanelContainer.new()
+	_ribbon.name = "SubtitleRibbon"
+	_ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ribbon.theme_type_variation = UiTokens.TYPE_RIBBON_PANEL
+	_ribbon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_title_text.add_child(_ribbon)
+	_title_line_2.reparent(_ribbon, false)
+	_title_line_2.theme_type_variation = UiTokens.TYPE_RIBBON_LABEL
+	# Containers reset rotation when they lay out, so the tilt is re-applied.
+	_title_text.sort_children.connect(_tilt_ribbon)
+
+
+func _tilt_ribbon() -> void:
+	_ribbon.pivot_offset = _ribbon.size * 0.5
+	_ribbon.rotation = deg_to_rad(-3.0)
+
+
+## The logo drops in with a small bounce and the buttons pop in one after
+## another. Skipped with Reduced Motion, and in a windowless run.
+func _play_entrance() -> void:
+	if GameState.get_setting(&"reduced_motion") or DisplayServer.get_name() == "headless":
+		return
+	var tween := create_tween().set_parallel(true)
+	var resting_y := _title_block.position.y
+	_title_block.position.y = resting_y - 48.0
+	_title_block.modulate.a = 0.0
+	tween.tween_property(_title_block, "position:y", resting_y, 0.62).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_title_block, "modulate:a", 1.0, 0.3)
+	var index := 0
+	for button: Control in _menu_buttons.get_children():
+		var delay := 0.16 + 0.07 * float(index)
+		button.modulate.a = 0.0
+		button.pivot_offset = button.size * 0.5
+		button.scale = Vector2.ONE * 0.84
+		tween.tween_property(button, "modulate:a", 1.0, 0.22).set_delay(delay)
+		tween.tween_property(button, "scale", Vector2.ONE, 0.42).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		index += 1
 
 
 # --- Actions ----------------------------------------------------------------
@@ -232,8 +311,11 @@ func _dress_for_ending() -> void:
 	for entry: Array in ENDING_PROPS:
 		var prop: Node3D = (load(PROP_PATH % entry[0]) as PackedScene).instantiate()
 		dressing.add_child(prop)
-		prop.position = spot + (entry[1] as Vector3)
-		prop.rotation.y = deg_to_rad(float(entry[2]))
+		var lift := 0.012 if entry[0] == &"prop_drink_glass" else 0.0
+		prop.position = spot + DioramaStyle.screen_right() * float(entry[1]) + DioramaStyle.screen_in() * float(entry[2]) + Vector3(0.0, lift, 0.0)
+		prop.rotation.y = deg_to_rad(float(entry[3]))
+	# The ending's golden light stays on the lake after it (GDD 157).
+	DioramaStyle.apply_daylight(_lake_set, DioramaStyle.HOUR_GOLDEN)
 
 
 func is_ending_dressed() -> bool:

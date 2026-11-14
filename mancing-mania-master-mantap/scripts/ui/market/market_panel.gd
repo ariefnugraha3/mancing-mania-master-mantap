@@ -16,6 +16,9 @@ var actions: VBoxContainer
 
 var _heading: Label
 var _scroll: ScrollContainer
+## Scrolling column: the body, and the actions when the page is short.
+var _column: VBoxContainer
+var _actions_scroll: bool = false
 
 
 func _ready() -> void:
@@ -39,13 +42,18 @@ func _ready() -> void:
 	var padding := MarginContainer.new()
 	padding.name = "Padding"
 	padding.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	padding.add_theme_constant_override(&"margin_right", UiTokens.SPACE_16)
+	padding.add_theme_constant_override(&"margin_right", UiTokens.SPACE_8)
 	_scroll.add_child(padding)
+
+	_column = VBoxContainer.new()
+	_column.name = "Column"
+	_column.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
+	padding.add_child(_column)
 
 	body = VBoxContainer.new()
 	body.name = "Body"
 	body.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
-	padding.add_child(body)
+	_column.add_child(body)
 
 	actions = VBoxContainer.new()
 	actions.name = "Actions"
@@ -64,6 +72,22 @@ func build() -> void:
 ## Subclasses re-read the game state here. Called whenever it may have changed.
 func refresh() -> void:
 	pass
+
+
+## The height this page needs with its action strip fixed under the list,
+## leaving `list_room` for at least a line or two of the list.
+func fixed_height(list_room: float = 72.0) -> float:
+	var separation := float(get_theme_constant(&"separation"))
+	return _heading.get_combined_minimum_size().y + 2.0 + list_room 		+ actions.get_combined_minimum_size().y + separation * 3.0
+
+
+## Moves the action strip into the scrolling page (or back under it), so a
+## short page (large text on a small phone) still reaches every button.
+func set_actions_scroll(scrolls: bool) -> void:
+	if scrolls == _actions_scroll:
+		return
+	_actions_scroll = scrolls
+	actions.reparent(_column if scrolls else self, false)
 
 
 func set_heading(text: String) -> void:

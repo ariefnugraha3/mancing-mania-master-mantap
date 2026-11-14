@@ -1,8 +1,8 @@
 class_name BoxingWorld
 extends Node3D
 ## Everything you see in the ring (GDD 41-49, 168.7, 172.2, 172.6, 185.16):
-## Darto with his back to the camera, the fish on its stool facing him, and
-## the hits between them.
+## Darto in the near half with his back to the diorama camera, the fish on its
+## low stool in the far half facing him, and the hits between them.
 ##
 ## The world only shows what BoxingController decided. The fish's wind-up is
 ## its attack clip played at exactly the speed that fills the telegraph time,
@@ -10,8 +10,9 @@ extends Node3D
 ## animation is never interrupted before its impact: an unreadable attack
 ## would break the one promise this duel makes (GDD 176.14).
 
-const FOV_LANDSCAPE := 45.0
-const FOV_PORTRAIT := 55.0
+## HUD bars (top, bottom) in reference pixels, landscape then portrait.
+## HUD bars of the portrait screen (top, bottom) in canvas points.
+const HUD_INSETS := Vector2(170.0, 230.0)
 const BLEND_SEC := 0.06
 const IDLE_CLIP := &"box_idle"
 const MIRROR_SUFFIX := "_mirror"
@@ -19,11 +20,14 @@ const ATTACK_VARIANTS: Array[String] = ["a", "b", "c"]
 ## Normalized time of the impact inside every fish attack clip.
 const ATTACK_IMPACT_TIME := 1.0
 const SPARK_SEC := 0.16
+## Head and chest heights of the chibi fighters, for the hit sparks.
+const DARTO_HEAD_Y := 0.7
+const FISH_CHEST_Y := 0.42
 
 @onready var _set: Node3D = $BoxingSet
 @onready var _darto: Node3D = $DartoFighter
 @onready var _fish_anchor: Node3D = $FishFighter
-@onready var _camera: Camera3D = $BoxingCamera
+@onready var _camera: DioramaCamera = $BoxingCamera
 
 var _darto_player: AnimationPlayer
 var _fish_player: AnimationPlayer
@@ -51,8 +55,8 @@ func _ready() -> void:
 	for index: int in 3:
 		_sparks.append(_make_spark())
 		_spark_ages.append(SPARK_SEC)
-	PlatformService.viewport_class_changed.connect(_apply_camera)
-	_apply_camera(PlatformService.get_viewport_class())
+	_camera.set_hud_insets(HUD_INSETS)
+	_camera.frame_marker(markers.get_node("CameraFocus") as Node3D)
 
 
 func _process(delta: float) -> void:
@@ -122,14 +126,15 @@ func show_impact(outcome: StringName, direction: StringName) -> void:
 		_fish_player.seek(ATTACK_IMPACT_TIME, true)
 	if outcome == BoxingController.OUTCOME_HIT:
 		_darto_player.play(&"box_hit_left" if direction == BoxingController.DIRECTION_LEFT else &"box_hit_right", BLEND_SEC)
-		_spark(_darto.global_position + Vector3(0, 1.42, 0), UiTokens.RED_500)
+		_spark(_darto.global_position + Vector3(0, DARTO_HEAD_Y, 0), UiTokens.RED_500)
+		DioramaMotion.squash(_darto.get_node("Rig") as Node3D, 0.1)
 		return
 	# Dodged: Darto finishes the lean he was holding.
 	if _darto_player.current_animation.begins_with("box_dodge"):
 		_darto_player.play()
 	if outcome == BoxingController.OUTCOME_PERFECT:
 		_freeze(GameData.get_boxing_config().perfect_freeze_sec)
-		_spark(_darto.global_position + Vector3(0, 1.5, 0), UiTokens.SUN_500)
+		_spark(_darto.global_position + Vector3(0, DARTO_HEAD_Y + 0.08, 0), UiTokens.SUN_500)
 
 
 func show_dodge(direction: StringName, answering: bool) -> void:
@@ -143,10 +148,12 @@ func show_player_attack(attack_id: StringName) -> void:
 
 ## Darto's punch arrived. A blocked punch never interrupts a wind-up.
 func show_player_hit(blocked: bool) -> void:
-	_spark(_fish_anchor.global_position + Vector3(0, 0.55, 0), UiTokens.CREAM_50 if blocked else UiTokens.SUN_500)
+	_spark(_fish_anchor.global_position + Vector3(0, FISH_CHEST_Y, 0), UiTokens.CREAM_50 if blocked else UiTokens.SUN_500)
 	if _telegraphing or _finished:
 		return
 	_fish_player.play(&"box_block" if blocked else &"box_hit", BLEND_SEC)
+	if not blocked:
+		DioramaMotion.squash(_fish, 0.12)
 
 
 ## The fight is over: the loser goes down, the winner barely celebrates.
@@ -159,6 +166,7 @@ func show_finish(player_won: bool) -> void:
 	if player_won:
 		_fish_player.play(&"box_ko", BLEND_SEC)
 		_darto_player.play(&"box_win", BLEND_SEC * 2.0)
+		DioramaMotion.stretch(_darto.get_node("Rig") as Node3D, 0.1)
 	else:
 		_darto_player.play(&"box_ko", BLEND_SEC)
 		_fish_player.play(IDLE_CLIP, BLEND_SEC * 2.0)
@@ -184,6 +192,26 @@ static func get_attack_clip(direction: StringName, variant: int) -> StringName:
 	var letter := ATTACK_VARIANTS[clampi(variant, 0, ATTACK_VARIANTS.size() - 1)]
 	var suffix := "" if direction == BoxingController.DIRECTION_LEFT else MIRROR_SUFFIX
 	return StringName("box_attack_%s%s" % [letter, suffix])
+
+
+## A flat fan facing +Z, opaque in the middle and clear at the rim.
+static func burst_disc(radius: float, segments: int) -> ArrayMesh:
+	var vertices := PackedVector3Array([Vector3.ZERO])
+	var colors := PackedColorArray([Color(1, 1, 1, 1)])
+	var indices := PackedInt32Array()
+	for index: int in segments:
+		var angle := TAU * float(index) / float(segments)
+		vertices.append(Vector3(cos(angle), sin(angle), 0.0) * radius)
+		colors.append(Color(1, 1, 1, 0))
+		indices.append_array(PackedInt32Array([0, index + 1, (index + 1) % segments + 1]))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 # --- Internals --------------------------------------------------------------
@@ -231,36 +259,16 @@ func _spark(at: Vector3, color: Color) -> void:
 
 
 func _make_spark() -> MeshInstance3D:
-	var mesh := QuadMesh.new()
-	mesh.size = Vector2(0.34, 0.34)
-	# A soft round burst from a procedural gradient: no image file involved.
-	var gradient := Gradient.new()
-	gradient.set_color(0, Color(1, 1, 1, 1))
-	gradient.set_color(1, Color(1, 1, 1, 0))
-	var burst := GradientTexture2D.new()
-	burst.gradient = gradient
-	burst.fill = GradientTexture2D.FILL_RADIAL
-	burst.fill_from = Vector2(0.5, 0.5)
-	burst.fill_to = Vector2(1.0, 0.5)
-	burst.width = 64
-	burst.height = 64
-	var material := StandardMaterial3D.new()
-	material.albedo_texture = burst
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	# A soft round burst: a disc whose vertex alpha fades to the rim. No
+	# texture is involved (VISUAL_STYLE_GUIDE 5.1).
+	var material := DioramaStyle.unshaded_transparent(Color.WHITE, true)
 	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.no_depth_test = true
 	var spark := MeshInstance3D.new()
-	spark.mesh = mesh
+	spark.mesh = burst_disc(0.11, 16)
 	spark.material_override = material
 	spark.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	spark.visible = false
 	add_child(spark)
 	return spark
 
-
-func _apply_camera(viewport_class: StringName) -> void:
-	var portrait := viewport_class == PlatformService.PORTRAIT
-	var marker_name := "CameraPortrait" if portrait else "CameraLandscape"
-	_camera.transform = (_set.get_node("Markers/%s" % marker_name) as Node3D).transform
-	_camera.fov = FOV_PORTRAIT if portrait else FOV_LANDSCAPE

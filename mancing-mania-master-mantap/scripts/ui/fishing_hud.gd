@@ -5,19 +5,25 @@ extends CanvasLayer
 ## reeling, and the Market and Pause buttons.
 ##
 ## Tutorial prompts appear one at a time and stop once the player has done the
-## thing. Touch layouts add one large contextual button; it feeds the same
-## input actions as the keyboard and mouse.
+## thing. The portrait screen is laid out for thumbs: the chips and Pause along
+## the top, and one thumb row at the bottom with the large contextual button
+## (CAST / STRIKE / REEL) and the Market button. The contextual button feeds
+## the same input actions as the keyboard and mouse.
 
 signal pause_pressed()
 signal market_pressed()
 signal bucket_pressed()
 
-const ACTION_BUTTON_SIZE := Vector2(260.0, 76.0)
-const TRACK_HEIGHT_LANDSCAPE := 320.0
-const TRACK_HEIGHT_PORTRAIT := 400.0
+## The bottom thumb row: the contextual button and the Market button.
+const THUMB_ROW_HEIGHT := 84.0
+const MARKET_WIDTH := 96.0
+## The thumb row never gets wider than this (tablets).
+const THUMB_ROW_MAX_WIDTH := 520.0
+const TRACK_HEIGHT_PHONE := 300.0
+const TRACK_HEIGHT_TABLET := 360.0
 
 @onready var _safe_root: Control = $SafeRoot
-@onready var _top_bar: HBoxContainer = $SafeRoot/TopBar
+@onready var _top_bar: HFlowContainer = $SafeRoot/TopBar
 @onready var _cash_widget: PanelContainer = $SafeRoot/TopBar/CashWidget
 @onready var _bucket_widget: Button = $SafeRoot/TopBar/BucketWidget
 @onready var _prompt: VBoxContainer = $SafeRoot/ContextPrompt
@@ -69,8 +75,11 @@ func set_cash(cash: int) -> void:
 	_cash_label.text = Money.format_rp(cash)
 
 
+## The bucket chip shows the bucket badge and the count; the full wording is
+## its tooltip and accessibility name.
 func set_bucket_count(count: int) -> void:
-	_bucket_label.text = TextDb.tf(&"fishing.hud.bucket", {"count": count})
+	_bucket_label.text = str(count)
+	_bucket_widget.tooltip_text = TextDb.tf(&"fishing.hud.bucket", {"count": count})
 
 
 func set_market_available(available: bool) -> void:
@@ -156,11 +165,13 @@ func _show(title: String, subtitle: String, accent: bool) -> void:
 
 
 func _by_device(keyboard_key: StringName, touch_key: StringName) -> StringName:
-	return touch_key if _uses_touch_layout() else keyboard_key
+	return keyboard_key if InputManager.is_keyboard_active() else touch_key
 
 
+## The portrait screen always shows the touch controls; keyboard wording is
+## used only while a keyboard is the active device.
 func _uses_touch_layout() -> bool:
-	return InputManager.is_touch_primary() or PlatformService.get_viewport_class() == PlatformService.PORTRAIT
+	return true
 
 
 # --- Buttons ----------------------------------------------------------------
@@ -198,13 +209,16 @@ func _on_action_up() -> void:
 # --- Construction -----------------------------------------------------------
 
 func _build_top_bar() -> void:
-	_top_bar.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
+	# A flow: on a narrow screen (or at a large UI scale) the bucket chip
+	# drops under the cash chip instead of running into Pause.
+	_top_bar.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	_top_bar.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	_cash_widget.add_theme_stylebox_override(&"panel", HudChip.make_style())
 	_cash_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cash_label = HudChip.add_content(_cash_widget, UiIcon.ICON_CASH)
-	_cash_label.custom_minimum_size.x = 118.0
+	_cash_label.custom_minimum_size.x = 92.0
 
-	_bucket_widget.custom_minimum_size = Vector2(170.0, UiTokens.TOUCH_TARGET_MIN)
+	_bucket_widget.custom_minimum_size = Vector2(86.0, UiTokens.TOUCH_TARGET_MIN)
 	_bucket_widget.focus_mode = Control.FOCUS_NONE
 	_bucket_label = HudChip.add_content(_bucket_widget, UiIcon.ICON_BUCKET)
 	_bucket_widget.pressed.connect(func() -> void: bucket_pressed.emit())
@@ -216,6 +230,7 @@ func _build_prompt() -> void:
 	_prompt.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
 
 	_prompt_label = _outlined_label(UiTokens.FONT_HEADER)
+	UiSkin.sign_text(_prompt_label, UiTokens.FONT_HEADER + 4, UiTokens.CREAM_50, 11)
 	_prompt.add_child(_prompt_label)
 	_sub_label = _outlined_label(UiTokens.FONT_BODY)
 	_prompt.add_child(_sub_label)
@@ -225,17 +240,12 @@ func _build_prompt() -> void:
 	_strike_bar.name = "StrikeBar"
 	_strike_bar.max_value = 1.0
 	_strike_bar.show_percentage = false
-	_strike_bar.custom_minimum_size = Vector2(300.0, 16.0)
+	_strike_bar.custom_minimum_size = Vector2(240.0, 18.0)
 	_strike_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_strike_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_strike_bar.visible = false
-	if UiTokens.is_high_contrast():
-		# The strike prompt gets a strong border (GDD 189.4).
-		var frame := StyleBoxFlat.new()
-		frame.bg_color = UiTokens.INK_900
-		frame.border_color = UiTokens.CREAM_50
-		frame.set_border_width_all(3)
-		_strike_bar.add_theme_stylebox_override(&"background", frame)
+	# High Contrast makes the track opaque and its rim heavier (GDD 189.4).
+	HudChip.style_bar(_strike_bar, UiTokens.SUN_500, 9)
 	_prompt.add_child(_strike_bar)
 
 
@@ -249,7 +259,7 @@ func _outlined_label(font_size: int) -> Label:
 
 
 func _build_buttons() -> void:
-	_action_button.custom_minimum_size = ACTION_BUTTON_SIZE
+	_action_button.custom_minimum_size = Vector2(0.0, THUMB_ROW_HEIGHT)
 	_action_button.theme_type_variation = UiTokens.TYPE_CTA_BUTTON
 	_action_button.focus_mode = Control.FOCUS_NONE
 	_action_button.click_sfx = &""
@@ -258,8 +268,8 @@ func _build_buttons() -> void:
 	_action_button.button_up.connect(_on_action_up)
 
 	_market_button.focus_mode = Control.FOCUS_NONE
-	_market_button.custom_minimum_size = Vector2(170.0, UiTokens.TOUCH_TARGET_PREFERRED)
-	var market_label := HudChip.add_content(_market_button, UiIcon.ICON_MARKET)
+	_market_button.custom_minimum_size = Vector2(MARKET_WIDTH, THUMB_ROW_HEIGHT)
+	var market_label := HudChip.add_stacked_content(_market_button, UiIcon.ICON_MARKET)
 	market_label.text = TextDb.t(&"fishing.hud.market")
 	_market_button.pressed.connect(func() -> void: market_pressed.emit())
 
@@ -275,30 +285,44 @@ func _on_layout_changed(_value: StringName) -> void:
 	_refresh_buttons()
 
 
-## Anchors every block to its place for the current viewport class. Positions
-## come from anchors and container sizes only, never fixed screen coordinates.
+## Places every block on the portrait screen. Positions come from the safe
+## area and the tokens only, never from fixed screen coordinates.
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := _safe_root.size
+	var tablet := PlatformService.is_tablet()
 
-	UiTokens.anchor_at(_top_bar, Control.PRESET_TOP_LEFT)
+	# Top: Pause on the right, the chips flowing in the space left of it.
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
-	UiTokens.anchor_at(_market_button, Control.PRESET_BOTTOM_RIGHT if UiTokens.is_left_handed() else Control.PRESET_BOTTOM_LEFT)
-	UiTokens.anchor_at(_action_button, Control.PRESET_CENTER_BOTTOM)
-	if portrait:
-		# Keep the big button clear of the Market button on narrow screens.
-		_action_button.offset_top -= UiTokens.TOUCH_TARGET_PREFERRED + UiTokens.SPACE_16
-		_action_button.offset_bottom -= UiTokens.TOUCH_TARGET_PREFERRED + UiTokens.SPACE_16
+	var chips_width := maxf(area.x - _pause_button.size.x - UiTokens.SPACE_8, 120.0)
+	_top_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_top_bar.position = Vector2.ZERO
+	_top_bar.size = Vector2(chips_width, 0.0)
+	_top_bar.size = Vector2(chips_width, _top_bar.get_combined_minimum_size().y)
+
+	# Bottom: the thumb row. The Market button sits on the side away from the
+	# main thumb; Left-handed swaps it (GDD 189.12).
+	var row_width := minf(area.x, THUMB_ROW_MAX_WIDTH)
+	var row := Rect2((area.x - row_width) * 0.5, area.y - THUMB_ROW_HEIGHT, row_width, THUMB_ROW_HEIGHT)
+	var action_width := row.size.x - MARKET_WIDTH - UiTokens.SPACE_12
+	var left_handed := UiTokens.is_left_handed()
+	_place(_market_button, Rect2(row.position.x + (row.size.x - MARKET_WIDTH if left_handed else 0.0), row.position.y, MARKET_WIDTH, row.size.y))
+	_place(_action_button, Rect2(row.position.x + (0.0 if left_handed else MARKET_WIDTH + UiTokens.SPACE_12), row.position.y, action_width, row.size.y))
 
 	# Prompt: a centred column under the top bar.
-	var prompt_width := minf(area.x - UiTokens.SPACE_32, 620.0)
-	_prompt.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_prompt.offset_left = -prompt_width * 0.5
-	_prompt.offset_right = prompt_width * 0.5
-	_prompt.offset_top = 84.0 if portrait else 72.0
-	_prompt.offset_bottom = _prompt.offset_top + 180.0
+	var prompt_width := minf(area.x, 560.0)
+	_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_prompt.position = Vector2((area.x - prompt_width) * 0.5, _top_bar.size.y + UiTokens.SPACE_16)
+	_prompt.size = Vector2(prompt_width, 180.0)
 
-	# Reel read-out: right edge, vertically centred.
-	_reel_hud.set_track_height(TRACK_HEIGHT_PORTRAIT if portrait else TRACK_HEIGHT_LANDSCAPE)
+	# Reel read-out: right edge, centred in the space above the thumb row.
+	_reel_hud.set_track_height(TRACK_HEIGHT_TABLET if tablet else TRACK_HEIGHT_PHONE)
 	var reel_size := _reel_hud.custom_minimum_size
-	_reel_hud.set_home(Vector2(area.x - reel_size.x - UiTokens.SPACE_16, (area.y - reel_size.y) * 0.5 - (40.0 if portrait else 0.0)))
+	var free_top := _top_bar.size.y + UiTokens.SPACE_16
+	var free_bottom := row.position.y - UiTokens.SPACE_16
+	_reel_hud.set_home(Vector2(area.x - reel_size.x, maxf(free_top, (free_top + free_bottom - reel_size.y) * 0.5)))
+
+
+func _place(control: Control, rect: Rect2) -> void:
+	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	control.position = rect.position
+	control.size = rect.size

@@ -342,3 +342,23 @@ func test_paying_the_debt_runs_the_ending_into_the_postgame() -> bool:
 	check(await _wait_for_scene(&"main_menu"), "the Main Menu")
 	check(tree.current_scene.is_ending_dressed(), "has the family's glasses by the bench")
 	return true
+
+
+## Story chat lines are aliases of the line before them in the text table; the
+## player must see the line, never the key it points to.
+func test_story_text_aliases_resolve_to_the_line() -> bool:
+	var data: Variant = read_json("res://data/story/story_timelines.json")
+	if not check(typeof(data) == TYPE_DICTIONARY, "the story timelines load"):
+		return true
+	var checked := 0
+	for timeline_id: String in (data["timelines"] as Dictionary):
+		for step: Dictionary in (data["timelines"][timeline_id]["steps"] as Array):
+			for field: String in ["text", "phone"]:
+				if not step.has(field):
+					continue
+				var shown := TextDb.t(StringName(step[field]))
+				check(not shown.begins_with("story.") and not shown.begins_with("#"), "%s shows its line, not a key" % step[field])
+				checked += 1
+	check(checked > 50, "every story line was checked")
+	check_eq(TextDb.t(&"story.story_debt_300k.02"), TextDb.t(&"story.story_debt_300k.01"), "an alias shows the line it names")
+	return true

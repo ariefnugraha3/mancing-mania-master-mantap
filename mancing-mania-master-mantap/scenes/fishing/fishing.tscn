@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/fishing/fishing_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/fishing/fishing_controller.gd" id="2_controller"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/ui/reel_hud.gd" id="12_reel"]
 [ext_resource type="Script" path="res://scripts/ui/bucket_peek_overlay.gd" id="13_bucket_peek"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="14_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Fishing" type="Node"]
 script = ExtResource("1_scene")
@@ -43,8 +44,8 @@ script = ExtResource("3_world")
 [node name="RippleEmitter" type="Node3D" parent="World/FloatRoot"]
 
 [node name="BiteMarker" type="Label3D" parent="World/FloatRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
-pixel_size = 0.004
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
+pixel_size = 0.0024
 billboard = 1
 no_depth_test = true
 modulate = Color(1, 0.968627, 0.901961, 1)
@@ -56,9 +57,8 @@ outline_size = 40
 [node name="FishShadowRoot" type="Node3D" parent="World"]
 
 [node name="FishingCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 50.0
-far = 300.0
 
 [node name="FishingEffects" type="Node3D" parent="World"]
 
@@ -76,7 +76,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("10_safe")
 
-[node name="TopBar" type="HBoxContainer" parent="FishingCanvas/SafeRoot"]
+[node name="TopBar" type="HFlowContainer" parent="FishingCanvas/SafeRoot"]
 mouse_filter = 2
 
 [node name="CashWidget" type="PanelContainer" parent="FishingCanvas/SafeRoot/TopBar"]

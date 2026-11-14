@@ -14,7 +14,15 @@ static func t(key: StringName) -> String:
 	_ensure_loaded()
 	var id := String(key)
 	if _entries.has(id):
-		return _entries[id]
+		var value: String = _entries[id]
+		# An entry whose whole value is another key is an alias of it (story
+		# chat lines reuse the line before them), followed a few steps at most.
+		var hops := 0
+		while hops < 4 and value != id and _entries.has(value):
+			id = value
+			value = _entries[id]
+			hops += 1
+		return value
 	GameLog.error(&"TEXT", "missing text key", {"key": id})
 	return "#%s#" % id
 

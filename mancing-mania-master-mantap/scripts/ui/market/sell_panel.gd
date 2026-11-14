@@ -21,13 +21,18 @@ func build() -> void:
 	_total_label = add_value_row(actions, TextDb.t(&"market.sell.total"), UiTokens.TYPE_HEADER)
 
 	_sell_all = make_button(TextDb.t(&"market.sell.sell_all"), UiTokens.TYPE_CTA_BUTTON)
+	_sell_all.icon_id = IconPainter.CASH
 	_sell_all.name = "SellAllButton"
 	_sell_all.custom_minimum_size.y = 64.0
 	_sell_all.add_theme_font_size_override(&"font_size", UiTokens.FONT_HEADER)
 	_sell_all.pressed.connect(func() -> void: sell_all_requested.emit())
 	actions.add_child(_sell_all)
 
-	var row := HBoxContainer.new()
+	# The two sell buttons share a line, or stack when the text is large.
+	var row := HFlowContainer.new()
+	row.name = "SellRow"
+	row.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	row.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	actions.add_child(row)
 	_sell_fish = make_button(TextDb.t(&"market.sell.sell_fish"))
 	_sell_fish.name = "SellFishButton"

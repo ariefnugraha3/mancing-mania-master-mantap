@@ -1,12 +1,16 @@
 class_name WheelGraphic
 extends Control
 ## The painted Wheel of Fate (GDD 38, 167.9): eight segments, two per duel,
-## each with its name and its own pattern, on paper colours. It is a painted
-## wheel, not a casino one: no lights, no coin shower.
+## each with its name and its own pattern, in the UI palette. It is a painted
+## wooden wheel, not a casino one: a cream rim with wooden pegs, no lights,
+## no coin shower.
 
 const DUEL_COLORS: Dictionary = {
-	&"boxing": Color("b8654e"), &"arm_wrestle": Color("778b59"), &"dance": Color("e4ae55"), &"suwit": Color("557f7a"),
+	&"boxing": UiTokens.TERRACOTTA_500, &"arm_wrestle": UiTokens.GRASS_500,
+	&"dance": UiTokens.SUN_500, &"suwit": UiTokens.LAKE_500,
 }
+## Width of the cream rim around the segments.
+const RIM := 14.0
 
 ## Rotation in turns; segment `i` is under the top pointer at i / 8.
 var turns: float = 0.0:
@@ -25,10 +29,17 @@ func _ready() -> void:
 
 func _draw() -> void:
 	var centre := size * 0.5
-	var radius := minf(size.x, size.y) * 0.5 - 6.0
+	var radius := minf(size.x, size.y) * 0.5 - RIM - 4.0
+	if radius <= 4.0:
+		return
 	var count := WheelController.SEGMENTS.size()
 	var step := TAU / float(count)
-	draw_circle(centre, radius + 6.0, UiTokens.INK_900)
+	# A soft shadow, a cocoa outline and the cream rim.
+	draw_circle(centre + Vector2(0.0, radius * 0.045), radius + RIM + 4.0, Color(UiTokens.INK_900, 0.28))
+	draw_circle(centre, radius + RIM + 3.0, UiTokens.INK_900)
+	draw_circle(centre, radius + RIM, UiTokens.CREAM_100)
+	draw_arc(centre, radius + RIM * 0.5, 0.0, TAU, 64, UiTokens.EDGE_CREAM, 2.0, true)
+	draw_circle(centre, radius + 2.0, UiTokens.INK_900)
 	for index: int in count:
 		var duel: StringName = WheelController.SEGMENTS[index]
 		# Segment i is centred at i / 8 of a turn clockwise from the top;
@@ -40,31 +51,64 @@ func _draw() -> void:
 			points.append(centre + Vector2(cos(angle), sin(angle)) * radius)
 		var color: Color = DUEL_COLORS[duel]
 		if index == highlight:
-			color = color.lightened(0.25)
+			color = color.lightened(0.3)
 		draw_colored_polygon(points, color)
+		# A lighter band along the outer edge, like paint catching the light.
+		var band := PackedVector2Array()
+		for arc: int in 13:
+			var angle := middle - step * 0.5 + step * float(arc) / 12.0
+			band.append(centre + Vector2(cos(angle), sin(angle)) * (radius - 7.0))
+		draw_polyline(band, color.lightened(0.22), 8.0, true)
 		draw_polyline(points + PackedVector2Array([centre]), UiTokens.INK_900, 3.0, true)
+		if index == highlight:
+			draw_polyline(points + PackedVector2Array([centre]), UiTokens.CREAM_50, 6.0, true)
 		# Pattern by duel, so segments differ by more than colour.
 		var mark := centre + Vector2(cos(middle), sin(middle)) * radius * 0.42
+		var shape := PackedVector2Array()
 		match duel:
 			&"boxing":
-				draw_circle(mark, radius * 0.07, UiTokens.CREAM_50)
+				for corner: int in 16:
+					var turn := TAU * float(corner) / 16.0
+					shape.append(mark + Vector2(cos(turn), sin(turn)) * radius * 0.07)
 			&"arm_wrestle":
-				draw_rect(Rect2(mark - Vector2.ONE * radius * 0.06, Vector2.ONE * radius * 0.12), UiTokens.CREAM_50)
+				var half := radius * 0.06
+				shape = PackedVector2Array([mark + Vector2(-half, -half), mark + Vector2(half, -half), mark + Vector2(half, half), mark + Vector2(-half, half)])
 			&"dance":
-				draw_colored_polygon(PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0.8) * radius * 0.07, mark + Vector2(-1, 0.8) * radius * 0.07]), UiTokens.CREAM_50)
+				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0.8) * radius * 0.07, mark + Vector2(-1, 0.8) * radius * 0.07])
 			&"suwit":
-				draw_colored_polygon(PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0) * radius * 0.08, mark + Vector2(0, 1) * radius * 0.08, mark + Vector2(-1, 0) * radius * 0.08]), UiTokens.CREAM_50)
-		var text_at := centre + Vector2(cos(middle), sin(middle)) * radius * 0.72
+				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0) * radius * 0.08, mark + Vector2(0, 1) * radius * 0.08, mark + Vector2(-1, 0) * radius * 0.08])
+		draw_colored_polygon(shape, UiTokens.CREAM_50)
+		draw_polyline(shape + PackedVector2Array([shape[0]]), UiTokens.INK_900, 2.5, true)
+
 		var label := TextDb.t(StringName("duel.%s.upper" % duel))
-		var font := get_theme_default_font()
+		var font := UiSkin.bold_font()
+		# The name shrinks to fit the width of its segment at that radius.
+		var text_radius := radius * 0.73
+		var room := 2.0 * text_radius * sin(step * 0.5) * 0.86
 		var font_size := int(radius * 0.085)
-		if font_size < 1:
+		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if width > room and width > 0.0:
+			font_size = int(floor(float(font_size) * room / width))
+			width = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if font_size < 6:
 			# Not laid out yet: nothing readable to draw.
 			continue
-		var width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var text_at := centre + Vector2(cos(middle), sin(middle)) * text_radius
 		draw_set_transform(text_at, middle + PI * 0.5, Vector2.ONE)
-		draw_string_outline(font, Vector2(-width * 0.5, font_size * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 4, UiTokens.INK_900)
+		draw_string_outline(font, Vector2(-width * 0.5, font_size * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, UiTokens.INK_900)
 		draw_string(font, Vector2(-width * 0.5, font_size * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, UiTokens.CREAM_50)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	draw_circle(centre, radius * 0.12, UiTokens.CREAM_100)
-	draw_arc(centre, radius * 0.12, 0.0, TAU, 24, UiTokens.INK_900, 3.0)
+
+	# Wooden pegs on the rim between segments.
+	for index: int in count:
+		var boundary := (float(index) / float(count) - turns) * TAU - PI * 0.5 + step * 0.5
+		var peg := centre + Vector2(cos(boundary), sin(boundary)) * (radius + RIM * 0.5)
+		draw_circle(peg, RIM * 0.55, UiTokens.INK_900)
+		draw_circle(peg, RIM * 0.38, UiTokens.SUN_500)
+
+	# The hub: a cocoa ring, a cream cap and a small sun boss with a shine.
+	draw_circle(centre, radius * 0.16, UiTokens.INK_900)
+	draw_circle(centre, radius * 0.135, UiTokens.CREAM_100)
+	draw_circle(centre, radius * 0.07, UiTokens.SUN_500)
+	draw_arc(centre, radius * 0.07, 0.0, TAU, 24, UiSkin.edge_of(UiTokens.SUN_500), 2.5, true)
+	draw_circle(centre + Vector2(-radius * 0.022, -radius * 0.022), radius * 0.018, UiTokens.CREAM_50)

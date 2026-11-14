@@ -1,6 +1,6 @@
 # Build dan Rilis
 
-Panduan export Web (itch.io) dan Android (Google Play) sesuai GDD Section 135, 186, dan 196. Semua perintah dijalankan dari folder project ini. `godot` berarti executable Godot 4.7.2 (edisi standar) di mesin Anda.
+Panduan export Web (itch.io), Android (Google Play), dan iOS/iPadOS (App Store) sesuai GDD Section 135, 186, dan 196. Game ini portrait saja, untuk HP dan tablet (revisi Mobile 6.2). Semua perintah dijalankan dari folder project ini. `godot` berarti executable Godot 4.7.2 (edisi standar) di mesin Anda.
 
 ## Prasyarat umum
 
@@ -33,7 +33,7 @@ Atau dengan Python (Windows tanpa `zip`):
 python -c "import zipfile,os; z=zipfile.ZipFile('build/itch/mancing-mania-gelut-edition-web-<versi>.zip','w',zipfile.ZIP_DEFLATED); [z.write(os.path.join('build/web',f),f) for f in os.listdir('build/web')]; z.close()"
 ```
 
-Pengaturan halaman itch.io (Section 135, 186.8): Kind of project **HTML**, centang *This file will be played in the browser*, viewport **1280×720**, centang *Fullscreen button*, boleh *Automatically start on page load* dimatikan. Judul, ringkasan, deskripsi, dan tag ada di `docs/store_compliance_report.md`.
+Pengaturan halaman itch.io (Section 135, 186.8): Kind of project **HTML**, centang *This file will be played in the browser*, viewport **540×960** (portrait), centang *Fullscreen button*, boleh *Automatically start on page load* dimatikan. Judul, ringkasan, deskripsi, dan tag ada di `docs/store_compliance_report.md`.
 
 Menguji lokal:
 
@@ -76,6 +76,24 @@ godot --headless --path . --export-release "Android" build/android/MancingManiaG
 ```
 
 Sebelum submit, periksa ulang target API yang diwajibkan Google Play pada tanggal submission (Section 186.3, 186.11) dan naikkan `gradle_build/target_sdk` bila perlu.
+
+## iOS / iPadOS / App Store
+
+Preset `iOS` sudah ada: iPhone + iPad (`application/targeted_device_family = 2`), bundle ID `com.mancingmania.gelutedition`, iOS 14.0+, `arm64`, portrait, tanpa usage description, ikon dari `generated/ui/app_icon.png`, latar launch screen cream.
+
+Ekspor iOS hanya bisa di **macOS** dengan **Xcode** dan akun **Apple Developer**:
+
+1. Pasang export template Godot 4.7.2 (termasuk iOS) dan Xcode terbaru.
+2. Di preset `iOS`, isi `application/app_store_team_id`, lalu sertifikat dan provisioning profile (atau biarkan Xcode mengelola signing otomatis). Jangan commit `*.p12` / `*.mobileprovision`.
+3. Ekspor:
+
+```text
+godot --headless --path . --export-release "iOS" build/ios/MancingManiaGelut.ipa
+```
+
+atau centang `application/export_project_only`, buka proyek Xcode hasil ekspor, lalu *Archive → Distribute App*.
+
+`application/short_version` harus sama dengan MAJOR.MINOR.PATCH versi proyek (tanpa `-rc.N`); `application/version` adalah nomor build yang naik setiap upload. Uji di iPhone dengan notch/Dynamic Island dan di iPad sebelum submit.
 
 ## Versi
 

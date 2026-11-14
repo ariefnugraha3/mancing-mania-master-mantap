@@ -500,8 +500,8 @@ func test_market_pause_and_both_screen_shapes() -> bool:
 	var tabs := scene.get_node(LEDGER + "TabBar") as Control
 	var page := scene.get_node(LEDGER + "TabContent") as Control
 	var leave := scene.get_node(LEDGER + "LeaveMarketButton") as Control
-	var camera := scene.get_node("World/MarketCamera") as Camera3D
-	var markers := scene.get_node("World/MarketSet/Markers")
+	var camera := scene.get_node("World/MarketCamera") as DioramaCamera
+	var focus := scene.get_node("World/MarketSet/Markers/CameraFocus") as Node3D
 
 	InputManager.press_action(InputActions.PAUSE)
 	check(await wait_until(pause.is_open, 2.0), "the pause action opens the pause menu")
@@ -512,7 +512,8 @@ func test_market_pause_and_both_screen_shapes() -> bool:
 
 	var window := tree.root
 	var original_size := window.size
-	for shape: Array in [[Vector2i(1280, 720), "CameraLandscape"], [Vector2i(720, 1280), "CameraPortrait"]]:
+	# A tall phone and a tablet; a tablet shows a wider slice of the world.
+	for shape: Array in [[Vector2i(1080, 2400), 1.0], [Vector2i(1536, 2048), DioramaCamera.TABLET_WIDTH_SCALE]]:
 		var size: Vector2i = shape[0]
 		window.size = size
 		await wait_frames(4)
@@ -522,9 +523,11 @@ func test_market_pause_and_both_screen_shapes() -> bool:
 		check(bounds.encloses(page.get_global_rect()), "%s: the ledger page is inside the safe area" % label)
 		check(bounds.encloses(leave.get_global_rect()), "%s: LEAVE MARKET is inside the safe area" % label)
 		check(not page.get_global_rect().intersects(leave.get_global_rect()), "%s: LEAVE MARKET is not under the ledger" % label)
-		check(tabs.get_global_rect().end.y <= page.get_global_rect().position.y + 3.0, "%s: tabs sit on top of the page" % label)
-		check(page.size.y >= 320.0, "%s: the page has room to work in (%d px)" % [label, int(page.size.y)])
-		check(camera.transform.is_equal_approx((markers.get_node(shape[1]) as Node3D).transform), "%s: camera uses %s" % [label, shape[1]])
+		check(tabs.get_global_rect().end.y <= page.get_global_rect().position.y + float(MarketHud.LEDGER_RIM), "%s: tabs sit on top of the page" % label)
+		check(page.size.y >= 240.0, "%s: the page has room to work in (%d pt)" % [label, int(page.size.y)])
+		check(camera != null and camera.projection == Camera3D.PROJECTION_ORTHOGONAL, "%s: the diorama camera is orthographic" % label)
+		var expected := DioramaStyle.clamp_width(float(focus.get_meta(&"width_portrait")) * float(shape[1]))
+		check_near(camera.get_frame_width(), expected, 0.001, "%s: camera frames the room (%.1f m)" % [label, expected])
 	window.size = original_size
 	await wait_frames(3)
 	return true
@@ -758,8 +761,9 @@ func test_boxing_inputs_pause_and_both_screen_shapes() -> bool:
 	check(controls[0].get_global_rect().end.x <= controls[2].get_global_rect().position.x, "dodge on the left, punches on the right")
 	var widget_rect := widget.get_global_rect()
 	check(widget_rect.end.y <= fight_bottom, "the telegraph read-out is in the fight area")
-	var camera := scene.get_node("World/BoxingCamera") as Camera3D
-	check(camera.transform.is_equal_approx((scene.get_node("World/BoxingSet/Markers/CameraPortrait") as Node3D).transform), "portrait uses its own camera")
+	var camera := scene.get_node("World/BoxingCamera") as DioramaCamera
+	var focus := scene.get_node("World/BoxingSet/Markers/CameraFocus") as Node3D
+	check_near(camera.get_frame_width(), float(focus.get_meta(&"width_portrait")), 0.001, "portrait uses its own framing")
 	window.size = original_size
 	await wait_frames(3)
 	DebugService.clear_forces()
@@ -872,13 +876,14 @@ func test_arm_wrestle_portrait_layout() -> bool:
 	var mash := (scene.get_node(TABLE + "MashButton") as Control).get_global_rect()
 	var bar := (scene.get_node(TABLE + "PositionBar") as Control).get_global_rect()
 	check(hud.uses_touch_layout() and (scene.get_node(TABLE + "MashButton") as Control).visible, "portrait shows the MASH button")
-	check(mash.position.y >= area.position.y + area.size.y * 0.69, "MASH fills the bottom 30%")
-	check(mash.size.x >= area.size.x - 2.0 and mash.size.y >= 200.0, "MASH is one large target (%dx%d)" % [int(mash.size.x), int(mash.size.y)])
+	check(mash.position.y >= area.position.y + area.size.y * 0.6, "MASH fills the bottom of the screen")
+	check(mash.size.x >= area.size.x - 2.0 and mash.size.y >= ArmWrestleHud.MASH_HEIGHT_RANGE.x, "MASH is one large target (%dx%d)" % [int(mash.size.x), int(mash.size.y)])
 	check(area.grow(1.0).encloses(mash), "MASH is inside the safe area")
-	check(bar.position.y >= area.position.y + area.size.y * 0.55 and bar.end.y <= mash.position.y, "the bars sit in the middle, above MASH")
+	check(bar.position.y >= area.position.y + area.size.y * 0.45 and bar.end.y <= mash.position.y, "the bars sit in the lower half, above MASH")
 	check(not bar.intersects(mash), "the bars and MASH do not overlap")
-	var camera := scene.get_node("World/ArmCamera") as Camera3D
-	check(camera.transform.is_equal_approx((scene.get_node("World/ArmWrestleSet/Markers/CameraPortrait") as Node3D).transform), "portrait uses its own camera")
+	var camera := scene.get_node("World/ArmCamera") as DioramaCamera
+	var focus := scene.get_node("World/ArmWrestleSet/Markers/CameraFocus") as Node3D
+	check_near(camera.get_frame_width(), float(focus.get_meta(&"width_portrait")), 0.001, "portrait uses its own framing")
 	window.size = original_size
 	await wait_frames(3)
 	return true
@@ -960,7 +965,7 @@ func test_dance_portrait_lanes_are_full_touch_targets() -> bool:
 		check(area.grow(1.0).encloses(rect), "lane %d is inside the safe area" % (lane + 1))
 		if lane > 0:
 			check(not rect.intersects(hud.get_lane_button(lane - 1).get_global_rect()), "lanes %d and %d do not overlap" % [lane, lane + 1])
-	check(widths.max() - widths.min() < 1.0 and widths[0] >= 150.0, "four equal, wide lanes (%d px)" % int(widths[0]))
+	check(widths.max() - widths.min() < 1.0 and widths[0] >= 80.0, "four equal, wide lanes (%d pt)" % int(widths[0]))
 	window.size = original
 	await wait_frames(3)
 	return true

@@ -4,6 +4,8 @@ Game memancing cozy berlatar Danau Cempaka. Setiap ikan yang berhasil ditarik me
 
 Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authoritative-specification.md`. Dokumen itu adalah sumber kebenaran; README ini hanya menjelaskan cara bekerja dengan project.
 
+Tampilan 3D, kamera, dan art style mengikuti `../VISUAL_STYLE_GUIDE.md` (diorama mini "Warm, Cozy & Cute", kamera ortografis 45°/35°, karakter chibi 0,90 m). GDD revisi visual 6.1 menerapkannya; palet dan angkanya ada di satu tempat, `scripts/visual/diorama_style.gd`.
+
 ## Status
 
 | Milestone | Isi | Status |
@@ -18,6 +20,7 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 8 | Cerita, cutscene, ending | selesai (`0.8.0`) |
 | 9 | Art/UI/audio final, aksesibilitas, performa | selesai (`0.9.0`) |
 | 10 | Balance, QA penuh, export, release candidate | `1.0.0-rc.1` — human playtest pending |
+| Revisi visual 6.1 | Rombak visual ke diorama "Warm, Cozy & Cute" (`../VISUAL_STYLE_GUIDE.md`) | implementasi selesai, QA visual & playtest ulang menuju `1.0.0-rc.2` |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -76,8 +79,9 @@ autoload/     9 service global: GameState, SaveManager, SceneRouter, AudioManage
 data/         data authoritative (.tres): ikan, sampah, upgrade, balance, audio, teks
 scenes/       scene per layar (boot, menu, fishing, market, wheel, empat duel, result, story, credits)
 scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, arm_wrestle/, duel/), actors/,
+              visual/ (gaya diorama: palet, kamera, gerak),
               ui/ (termasuk ui/market/ untuk halaman ledger), audio/, utilities/
-shaders/      shader buatan project (air danau, goyangan dedaunan, siluet Fish Book)
+shaders/      shader UI buatan project (siluet Fish Book); dunia 3D tidak memakai shader kustom
 tools/        generators/ (pembuat aset dan store art), validation/ (pemeriksa kebijakan aset),
               perf/ (probe performa), sim/ (simulasi balance), release/ (validator dan manifest rilis)
 release/      kebijakan privasi HTML, contoh metadata publisher, manifest build
@@ -108,7 +112,7 @@ docs/         keputusan implementasi dan laporan milestone
 Jalankan di jendela (bukan headless) agar renderer nyata dipakai:
 
 ```text
-godot --path . --resolution 1280x720 --script res://tools/perf/perf_probe.gd -- --out=C:/tmp/perf.json
+godot --path . --resolution 540x960 --script res://tools/perf/perf_probe.gd -- --out=C:/tmp/perf.json
 ```
 
 Hasil dan pembacaannya ada di `docs/performance_report.md`.

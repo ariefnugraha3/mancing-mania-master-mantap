@@ -33,7 +33,7 @@ var _tutorial_button: GameButton
 var _preset_buttons: Dictionary[int, GameButton] = {}
 var _custom_button: GameButton
 var _all_button: GameButton
-var _custom_box: HBoxContainer
+var _custom_box: HFlowContainer
 var _custom_confirm: GameButton
 var _step_buttons: Dictionary[int, GameButton] = {}
 var _custom_amount: int = 0
@@ -68,9 +68,10 @@ func build() -> void:
 	_tutorial_button.pressed.connect(func() -> void: payment_requested.emit(TUTORIAL_AMOUNT))
 	actions.add_child(_tutorial_button)
 
-	var presets := HBoxContainer.new()
+	var presets := HFlowContainer.new()
 	presets.name = "Presets"
-	presets.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	presets.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	presets.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	actions.add_child(presets)
 	for amount: int in PRESET_AMOUNTS:
 		var button := _action_button(TextDb.tf(&"market.debt.pay_amount", {"amount": Money.group_thousands(amount)}))
@@ -79,9 +80,10 @@ func build() -> void:
 		presets.add_child(button)
 		_preset_buttons[amount] = button
 
-	var extras := HBoxContainer.new()
+	var extras := HFlowContainer.new()
 	extras.name = "Extras"
-	extras.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	extras.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	extras.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	actions.add_child(extras)
 	_custom_button = _action_button(TextDb.t(&"market.debt.pay_custom"))
 	_custom_button.name = "PayCustomButton"
@@ -94,10 +96,11 @@ func build() -> void:
 	extras.add_child(_all_button)
 
 	# PAY CUSTOM: step the amount down or up around the button that pays it.
-	_custom_box = HBoxContainer.new()
+	_custom_box = HFlowContainer.new()
 	_custom_box.name = "Custom"
 	_custom_box.visible = false
-	_custom_box.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	_custom_box.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	_custom_box.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	actions.add_child(_custom_box)
 	_custom_confirm = _action_button("", UiTokens.TYPE_CTA_BUTTON)
 	_custom_confirm.name = "PayCustomConfirm"
@@ -126,9 +129,10 @@ func _build_savings() -> void:
 	body.add_child(_savings_root)
 	_saved_label = add_value_row(_savings_root, TextDb.t(&"market.savings.total"), UiTokens.TYPE_HEADER)
 	_savings_root.add_child(make_label(TextDb.t(&"market.savings.terms"), UiTokens.TYPE_SMALL))
-	var presets := HBoxContainer.new()
+	var presets := HFlowContainer.new()
 	presets.name = "SavePresets"
-	presets.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	presets.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
+	presets.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	_savings_root.add_child(presets)
 	for amount: int in PRESET_AMOUNTS:
 		var button := _action_button(TextDb.tf(&"market.savings.deposit", {"amount": Money.group_thousands(amount)}))
@@ -245,6 +249,9 @@ func _action_button(text: String, type_variation: StringName = &"") -> GameButto
 	# This page has many buttons; the smaller touch height keeps the ledger
 	# rows above them in view.
 	button.min_height = UiTokens.TOUCH_TARGET_MIN
-	button.add_theme_font_size_override(&"font_size", ACTION_FONT_SIZE)
-	button.clip_text = true
+	button.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(ACTION_FONT_SIZE))
+	# Whole labels: on a narrow phone the buttons of a row wrap onto a second
+	# line instead of cutting their text.
+	button.clip_text = false
+	button.set_side_padding(UiTokens.SPACE_12)
 	return button

@@ -57,11 +57,20 @@ func _make_card(upgrade: UpgradeData) -> PanelContainer:
 	column.add_child(title_row)
 	var name_label := make_label(upgrade.name.to_upper())
 	name_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
+	name_label.add_theme_font_override(&"font", UiSkin.bold_font())
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(name_label)
+	# The level sits on a small gold tag, like a price sticker.
+	var level_tag := PanelContainer.new()
+	level_tag.name = "LevelTag"
+	level_tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	level_tag.add_theme_stylebox_override(&"panel", UiSkin.pill(UiTokens.SUN_500, 2, 12, Vector2(10.0, 1.0), 2))
+	title_row.add_child(level_tag)
 	var level_label := Label.new()
 	level_label.theme_type_variation = UiTokens.TYPE_SMALL
-	title_row.add_child(level_label)
+	level_label.add_theme_font_override(&"font", UiSkin.bold_font())
+	level_label.add_theme_color_override(&"font_color", UiTokens.INK_900)
+	level_tag.add_child(level_label)
 
 	var current_label := make_label("", UiTokens.TYPE_SMALL)
 	column.add_child(current_label)
@@ -79,12 +88,10 @@ func _make_card(upgrade: UpgradeData) -> PanelContainer:
 	return card
 
 
-## A price card: slightly darker paper with a thin ink border.
+## A price card: a lighter paper slip with a caramel rim and a small lip,
+## lying on the ledger page.
 func _card_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(UiTokens.PAPER_200, 0.55)
-	box.border_color = Color(UiTokens.INK_700, 0.6)
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
-	box.set_content_margin_all(UiTokens.SPACE_12)
+	var box := UiSkin.pill(UiTokens.CREAM_50, 3, 16, Vector2(UiTokens.SPACE_12, UiTokens.SPACE_12), 2)
+	box.shadow_size = 3
+	box.shadow_offset = Vector2(0.0, 1.0)
 	return box

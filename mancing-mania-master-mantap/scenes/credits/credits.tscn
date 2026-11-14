@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/story/credits_scene.gd" id="1_credits"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="2_safe"]
 [ext_resource type="PackedScene" path="res://generated/scenes/environment/env_lake_set.tscn" id="3_lake"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Credits" type="Node"]
 script = ExtResource("1_credits")
@@ -12,9 +13,8 @@ script = ExtResource("1_credits")
 [node name="LakeSet" parent="World" instance=ExtResource("3_lake")]
 
 [node name="CreditsCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 50.0
-far = 300.0
 
 [node name="CreditsCanvas" type="CanvasLayer" parent="."]
 

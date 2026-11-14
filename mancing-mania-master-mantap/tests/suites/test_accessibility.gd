@@ -117,13 +117,23 @@ func test_text_scale_scales_the_theme() -> bool:
 	return true
 
 
+func _scroll_parent(control: Control) -> ScrollContainer:
+	var node := control.get_parent()
+	while node != null:
+		if node is ScrollContainer:
+			return node
+		node = node.get_parent()
+	return null
+
+
 # A11Y-001, A11Y-002: the screens with critical buttons at the largest sizes.
 func test_largest_scales_keep_critical_buttons_whole() -> bool:
 	GameState.set_setting(&"ui_scale", 1.3)
 	GameState.set_setting(&"text_scale", 1.5)
 	DisplaySettings.apply_all(tree)
 	var problems := PackedStringArray()
-	for size: Vector2i in [Vector2i(1280, 720), Vector2i(720, 1280)]:
+	# A small 9:16 phone, a tall phone and a tablet.
+	for size: Vector2i in [Vector2i(720, 1280), Vector2i(1080, 2400), Vector2i(1536, 2048)]:
 		tree.root.size = size
 		for scene_path: String in ["res://scenes/menu/main_menu.tscn", "res://scenes/fishing/fishing.tscn", "res://scenes/market/market.tscn"]:
 			tree.change_scene_to_packed(load(scene_path))
@@ -134,7 +144,16 @@ func test_largest_scales_keep_critical_buttons_whole() -> bool:
 				if not control.is_visible_in_tree() or control.text == "":
 					continue
 				var rect := control.get_global_rect()
-				if not visible_rect.grow(1.0).encloses(rect):
+				# A button inside a scrolling page is reachable when the page
+				# itself is on screen (the smallest phone at the largest sizes
+				# scrolls the Market buttons with the list).
+				var reach := rect
+				var scroll := _scroll_parent(control)
+				if scroll != null:
+					reach = scroll.get_global_rect()
+					if rect.size.x > reach.size.x + 1.0:
+						problems.append("%s %s: %s is wider than its page" % [scene_path.get_file(), size, control.name])
+				if not visible_rect.grow(1.0).encloses(reach):
 					problems.append("%s %s: %s is off screen" % [scene_path.get_file(), size, control.name])
 				var font := control.get_theme_font(&"font")
 				var font_size := control.get_theme_font_size(&"font_size")
@@ -340,22 +359,26 @@ func test_rhythm_calibration_persists_after_reload() -> bool:
 
 # --- Graphics quality (GDD 190.1) ---------------------------------------------
 
-func test_quality_presets_change_shadows_and_resolution_only() -> bool:
+## VISUAL_STYLE_GUIDE 6.1: no shadow maps at any level; MSAA 4x on desktop,
+## 2x on phones. Quality only trades resolution, scatter and anti-aliasing.
+func test_quality_presets_change_resolution_and_aa_only() -> bool:
 	tree.change_scene_to_packed(load("res://scenes/fishing/fishing.tscn"))
 	await wait_frames(4)
 	var suns := tree.current_scene.find_children("*", "DirectionalLight3D", true, false)
 	check(not suns.is_empty(), "the lake has a sun")
 	GameState.set_setting(&"quality_preset", "low")
 	DisplaySettings.apply_all(tree)
-	check(not (suns[0] as DirectionalLight3D).shadow_enabled, "LOW turns shadows off")
+	check(not (suns[0] as DirectionalLight3D).shadow_enabled, "LOW has no real shadows")
 	check_near(tree.root.scaling_3d_scale, 0.75, 0.001, "and renders 3D at 75%")
+	check_eq(tree.root.msaa_3d, Viewport.MSAA_DISABLED, "LOW skips anti-aliasing")
 	GameState.set_setting(&"quality_preset", "high")
 	DisplaySettings.apply_all(tree)
-	check((suns[0] as DirectionalLight3D).shadow_enabled, "HIGH has shadows")
-	check_eq(tree.root.msaa_3d, Viewport.MSAA_2X, "and anti-aliasing")
+	check(not (suns[0] as DirectionalLight3D).shadow_enabled, "HIGH has no real shadows either: they are fake discs")
+	check_eq(tree.root.msaa_3d, Viewport.MSAA_4X, "HIGH uses 4x MSAA on desktop")
+	check_eq(DisplaySettings.msaa_for(DisplaySettings.QUALITY["high"]), Viewport.MSAA_4X, "the desktop cap is 4x")
 	GameState.set_setting(&"quality_preset", "medium")
 	DisplaySettings.apply_all(tree)
-	check_eq(tree.root.msaa_3d, Viewport.MSAA_DISABLED, "MEDIUM is the default look")
+	check_eq(tree.root.msaa_3d, Viewport.MSAA_2X, "MEDIUM is the default look with 2x MSAA")
 	tree.current_scene.queue_free()
 	await wait_frames(2)
 	return true

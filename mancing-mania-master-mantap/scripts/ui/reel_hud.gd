@@ -35,8 +35,19 @@ var _clock: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_track.add_theme_stylebox_override(&"panel", _box(Color(UiTokens.CREAM_100, 0.92), UiTokens.INK_700, 10))
-	_zone.add_theme_stylebox_override(&"panel", _box(Color(UiTokens.GRASS_500, 0.95), UiTokens.INK_900, 6))
+	var track := UiSkin.well(Color(UiTokens.CREAM_100, 0.94), 18, 0.0)
+	track.set_border_width_all(UiTokens.hud_border(3))
+	track.border_width_top = UiTokens.hud_border(5)
+	track.border_color = UiTokens.EDGE_PAPER
+	track.shadow_color = UiTokens.SHADOW
+	track.shadow_size = 8
+	track.shadow_offset = Vector2(0.0, 3.0)
+	_track.add_theme_stylebox_override(&"panel", track)
+	var zone := UiSkin.bar_fill(Color(UiTokens.GRASS_500, 0.96))
+	zone.set_border_width_all(UiTokens.hud_border(2))
+	zone.border_width_bottom = UiTokens.hud_border(4)
+	zone.set_corner_radius_all(10)
+	_zone.add_theme_stylebox_override(&"panel", zone)
 	for node: Control in [_track, _zone, _marker]:
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_marker.draw.connect(_draw_marker)
@@ -46,7 +57,7 @@ func _ready() -> void:
 	_stress_gauge.fill_mode = ProgressBar.FILL_BOTTOM_TO_TOP
 	_stress_gauge.show_percentage = false
 	_stress_gauge.max_value = 1.0
-	_stress_gauge.add_theme_stylebox_override(&"fill", _box(UiTokens.RED_500, UiTokens.INK_700, 5))
+	HudChip.style_bar(_stress_gauge, UiTokens.RED_500, 8)
 	_stress_gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_stress_gauge)
 
@@ -145,23 +156,13 @@ func _draw_marker() -> void:
 	var size := _marker.size
 	var middle := size.y * 0.5
 	var fill := UiTokens.SUN_500 if _held else UiTokens.CREAM_50
-	var bar := Rect2(12.0, middle - 4.0, size.x - 24.0, 8.0)
-	_marker.draw_rect(bar.grow(float(UiTokens.hud_border(2))), UiTokens.INK_900)
-	_marker.draw_rect(bar, fill)
+	var bar := Rect2(12.0, middle - 5.0, size.x - 24.0, 10.0)
+	_marker.draw_style_box(UiSkin.rounded(fill, 7, UiTokens.hud_border(3)), bar.grow(float(UiTokens.hud_border(2))))
 	for side: float in [0.0, 1.0]:
 		var tip_x := lerpf(12.0, size.x - 12.0, side)
 		var back_x := lerpf(0.0, size.x, side)
 		var arrow := PackedVector2Array([Vector2(tip_x, middle), Vector2(back_x, middle - 9.0), Vector2(back_x, middle + 9.0)])
 		_marker.draw_colored_polygon(arrow, UiTokens.INK_900)
-
-
-func _box(fill: Color, border: Color, radius: int) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = fill
-	box.border_color = border
-	box.set_border_width_all(UiTokens.hud_border(2))
-	box.set_corner_radius_all(radius)
-	return box
 
 
 func _style_outlined(label: Label, font_size: int) -> void:

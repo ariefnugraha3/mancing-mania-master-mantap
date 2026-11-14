@@ -2,6 +2,99 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## Unreleased — Revisi Mobile 6.2: game HP portrait (Android & iOS, HP & tablet)
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi UI dan visual di bawah. Gameplay, balance, cerita, audio, dan art tidak berubah.
+
+### Diubah
+
+- Game dikunci **portrait** dan ditata untuk HP dan tablet; layout landscape dihapus.
+- Kanvas UI kini dalam *point* setara dp/pt: HP 390 pt lebar (tinggi mengikuti layar), tablet 600 pt; jendela yang lebih lebar dari 4:5 menampilkan kanvas portrait dengan bilah di samping. Tombol 48 pt kini benar-benar 48 dp / 44 pt di HP (sebelumnya kanvas 720 px membuat tombol ±26 pt dan teks ±10 pt di HP sungguhan).
+- Safe area Android **dan iOS** (notch, Dynamic Island, status bar, home indicator, gesture bar) dihormati di semua layar; overlay berpusat di safe area, dialog cerita dan ponsel tidak lagi menempel ke tepi.
+- Memancing: chip uang dan ember (ember kini ikon + jumlah) mengalir ke baris kedua bila sempit; baris jempol bawah berisi MARKET dan tombol CAST/STRIKE/REEL besar.
+- Main Menu: emblem di atas judul yang menyesuaikan lebar layar; tombol menu selebar layar (maks. 400 pt) di zona jempol.
+- Market: ledger menjadi bottom sheet; tab seperti tab bar HP (ikon di atas label); judul warung di barisnya sendiri; tombol Debt/Sell turun baris alih-alih terpotong; tombol aksi ikut digulir bila halaman terlalu pendek.
+- Tinju: empat tombol jempol dengan ikon besar (panah ◀ ▶ untuk DODGE, sarung tinju untuk JAB/CROSS). Panco: bar tepat di atas MASH. Suwit: titik skor di baris sendiri, jarak antar pilihan 20 pt. Dance: lajur sebagai bottom sheet. Banner duel boleh dua baris.
+- Settings: setiap volume menjadi nama + nilai di satu baris dan slider selebar panel di bawahnya.
+- Kamera diorama hanya punya bingkai HP; tablet memperlihatkan dunia 1,25× lebih lebar. Inset HUD boleh berupa porsi tinggi layar untuk bottom sheet.
+- Petunjuk menyebut tombol sentuh, atau tombol keyboard bila keyboard sedang dipakai.
+
+### Ditambahkan
+
+- Preset ekspor **iOS** (iPhone + iPad, iOS 14+, `build/ios/MancingManiaGelut.ipa`); platform save `ios`; PWA Web berorientasi portrait.
+- `PlatformService`: `PHONE`/`TABLET`, `is_ios()`, `is_mobile()`, `is_tablet()`, `canvas_size_for()`, `aspect_mode_for()`, `set_simulated_insets()`, sinyal `safe_area_changed`.
+- Argumen debug `--mm-insets=<kiri>,<atas>,<kanan>,<bawah>` untuk mensimulasikan notch dan home indicator.
+- `GameButton.icon_pixels` dan `set_side_padding()`; `HudChip.add_stacked_content()`; `UiTokens.place_banner()`; ikon `ARROW_LEFT`, `ARROW_RIGHT`, `GLOVE`, `HAND`; `InputManager.is_keyboard_active()`.
+- Test bentuk layar HP/tablet, simulasi inset, preset iOS (total 272 test).
+
+### Dihapus
+
+- Kelas tampilan `LANDSCAPE_WIDE`/`LANDSCAPE_COMPACT`, referensi 1280 × 720, dan semua cabang layout landscape.
+
+## Unreleased — Revisi UI 6.1: "cozy warung card"
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi visual di bawah. Gameplay, balance, cerita, audio, dan save tidak berubah.
+
+### Diubah
+
+- Palet UI mengikuti palet diorama (GDD 167.2): cream `#FFF9EE`/`#FCEFD6`, crust `#E0784C`, teal `#4F9A91`, cocoa `#3F2A1E`, plus token rim/lip/bayangan.
+- Semua tombol menjadi tombol berlip yang tenggelam saat ditekan, dengan cincin fokus emas; varian baru Accent dan Round (tombol Pause bulat).
+- Overlay (Pause, Settings, How to Play, Controls, Privacy, modal, Bucket, Receipt) menjadi kartu cream dengan pita judul crust dan animasi pop kecil.
+- Main Menu: logo emblem bulat, judul bergaya cat papan, pita "GELUT EDITION" miring, tombol berikon yang muncul berurutan.
+- Chip HUD (uang, ember, Market) memakai badge bulat berwarna berisi ikon; bar HP/stamina/strike/stress, timer duel, position bar, telegraph, track reel, dan titik Suwit memakai bentuk bulat yang sama.
+- Market: tab map ledger, kartu ledger, slip upgrade dengan tag level emas, judul "BU YATI'S WARUNG" bergaya cat papan.
+- Settings: header seksi berupa tab paper; tombol Pause/Settings/Close/How to Play/Result/Market memakai ikon.
+- Dance: lajur bulat bernuansa warna, penerima nada, key cap, nada berbayangan yang memudar masuk; skor tebal berwarna.
+- Wheel: roda kayu dicat dengan rim cream, pasak, hub matahari, pin penunjuk crust, palet UI, nama duel yang muat di segmennya.
+- Dialog dan ponsel cerita: kartu cream, name tag crust, panah lanjut yang memantul, ponsel mainan bertubuh cocoa.
+- Semua teks melayang di atas scene memakai potongan tebal dengan outline dan bayangan; judul besar (Result, Wheel, banner duel, credits) bergaya cat papan.
+
+### Ditambahkan
+
+- `scripts/ui/ui_skin.gd`, `icon_painter.gd`, `icon_texture.gd`, `logo_emblem.gd`, `advance_arrow.gd`; `GameButton.icon_id`; `HudChip.style_bar()` dan `HudChip.timer_style()`.
+- Dua test: gaya UI (lip, tenggelam, varian theme, font tanpa file, ikon) dan alias teks cerita (total 271 test).
+
+### Diperbaiki
+
+- Pesan chat cerita tidak lagi menampilkan kunci teks mentah (alias di `ui_text.tres` kini diikuti `TextDb`).
+- Kartu dialog cerita tidak lagi terdorong keluar layar oleh baris panjang.
+- Bayangan kartu yang terpotong menjadi pita persegi (How to Play, ponsel cerita).
+
+## Unreleased — Revisi Visual 6.1: diorama "Warm, Cozy & Cute"
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED** untuk revisi ini; build berikutnya adalah `1.0.0-rc.2` setelah QA dan human playtest ulang (GDD Section 194.4). Gameplay, balance, cerita, audio, dan save tidak berubah; UI 2D dirombak terpisah (lihat entri di atas).
+
+### Diubah
+
+- Seluruh visual mengikuti `VISUAL_STYLE_GUIDE.md`: diorama mini low-poly yang bulat dan empuk, warna solid hangat tanpa tekstur, cahaya keemasan.
+- Kamera: satu `DioramaCamera` ortografis (yaw 45°, pitch 35°, `KEEP_WIDTH`) di semua 11 scene, dibingkai lewat marker `CameraFocus` per set dan bar HUD.
+- Darto, Rini, Nisa, Bu Yati dibuat ulang sebagai karakter chibi 0,90 m (kepala ±42%, mata manik, pipi merona, poni di atas alis, topi di atas poni), satu mesh ≤ 2.000 segitiga.
+- Enam ikan dibuat ulang sebagai ikan mainan yang montok dengan mata besar, sirip empuk, dan aksesori khas yang lebih besar.
+- 29 prop dibangun ulang dengan rounded slab, kapsul, dan lathe pada skala chibi (meja warung 0,42 m).
+- Tujuh set menjadi diorama: kolam Danau Cempaka, warung dan rumah sebagai rumah boneka (dinding dekat 0,16 m, jendela bertirai kotak-kotak), ring, meja panco, panggung joget, dek Suwit.
+- Cahaya per panduan: latar `#F5E6CA`, ambient `#FFE3A8` × 0,55, Filmic white 1,2, matahari (-52°, -135°) tanpa bayangan, lampu interior `#FFAA44`; titik kunci 17:36 untuk ending dan 18:00 untuk credits.
+- Bayangan palsu (cakram lembut) di bawah karakter, ikan, perabot, dan pohon; tanpa shadow map, SSAO, glow, atau fog.
+- Preset grafis: LOW 75% / tanpa MSAA, MEDIUM 2× MSAA, HIGH 4× (Android 2×); tidak ada level yang menyalakan bayangan.
+- Napas idle 1,35 rad/s dan squash & stretch `TRANS_BACK` untuk reaksi (dimatikan oleh Reduced Motion).
+- Data staging cerita (`data/story/story_timelines.json`): framing memakai marker fokus set dan offset layar, bukan posisi kamera dan FOV.
+- Lembar referensi (21) dan potret Fish Book dirender ulang; store art diambil ulang.
+
+### Ditambahkan
+
+- `scripts/visual/`: `DioramaStyle` (palet, profil kamera, rig cahaya, material standar, waktu cahaya), `DioramaCamera`, `DioramaMotion`, `AmbientMotion`.
+- `tools/generators/soft_mesh.gd` (primitif halus panduan 4.1) dan `diorama_kit.gd`.
+- Material `mat_vertex_color_round`, `mat_metal_soft`, `mat_glow_warm`, `mat_glass`, `mat_fake_shadow`; mesh `mesh_shadow_character`, `mesh_shadow_furniture`.
+- Lembar referensi baru: Rini, Nisa, lima ikan lain, motor.
+- Empat test gaya visual di suite `assets` (total 269 test).
+
+### Diperbaiki
+
+- Lengan sirip ikan di panco kini direntangkan sepanjang sumbunya sendiri (sebelumnya `Basis.scaled()` menskalakan sumbu dunia).
+
+### Dihapus
+
+- `shaders/lake_water.gdshader`, `shaders/foliage_sway.gdshader`, materialnya, dan `tools/generators/mesh_builder.gd` (builder faceted lama).
+
 ## 1.0.0-rc.1 — Milestone 10: Balance, Full QA, Release Candidate
 
 Status rilis: **V1.0 RELEASE CANDIDATE — HUMAN PLAYTEST PENDING** (GDD Section 192.1).

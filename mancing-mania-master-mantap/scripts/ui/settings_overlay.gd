@@ -36,24 +36,26 @@ func build_content() -> void:
 	panel_width = 560.0
 	set_title(TextDb.t(&"settings.title"))
 
-	content.add_child(make_label(TextDb.t(&"settings.section.audio"), UiTokens.TYPE_HEADER))
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override(&"v_separation", UiTokens.SPACE_4)
+	content.add_child(_section(TextDb.t(&"settings.section.audio")))
+	# Each volume is a name and a value on one line and a full-width slider
+	# under them: easy to drag with a thumb on a narrow phone.
+	var grid := VBoxContainer.new()
+	grid.name = "Volumes"
+	grid.add_theme_constant_override(&"separation", 0)
 	content.add_child(grid)
 	for key: StringName in [&"master_volume", &"music_volume", &"sfx_volume", &"ambience_volume", &"ui_volume"]:
 		_add_volume_row(grid, key)
 
-	content.add_child(make_label(TextDb.t(&"settings.section.visual"), UiTokens.TYPE_HEADER))
+	content.add_child(_section(TextDb.t(&"settings.section.visual")))
 	_add_option_row(&"quality_preset")
-	if not PlatformService.is_android():
+	if not PlatformService.is_mobile():
 		_add_option_row(&"fullscreen_web")
 
-	content.add_child(make_label(TextDb.t(&"settings.section.accessibility"), UiTokens.TYPE_HEADER))
+	content.add_child(_section(TextDb.t(&"settings.section.accessibility")))
 	for key: StringName in ACCESSIBILITY_OPTIONS:
 		_add_option_row(key)
 
-	content.add_child(make_label(TextDb.t(&"settings.section.rhythm"), UiTokens.TYPE_HEADER))
+	content.add_child(_section(TextDb.t(&"settings.section.rhythm")))
 	_beat_pulse = make_button("")
 	_beat_pulse.name = "BeatPulseToggle"
 	_beat_pulse.pressed.connect(func() -> void:
@@ -64,25 +66,28 @@ func build_content() -> void:
 		_add_offset_row(key)
 	var calibrate := make_button(TextDb.t(&"settings.rhythm.calibrate"))
 	calibrate.name = "CalibrateButton"
+	calibrate.icon_id = IconPainter.MUSIC
 	calibrate.pressed.connect(func() -> void: _calibration.open())
 	content.add_child(calibrate)
 
 	# Keyboard remapping is for Web and desktop (GDD 189.15).
-	if not PlatformService.is_android():
-		content.add_child(make_label(TextDb.t(&"settings.section.controls"), UiTokens.TYPE_HEADER))
+	if not PlatformService.is_mobile():
+		content.add_child(_section(TextDb.t(&"settings.section.controls")))
 		var controls := make_button(TextDb.t(&"settings.controls.open"))
 		controls.name = "ControlsButton"
+		controls.icon_id = IconPainter.KEYS
 		controls.pressed.connect(func() -> void: _controls.open())
 		content.add_child(controls)
 
 	# Privacy summary and policy, offline (GDD 187.7).
-	content.add_child(make_label(TextDb.t(&"settings.section.privacy"), UiTokens.TYPE_HEADER))
+	content.add_child(_section(TextDb.t(&"settings.section.privacy")))
 	var privacy := make_button(TextDb.t(&"settings.privacy.open"))
 	privacy.name = "PrivacyButton"
+	privacy.icon_id = IconPainter.SHIELD
 	privacy.pressed.connect(func() -> void: _privacy.open())
 	content.add_child(privacy)
 
-	content.add_child(make_label(TextDb.t(&"settings.section.save"), UiTokens.TYPE_HEADER))
+	content.add_child(_section(TextDb.t(&"settings.section.save")))
 	# Browser storage can be cleared by the player (GDD 115).
 	var web_note := make_label(TextDb.t(&"settings.web_storage_note"), UiTokens.TYPE_SMALL)
 	web_note.name = "WebStorageNote"
@@ -91,11 +96,13 @@ func build_content() -> void:
 	_reset_note = make_label(TextDb.t(&"settings.no_save"), UiTokens.TYPE_SMALL)
 	content.add_child(_reset_note)
 	_reset_button = make_button(TextDb.t(&"settings.reset_save"), UiTokens.TYPE_DANGER_BUTTON)
+	_reset_button.icon_id = IconPainter.WARNING
 	_reset_button.pressed.connect(_on_reset_pressed)
 	content.add_child(_reset_button)
 
 	_close_button = make_button(TextDb.t(&"common.close"), UiTokens.TYPE_CTA_BUTTON)
 	_close_button.click_sfx = &"ui_back"
+	_close_button.icon_id = IconPainter.CHECK
 	_close_button.pressed.connect(hide_overlay)
 	footer.add_child(_close_button)
 
@@ -114,6 +121,14 @@ func build_content() -> void:
 	add_child(_privacy)
 
 
+## A section header: a small paper tab, as wide as its words.
+func _section(text: String) -> Label:
+	var label := make_label(text, UiTokens.TYPE_SECTION)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	return label
+
+
 ## A setting with a few allowed values: its name and a button that moves to
 ## the next value.
 func _add_option_row(key: StringName) -> void:
@@ -125,7 +140,7 @@ func _add_option_row(key: StringName) -> void:
 	row.add_child(name_label)
 	var button := make_button("")
 	button.name = "Option_%s" % key
-	button.custom_minimum_size.x = 190.0
+	button.custom_minimum_size.x = 150.0
 	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	button.pressed.connect(func() -> void:
 		GameState.set_setting(key, next_value(key, GameState.get_setting(key)))
@@ -219,11 +234,14 @@ func on_cancel() -> void:
 	hide_overlay()
 
 
-func _add_volume_row(grid: GridContainer, key: StringName) -> void:
+func _add_volume_row(grid: VBoxContainer, key: StringName) -> void:
+	var line := HBoxContainer.new()
+	line.name = "Volume_%s" % key
+	grid.add_child(line)
 	var name_label := make_label(TextDb.t(StringName("settings.audio.%s" % key)))
 	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	name_label.custom_minimum_size.x = 170.0
-	grid.add_child(name_label)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_child(name_label)
 
 	var slider := HSlider.new()
 	slider.min_value = 0.0
@@ -231,18 +249,18 @@ func _add_volume_row(grid: GridContainer, key: StringName) -> void:
 	slider.step = VOLUME_STEP
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	slider.custom_minimum_size = Vector2(180.0, UiTokens.TOUCH_TARGET_MIN)
+	slider.custom_minimum_size = Vector2(0.0, UiTokens.TOUCH_TARGET_MIN)
 	slider.value_changed.connect(_on_volume_changed.bind(key))
 	slider.drag_ended.connect(_on_volume_drag_ended)
-	grid.add_child(slider)
-	_sliders[key] = slider
 
 	var value_label := make_label("")
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	value_label.custom_minimum_size.x = 56.0
-	grid.add_child(value_label)
+	line.add_child(value_label)
 	_value_labels[key] = value_label
+	grid.add_child(slider)
+	_sliders[key] = slider
 
 
 func _refresh() -> void:

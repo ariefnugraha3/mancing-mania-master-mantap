@@ -35,17 +35,38 @@ func before_each() -> void:
 
 # --- PlatformService --------------------------------------------------------
 
-func test_viewport_classes_follow_aspect_ratio() -> bool:
-	check_eq(PlatformService.classify_aspect(1280.0, 720.0), PlatformService.LANDSCAPE_WIDE, "1280x720")
-	check_eq(PlatformService.classify_aspect(1920.0, 1080.0), PlatformService.LANDSCAPE_WIDE, "1920x1080")
-	check_eq(PlatformService.classify_aspect(1450.0, 1000.0), PlatformService.LANDSCAPE_WIDE, "aspect 1.45 is wide")
-	check_eq(PlatformService.classify_aspect(1024.0, 768.0), PlatformService.LANDSCAPE_COMPACT, "1024x768")
-	check_eq(PlatformService.classify_aspect(800.0, 800.0), PlatformService.LANDSCAPE_COMPACT, "square")
-	check_eq(PlatformService.classify_aspect(720.0, 1280.0), PlatformService.PORTRAIT, "720x1280")
-	check_eq(PlatformService.classify_aspect(1080.0, 2400.0), PlatformService.PORTRAIT, "1080x2400")
-	check_eq(PlatformService.reference_size_for_class(PlatformService.PORTRAIT), Vector2i(720, 1280), "portrait reference")
-	check_eq(PlatformService.reference_size_for_class(PlatformService.LANDSCAPE_WIDE), Vector2i(1280, 720), "landscape reference")
-	check_eq(PlatformService.reference_size_for_class(PlatformService.LANDSCAPE_COMPACT), Vector2i(1280, 720), "compact reference")
+## The game is portrait only: phones and tablets, each on a canvas measured
+## in device-independent points (GDD 167.7, 167.8).
+func test_form_factors_follow_aspect_ratio() -> bool:
+	check_eq(PlatformService.classify_aspect(1080.0, 2400.0), PlatformService.PHONE, "1080x2400 phone")
+	check_eq(PlatformService.classify_aspect(1170.0, 2532.0), PlatformService.PHONE, "iPhone 1170x2532")
+	check_eq(PlatformService.classify_aspect(720.0, 1280.0), PlatformService.PHONE, "9:16 phone")
+	check_eq(PlatformService.classify_aspect(1600.0, 2560.0), PlatformService.TABLET, "10-inch Android tablet")
+	check_eq(PlatformService.classify_aspect(1640.0, 2360.0), PlatformService.TABLET, "iPad Air")
+	check_eq(PlatformService.classify_aspect(1536.0, 2048.0), PlatformService.TABLET, "iPad 3:4")
+	check_eq(PlatformService.canvas_size_for(1080.0, 2400.0), PlatformService.PHONE_CANVAS, "phone canvas")
+	check_eq(PlatformService.canvas_size_for(1536.0, 2048.0), PlatformService.TABLET_CANVAS, "tablet canvas")
+	check_eq(PlatformService.aspect_mode_for(1080.0, 2400.0), Window.CONTENT_SCALE_ASPECT_EXPAND, "a phone fills its screen")
+	check_eq(PlatformService.aspect_mode_for(1536.0, 2048.0), Window.CONTENT_SCALE_ASPECT_EXPAND, "a tablet fills its screen")
+	# A landscape desktop window or browser shows the widest portrait canvas.
+	var wide := PlatformService.canvas_size_for(1920.0, 1080.0)
+	check(float(wide.x) / float(wide.y) <= PlatformService.MAX_ASPECT + 0.001, "a landscape window keeps a portrait canvas")
+	check_eq(PlatformService.aspect_mode_for(1920.0, 1080.0), Window.CONTENT_SCALE_ASPECT_KEEP, "with bars at the sides")
+	# On a phone the canvas is about as many points wide as the phone is in
+	# dp/pt, so the 48-point touch target is a real 48 dp / 44 pt one.
+	check(PlatformService.PHONE_CANVAS.x >= 360 and PlatformService.PHONE_CANVAS.x <= 430, "phone canvas width is in phone points")
+	return true
+
+
+## A simulated notch and home indicator shrink the safe area (QA tool).
+func test_simulated_insets_shrink_the_safe_area() -> bool:
+	var before := PlatformService.get_safe_rect()
+	PlatformService.set_simulated_insets(Vector4(0.0, 47.0, 0.0, 34.0))
+	var after := PlatformService.get_safe_rect()
+	check_eq(after.position.y, before.position.y + 47, "the notch pushes the top edge down")
+	check_eq(after.end.y, before.end.y - 34, "the home indicator lifts the bottom edge")
+	PlatformService.set_simulated_insets(Vector4.ZERO)
+	check_eq(PlatformService.get_safe_rect(), before, "clearing the insets restores the safe area")
 	return true
 
 

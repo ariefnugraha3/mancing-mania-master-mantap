@@ -8,7 +8,7 @@ extends CanvasLayer
 
 signal finished()
 
-const BOX_WIDTH := 760.0
+const BOX_WIDTH := 640.0
 ## Text appears this many characters per second at the "normal" setting.
 const CHARS_PER_SEC: Dictionary = {"relaxed": 30.0, "normal": 55.0, "fast": 110.0, "instant": 0.0}
 
@@ -35,24 +35,34 @@ func _ready() -> void:
 	_panel = PanelContainer.new()
 	_panel.name = "Box"
 	root.add_child(_panel)
+	# A speech card: the speaker's name on a crust tag, the line in larger
+	# type, and a bouncing arrow with the hint at the bottom right.
+	_panel.add_theme_stylebox_override(&"panel", UiSkin.card(UiTokens.CREAM_50, 22, UiTokens.SPACE_16, 4))
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override(&"separation", UiTokens.SPACE_4)
+	column.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
 	_panel.add_child(column)
 	_speaker = Label.new()
 	_speaker.name = "Speaker"
-	_speaker.theme_type_variation = UiTokens.TYPE_HEADER
+	_speaker.theme_type_variation = UiTokens.TYPE_NAME_TAG
+	_speaker.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(_speaker)
 	_text = Label.new()
 	_text.name = "Text"
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size.y = 56.0
+	_text.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY + 2))
 	column.add_child(_text)
+	var foot := HBoxContainer.new()
+	foot.alignment = BoxContainer.ALIGNMENT_END
+	foot.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	column.add_child(foot)
 	_hint = Label.new()
 	_hint.name = "Advance"
 	_hint.theme_type_variation = UiTokens.TYPE_SMALL
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_hint.text = TextDb.t(&"dialogue.advance")
-	column.add_child(_hint)
+	foot.add_child(_hint)
+	foot.add_child(AdvanceArrow.new())
 	root.resized.connect(_layout)
 	_layout.call_deferred()
 	visible = false
@@ -149,5 +159,5 @@ func _layout() -> void:
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_panel.reset_size()
 	var height := maxf(_panel.get_combined_minimum_size().y, 150.0)
-	_panel.position = Vector2((root.size.x - width) * 0.5, root.size.y - height)
+	_panel.position = Vector2((root.size.x - width) * 0.5, root.size.y - height - UiTokens.SPACE_8)
 	_panel.size = Vector2(width, height)

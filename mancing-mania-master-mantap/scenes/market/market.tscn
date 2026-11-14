@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/market/market_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/market/market_controller.gd" id="2_controller"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://scripts/ui/market/records_panel.gd" id="14_records"]
 [ext_resource type="Script" path="res://scripts/ui/receipt_overlay.gd" id="15_receipt"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="16_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Market" type="Node"]
 script = ExtResource("1_scene")
@@ -37,9 +38,8 @@ script = ExtResource("3_world")
 [node name="Rig" parent="World/DartoMarketPose" instance=ExtResource("6_darto")]
 
 [node name="MarketCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 50.0
-far = 300.0
 
 [node name="MarketCanvas" type="CanvasLayer" parent="."]
 script = ExtResource("7_hud")

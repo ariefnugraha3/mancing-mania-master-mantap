@@ -269,6 +269,7 @@ func _mark_dirty() -> void:
 ##   --mm-event=<story event id>                     start a game if needed and play that story event
 ##   --mm-seen=<story event id>                      mark a story event as seen
 ##   --mm-credits                                    roll the credits (as after the ending)
+##   --mm-insets=<left>,<top>,<right>,<bottom>       simulate a notch and home indicator (canvas points)
 ##   --mm-shot=<absolute png path>                   save a screenshot
 ## The run quits after the last step when it took at least one screenshot.
 func _run_command_line_tools() -> void:
@@ -304,6 +305,12 @@ func _run_command_line_tools() -> void:
 				InputManager.release_action(StringName(value))
 			"wait":
 				await get_tree().create_timer(maxf(value.to_float(), 0.05)).timeout
+			"insets":
+				var sides := value.split_floats(",")
+				if sides.size() == 4:
+					PlatformService.set_simulated_insets(Vector4(sides[0], sides[1], sides[2], sides[3]))
+				else:
+					GameLog.error(&"DEBUG", "--mm-insets needs four numbers", {"value": value})
 			"force":
 				set_forced_fish(StringName(value))
 			"fast-wait":

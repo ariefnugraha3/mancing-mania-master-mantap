@@ -6,9 +6,10 @@ extends SceneTree
 ## after generate_all_assets.gd:
 ##   godot --path . --script res://tools/generators/reference_sheet_generator.gd
 ##
-## Model sheets show side, front, back, three-quarter, silhouette and a hero
-## pose on neutral cream, with the palette and a scale bar underneath.
-## Set sheets are a single shot through the set's own lighting.
+## Model sheets show side, front, back, the game-camera view, silhouette and
+## a three-quarter hero pose on the vanilla background, with the palette and
+## a scale bar underneath. Set sheets are one shot through the set's own light
+## rig and the game's orthographic diorama camera.
 ##
 ## The same run renders the Fish Book portraits (GDD 174.9). Unlike the
 ## sheets those are runtime textures: one fish each on a transparent
@@ -17,7 +18,7 @@ extends SceneTree
 const Manifest := preload("res://tools/generators/generator_manifest.gd")
 
 const GENERATOR_ID := "reference_sheet_generator"
-const GENERATOR_VERSION := 1
+const GENERATOR_VERSION := 2
 const OUTPUT_DIR := "res://generated/references/"
 const CELL := 512
 const STRIP_HEIGHT := 96
@@ -28,115 +29,205 @@ const FISH_IDS: Array[String] = [
 	"catfish_bruiser", "tilapia_gym_rat", "gourami_shady",
 	"carp_golden", "snakehead_sergeant", "arowana_don",
 ]
-const BACKGROUND := Color("fff7e6")
-const INK := Color("352f29")
+const BACKGROUND := Color("f5e6ca")
+const INK := Color("3b2a20")
 
 ## kind "model": `size` is the height of the framed area in metres and
-## `centre` is the point the cameras look at.
+## `centre` the point the cameras look at. Every model sheet includes the
+## view from the game's own diorama camera (pitch 35, orthographic).
+## kind "set": the set through the game camera (orthographic, yaw 45,
+## pitch 35, KEEP_WIDTH), framed on a focus marker of the set with its frame
+## width (VISUAL_STYLE_GUIDE 2), the cast standing on the set's markers.
 const SUBJECTS: Array = [
 	{
-		"id": "ref_fish_catfish", "kind": "model",
-		"scene": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
-		"size": 0.95, "centre": Vector3(0.0, 0.0, 0.0),
-		"hero_clip": "fish_challenge", "hero_time": 1.6, "hero_centre": Vector3(0.0, 0.42, 0.0),
-		"palette": ["3f463a", "b9b39a", "2c3129", "a4483f", "e9dcc0"],
-	},
-	{
-		"id": "ref_chr_darto", "kind": "model",
+		"id": "ref_chr_darto",
+		"kind": "model",
 		"scene": "res://generated/scenes/characters/chr_darto.tscn",
-		"size": 2.0, "centre": Vector3(0.0, 0.88, 0.0), "front_axis": Vector3(0.0, 0.0, -1.0),
-		"hero_clip": "idle_fishing", "hero_time": 0.0, "hero_centre": Vector3(0.0, 0.88, 0.0),
-		"palette": ["a78d68", "4f554e", "b98a62", "6a6655", "2a2622"],
+		"size": 1.05,
+		"centre": Vector3(0.0, 0.46, 0.0),
+		"front_axis": Vector3(0.0, 0.0, -1.0),
+		"hero_clip": "idle_fishing",
+		"hero_time": 0.0,
+		"palette": ["b7a68c", "67706b", "dca982", "7b7b66", "3b2a20"],
 	},
 	{
-		"id": "ref_set_lake", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_lake_set.tscn",
-		"camera_position": Vector3(4.6, 2.5, 9.2), "camera_target": Vector3(-0.6, 0.7, -3.5), "fov": 50.0,
+		"id": "ref_chr_rini",
+		"kind": "model",
+		"scene": "res://generated/scenes/characters/chr_rini.tscn",
+		"size": 1.05,
+		"centre": Vector3(0.0, 0.46, 0.0),
+		"front_axis": Vector3(0.0, 0.0, -1.0),
+		"hero_clip": "small_smile",
+		"hero_time": 0.5,
+		"palette": ["7f9bc7", "a86a55", "e2b18a", "3b2a20", "c96a5c"],
 	},
 	{
-		"id": "ref_chr_bu_yati", "kind": "model",
+		"id": "ref_chr_nisa",
+		"kind": "model",
+		"scene": "res://generated/scenes/characters/chr_nisa.tscn",
+		"size": 1.05,
+		"centre": Vector3(0.0, 0.46, 0.0),
+		"front_axis": Vector3(0.0, 0.0, -1.0),
+		"hero_clip": "laugh_small",
+		"hero_time": 0.2,
+		"palette": ["8fc0ea", "eee6d8", "e8bd95", "2f2119", "c2675a"],
+	},
+	{
+		"id": "ref_chr_bu_yati",
+		"kind": "model",
 		"scene": "res://generated/scenes/characters/chr_bu_yati.tscn",
-		"size": 1.9, "centre": Vector3(0.0, 0.8, 0.0), "front_axis": Vector3(0.0, 0.0, -1.0),
-		"hero_clip": "weigh_fish", "hero_time": 0.9, "hero_centre": Vector3(0.0, 0.8, 0.0),
-		"palette": ["7c4a44", "6b6a4b", "d6c4a0", "b08260", "5a554f"],
+		"size": 1.05,
+		"centre": Vector3(0.0, 0.46, 0.0),
+		"front_axis": Vector3(0.0, 0.0, -1.0),
+		"hero_clip": "weigh_fish",
+		"hero_time": 0.9,
+		"palette": ["93504a", "80845f", "f7ead0", "cf9f78", "a7a5a5"],
 	},
 	{
-		"id": "ref_set_market", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_market_set.tscn",
-		"camera_marker": "Markers/CameraLandscape", "fov": 50.0,
+		"id": "ref_fish_catfish",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
+		"size": 0.95,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "fish_challenge",
+		"hero_time": 1.6,
+		"hero_centre": Vector3(0.0, 0.38, 0.0),
+		"palette": ["6b7360", "e6dcbf", "545b4a", "c8574a", "fffbf5"],
+	},
+	{
+		"id": "ref_fish_tilapia",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_tilapia_gym_rat.tscn",
+		"size": 0.8,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "box_idle",
+		"hero_time": 0.0,
+		"hero_centre": Vector3(0.0, 0.3, 0.0),
+		"palette": ["8a9da5", "efe8da", "6f838b", "d2544a", "fffbf5"],
+	},
+	{
+		"id": "ref_fish_gourami",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_gourami_shady.tscn",
+		"size": 0.85,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "suwit_tell_fake",
+		"hero_time": 0.3,
+		"hero_centre": Vector3(0.0, 0.3, 0.0),
+		"palette": ["a5977b", "f0e3c8", "8b6f69", "2a2220"],
+	},
+	{
+		"id": "ref_fish_carp",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_carp_golden.tscn",
+		"size": 0.85,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "dance_great",
+		"hero_time": 0.15,
+		"hero_centre": Vector3(0.0, 0.32, 0.0),
+		"palette": ["efae45", "fbe8b4", "e07f3c", "f5b301"],
+	},
+	{
+		"id": "ref_fish_snakehead",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_snakehead_sergeant.tscn",
+		"size": 0.95,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "box_idle",
+		"hero_time": 0.0,
+		"hero_centre": Vector3(0.0, 0.38, 0.0),
+		"palette": ["66704f", "dcd2b0", "4f5741", "a39e74", "d9b45a"],
+	},
+	{
+		"id": "ref_fish_arowana",
+		"kind": "model",
+		"scene": "res://generated/scenes/fish/fish_arowana_don.tscn",
+		"size": 1.15,
+		"centre": Vector3(0.0, 0.0, 0.0),
+		"hero_clip": "box_idle",
+		"hero_time": 0.0,
+		"hero_centre": Vector3(0.0, 0.45, 0.0),
+		"palette": ["c66a4b", "f2c584", "7d332e", "d4af5a", "f2d3b0"],
+	},
+	{
+		"id": "ref_motor_darto",
+		"kind": "model",
+		"scene": "res://generated/scenes/props/prop_motorcycle_darto.tscn",
+		"size": 0.9,
+		"centre": Vector3(0.0, 0.27, 0.0),
+		"front_axis": Vector3(1.0, 0.0, 0.0),
+		"palette": ["7f8f6c", "4a433d", "c9c6bd", "f6e7c8", "cf6a58"],
+	},
+	{
+		"id": "ref_set_lake", "kind": "set", "scene": "res://generated/scenes/environment/env_lake_set.tscn",
+		"focus": "Markers/StoryWide",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "idle_fishing"},
+		],
+	},
+	{
+		"id": "ref_set_home", "kind": "set", "scene": "res://generated/scenes/environment/env_home_set.tscn",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "phone_look"},
+			{"scene": "res://generated/scenes/characters/chr_rini.tscn", "marker": "Markers/RiniSpot", "clip": "put_on_shoes", "time": 1.0},
+		],
+	},
+	{
+		"id": "ref_set_market", "kind": "set", "scene": "res://generated/scenes/environment/env_market_set.tscn",
+		"focus": "Markers/StoryTwoShot", "width": 6.2,
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_bu_yati.tscn", "marker": "Markers/BuYatiSpot", "clip": "market_idle"},
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
 		],
 	},
 	{
-		"id": "ref_set_boxing", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_boxing_set.tscn",
-		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"id": "ref_set_market_portrait", "kind": "set", "scene": "res://generated/scenes/environment/env_market_set.tscn",
+		"size": Vector2i(720, 1280),
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_bu_yati.tscn", "marker": "Markers/BuYatiSpot", "clip": "market_idle"},
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
+		],
+	},
+	{
+		"id": "ref_set_boxing", "kind": "set", "scene": "res://generated/scenes/environment/env_boxing_set.tscn",
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "box_idle", "show": "AccessoryMeshes/BoxingGloves"},
-			{"scene": "res://generated/scenes/fish/fish_catfish_bruiser.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_a", "time": 0.8},
+			{"scene": "res://generated/scenes/fish/fish_catfish_bruiser.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_a", "time": 0.8, "show": "AccessoryMeshes/Gloves"},
 		],
 	},
 	{
-		"id": "ref_set_boxing_portrait", "kind": "set", "size": Vector2i(720, 1280),
-		"scene": "res://generated/scenes/environment/env_boxing_set.tscn",
-		"camera_marker": "Markers/CameraPortrait", "fov": 55.0,
+		"id": "ref_set_boxing_portrait", "kind": "set", "scene": "res://generated/scenes/environment/env_boxing_set.tscn",
+		"size": Vector2i(720, 1280),
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "box_dodge_left", "time": 0.12, "show": "AccessoryMeshes/BoxingGloves"},
-			{"scene": "res://generated/scenes/fish/fish_arowana_don.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_c", "time": 1.0},
+			{"scene": "res://generated/scenes/fish/fish_arowana_don.tscn", "marker": "Markers/FishSpot", "clip": "box_attack_c", "time": 1.0, "show": "AccessoryMeshes/Gloves"},
 		],
 	},
 	{
-		"id": "ref_set_arm", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_arm_set.tscn",
-		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"id": "ref_set_arm", "kind": "set", "scene": "res://generated/scenes/environment/env_arm_set.tscn",
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "arm_push_hard"},
 			{"scene": "res://generated/scenes/fish/fish_carp_golden.tscn", "marker": "Markers/FishSpot", "clip": "arm_burst"},
 		],
 	},
 	{
-		"id": "ref_set_dance", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_dance_set.tscn",
-		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"id": "ref_set_dance", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.45, 0.0), "width": 5.6,
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "dance_hit_lane_2", "time": 0.12},
 			{"scene": "res://generated/scenes/fish/fish_gourami_shady.tscn", "marker": "Markers/FishSpot", "clip": "dance_great", "time": 0.15},
 		],
 	},
 	{
-		"id": "ref_set_suwit", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_suwit_set.tscn",
-		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"id": "ref_set_suwit", "kind": "set", "scene": "res://generated/scenes/environment/env_suwit_set.tscn",
 		"actors": [
 			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "suwit_ready"},
 			{"scene": "res://generated/scenes/fish/fish_gourami_shady.tscn", "marker": "Markers/FishSpot", "clip": "suwit_tell_fake", "time": 0.3},
 		],
 	},
 	{
-		"id": "ref_fish_lineup", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_dance_set.tscn",
-		"camera_position": Vector3(0.0, 1.0, 3.2), "camera_target": Vector3(0.0, 0.85, 0.0), "fov": 42.0,
-		"lineup": true,
-	},
-	{
-		"id": "ref_set_home", "kind": "set",
-		"scene": "res://generated/scenes/environment/env_home_set.tscn",
-		"camera_marker": "Markers/CameraWide", "fov": 48.0,
-		"actors": [
-			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
-			{"scene": "res://generated/scenes/characters/chr_rini.tscn", "marker": "Markers/RiniSpot", "clip": "put_on_shoes", "time": 1.0},
-		],
-	},
-	{
-		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
-		"scene": "res://generated/scenes/environment/env_market_set.tscn",
-		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,
-		"actors": [
-			{"scene": "res://generated/scenes/characters/chr_bu_yati.tscn", "marker": "Markers/BuYatiSpot", "clip": "market_idle"},
-			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
-		],
+		"id": "ref_fish_lineup", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
 	},
 ]
 
@@ -213,9 +304,12 @@ func _render_model(subject: Dictionary) -> Image:
 	var sheet := Image.create(CELL * 3, CELL * 2 + STRIP_HEIGHT, false, Image.FORMAT_RGBA8)
 	sheet.fill(BACKGROUND)
 
+	# Side, front, back, and the game's own view of a model facing the
+	# camera: from 35 degrees above, orthographic (VISUAL_STYLE_GUIDE 2).
+	var pitch := deg_to_rad(DioramaStyle.CAMERA_PITCH_DEG)
 	var views: Array = [
 		[-side, true], [front, true], [-front, true],
-		[(front * 0.8 - side * 0.7 + Vector3(0.0, 0.45, 0.0)).normalized(), false],
+		[(front * cos(pitch) + Vector3(0.0, sin(pitch), 0.0)).normalized(), true],
 	]
 	for index: int in views.size():
 		_aim(centre, views[index][0], size, views[index][1])
@@ -234,13 +328,15 @@ func _render_model(subject: Dictionary) -> Image:
 	for mesh: MeshInstance3D in originals:
 		mesh.material_override = originals[mesh]
 
-	# Hero pose from one of the model's own clips.
+	# Hero pose from one of the model's own clips, through the game camera
+	# turned three-quarters (45 degrees off the front, 35 above).
 	var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
-	if player != null and player.has_animation(subject["hero_clip"]):
+	if player != null and subject.has("hero_clip") and player.has_animation(subject["hero_clip"]):
 		player.play(subject["hero_clip"])
 		player.seek(subject["hero_time"], true)
 		player.pause()
-	_aim(subject["hero_centre"], (front * 0.9 - side * 0.5 + Vector3(0.0, 0.3, 0.0)).normalized(), size, false)
+	var three_quarter := (front * 0.7071 - side * 0.7071) * cos(pitch) + Vector3(0.0, sin(pitch), 0.0)
+	_aim(subject.get("hero_centre", centre), three_quarter.normalized(), size, true)
 	sheet.blit_rect(await _capture(), Rect2i(0, 0, CELL, CELL), Vector2i(CELL * 2, CELL))
 
 	_draw_strip(sheet, subject, size)
@@ -277,8 +373,9 @@ func _render_set(subject: Dictionary) -> Image:
 		for index: int in ids.size():
 			var fish: Node3D = load(FISH_SCENE % ids[index]).instantiate()
 			_stage.add_child(fish)
-			fish.position = Vector3(-1.75 + 0.7 * float(index), 0.34, 0.0)
-			fish.rotation.y = PI
+			fish.position = DioramaStyle.screen_right() * (-1.15 + 0.46 * float(index)) + Vector3(0.0, 0.12, 0.0)
+			var look := (-DioramaStyle.screen_in() - DioramaStyle.screen_right() * 0.4).normalized()
+			fish.rotation.y = atan2(-look.z, look.x)
 			var gloves := fish.get_node_or_null("AccessoryMeshes/Gloves") as Node3D
 			if gloves != null:
 				gloves.visible = false
@@ -302,15 +399,25 @@ func _render_set(subject: Dictionary) -> Image:
 			player.play(actor["clip"])
 			player.seek(actor.get("time", 0.0), true)
 			player.pause()
-	_camera.projection = Camera3D.PROJECTION_PERSPECTIVE
-	_camera.fov = subject["fov"]
-	_camera.near = 0.1
-	_camera.far = 400.0
-	var camera_spot := set_root.get_node_or_null(subject.get("camera_marker", "")) as Node3D
-	if camera_spot != null:
-		_camera.global_transform = camera_spot.global_transform
-	else:
-		_camera.look_at_from_position(subject["camera_position"], subject["camera_target"], Vector3.UP)
+	# The game camera: orthographic, yaw 45, pitch 35, KEEP_WIDTH.
+	var frame: Vector2i = subject.get("size", Vector2i(1280, 720))
+	var portrait := frame.y > frame.x
+	var focus := Vector3.ZERO
+	var width := DioramaStyle.WIDTH_DEFAULT
+	var marker := set_root.get_node_or_null(subject.get("focus", "Markers/CameraFocus")) as Node3D
+	if marker != null:
+		focus = marker.global_position
+		width = float(marker.get_meta(&"width_portrait" if portrait else &"width_landscape", width))
+		if portrait and marker.has_meta(&"focus_portrait"):
+			focus = marker.get_meta(&"focus_portrait")
+	focus = subject.get("focus_point", focus)
+	width = float(subject.get("width", width))
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	_camera.keep_aspect = Camera3D.KEEP_WIDTH
+	_camera.size = width
+	_camera.near = DioramaStyle.CAMERA_NEAR
+	_camera.far = DioramaStyle.CAMERA_FAR
+	_camera.look_at_from_position(focus + DioramaStyle.camera_offset(), focus, Vector3.UP)
 	var image: Image = await _capture()
 	_close_stage()
 	return image
@@ -372,15 +479,18 @@ func _open_stage(size: Vector2i, studio: bool, transparent: bool = false) -> voi
 	environment.background_mode = Environment.BG_CLEAR_COLOR if transparent else Environment.BG_COLOR
 	environment.background_color = BACKGROUND
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color(1.0, 0.97, 0.92)
-	environment.ambient_light_energy = 0.75
+	environment.ambient_light_color = DioramaStyle.SUN_GOLD
+	environment.ambient_light_energy = DioramaStyle.AMBIENT_ENERGY
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_white = DioramaStyle.TONEMAP_WHITE
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
 	_stage.add_child(world_environment)
 
+	# The guide's warm sun, over the viewer's shoulder for a studio shot.
 	var key := DirectionalLight3D.new()
-	key.light_color = Color(1.0, 0.95, 0.86)
-	key.light_energy = 1.15
+	key.light_color = DioramaStyle.SUN_GOLD
+	key.light_energy = DioramaStyle.SUN_ENERGY
 	_stage.add_child(key)
 	key.look_at_from_position(Vector3(2.0, 3.0, 2.5), Vector3.ZERO, Vector3.UP)
 

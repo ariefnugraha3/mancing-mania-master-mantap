@@ -63,9 +63,17 @@ func test_export_presets_follow_the_release_contract() -> bool:
 	for section: String in presets.get_sections():
 		if section.begins_with("preset.") and not section.ends_with(".options"):
 			by_name[presets.get_value(section, "name")] = section
-	check(by_name.has("Web") and by_name.has("Android"), "Web and Android presets")
+	check(by_name.has("Web") and by_name.has("Android") and by_name.has("iOS"), "Web, Android and iOS presets")
 	var web: String = by_name.get("Web", "")
 	var android: String = by_name.get("Android", "")
+	var ios: String = by_name.get("iOS", "")
+	# The game is played upright on phones and tablets (GDD 122, 167.8).
+	check_eq(int(ProjectSettings.get_setting("display/window/handheld/orientation")), int(DisplayServer.SCREEN_PORTRAIT), "portrait orientation")
+	check_eq(presets.get_value(ios + ".options", "application/bundle_identifier"), "com.mancingmania.gelutedition", "iOS bundle identifier")
+	check_eq(int(presets.get_value(ios + ".options", "application/targeted_device_family")), 2, "iOS targets iPhone and iPad")
+	check_eq(presets.get_value(ios, "export_path"), "build/ios/MancingManiaGelut.ipa", "iOS exports an IPA")
+	check(presets.get_value(android + ".options", "screen/support_xlarge"), "Android runs on tablets")
+	check_eq(int(presets.get_value(web + ".options", "progressive_web_app/orientation")), 2, "the Web app installs in portrait")
 	check_eq(presets.get_value(web, "export_path"), "build/web/index.html", "Web exports to build/web/index.html")
 	check_eq(presets.get_value(web + ".options", "variant/thread_support"), false, "Web does not depend on threads (GDD 135)")
 	check_eq(presets.get_value(android, "export_path"), "build/android/MancingManiaGelut.aab", "Android exports the App Bundle")
@@ -78,7 +86,7 @@ func test_export_presets_follow_the_release_contract() -> bool:
 		if key.begins_with("permissions/") and key != "permissions/custom_permissions":
 			check(not bool(presets.get_value(android + ".options", key)), "no %s" % key)
 	check((presets.get_value(android + ".options", "permissions/custom_permissions") as PackedStringArray).is_empty(), "no custom permission")
-	for section: String in [web, android]:
+	for section: String in [web, android, ios]:
 		check(str(presets.get_value(section, "include_filter")).contains("data/story/*.json"), "%s packs the story timelines" % presets.get_value(section, "name"))
 		var excluded := str(presets.get_value(section, "exclude_filter"))
 		for folder: String in ["tests/*", "tools/*", "docs/*", "generated/references/*"]:
@@ -96,13 +104,16 @@ func test_version_is_semantic() -> bool:
 	for section: String in presets.get_sections():
 		if section.ends_with(".options") and presets.has_section_key(section, "version/name"):
 			check_eq(presets.get_value(section, "version/name"), version, "Android versionName matches the project")
+		if section.ends_with(".options") and presets.has_section_key(section, "application/short_version"):
+			# The App Store takes only MAJOR.MINOR.PATCH.
+			check_eq(presets.get_value(section, "application/short_version"), version.get_slice("-", 0), "iOS short version matches the project")
 	return true
 
 
 # GDD 191.6, 191.7: secrets and build output stay out of the repository.
 func test_repository_ignores_build_output_and_secrets() -> bool:
 	var ignore := FileAccess.get_file_as_string("res://.gitignore")
-	for entry: String in [".godot/", "build/web/", "build/android/", "build/itch/", "*.keystore", "*.jks", ".env"]:
+	for entry: String in [".godot/", "build/web/", "build/android/", "build/ios/", "build/itch/", "*.keystore", "*.jks", "*.p12", "*.mobileprovision", ".env"]:
 		check(ignore.contains(entry), ".gitignore covers %s" % entry)
 	var keystores := PackedStringArray()
 	for path: String in _files(["res://"], ["keystore", "jks"]):

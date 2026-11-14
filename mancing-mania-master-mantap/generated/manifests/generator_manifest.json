@@ -2,523 +2,607 @@
   "assets": {
     "chr_bu_yati": {
       "generator": "character_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/characters/chr_bu_yati.tscn",
-      "seed": 0.0,
-      "sha256": "91daa6551585b196433a9e065e84187f227e190710f0fab50984f8f3cb391ed4"
+      "seed": 0,
+      "sha256": "9f99b3602b2f5c1d0364e9f0a63fc24d8caac797add5173afd2473940762afa2"
     },
     "chr_darto": {
       "generator": "character_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
-      "seed": 0.0,
-      "sha256": "9c73cf0c5d8d6bfaced298dc233a5a8f52b9bf8c08cf88ea4cc104a33e647c34"
+      "seed": 0,
+      "sha256": "0e1c107a582df6c42aeade61fa6047d4ca1c5389b689a51b753c97d5f8bfbfe0"
     },
     "chr_nisa": {
       "generator": "character_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/characters/chr_nisa.tscn",
-      "seed": 0.0,
-      "sha256": "36cd35dddb2709b495c6a3329e7ad613b011b66179191a85f36a6b35627e0841"
+      "seed": 0,
+      "sha256": "cc2911f3dfbc5f635c10751be1c7323b2d4dc30f3cfa79b9cce9dcdec536d053"
     },
     "chr_rini": {
       "generator": "character_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/characters/chr_rini.tscn",
-      "seed": 0.0,
-      "sha256": "8c805b67067837e32ba9758db95799e80bbf79982a7a9a9a536782b3e341f34c"
+      "seed": 0,
+      "sha256": "ec0eb538cdbae90a306361d1f598e52f3b340cee91a626b65c45ff40e3ff1d53"
     },
     "env_arm_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_arm_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "f0061aff6580e93c734286582ba88fe931f0f93f8cb9743c85391fa75ff4b212"
+      "seed": 20261114,
+      "sha256": "548d5ca8ade1abe3d87d124703146948a0bf0e09067f690ebe9825eb9d82812b"
     },
     "env_boxing_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_boxing_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "0e06ee5a562b8772e002ce9fd67604a93e481222da538f57082f23f7b893be49"
+      "seed": 20261114,
+      "sha256": "0c5dae8b37ce449327feff3002ba9f6aeb8699345368a4975e0d44b58695b958"
     },
     "env_dance_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_dance_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "b1a04149f6fbd414fd60c8a2f79b822299198d248ecbe0c0402329c87be0ebf1"
+      "seed": 20261114,
+      "sha256": "62dc30d076a977389f2e104569be58051bc76b6811177c5a46eee8d9742eb6e2"
     },
     "env_home_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_home_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "8596039d7e67d73ca5baaf6ce4c972cd7852a87e7b9d5b04b57cfffc65d399cc"
+      "seed": 20261114,
+      "sha256": "1b4bd317150bfa434c022de71ce2e3d664a6aad5766eef95c211dffa4a913301"
     },
     "env_lake_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_lake_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "a8f21ee7879278023a6ae5349e253cd7d27b73c61f258341be5456223e9834b8"
+      "seed": 20261114,
+      "sha256": "6b5ca0b1811681c7a5ec5383aeaa96aef4edb605ae4957c2565621d922f657bc"
     },
     "env_market_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_market_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "740e44302eaefab9b49ac2f6edd40d07b0afb1553b53eacc89e157f3d409bf35"
+      "seed": 20261114,
+      "sha256": "5ef113b2c3a147169d6203d0003dc19746232eb432ce823465accabf34dbd62c"
     },
     "env_suwit_set": {
       "generator": "environment_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/environment/env_suwit_set.tscn",
-      "seed": 20261112.0,
-      "sha256": "55d20b42630e8f5f9917bc9b70533f39a1bb9777f865afcc917412b04fb08122"
+      "seed": 20261114,
+      "sha256": "16b42f6fbb9316a0132ab978ab528cb1508c72444025cde6da5de2d89064b11c"
     },
     "fish_arowana_don": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_arowana_don.tscn",
-      "seed": 0.0,
-      "sha256": "2a5223bb565abce4f59ca2be4c0484d8cd96f9907cbb3ab65695d1d5566200c5"
+      "seed": 0,
+      "sha256": "2a2b0cc8218a069253c2db502202ddc9f23ce993c6a33fd2fdd87f552f8b159c"
     },
     "fish_carp_golden": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_carp_golden.tscn",
-      "seed": 0.0,
-      "sha256": "e492f549b193df52c58888b9525c2a2337d25fcc4f064b6401d1e514578fefa4"
+      "seed": 0,
+      "sha256": "1479f72e29d1566b306fbc3a81f6fa644b66dca63f349ef0aca66d834bc6cf66"
     },
     "fish_catfish_bruiser": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
-      "seed": 0.0,
-      "sha256": "e8b6eecc4577fc8a96f0741f1a2cc258551fa4171391d19d717eeb91b927826e"
+      "seed": 0,
+      "sha256": "26a80704cf8a4058571a614f80dde9c94020f43fa0a96081d40e8d59f7df43dd"
     },
     "fish_gourami_shady": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_gourami_shady.tscn",
-      "seed": 0.0,
-      "sha256": "6c71cfcb0087061b7ab6b600be558fbdff03bfe223cc7f163a672dcd6552ac9c"
+      "seed": 0,
+      "sha256": "7f1af690a0e582b44ab25b27c8fd9baba481fbcc547351e43b9317cad2695d7a"
     },
     "fish_snakehead_sergeant": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_snakehead_sergeant.tscn",
-      "seed": 0.0,
-      "sha256": "c05829364143cff32e7d3e6e7ab2ab8060055d5f9c692230c6d300078d2e01e3"
+      "seed": 0,
+      "sha256": "ab9e2c0c2f333ab7bb833b0a4c67489e94f6dadcf33a0c95d759bc0a02071f41"
     },
     "fish_tilapia_gym_rat": {
       "generator": "fish_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/fish/fish_tilapia_gym_rat.tscn",
-      "seed": 0.0,
-      "sha256": "f8d82aacb76d08063eae8641d904824cb2ee8239cd9defdc7b722112eb8a7fbb"
+      "seed": 0,
+      "sha256": "b82f61bcf1833a76587f2109176f2a7ab54b30a4b1127c9c7103c16bcef114fa"
+    },
+    "mat_fake_shadow": {
+      "generator": "material_builder",
+      "generator_version": 2,
+      "output": "res://generated/materials/mat_fake_shadow.tres",
+      "seed": 0,
+      "sha256": "cd7971ed6aacd0dcf8acd894ed478d5ffa4eb01062a15c0fe1517483a58015ee"
     },
     "mat_fishing_line": {
       "generator": "material_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/materials/mat_fishing_line.tres",
-      "seed": 0.0,
-      "sha256": "43e689ceeae3c104da24245f8c3a92309250e9ea7d386d97fc96fc6978215c5c"
+      "seed": 0,
+      "sha256": "99f58dff585af6a79724eb8d30fc9da1d96b41acecac15c7a3cbf7014c74fc6d"
     },
-    "mat_foliage_sway": {
+    "mat_glass": {
       "generator": "material_builder",
-      "generator_version": 1.0,
-      "output": "res://generated/materials/mat_foliage_sway.tres",
-      "seed": 0.0,
-      "sha256": "e0d977e44401b5df6ee5961878a8bad77641a9070430798e892ce2c1bed50cf6"
+      "generator_version": 2,
+      "output": "res://generated/materials/mat_glass.tres",
+      "seed": 0,
+      "sha256": "dc07c99cf6854434b423e0256447b8b32512bf33763df08048472d473fc2aed1"
     },
-    "mat_grass_sway": {
+    "mat_glow_warm": {
       "generator": "material_builder",
-      "generator_version": 1.0,
-      "output": "res://generated/materials/mat_grass_sway.tres",
-      "seed": 0.0,
-      "sha256": "45029adbfea3bd79f5f384da7ad822f2b0772bdea42ed9b0a93d822d47f0127b"
+      "generator_version": 2,
+      "output": "res://generated/materials/mat_glow_warm.tres",
+      "seed": 0,
+      "sha256": "36f7d799a1f7b4e326c38e11104d10df04abc994c743891f89498c15da8def63"
     },
-    "mat_lake_water": {
+    "mat_metal_soft": {
       "generator": "material_builder",
-      "generator_version": 1.0,
-      "output": "res://generated/materials/mat_lake_water.tres",
-      "seed": 0.0,
-      "sha256": "54fe04f845d0cda93019463ef3825de392ed33d62e80e288587620be67c84d62"
+      "generator_version": 2,
+      "output": "res://generated/materials/mat_metal_soft.tres",
+      "seed": 0,
+      "sha256": "8002f1ab124851fe0ea8d1333afc3ae371c8ccf69486f77c06558f322d257c28"
     },
     "mat_vertex_color": {
       "generator": "material_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/materials/mat_vertex_color.tres",
-      "seed": 0.0,
-      "sha256": "63c40c79dbd7775c1dd99af84367befa6ee6fa75fefce9819d49f2ab3d6e3ad7"
+      "seed": 0,
+      "sha256": "794baf21852f8e70b4fe787abe60571c2ba4ff92d1aa24df8199c075e2cc8e2d"
+    },
+    "mat_vertex_color_round": {
+      "generator": "material_builder",
+      "generator_version": 2,
+      "output": "res://generated/materials/mat_vertex_color_round.tres",
+      "seed": 0,
+      "sha256": "941c88480a7e1bb60629b0b9fd14f735609499a1e389352b5f25df7c6bceaa77"
     },
     "mat_water_ripple": {
       "generator": "material_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/materials/mat_water_ripple.tres",
-      "seed": 0.0,
-      "sha256": "cb0f014b1c40db1af0fbe3e622a674168c33da1476f3bf2910de0eb7992a4f1e"
+      "seed": 0,
+      "sha256": "a2f5d954ff826d61859f2657d3d10bcd4a4c5893c207ba1d1f583d0bacb7f3eb"
     },
     "mat_water_shadow": {
       "generator": "material_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/materials/mat_water_shadow.tres",
-      "seed": 0.0,
-      "sha256": "0ebb8e0126e6229ad388cc7b59d96cbfea441fbf052762dea62411707cadcabf"
+      "seed": 0,
+      "sha256": "0aad2c0e0d8390cc772db2e361d4d6341377b99b88a09a1f8cea6e6630a18180"
+    },
+    "mesh_shadow_character": {
+      "generator": "material_builder",
+      "generator_version": 2,
+      "output": "res://generated/meshes/mesh_shadow_character.tres",
+      "seed": 0,
+      "sha256": "807ddfb7666ccbc6e6fd1e02a97fc0840a5a788944c67c991ca1fb2ac9c75fc9"
+    },
+    "mesh_shadow_furniture": {
+      "generator": "material_builder",
+      "generator_version": 2,
+      "output": "res://generated/meshes/mesh_shadow_furniture.tres",
+      "seed": 0,
+      "sha256": "afd3864554198f6516a9e256101293ef2b98304902e56e21fd02958f760a5963"
     },
     "prop_arm_elbow_pad": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_arm_elbow_pad.tscn",
-      "seed": 0.0,
-      "sha256": "1d4a612bbbd4b3fa19915b88841cf0663c942e4cebfc79558838d5b504f57eb5"
+      "seed": 0,
+      "sha256": "6d6ca289ab655e3769160428097e399387dadb6ccb4d8cbec52bf43a47943504"
     },
     "prop_arm_table": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_arm_table.tscn",
-      "seed": 0.0,
-      "sha256": "0fc6ba02aaee714ec3349b99ccf462b28d801285a726ab50a0952d48e397d4a8"
+      "seed": 0,
+      "sha256": "a884236e5bdf6126d4aa803fe9c4f35a6977cc3cf6a29f5b4306784c2acdc5bd"
     },
     "prop_boxing_corner_stool": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_boxing_corner_stool.tscn",
-      "seed": 0.0,
-      "sha256": "55e58e3bf2a3f88b0d86cf71716b75b4fb6efe7a13908dc69565862476156ca7"
+      "seed": 0,
+      "sha256": "672835ef32e7368c33e6af6cf3b48e137cd95eb5e02d4ef28765288d8fd0b9d9"
     },
     "prop_boxing_mat": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_boxing_mat.tscn",
-      "seed": 0.0,
-      "sha256": "712ce5060a946be4ecd52a4c690788b37ffbc58d017ecc10061eda643e436690"
+      "seed": 0,
+      "sha256": "7baa736b21abda838d742468b8354594d7425777793327f1aadb6537f696a9e0"
     },
     "prop_boxing_ropes": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_boxing_ropes.tscn",
-      "seed": 0.0,
-      "sha256": "2b9bf0670f738ec22ade5e2b5479c29b325e4e6e26649c95526b58f2e480fbab"
+      "seed": 0,
+      "sha256": "b47800c31c3ac3bffb3928ab1f36126c2349a497b0feb06064964bf740a73713"
     },
     "prop_bucket_blue": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_bucket_blue.tscn",
-      "seed": 0.0,
-      "sha256": "24de2a2043ebed8358fb061ca32e5538fe4a36325744d23500a1500a69d5f842"
+      "seed": 0,
+      "sha256": "c75e8928a66f37be3edba4d1c6397bafbf9df66f51c4234cdfd6b896907ac2a0"
     },
     "prop_dance_platform": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_dance_platform.tscn",
-      "seed": 0.0,
-      "sha256": "8f568ec7784851b492e662d7c4053c048969662dc97f3b82b012195a5e2d02ce"
+      "seed": 0,
+      "sha256": "7147b955addc84fb4a68ac3357742ce9505ad9fbc631c220c7fc314da77c61c3"
     },
     "prop_dance_string_light": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_dance_string_light.tscn",
-      "seed": 0.0,
-      "sha256": "2e81c7a1024f60a5518f16d6b310d475af6faf2f3efc20b9eb6bd96e459d4999"
+      "seed": 0,
+      "sha256": "3ce894a622a04065810f0d826faaada20c0346500a0653db72ca7413ef180ba2"
     },
     "prop_drink_glass": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_drink_glass.tscn",
-      "seed": 0.0,
-      "sha256": "dde425fefa6c6bada9d9996444db0efa562d6b7bdfcae4e1357fafb96c7791ed"
+      "seed": 0,
+      "sha256": "469bf819cf6374a457cfd11aab1829719342ff9d15c9c26cac411d70c0a39802"
     },
     "prop_fishing_rod_basic": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_fishing_rod_basic.tscn",
-      "seed": 0.0,
-      "sha256": "d2af339469da2c99f35438590745b0d161c3d285e2a69307efc3958a287ef296"
+      "seed": 0,
+      "sha256": "a350334459942a1c1c03ff104eb0fd35bd734ad5ffccf96fd5d760472092e8bb"
     },
     "prop_float_basic": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_float_basic.tscn",
-      "seed": 0.0,
-      "sha256": "5b59065b833490809704627728e74ff72f477fbf9fe66e19f40d25f155e13409"
+      "seed": 0,
+      "sha256": "704bd5314d7abde90062b67c3568fea8fc4409a7c494f20d91a40cf78bdbb119"
     },
     "prop_hanging_lamp": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_hanging_lamp.tscn",
-      "seed": 0.0,
-      "sha256": "1f3cd84a03e814bbf414f2c98e7f7c86b7632fbb56674d64c30adf0c2ecfe758"
+      "seed": 0,
+      "sha256": "7aec257eb0c2e2528eec6eafcb1a4c02dd3fad0fe62bc07e0b20fba12c4ea96e"
     },
     "prop_helmet": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_helmet.tscn",
-      "seed": 0.0,
-      "sha256": "239d5af1cd87fbc5446468c62cea1b5f7a54f374885fba599d3fb848f95e5dd8"
+      "seed": 0,
+      "sha256": "47d9e235520fac89e2f9cf31352bf669b1ff9c7a8cdb0d3bc82ceb647f625cdb"
     },
     "prop_market_fan": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_fan.tscn",
-      "seed": 0.0,
-      "sha256": "8942b4be738175058652f6b8634a8293d435bc9d7d922839194b7254ebeeb819"
+      "seed": 0,
+      "sha256": "9ba6c912d6136d85828a46c4ca8aa05d396a641445e8dc780c25afa7c4f955bb"
     },
     "prop_market_freezer": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_freezer.tscn",
-      "seed": 0.0,
-      "sha256": "51585e6bab66209ad61a4143257976075cba26c3fef21e0de9b1d8be72213582"
+      "seed": 0,
+      "sha256": "f02c008d2a7485d486036ec5d4b53e8ecd13bc9528bb457337337c9900953f01"
     },
     "prop_market_jar_set": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_jar_set.tscn",
-      "seed": 0.0,
-      "sha256": "cebd759d83d9d73b652913f26a0f6c4afbd87d59b0208fe2cb636e2fc0ce64e6"
+      "seed": 0,
+      "sha256": "db722c3809d82ef61271620300dd4ee8820b5334b8b6a8fb332d8d34d1dbece6"
     },
     "prop_market_price_board": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_price_board.tscn",
-      "seed": 0.0,
-      "sha256": "6e58cedd954383eac192de48224eff79022305085c36ffcb5e5857cbbc046962"
+      "seed": 0,
+      "sha256": "e3d7fa1a643401377042a8fc30c228eda9a549fffeccb68df4c3f08e7cd4371f"
     },
     "prop_market_scale": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_scale.tscn",
-      "seed": 0.0,
-      "sha256": "4c930829d532b1082ef042732132744712d8e97655b511fe294bb9d45a04a730"
+      "seed": 0,
+      "sha256": "bea9a2745339b1d01ebe96cb8dd4f26a8a3c05c3378fb5b56262ea2a78c928ee"
     },
     "prop_market_table": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_table.tscn",
-      "seed": 0.0,
-      "sha256": "2e27401c63601eee4c68742195e310b62f3761b21e30ee66f5c301b0308e9000"
+      "seed": 0,
+      "sha256": "e964ac3be2717b51415c5fb7915ebad0b33c4fc361365bfd0750a27985b47f54"
     },
     "prop_market_thermos": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_market_thermos.tscn",
-      "seed": 0.0,
-      "sha256": "241d58f286545bc369e451134e10a87e1de9b9f9872c9a196ac412a6b3c64146"
+      "seed": 0,
+      "sha256": "d4e74d981bf9e6c2dfe93b6d265ea1e20ce8847ddfbb295718ca1ea47c35b813"
     },
     "prop_motorcycle_darto": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_motorcycle_darto.tscn",
-      "seed": 0.0,
-      "sha256": "0d9123710143d516a2824743fa40e166366f34ea1d25dc1728bba610decd85e8"
+      "seed": 0,
+      "sha256": "9e5431d463bb3f5aa83c0c47f8e5534e3890b3bad2f02f768757a7dd6cee04d0"
     },
     "prop_phone": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_phone.tscn",
-      "seed": 0.0,
-      "sha256": "017a85cb183c20d43e314120b1b0c07347d962c69e2094d190190014e1ffa25f"
+      "seed": 0,
+      "sha256": "8350f3588a946c2c64e9470882888038cc686c53cff9137a8d00166d2121ac49"
     },
     "prop_picnic_mat": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_picnic_mat.tscn",
-      "seed": 0.0,
-      "sha256": "5eae0e99ee5ada1b41fe2dabbef59570419ae93d9878032336418be395d107c7"
+      "seed": 0,
+      "sha256": "6418b64bd02d91cdcb1029379363749636a1280ef4ff4ac461a99048bfe01105"
     },
     "prop_plastic_chair": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_plastic_chair.tscn",
-      "seed": 0.0,
-      "sha256": "5c26947b6c0e5cc0e0d3b7d65409541770c0da23b7674dc9a7f8f06a7ffce39f"
+      "seed": 0,
+      "sha256": "0c8b6d3d934f57889ec4f35f3ef2afff49d675c152e11633de1e208607e5368b"
     },
     "prop_rice_cooker": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_rice_cooker.tscn",
-      "seed": 0.0,
-      "sha256": "f3365b3274e8711009adb21a5c99138037945c089e30d0d5fd27560c5143f19d"
+      "seed": 0,
+      "sha256": "25137eb62de459a461c4d861511eee9e7b1d23a69452f6ff95c6e0c94fab275a"
     },
     "prop_suwit_table": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_suwit_table.tscn",
-      "seed": 0.0,
-      "sha256": "73073e0e3beef5c9725a0dee281dfa0964f7b7f8f8201faa30148ca2b8747570"
+      "seed": 0,
+      "sha256": "d545ad638ba24ca3a3e882edcdd8708b5981016c63dcd4ac310a39e999eac340"
     },
     "prop_trash_ancient_tyre": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_trash_ancient_tyre.tscn",
-      "seed": 0.0,
-      "sha256": "fe91f72e9e4b1466c26648d9c1968e34b2c5c02817782172ec337b515d44d054"
+      "seed": 0,
+      "sha256": "ad60037364af2c5d9104c175d0c3be0721940ae43b449286bf57f0500b05aa0c"
     },
     "prop_trash_lost_sandal": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_trash_lost_sandal.tscn",
-      "seed": 0.0,
-      "sha256": "e0ebb5d1431fe786bb0360785575909fe77474fda7cc5b36e16856a276c36b59"
+      "seed": 0,
+      "sha256": "aa0c82cef2a2bba0501c079e63af4cae3cb725f03c76da20ffffd50d17b02776"
     },
     "prop_trash_rusty_can": {
       "generator": "prop_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/scenes/props/prop_trash_rusty_can.tscn",
-      "seed": 0.0,
-      "sha256": "1f5879bce06608d7a3f008a7b36b61ea7a4a4897b588cd2ca8e784335481b387"
+      "seed": 0,
+      "sha256": "aa9daf01e984e1601cb7ebffaab74d17fde51d4ca2aa0b40bb4340de7c51aac6"
     },
     "ref_chr_bu_yati": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_chr_bu_yati.png",
-      "seed": 0,
-      "sha256": "14c33ca36760079f8b0cabb47fdd3933698b0114b8438d74a92739593d11f116"
+      "seed": 0.0,
+      "sha256": "53cf7782d09e6f017cfcb6b9e8b0751faffbd1570916fd239252d6d82f54b67a"
     },
     "ref_chr_darto": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_chr_darto.png",
-      "seed": 0,
-      "sha256": "629ab492d57651ba17da895ef8882f7804a7c978cc8f04e62d77b5c5541e5be1"
+      "seed": 0.0,
+      "sha256": "6cfae542fb58c7ddc63973c9a5383a783c86a97e9ce04f43dd5f47a48e9b7ed7"
+    },
+    "ref_chr_nisa": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_chr_nisa.png",
+      "seed": 0.0,
+      "sha256": "ca32867515af174046ba453c18d834fe7a8b20d8ceb233b7225611294b19d933"
+    },
+    "ref_chr_rini": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_chr_rini.png",
+      "seed": 0.0,
+      "sha256": "4216f65c92d736d1e2c7680ca850523802dd756456d8a4b87a6e32c391dbd7a0"
+    },
+    "ref_fish_arowana": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_fish_arowana.png",
+      "seed": 0.0,
+      "sha256": "78e921b7a692caf85278b4b15edf6dd0280671f03455d2e46f71ebdfad3ab08b"
+    },
+    "ref_fish_carp": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_fish_carp.png",
+      "seed": 0.0,
+      "sha256": "89c4721d14b11d6987376d77214fdd5684480f0972edeeb51bfc3294c26931bc"
     },
     "ref_fish_catfish": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_fish_catfish.png",
-      "seed": 0,
-      "sha256": "5326f83031b4ed77ba0eb57ac68c1be00446bbca137d27b5c3ddc5ce31ecebd7"
+      "seed": 0.0,
+      "sha256": "e479be43d817ea05ff43eab322e9b168c129c6dd0e8350f49bcb79e2e8254769"
+    },
+    "ref_fish_gourami": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_fish_gourami.png",
+      "seed": 0.0,
+      "sha256": "e78b145dcd500d2a68e38e5f788321fec2f1868c2512973e7bd8f0e3bfedcff0"
     },
     "ref_fish_lineup": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_fish_lineup.png",
-      "seed": 0,
-      "sha256": "15e66d0d97c62d29131eccaed1eb585dfbf7961d1346acb160c47fda232ef0f9"
+      "seed": 0.0,
+      "sha256": "496381780ebc7b84b2ec88f632b29ab122029e61b6927f885f7b3dabc0a30e18"
+    },
+    "ref_fish_snakehead": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_fish_snakehead.png",
+      "seed": 0.0,
+      "sha256": "05989294e9fdfa4b12adaa9bd37ed57b186ef13fa76358babd78c655d084cb0c"
+    },
+    "ref_fish_tilapia": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_fish_tilapia.png",
+      "seed": 0.0,
+      "sha256": "c2fc9a12a9ca8a775943687634909ea887c1e549b0726518c52d447e7fa7acea"
+    },
+    "ref_motor_darto": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 2.0,
+      "output": "res://generated/references/ref_motor_darto.png",
+      "seed": 0.0,
+      "sha256": "1df2d981849cdbb1b9c7487d910629ba42dc844a9cc68bb5cb3cfd9ce795316b"
     },
     "ref_set_arm": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_arm.png",
-      "seed": 0,
-      "sha256": "893f7e6163d7d3a354f0aeaee15bf0fd72d2cdd057330ee37097b6077542f248"
+      "seed": 0.0,
+      "sha256": "07ff94acf85199b17923503fa6c44af7a37a23ed1a602ef9bf6fd97724637e17"
     },
     "ref_set_boxing": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_boxing.png",
-      "seed": 0,
-      "sha256": "630e496fe141cfbdcde2050875bf9fda8325a174a0c799ab3f302853741bc11f"
+      "seed": 0.0,
+      "sha256": "c920c00cd1f6a0da944aecb14d7e17d90f7fc95bd5f1e30608555794d2a9d9b6"
     },
     "ref_set_boxing_portrait": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_boxing_portrait.png",
-      "seed": 0,
-      "sha256": "b8ab055b33329ac58624396eb3814410bf71a912d93908dc410b3d6a84617854"
+      "seed": 0.0,
+      "sha256": "0ba8449366f13631cc6edf33ca7eaf8fdb5329a0bbac691eaa9013e708d614b4"
     },
     "ref_set_dance": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_dance.png",
-      "seed": 0,
-      "sha256": "c92ff37a031e3935980e249cd4152687dcae020184958dba8936c88862ba0f94"
+      "seed": 0.0,
+      "sha256": "63622be090e842704178cb635315c4b03f37793c92505f5adc295c446990c5d7"
     },
     "ref_set_home": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_home.png",
-      "seed": 0,
-      "sha256": "e1451e3bb908701382dce477bf0093a38af717fe3ba7b3ffc5d257ca57bf2134"
+      "seed": 0.0,
+      "sha256": "0a515e38a6f010abeaa4128f80f57cb148e75b16855d5206a8703a3dd5e8af00"
     },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_lake.png",
-      "seed": 0,
-      "sha256": "f7f23e5b8f331f83f9cdd5ed722dad269a02ce983c3840d9893d93e3f1e1e8f4"
+      "seed": 0.0,
+      "sha256": "e7ff4b1a857e81e87eb12803a77408f3651b19f684e89d77443ee1df03ad3b95"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_market.png",
-      "seed": 0,
-      "sha256": "59516d6285bea6fbd8fb2a6f7a05ae13eb8260d51bf6d455b2e094d84a9f4b27"
+      "seed": 0.0,
+      "sha256": "027bf65bec5927c205ac80931d98c289dcfcb5629445b5fc4306fd9a93def472"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_market_portrait.png",
-      "seed": 0,
-      "sha256": "501f920260a108606070f77b239f5db267e3a622d35e0639e000ff0c68bd4451"
+      "seed": 0.0,
+      "sha256": "7f792c92b7da4389ffb81569979ce8f5bc8ed2c7084695118e463d92163b4392"
     },
     "ref_set_suwit": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_suwit.png",
-      "seed": 0,
-      "sha256": "093958c6c5f20d0e811c9198d904b1f1940ca02ad5911a0cfdf54924c5860248"
+      "seed": 0.0,
+      "sha256": "f0c0b176c28d9d71383de44f831b45cc5d467c3efde693524bcd037b0253072a"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_arowana_don.png",
-      "seed": 0,
-      "sha256": "2c44843e4aa0330d76c617cbe277460a345ac1842d8196936aeae943acff2e42"
+      "seed": 0.0,
+      "sha256": "ae886fd29cf09dfa63e2655bb03d39515cdb5f83e4c0bfa48e4fa0e372c50110"
     },
     "tex_fishbook_carp_golden": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_carp_golden.png",
-      "seed": 0,
-      "sha256": "0e451e0305b50787a4c29a66be7457ff1c6868b6864f73fcb1d7972d30e0cf45"
+      "seed": 0.0,
+      "sha256": "694877cd9907778c4f275dc1438c653717ce53b784f83b369e66f97e816c5d1b"
     },
     "tex_fishbook_catfish_bruiser": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_catfish_bruiser.png",
-      "seed": 0,
-      "sha256": "6770d9de2253ed6973a96105419faafdd26e58fde12c59a0e7f0aa91a445d455"
+      "seed": 0.0,
+      "sha256": "d36faf37ba5d0bda7abb8762d061097594cf62234cc1a599faa5725233c6991c"
     },
     "tex_fishbook_gourami_shady": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_gourami_shady.png",
-      "seed": 0,
-      "sha256": "d1a9aa577bdd7e1c1900937d49505182a9917bdfe8ec9e5462f5e442d9523f8a"
+      "seed": 0.0,
+      "sha256": "da8c32776017495592b7a764c702b7b6d242253d3a112bbc79fc11e55f4f72e2"
     },
     "tex_fishbook_snakehead_sergeant": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_snakehead_sergeant.png",
-      "seed": 0,
-      "sha256": "58d6b14a7772353613d2c6f3d40669b068f0f0bd5b410bb7ed2efbe016585fb3"
+      "seed": 0.0,
+      "sha256": "841e6bdba702fba56725c7f37a7b93f039813377e36c3b947c236524cc6bc72e"
     },
     "tex_fishbook_tilapia_gym_rat": {
       "generator": "reference_sheet_generator",
-      "generator_version": 1,
+      "generator_version": 2.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_tilapia_gym_rat.png",
-      "seed": 0,
-      "sha256": "388015d2e88056acd50347cbe6f239aa76ca9a7d1b3c280b5b3a7dfc46b2a4c2"
+      "seed": 0.0,
+      "sha256": "c91cf526fcc6c54724f7e578c670166ae36507a4f418f463ecfa76ea8856c9c4"
     },
     "ui_app_icon": {
       "generator": "ui_art_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/ui/app_icon.png",
-      "seed": 0.0,
-      "sha256": "80486c64ed524a7994dcd50075be3cbcb820fd39afdcb4ea24258b8f1d30cd6b"
+      "seed": 0,
+      "sha256": "8de652f67758554347e00da98daf37d559b8fa0dc42ec5c3e28f0c00a9c2eadd"
     },
     "ui_theme": {
       "generator": "ui_art_builder",
-      "generator_version": 1.0,
+      "generator_version": 2,
       "output": "res://generated/ui/ui_theme.tres",
-      "seed": 0.0,
-      "sha256": "836f1b2e70362921fef987b0f8f8d88c6d278c4efd967ea82c744e5eced7dd3b"
+      "seed": 0,
+      "sha256": "cddffe5cb253f7178530d1e55468258c97e6ee2b5d97d8601e03dfdc7b804678"
     }
   },
   "generator_schema": 1,
-  "project_version": "0.9.0"
+  "project_version": "1.0.0-rc.1"
 }

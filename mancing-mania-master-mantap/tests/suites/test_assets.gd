@@ -94,6 +94,30 @@ func test_generated_theme_covers_the_ui_states() -> bool:
 	return true
 
 
+## The cozy card look (GDD 167, revision 6.1): pressable things have a lip
+## and sink when pressed, the extra variations exist, bold text is the
+## built-in font made bolder, and icons are drawn, not loaded.
+func test_ui_skin_follows_the_cozy_card_look() -> bool:
+	var normal := UiSkin.button_box(UiTokens.TERRACOTTA_500)
+	var pressed := UiSkin.button_box(UiTokens.TERRACOTTA_500, UiSkin.STATE_PRESSED)
+	check(normal.border_width_bottom > normal.border_width_left, "a button has a lip under it")
+	check(pressed.border_width_bottom < normal.border_width_bottom, "a pressed button's lip gets thinner")
+	check(pressed.expand_margin_top < 0.0, "a pressed button's face sinks")
+	check(normal.get_minimum_size() == pressed.get_minimum_size(), "pressing does not change the button's size")
+	var theme := load(UiArtBuilder.THEME_PATH) as Theme
+	if check(theme != null, "generated theme loads"):
+		for type_name: StringName in [UiTokens.TYPE_ROUND_BUTTON, UiTokens.TYPE_ACCENT_BUTTON]:
+			check(theme.has_stylebox(&"pressed", type_name), "%s has a pressed style" % type_name)
+		for type_name: StringName in [UiTokens.TYPE_SECTION, UiTokens.TYPE_NAME_TAG, UiTokens.TYPE_RIBBON_LABEL]:
+			check_eq(theme.get_type_variation_base(type_name), &"Label", "%s is a Label variation" % type_name)
+	check(UiSkin.bold_font().base_font == null, "bold text is the built-in font, made bolder")
+	check(UiSkin.heavy_font().variation_embolden > UiSkin.bold_font().variation_embolden, "titles are heavier than buttons")
+	for icon_id: StringName in [IconPainter.PLAY, IconPainter.GEAR, IconPainter.CHECK, IconPainter.DOOR]:
+		var icon := IconTexture.make(icon_id, 24)
+		check(icon != null and icon.get_width() == 24, "%s is a drawn 24 px icon" % icon_id)
+	return true
+
+
 func test_theme_generation_is_repeatable() -> bool:
 	var builder := UiArtBuilder.new()
 	var first_path := WORK_DIR.path_join("theme_a.tres")
@@ -161,7 +185,7 @@ func test_market_assets_are_generated() -> bool:
 	darto.free()
 
 	var market: Node = (load("res://generated/scenes/environment/env_market_set.tscn") as PackedScene).instantiate()
-	for marker: String in ["BuYatiSpot", "DartoSpot", "CameraLandscape", "CameraPortrait"]:
+	for marker: String in ["BuYatiSpot", "DartoSpot", "CameraFocus"]:
 		check(market.get_node_or_null("Markers/%s" % marker) is Marker3D, "Market set marker %s" % marker)
 	var props := market.get_node_or_null("Props")
 	if check(props != null, "the Market set has its furniture"):
@@ -248,7 +272,7 @@ func test_boxing_assets_follow_the_animation_contract() -> bool:
 	darto.free()
 
 	var ring: Node = (load("res://generated/scenes/environment/env_boxing_set.tscn") as PackedScene).instantiate()
-	for marker: String in ["DartoSpot", "FishSpot", "CameraLandscape", "CameraPortrait"]:
+	for marker: String in ["DartoSpot", "FishSpot", "CameraFocus"]:
 		check(ring.get_node_or_null("Markers/%s" % marker) is Marker3D, "boxing set marker %s" % marker)
 	for prop: String in ["Mat", "Ropes", "FishStool"]:
 		var node := ring.get_node_or_null("Props/%s" % prop)
@@ -259,7 +283,7 @@ func test_boxing_assets_follow_the_animation_contract() -> bool:
 	var to_darto := (darto_spot.position - fish_spot.position).slide(Vector3.UP).normalized()
 	check(fish_spot.transform.basis.x.dot(to_darto) > 0.99, "the fish's belly faces Darto")
 	check((-darto_spot.transform.basis.z).dot(-to_darto) > 0.99, "Darto faces the fish")
-	check(fish_spot.position.y > 0.5, "the fish stands on the stool")
+	check(fish_spot.position.y > 0.1, "the fish stands on its low stool")
 	ring.free()
 	return true
 
@@ -282,7 +306,7 @@ func test_arm_wrestle_assets() -> bool:
 		check(darto_player.has_animation(clip), "Darto clip %s (GDD 172.3)" % clip)
 	darto.free()
 	var table: Node = (load("res://generated/scenes/environment/env_arm_set.tscn") as PackedScene).instantiate()
-	for marker: String in ["DartoSpot", "FishSpot", "GripPoint", "CameraLandscape", "CameraPortrait"]:
+	for marker: String in ["DartoSpot", "FishSpot", "GripPoint", "CameraFocus"]:
 		check(table.get_node_or_null("Markers/%s" % marker) is Marker3D, "arm set marker %s" % marker)
 	for prop: String in ["Table", "PadDarto", "PadFish"]:
 		check(table.get_node_or_null("Props/%s" % prop) != null, "arm set prop %s" % prop)
@@ -307,3 +331,137 @@ func test_dance_assets() -> bool:
 		check(darto_player.has_animation(clip), "Darto clip %s (GDD 172.4)" % clip)
 	darto.free()
 	return true
+
+
+# --- Diorama visual style (VISUAL_STYLE_GUIDE.md, GDD 99-103) ----------------
+
+const SETS: Array[String] = [
+	"res://generated/scenes/environment/env_lake_set.tscn",
+	"res://generated/scenes/environment/env_market_set.tscn",
+	"res://generated/scenes/environment/env_boxing_set.tscn",
+	"res://generated/scenes/environment/env_arm_set.tscn",
+	"res://generated/scenes/environment/env_dance_set.tscn",
+	"res://generated/scenes/environment/env_suwit_set.tscn",
+	"res://generated/scenes/environment/env_home_set.tscn",
+]
+const PEOPLE: Array[String] = [
+	"res://generated/scenes/characters/chr_darto.tscn",
+	"res://generated/scenes/characters/chr_bu_yati.tscn",
+	"res://generated/scenes/characters/chr_rini.tscn",
+	"res://generated/scenes/characters/chr_nisa.tscn",
+]
+
+
+func test_camera_profile_follows_the_guide() -> bool:
+	var offset := DioramaStyle.camera_offset() / DioramaStyle.CAMERA_DISTANCE
+	check(offset.is_equal_approx(Vector3(-0.579228, 0.573576, -0.579228)), "camera offset is yaw 45, pitch 35 (guide 2.2)")
+	check_eq(DioramaStyle.clamp_width(6.8), 6.8, "6.8 m is the default frame width")
+	check_eq(DioramaStyle.clamp_width(20.0), DioramaStyle.ZOOM_MAX, "frame width stops at 11.0 m")
+	check_eq(DioramaStyle.clamp_width(1.0), DioramaStyle.ZOOM_MIN, "frame width stops at 5.6 m")
+	var camera := DioramaCamera.new()
+	check_eq(camera.projection, Camera3D.PROJECTION_ORTHOGONAL, "the camera is orthographic")
+	check_eq(camera.keep_aspect, Camera3D.KEEP_WIDTH, "camera.size is the visible width")
+	check_near(camera.near, 0.05, 0.0001, "near plane")
+	check_near(camera.far, 200.0, 0.0001, "far plane")
+	camera.frame(Vector3(1, 0, 2), 6.8)
+	var looking := -camera.transform.basis.z
+	check(looking.is_equal_approx(-DioramaStyle.camera_offset().normalized()), "it looks at the focus from the -X, -Z side")
+	camera.free()
+	for scene_path: String in ["res://scenes/fishing/fishing.tscn", "res://scenes/market/market.tscn", "res://scenes/boxing/boxing.tscn",
+			"res://scenes/arm_wrestle/arm_wrestle.tscn", "res://scenes/dance/dance.tscn", "res://scenes/suwit/suwit.tscn",
+			"res://scenes/menu/main_menu.tscn", "res://scenes/result/result.tscn", "res://scenes/wheel/wheel.tscn",
+			"res://scenes/story/story.tscn", "res://scenes/credits/credits.tscn"]:
+		var text := FileAccess.get_file_as_string(scene_path)
+		check(text.contains("res://scripts/visual/diorama_camera.gd"), "%s uses the diorama camera" % scene_path.get_file())
+		check(not text.contains("fov = "), "%s has no perspective field of view" % scene_path.get_file())
+	return true
+
+
+func test_every_set_carries_the_afternoon_light_rig() -> bool:
+	for set_path: String in SETS:
+		var set_root: Node = (load(set_path) as PackedScene).instantiate()
+		var name := set_path.get_file()
+		var world := set_root.get_node_or_null("Lighting/WorldEnvironment") as WorldEnvironment
+		var sun := set_root.get_node_or_null("Lighting/Sun") as DirectionalLight3D
+		if check(world != null and world.environment != null, "%s has an environment" % name):
+			var environment := world.environment
+			check_eq(environment.background_mode, Environment.BG_COLOR, "%s: plain colour background" % name)
+			check(environment.background_color.is_equal_approx(DioramaStyle.VANILLA), "%s: background is #F5E6CA" % name)
+			check_eq(environment.ambient_light_source, Environment.AMBIENT_SOURCE_COLOR, "%s: ambient from a colour" % name)
+			check(environment.ambient_light_color.is_equal_approx(DioramaStyle.SUN_GOLD), "%s: ambient is #FFE3A8" % name)
+			check_near(environment.ambient_light_energy, 0.55, 0.0001, "%s: ambient energy 0.55" % name)
+			check_eq(environment.tonemap_mode, Environment.TONE_MAPPER_FILMIC, "%s: filmic tonemap" % name)
+			check_near(environment.tonemap_white, 1.2, 0.0001, "%s: tonemap white 1.2" % name)
+			check(not environment.ssao_enabled and not environment.glow_enabled and not environment.fog_enabled, "%s: no SSAO, glow or fog" % name)
+		if check(sun != null, "%s has a sun" % name):
+			check(sun.light_color.is_equal_approx(DioramaStyle.SUN_GOLD), "%s: sun colour" % name)
+			check_near(sun.light_energy, 0.95, 0.0001, "%s: sun energy" % name)
+			check(sun.rotation_degrees.is_equal_approx(Vector3(-52.0, -135.0, 0.0)), "%s: sun shines the way the camera looks" % name)
+		for light: Node in set_root.find_children("*", "Light3D", true, false):
+			check(not (light as Light3D).shadow_enabled, "%s: %s casts no shadow map" % [name, light.name])
+		for lamp: Node in set_root.find_children("*", "OmniLight3D", true, false):
+			check((lamp as OmniLight3D).light_color.is_equal_approx(DioramaStyle.LAMP_WARM), "%s: interior lamp is #FFAA44" % name)
+			check((lamp as OmniLight3D).omni_range >= 3.0, "%s: lamp range is at least 3 m" % name)
+		var focus := set_root.get_node_or_null("Markers/CameraFocus") as Node3D
+		if check(focus != null, "%s has a CameraFocus marker" % name):
+			for key: StringName in [&"width_landscape", &"width_portrait"]:
+				var width := float(focus.get_meta(key, 0.0))
+				check(width >= DioramaStyle.ZOOM_MIN - 0.001 and width <= DioramaStyle.ZOOM_MAX + 0.001, "%s: %s %.1f is in the zoom range" % [name, key, width])
+		set_root.free()
+	return true
+
+
+func test_no_custom_shaders_or_textures_in_the_3d_world() -> bool:
+	var paths: Array[String] = []
+	paths.append_array(SETS)
+	paths.append_array(PEOPLE)
+	for fish: FishData in GameData.get_all_fish():
+		paths.append(fish.model_scene.resource_path)
+	for directory: String in ["res://generated/scenes/props/", "res://generated/materials/"]:
+		for file_name: String in DirAccess.get_files_at(directory):
+			if file_name.ends_with(".tscn") or file_name.ends_with(".tres"):
+				paths.append(directory + file_name)
+	for path: String in paths:
+		var text := FileAccess.get_file_as_string(path)
+		check(not text.contains("ShaderMaterial"), "%s uses no custom shader (guide 5.1)" % path.get_file())
+		check(not text.contains("Texture2D"), "%s uses no texture (guide 1.3)" % path.get_file())
+	var solid := load("res://generated/materials/mat_vertex_color.tres") as StandardMaterial3D
+	if check(solid != null, "the standard material exists"):
+		check_near(solid.roughness, 0.85, 0.0001, "roughness 0.85")
+		check_near(solid.metallic_specular, 0.5, 0.0001, "metallic specular 0.5")
+		check_eq(solid.diffuse_mode, BaseMaterial3D.DIFFUSE_LAMBERT, "Lambert diffuse")
+		check_eq(solid.specular_mode, BaseMaterial3D.SPECULAR_SCHLICK_GGX, "SchlickGGX specular")
+		check(solid.vertex_color_use_as_albedo and solid.vertex_color_is_srgb, "vertex colour is the albedo (sRGB)")
+	var round := load("res://generated/materials/mat_vertex_color_round.tres") as StandardMaterial3D
+	check(round != null and is_equal_approx(round.roughness, 0.9), "spheres and capsules use roughness 0.9")
+	return true
+
+
+func test_people_are_chibi_and_stand_on_a_soft_shadow() -> bool:
+	for path: String in PEOPLE:
+		var person: Node3D = (load(path) as PackedScene).instantiate()
+		var name := path.get_file()
+		var body := person.get_node_or_null("BodyMeshes/Body") as MeshInstance3D
+		if check(body != null and body.mesh != null, "%s has a baked body" % name):
+			var bounds := body.mesh.get_aabb()
+			var height := bounds.end.y * person.scale.y
+			check(height <= 0.97 and height >= 0.7, "%s is chibi height (%.2f m)" % [name, height])
+			check_eq(body.mesh.get_surface_count(), 1, "%s body is one vertex-coloured surface" % name)
+			var triangles := 0
+			for surface: int in body.mesh.get_surface_count():
+				triangles += body.mesh.surface_get_array_index_len(surface) / 3
+			check(triangles >= 500 and triangles <= 2000, "%s stays inside the 500-2,000 triangle budget (%d)" % [name, triangles])
+		var shadow := person.get_node_or_null("ShadowBlob") as MeshInstance3D
+		check(shadow != null and shadow.position.y > 0.0 and shadow.position.y < 0.01, "%s stands on a fake shadow disc" % name)
+		person.free()
+	var darto: Node3D = (load(PEOPLE[0]) as PackedScene).instantiate()
+	var skeleton := darto.get_node("Skeleton3D") as Skeleton3D
+	check_near(skeleton.get_bone_global_rest(skeleton.find_bone("pelvis")).origin.y, 0.25, 0.001, "hips at 0.25 m (guide 9.1)")
+	check_near(skeleton.get_bone_global_rest(skeleton.find_bone("upper_arm_r")).origin.y, DioramaStyle.CHEST_LINE, 0.001, "shoulders on the 0.44 m chest line")
+	darto.free()
+	var counter: Node = (load("res://generated/scenes/props/prop_market_table.tscn") as PackedScene).instantiate()
+	var top := (counter.get_node("Mesh") as MeshInstance3D).mesh.get_aabb().end.y
+	check(top <= DioramaStyle.CHEST_LINE, "the counter top (%.2f m) is under the chest line" % top)
+	counter.free()
+	return true
+

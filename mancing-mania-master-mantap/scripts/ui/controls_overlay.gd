@@ -24,7 +24,7 @@ func build_content() -> void:
 		row.add_child(label)
 		var button := make_button("")
 		button.name = "Bind_%s" % action
-		button.custom_minimum_size.x = 200.0
+		button.custom_minimum_size.x = 150.0
 		button.size_flags_horizontal = Control.SIZE_SHRINK_END
 		button.pressed.connect(_begin_capture.bind(action))
 		row.add_child(button)
@@ -35,6 +35,7 @@ func build_content() -> void:
 	_reset_button.pressed.connect(_reset)
 	footer.add_child(_reset_button)
 	_close_button = make_button(TextDb.t(&"common.close"), UiTokens.TYPE_CTA_BUTTON)
+	_close_button.icon_id = IconPainter.CHECK
 	_close_button.click_sfx = &"ui_back"
 	_close_button.pressed.connect(hide_overlay)
 	footer.add_child(_close_button)

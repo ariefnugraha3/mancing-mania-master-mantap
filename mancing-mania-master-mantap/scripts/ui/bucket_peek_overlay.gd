@@ -19,6 +19,7 @@ func build_content() -> void:
 	_estimate = make_label("", UiTokens.TYPE_SMALL)
 	content.add_child(_estimate)
 	_close_button = make_button(TextDb.t(&"common.close"), UiTokens.TYPE_CTA_BUTTON)
+	_close_button.icon_id = IconPainter.CHECK
 	_close_button.click_sfx = &"ui_back"
 	_close_button.pressed.connect(hide_overlay)
 	footer.add_child(_close_button)

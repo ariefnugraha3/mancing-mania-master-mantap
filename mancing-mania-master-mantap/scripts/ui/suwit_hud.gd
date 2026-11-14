@@ -10,7 +10,7 @@ signal move_pressed(move: StringName)
 signal charm_pressed()
 signal pause_pressed()
 
-const BUTTON_SIZE := Vector2(180.0, 150.0)
+const BUTTON_SIZE := Vector2(110.0, 130.0)
 
 @onready var _safe_root: Control = $SafeRoot
 @onready var _dots: HBoxContainer = $SafeRoot/ScoreDots
@@ -147,7 +147,7 @@ func _build_move_button(button: GameButton, move: StringName) -> void:
 
 func _build_tell() -> void:
 	_tell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tell.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	_tell.add_theme_stylebox_override(&"panel", UiSkin.card(UiTokens.CREAM_50, 22, UiTokens.SPACE_12, 3))
 	var column := VBoxContainer.new()
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tell.add_child(column)
@@ -158,6 +158,7 @@ func _build_tell() -> void:
 	_tell_label = Label.new()
 	_tell_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_tell_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
+	_tell_label.add_theme_font_override(&"font", UiSkin.bold_font())
 	column.add_child(_tell_label)
 	_tell.visible = false
 
@@ -189,10 +190,14 @@ func _build_dots() -> void:
 ## hollow ring. Filled versus hollow reads without the colours (GDD 189.5).
 func _style_dot(dot: Panel, filled: bool, color: Color) -> void:
 	var box := StyleBoxFlat.new()
-	box.set_corner_radius_all(13)
+	box.set_corner_radius_all(15)
 	box.border_color = UiTokens.INK_900 if filled else UiTokens.CREAM_50
 	box.set_border_width_all(UiTokens.hud_border(4) if filled else UiTokens.hud_border(3))
 	box.bg_color = color if filled else Color(UiTokens.INK_900, 0.35)
+	box.shadow_color = UiTokens.SHADOW
+	box.shadow_size = 3
+	box.shadow_offset = Vector2(0.0, 2.0)
+	box.anti_aliasing = true
 	dot.add_theme_stylebox_override(&"panel", box)
 	dot.set_meta(&"filled", filled)
 
@@ -217,26 +222,34 @@ func _key(action: StringName) -> String:
 
 
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := _safe_root.size
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
 	_dots.reset_size()
-	_place(_dots, Rect2((area.x - _dots.get_combined_minimum_size().x) * 0.5, 8.0, _dots.get_combined_minimum_size().x, 40.0))
-	var button := BUTTON_SIZE if not portrait else Vector2((area.x - UiTokens.SPACE_24 * 2.0) / 3.0, 170.0)
-	var row_width := button.x * 3.0 + float(UiTokens.SPACE_32) * 2.0 if not portrait else area.x
-	_row.add_theme_constant_override(&"separation", UiTokens.SPACE_32 if not portrait else UiTokens.SPACE_24)
+	var dots_size := _dots.get_combined_minimum_size()
+	# The score dots get their own row under Pause, centred.
+	var dots_top := float(UiTokens.TOUCH_TARGET_PREFERRED) + UiTokens.SPACE_8
+	_place(_dots, Rect2((area.x - dots_size.x) * 0.5, dots_top, dots_size.x, 40.0))
+	# Bottom: the Charm across the thumb zone; above it, the three moves,
+	# as wide as the screen allows with a clear gap between them.
+	# A clear gap, so a thumb never presses the neighbour (SUWIT-009).
+	var gap := float(UiTokens.SPACE_24 if PlatformService.is_tablet() else 20)
+	var row_width := minf(area.x, 560.0)
+	var button := Vector2((row_width - gap * 2.0) / 3.0, clampf(roundf(area.y * 0.18), 120.0, 170.0))
+	_row.add_theme_constant_override(&"separation", int(gap))
 	for move: StringName in _buttons:
 		_buttons[move].custom_minimum_size = button
 	var charm_height := float(UiTokens.TOUCH_TARGET_PREFERRED)
-	_place(_charm, Rect2((area.x - 260.0) * 0.5, area.y - charm_height - (34.0 if not portrait else 0.0), 260.0, charm_height))
+	var charm_width := minf(row_width, 320.0)
+	_place(_charm, Rect2((area.x - charm_width) * 0.5, area.y - charm_height, charm_width, charm_height))
 	_place(_row, Rect2((area.x - row_width) * 0.5, _charm.position.y - button.y - UiTokens.SPACE_16, row_width, button.y))
 	# The tell sits beside the fish, never over its face.
-	_place(_tell, Rect2(area.x * (0.86 if not portrait else 0.78) - 90.0, area.y * (0.2 if not portrait else 0.1), 180.0, 150.0))
-	_place(_countdown, Rect2(0.0, area.y * 0.1, area.x * (0.5 if not portrait else 0.4), 80.0))
-	_place(_banner, Rect2(0.0, area.y * 0.32, area.x, 56.0))
-	_place(_banner_body, Rect2(0.0, area.y * 0.32 + 58.0, area.x, 40.0))
-	_keys.visible = not portrait and not InputManager.is_touch_primary()
-	_place(_keys, Rect2(0.0, area.y - 30.0, area.x, 30.0))
+	var tell_size := Vector2(minf(170.0, area.x * 0.44), 150.0)
+	var under_dots := dots_top + 48.0
+	_place(_tell, Rect2(area.x - tell_size.x, under_dots, tell_size.x, tell_size.y))
+	_place(_countdown, Rect2(0.0, under_dots, area.x * 0.45, 80.0))
+	UiTokens.place_banner(_banner, _banner_body, area.y * 0.2, area.x)
+	_keys.visible = InputManager.is_keyboard_active()
+	_place(_keys, Rect2(0.0, _row.position.y - 30.0, area.x, 28.0))
 
 
 func _place(control: Control, rect: Rect2) -> void:

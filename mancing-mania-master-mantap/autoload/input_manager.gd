@@ -22,6 +22,9 @@ var _held: Dictionary[StringName, bool] = {}
 var _pressed_at_msec: Dictionary[StringName, int] = {}
 var _default_events: Dictionary[StringName, Array] = {}
 var _first_gesture_seen: bool = false
+## The last thing the player used was a key, so prompts name keys instead of
+## the on-screen buttons (the portrait screen always shows the buttons).
+var _keyboard_active: bool = false
 
 
 func _ready() -> void:
@@ -63,6 +66,10 @@ func get_device_type() -> StringName:
 
 func is_touch_primary() -> bool:
 	return _device_type == DEVICE_TOUCH
+
+
+func is_keyboard_active() -> bool:
+	return _keyboard_active
 
 
 ## Turns gameplay actions on or off. Turning them off also forgets anything
@@ -151,8 +158,14 @@ func _detect_device(event: InputEvent) -> void:
 	elif event is InputEventMouse and event.device != InputEvent.DEVICE_ID_EMULATION:
 		# Mouse events emulated from a touch must not flip the mode back.
 		detected = DEVICE_KEYBOARD_MOUSE
-	if detected != _device_type:
+	var keyboard := _keyboard_active
+	if event is InputEventKey and event.is_pressed():
+		keyboard = true
+	elif event is InputEventScreenTouch or event is InputEventMouseButton:
+		keyboard = false
+	if detected != _device_type or keyboard != _keyboard_active:
 		_device_type = detected
+		_keyboard_active = keyboard
 		input_device_changed.emit(_device_type)
 
 

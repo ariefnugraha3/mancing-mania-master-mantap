@@ -88,11 +88,14 @@ func _draw() -> void:
 			# The Perfect Dodge moment adds a second chevron: a change of shape.
 			_draw_chevron(Vector2(edge - side * 40.0, CHEVRON_HEIGHT * 0.5), side)
 
-	var bar := Rect2(Vector2(centre_x - BAR_SIZE.x * 0.5, CHEVRON_HEIGHT + 8.0), BAR_SIZE)
-	draw_rect(bar.grow(3.0), UiTokens.INK_900)
-	draw_rect(bar, UiTokens.CREAM_100)
+	var bar_size := Vector2(minf(BAR_SIZE.x, size.x - 48.0), BAR_SIZE.y)
+	var bar := Rect2(Vector2(centre_x - bar_size.x * 0.5, CHEVRON_HEIGHT + 8.0), bar_size)
+	var radius := int(minf(bar.size.y * 0.5, 8.0))
+	draw_style_box(UiSkin.rounded(UiTokens.INK_900, radius + 3), bar.grow(3.0))
+	draw_style_box(UiSkin.rounded(UiTokens.CREAM_100, radius), bar)
 	var fill := Rect2(bar.position, Vector2(bar.size.x * _ratio, bar.size.y))
-	draw_rect(fill, UiTokens.SUN_500 if _emphasis else UiTokens.LAKE_500)
+	if fill.size.x > 1.0:
+		draw_style_box(UiSkin.rounded(UiTokens.SUN_500 if _emphasis else UiTokens.LAKE_500, radius), fill)
 	if _mode == Mode.TELEGRAPH and _perfect_ratio > 0.0:
 		# The last part of the bar is the Perfect Dodge window: notched off
 		# and hatched, so it reads without its colour.

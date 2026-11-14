@@ -18,20 +18,16 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraWide",
-					"fov": 48
+					"focus": "StoryWide"
 				},
 				"darto": {
-					"marker": "CameraDarto",
-					"fov": 42
+					"focus": "StoryDarto"
 				},
 				"rini": {
-					"marker": "CameraRini",
-					"fov": 42
+					"focus": "StoryRini"
 				},
 				"door": {
-					"marker": "CameraDoor",
-					"fov": 44
+					"focus": "StoryDoor"
 				}
 			},
 			"steps": [
@@ -183,74 +179,35 @@
 				{
 					"who": "darto",
 					"spot": "DartoSpot",
-					"clip": "market_idle",
-					"yaw": 200
+					"face": "camera_right",
+					"clip": "market_idle"
 				},
 				{
 					"who": "catfish_bruiser",
 					"spot": "DartoSpot",
 					"offset": [
-						0.7,
+						0.62,
 						0.0,
-						0.3
+						-0.1
 					],
-					"yaw": 160,
-					"clip": "fish_challenge",
-					"scale": 1.3
+					"face": "camera_left",
+					"fish": true,
+					"clip": "fish_challenge"
 				}
 			],
 			"cameras": {
 				"wide": {
-					"offset_from": [
-						2.6,
-						2.3,
-						6.4
-					],
-					"offset_to": [
-						-0.4,
-						0.5,
-						-2.0
-					],
-					"fov": 50
+					"focus": "StoryWide"
 				},
 				"medium": {
-					"offset_from": [
-						0.9,
-						1.45,
-						2.4
-					],
-					"offset_to": [
-						-0.3,
-						0.95,
-						0.4
-					],
-					"fov": 44
+					"focus": "StoryMedium"
 				},
 				"darto": {
-					"offset_from": [
-						0.6,
-						1.4,
-						1.6
-					],
-					"offset_to": [
-						0.0,
-						1.0,
-						0.0
-					],
-					"fov": 42
+					"focus": "StoryDarto",
+					"glide": true
 				},
 				"water": {
-					"offset_from": [
-						0.4,
-						1.0,
-						1.2
-					],
-					"offset_to": [
-						0.4,
-						0.2,
-						-4.0
-					],
-					"fov": 46
+					"focus": "StoryWater"
 				}
 			},
 			"steps": [
@@ -320,34 +277,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -441,34 +377,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -555,34 +470,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -642,34 +536,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -797,34 +670,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -931,34 +783,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -1050,62 +881,23 @@
 				{
 					"who": "darto",
 					"spot": "DartoSpot",
-					"clip": "phone_sit",
-					"yaw": 180
+					"face": "in",
+					"clip": "phone_sit"
 				}
 			],
 			"cameras": {
 				"wide": {
-					"offset_from": [
-						2.6,
-						2.3,
-						6.4
-					],
-					"offset_to": [
-						-0.4,
-						0.5,
-						-2.0
-					],
-					"fov": 50
+					"focus": "StoryWide"
 				},
 				"medium": {
-					"offset_from": [
-						0.9,
-						1.45,
-						2.4
-					],
-					"offset_to": [
-						-0.3,
-						0.95,
-						0.4
-					],
-					"fov": 44
+					"focus": "StoryMedium"
 				},
 				"darto": {
-					"offset_from": [
-						0.6,
-						1.4,
-						1.6
-					],
-					"offset_to": [
-						0.0,
-						1.0,
-						0.0
-					],
-					"fov": 42
+					"focus": "StoryDarto",
+					"glide": true
 				},
 				"water": {
-					"offset_from": [
-						0.4,
-						1.0,
-						1.2
-					],
-					"offset_to": [
-						0.4,
-						0.2,
-						-4.0
-					],
-					"fov": 46
+					"focus": "StoryWater"
 				}
 			},
 			"steps": [
@@ -1163,12 +955,7 @@
 				{
 					"prop": "prop_plastic_chair",
 					"spot": "DartoSpot",
-					"offset": [
-						0,
-						0,
-						0
-					],
-					"yaw": 0
+					"face": "in"
 				}
 			]
 		},
@@ -1180,74 +967,35 @@
 				{
 					"who": "darto",
 					"spot": "DartoSpot",
-					"clip": "market_idle",
-					"yaw": 200
+					"face": "camera_right",
+					"clip": "market_idle"
 				},
 				{
 					"who": "arowana_don",
 					"spot": "DartoSpot",
 					"offset": [
-						0.8,
+						0.68,
 						0.0,
-						0.3
+						-0.1
 					],
-					"yaw": 160,
-					"clip": "fish_bucket_defeat",
-					"scale": 1.3
+					"face": "camera_left",
+					"fish": true,
+					"clip": "fish_bucket_defeat"
 				}
 			],
 			"cameras": {
 				"wide": {
-					"offset_from": [
-						2.6,
-						2.3,
-						6.4
-					],
-					"offset_to": [
-						-0.4,
-						0.5,
-						-2.0
-					],
-					"fov": 50
+					"focus": "StoryWide"
 				},
 				"medium": {
-					"offset_from": [
-						0.9,
-						1.45,
-						2.4
-					],
-					"offset_to": [
-						-0.3,
-						0.95,
-						0.4
-					],
-					"fov": 44
+					"focus": "StoryMedium"
 				},
 				"darto": {
-					"offset_from": [
-						0.6,
-						1.4,
-						1.6
-					],
-					"offset_to": [
-						0.0,
-						1.0,
-						0.0
-					],
-					"fov": 42
+					"focus": "StoryDarto",
+					"glide": true
 				},
 				"water": {
-					"offset_from": [
-						0.4,
-						1.0,
-						1.2
-					],
-					"offset_to": [
-						0.4,
-						0.2,
-						-4.0
-					],
-					"fov": 46
+					"focus": "StoryWater"
 				}
 			},
 			"steps": [
@@ -1314,34 +1062,13 @@
 			],
 			"cameras": {
 				"wide": {
-					"marker": "CameraLandscape",
-					"fov": 50
+					"focus": "CameraFocus"
 				},
 				"two_shot": {
-					"from": [
-						0.6,
-						1.55,
-						3.4
-					],
-					"to": [
-						-0.7,
-						1.15,
-						0.6
-					],
-					"fov": 44
+					"focus": "StoryTwoShot"
 				},
 				"darto": {
-					"from": [
-						-2.2,
-						1.6,
-						0.6
-					],
-					"to": [
-						-1.25,
-						1.3,
-						2.05
-					],
-					"fov": 42
+					"focus": "StoryDarto"
 				}
 			},
 			"steps": [
@@ -1437,33 +1164,33 @@
 					"who": "darto",
 					"spot": "DartoSpot",
 					"offset": [
-						-0.3,
 						0.0,
-						0.5
+						0.0,
+						-0.35
 					],
-					"yaw": 210,
+					"face": "camera",
 					"clip": "sit_lake"
 				},
 				{
 					"who": "rini",
 					"spot": "DartoSpot",
 					"offset": [
-						0.5,
+						0.6,
 						0.0,
-						0.9
+						-0.28
 					],
-					"yaw": 160,
+					"face": "camera_left",
 					"clip": "sit_lake"
 				},
 				{
 					"who": "nisa",
 					"spot": "DartoSpot",
 					"offset": [
-						-1.1,
+						-0.6,
 						0.0,
-						1.1
+						-0.28
 					],
-					"yaw": 220,
+					"face": "camera_right",
 					"clip": "sit_lake"
 				},
 				{
@@ -1471,13 +1198,13 @@
 					"spot": "FloatSpot",
 					"offset": [
 						0.0,
-						-0.2,
+						-0.12,
 						0.0
 					],
-					"yaw": 180,
+					"face": "right",
+					"fish": true,
 					"clip": "fish_escape_jump",
-					"hidden": true,
-					"scale": 1.4
+					"hidden": true
 				}
 			],
 			"props": [
@@ -1485,132 +1212,83 @@
 					"prop": "prop_picnic_mat",
 					"spot": "DartoSpot",
 					"offset": [
-						-0.3,
-						0.02,
-						1.0
-					]
-				},
-				{
-					"prop": "prop_motorcycle_darto",
-					"spot": "DartoSpot",
-					"offset": [
-						2.6,
 						0.0,
-						1.6
-					],
-					"yaw": 20
-				},
-				{
-					"prop": "prop_helmet",
-					"spot": "DartoSpot",
-					"offset": [
-						2.0,
 						0.0,
-						1.0
+						-0.95
 					]
 				},
 				{
 					"prop": "prop_helmet",
 					"spot": "DartoSpot",
 					"offset": [
-						2.2,
+						1.25,
 						0.0,
-						1.25
+						-1.35
+					]
+				},
+				{
+					"prop": "prop_helmet",
+					"spot": "DartoSpot",
+					"offset": [
+						1.42,
+						0.0,
+						-1.2
 					]
 				},
 				{
 					"prop": "prop_fishing_rod_basic",
 					"spot": "DartoSpot",
 					"offset": [
-						0.2,
-						0.0,
-						0.1
+						1.35,
+						0.02,
+						0.2
 					],
-					"yaw": 90
+					"yaw": -20
 				},
 				{
 					"prop": "prop_plastic_chair",
 					"spot": "DartoSpot",
 					"offset": [
-						-0.3,
 						0.0,
-						0.5
+						0.0,
+						-0.35
 					],
-					"yaw": 30
+					"face": "camera"
 				},
 				{
 					"prop": "prop_plastic_chair",
 					"spot": "DartoSpot",
 					"offset": [
-						0.5,
+						0.6,
 						0.0,
-						0.9
+						-0.28
 					],
-					"yaw": 340
+					"face": "camera_left"
 				},
 				{
 					"prop": "prop_plastic_chair",
 					"spot": "DartoSpot",
 					"offset": [
-						-1.1,
+						-0.6,
 						0.0,
-						1.1
+						-0.28
 					],
-					"yaw": 40
+					"face": "camera_right"
 				}
 			],
 			"cameras": {
 				"wide": {
-					"offset_from": [
-						2.6,
-						2.3,
-						6.4
-					],
-					"offset_to": [
-						-0.4,
-						0.5,
-						-2.0
-					],
-					"fov": 50
+					"focus": "StoryWide"
 				},
 				"medium": {
-					"offset_from": [
-						0.9,
-						1.45,
-						2.4
-					],
-					"offset_to": [
-						-0.3,
-						0.95,
-						0.4
-					],
-					"fov": 44
+					"focus": "StoryMedium"
 				},
 				"darto": {
-					"offset_from": [
-						0.6,
-						1.4,
-						1.6
-					],
-					"offset_to": [
-						0.0,
-						1.0,
-						0.0
-					],
-					"fov": 42
+					"focus": "StoryDarto",
+					"glide": true
 				},
 				"water": {
-					"offset_from": [
-						0.4,
-						1.0,
-						1.2
-					],
-					"offset_to": [
-						0.4,
-						0.2,
-						-4.0
-					],
-					"fov": 46
+					"focus": "StoryWater"
 				}
 			},
 			"steps": [
@@ -1742,7 +1420,8 @@
 				{
 					"cut_black": true
 				}
-			]
+			],
+			"hour": 17.6
 		},
 		"story_postgame_unlock": {
 			"set": "none",

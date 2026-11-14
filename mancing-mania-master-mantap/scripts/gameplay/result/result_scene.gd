@@ -8,7 +8,7 @@ const FIRST_BOSS_WIN_KEY := &"arowana_first_win_seen"
 @onready var _controller: ResultController = $ResultController
 @onready var _darto: Node3D = $World/DartoResultPose
 @onready var _fish_anchor: Node3D = $World/FishResultPose
-@onready var _camera: Camera3D = $World/ResultCamera
+@onready var _camera: DioramaCamera = $World/ResultCamera
 @onready var _safe_root: Control = $ResultCanvas/SafeRoot
 @onready var _title: Label = $ResultCanvas/SafeRoot/ResultTitle
 @onready var _detail: Label = $ResultCanvas/SafeRoot/DetailLabel
@@ -30,13 +30,14 @@ func _ready() -> void:
 	var fish := GameData.get_fish(result["fish_id"])
 	var won: bool = result["player_won"]
 	_title.text = TextDb.t(&"duel.result.win.title" if won else &"duel.result.loss.title")
-	UiTokens.outline_text(_title, UiTokens.FONT_HERO, UiTokens.SUN_500 if won else UiTokens.CREAM_50)
+	UiSkin.sign_text(_title, UiTokens.FONT_HERO + 8, DioramaStyle.BUTTER if won else UiTokens.CREAM_50, 14)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail.text = TextDb.tf(&"result.detail.win", {"fish": fish.display_name.to_upper()}) if won else ""
 	UiTokens.outline_text(_detail, UiTokens.FONT_HEADER)
 	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_continue.text = TextDb.t(&"duel.result.continue")
 	_continue.theme_type_variation = UiTokens.TYPE_CTA_BUTTON
+	_continue.icon_id = IconPainter.PLAY
 	_continue.pressed.connect(_controller.continue_from_result)
 	_continue.disabled = true
 	_progress.show_percentage = false
@@ -53,6 +54,8 @@ func _ready() -> void:
 	# Win: it slumps toward the bucket. Loss: it leaps back into the lake.
 	(model.get_node("AnimationPlayer") as AnimationPlayer).play(&"fish_bucket_defeat" if won else &"fish_escape_jump")
 	(_darto.get_node("Rig/AnimationPlayer") as AnimationPlayer).play(&"market_idle")
+	if won:
+		DioramaMotion.stretch(_darto.get_node("Rig") as Node3D, 0.12)
 	AudioManager.set_ambience_state(&"lake")
 	AudioManager.set_music_state(&"result")
 	AudioManager.play_ui(&"ui_sell" if won else &"ui_back")
@@ -71,17 +74,21 @@ func _ready() -> void:
 	_controller.start_auto_continue()
 
 
-## Darto stands at his fishing spot facing the camera, the bucket and the
-## fish beside him, the lake behind (GDD 88).
+## Darto stands at his fishing spot facing the camera, the bucket on his
+## left on screen and the fish on his right, the lake behind (GDD 88).
 func _stage_cast() -> void:
 	var markers := get_node("World/ResultStageAnchor/Markers")
 	var spot := (markers.get_node("DartoSpot") as Node3D).position
-	var bucket := (markers.get_node("BucketSpot") as Node3D).position
-	_darto.transform = Transform3D(Basis(Vector3.UP, PI + 0.25), spot)
-	(get_node("World/Bucket") as Node3D).position = bucket + Vector3(-0.2, 0.0, 0.1)
-	_fish_anchor.position = bucket + Vector3(0.45, 0.02, 0.2)
-	_fish_anchor.rotation.y = -PI * 0.5
-	_camera.look_at_from_position(spot + Vector3(0.55, 1.45, 3.4), spot + Vector3(0.55, 0.85, 0.0), Vector3.UP)
+	var right := DioramaStyle.screen_right()
+	var toward := -DioramaStyle.screen_in()
+	_darto.transform = Transform3D(Basis(Vector3.UP, atan2(-toward.x, -toward.z)), spot)
+	(get_node("World/Bucket") as Node3D).position = spot - right * 0.42 + toward * 0.05
+	_fish_anchor.position = spot + right * 0.5 + toward * 0.05
+	# The fish turns three-quarters toward the camera and Darto.
+	var look := (toward - right).normalized()
+	_fish_anchor.rotation.y = atan2(-look.z, look.x)
+	_camera.set_hud_insets(Vector2(110.0, 190.0))
+	_camera.frame(spot + Vector3(0.0, 0.35, 0.0) + right * 0.05, 5.6)
 
 
 func _process(_delta: float) -> void:
@@ -90,16 +97,18 @@ func _process(_delta: float) -> void:
 
 
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := _safe_root.size
-	_place(_title, Rect2(0.0, area.y * 0.08, area.x, 64.0))
-	_place(_detail, Rect2(0.0, area.y * 0.08 + 68.0, area.x, 40.0))
-	var width := minf(360.0, area.x)
+	# Both lines wrap on a narrow phone instead of running off the screen.
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place(_title, Rect2(0.0, area.y * 0.06, area.x, 64.0))
+	_place(_detail, Rect2(0.0, area.y * 0.06 + 68.0, area.x, 64.0))
+	_detail.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	var width := minf(400.0, area.x)
 	# CONTINUE takes the dialogue box's place once the talking is done.
 	var button_y := area.y - UiTokens.TOUCH_TARGET_PREFERRED - 40.0
 	_place(_continue, Rect2((area.x - width) * 0.5, button_y, width, UiTokens.TOUCH_TARGET_PREFERRED))
 	_place(_progress, Rect2((area.x - width) * 0.5, button_y + UiTokens.TOUCH_TARGET_PREFERRED + 8.0, width, 8.0))
-	_camera.fov = 58.0 if portrait else 45.0
 
 
 func _place(control: Control, rect: Rect2) -> void:

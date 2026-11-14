@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/boxing/boxing_scene.gd" id="1_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/boxing/boxing_controller.gd" id="2_controller"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/ui/telegraph_widget.gd" id="8_telegraph"]
 [ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="9_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
 
 [node name="Boxing" type="Node"]
 script = ExtResource("1_scene")
@@ -29,9 +30,8 @@ script = ExtResource("3_world")
 [node name="FishFighter" type="Node3D" parent="World"]
 
 [node name="BoxingCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
 current = true
-fov = 45.0
-far = 300.0
 
 [node name="BoxingCanvas" type="CanvasLayer" parent="."]
 script = ExtResource("6_hud")

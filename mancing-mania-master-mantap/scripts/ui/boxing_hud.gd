@@ -3,19 +3,22 @@ extends CanvasLayer
 ## Boxing HUD (GDD 42, 94, 167.9, 168.7): both HP bars, the round clock, the
 ## telegraph read-out and the four controls.
 ##
-## Keyboard players see their four keys named at the bottom of the screen.
-## Touch layouts get four large buttons in the lower part of the screen, dodge
-## on the left and punches on the right, clear of the fight above them. The
-## buttons feed the same input actions as the keyboard.
+## The portrait screen keeps the fight in the upper part and puts four large
+## thumb buttons in the lower part: the two dodges (arrows) under one thumb and
+## the two punches (gloves) under the other. The buttons feed the same input
+## actions as the keyboard; the keys are named above them while a keyboard is
+## in use.
 
 signal pause_pressed()
 
-const BAR_WIDTH_LANDSCAPE := 360.0
-const BAR_HEIGHT := 22.0
+const BAR_HEIGHT := 20.0
 const HP_CATCH_UP_PER_SEC := 1.6
 const WIDGET_SIZE := Vector2(520.0, 112.0)
-## Share of the screen height that belongs to the fight in portrait (GDD 94).
-const FIGHT_SHARE_PORTRAIT := 0.62
+## Share of the screen height that belongs to the fight (GDD 94); the thumb
+## buttons fill the rest.
+const FIGHT_SHARE_PORTRAIT := 0.68
+## Thumb buttons never grow taller than this.
+const BUTTON_MAX_HEIGHT := 168.0
 const LOW_TIME_SEC := 10.0
 
 @onready var _safe_root: Control = $SafeRoot
@@ -134,8 +137,9 @@ func get_shown_hp() -> Vector2:
 	return Vector2(_player_bar.value, _fish_bar.value)
 
 
+## The portrait screen always shows the thumb buttons.
 func uses_touch_layout() -> bool:
-	return InputManager.is_touch_primary() or PlatformService.get_viewport_class() == PlatformService.PORTRAIT
+	return true
 
 
 # --- Construction -----------------------------------------------------------
@@ -157,18 +161,7 @@ func _build_hp(box: VBoxContainer, title: String, fill: Color, alignment: Horizo
 	bar.show_percentage = false
 	bar.custom_minimum_size.y = BAR_HEIGHT
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fill_box := StyleBoxFlat.new()
-	fill_box.bg_color = fill
-	fill_box.border_color = UiTokens.INK_900
-	fill_box.set_border_width_all(2)
-	fill_box.set_corner_radius_all(5)
-	bar.add_theme_stylebox_override(&"fill", fill_box)
-	var back_box := StyleBoxFlat.new()
-	back_box.bg_color = Color(UiTokens.INK_900, 0.7)
-	back_box.border_color = UiTokens.INK_900
-	back_box.set_border_width_all(2)
-	back_box.set_corner_radius_all(5)
-	bar.add_theme_stylebox_override(&"background", back_box)
+	HudChip.style_bar(bar, fill)
 	box.add_child(bar)
 	return bar
 
@@ -181,6 +174,7 @@ func _build_timer() -> void:
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer_label.custom_minimum_size.x = 64.0
 	_timer_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_HEADER)
+	_timer_label.add_theme_font_override(&"font", UiSkin.heavy_font())
 	_timer.add_child(_timer_label)
 
 	_pause_button = GameButton.new()
@@ -191,16 +185,12 @@ func _build_timer() -> void:
 
 
 func _timer_style(urgent: bool) -> StyleBoxFlat:
-	var box := HudChip.make_style()
-	if urgent:
-		box.bg_color = UiTokens.SUN_500
-		box.border_color = UiTokens.INK_900
-		box.set_border_width_all(4)
-	return box
+	return HudChip.timer_style(urgent)
 
 
 func _build_labels() -> void:
 	_banner_title = _outlined(40)
+	UiSkin.sign_text(_banner_title, 44, DioramaStyle.BUTTER, 12)
 	_banner_title.name = "BannerTitle"
 	_banner_body = _outlined(UiTokens.FONT_HEADER)
 	_banner_body.name = "BannerBody"
@@ -225,19 +215,26 @@ func _outlined(font_size: int) -> Label:
 func _build_controls() -> void:
 	_controls.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var buttons: Dictionary[GameButton, Array] = {
-		_dodge_left: [&"boxing.button.dodge_left", &"box_dodge_left", &""],
-		_dodge_right: [&"boxing.button.dodge_right", &"box_dodge_right", &""],
-		_jab: [&"boxing.button.jab", &"box_jab", UiTokens.TYPE_CTA_BUTTON],
-		_cross: [&"boxing.button.cross", &"box_cross", UiTokens.TYPE_CTA_BUTTON],
+		_dodge_left: [&"boxing.button.dodge_left", &"box_dodge_left", &"", IconPainter.ARROW_LEFT],
+		_dodge_right: [&"boxing.button.dodge_right", &"box_dodge_right", &"", IconPainter.ARROW_RIGHT],
+		_jab: [&"boxing.button.jab", &"box_jab", UiTokens.TYPE_CTA_BUTTON, IconPainter.GLOVE],
+		_cross: [&"boxing.button.cross", &"box_cross", UiTokens.TYPE_CTA_BUTTON, IconPainter.GLOVE],
 	}
 	for button: GameButton in buttons:
 		var spec: Array = buttons[button]
 		button.text = TextDb.t(spec[0])
 		button.focus_mode = Control.FOCUS_NONE
 		button.click_sfx = &""
-		button.add_theme_font_size_override(&"font_size", 26)
+		button.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BUTTON - 2))
 		if spec[2] != &"":
 			button.theme_type_variation = spec[2]
+		# A big icon over a short caption: the arrow says which way to dodge.
+		button.icon_pixels = 40
+		button.icon_id = spec[3]
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		button.add_theme_constant_override(&"icon_max_width", 40)
+		button.set_side_padding(4.0)
 		# A touch acts on press, like a key, not on release.
 		button.button_down.connect(InputManager.press_action.bind(spec[1]))
 		button.button_up.connect(InputManager.release_action.bind(spec[1]))
@@ -262,79 +259,61 @@ func _key_name(action: StringName) -> String:
 
 # --- Layout -----------------------------------------------------------------
 
-func _on_layout_changed(_value: StringName) -> void:
+func _on_layout_changed(_value: StringName = &"") -> void:
 	_layout()
 
 
 ## Places every block for the current screen shape and input device.
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
-	var touch := uses_touch_layout()
 	var area := _safe_root.size
 	var row := float(UiTokens.TOUCH_TARGET_PREFERRED)
 	var gap := float(UiTokens.SPACE_12)
 
+	# Top row: the clock in the middle, Pause on the right. Under it, both HP
+	# bars side by side, Darto left and the fish right.
 	UiTokens.anchor_at(_pause_button, Control.PRESET_TOP_RIGHT)
-	var bars_top := 0.0
-	var bars_right := area.x - row - gap
-	var bar_width := minf(BAR_WIDTH_LANDSCAPE, (bars_right - 120.0) * 0.5)
-	if portrait:
-		# The clock shares the top row with Pause; the bars get their own row.
-		bars_top = row + gap
-		bars_right = area.x
-		bar_width = (area.x - gap) * 0.5
-		_place(_timer, Rect2((area.x - 96.0) * 0.5, 0.0, 96.0, row))
-	else:
-		_place(_timer, Rect2((bars_right - 96.0) * 0.5, 0.0, 96.0, row))
-	var bar_block := BAR_HEIGHT + 34.0
+	_place(_timer, Rect2((area.x - 88.0) * 0.5, 0.0, 88.0, row))
+	var bars_top := row + UiTokens.SPACE_8
+	var bar_width := (area.x - gap) * 0.5
+	var bar_block := BAR_HEIGHT + 30.0
 	_place(_player_hp, Rect2(0.0, bars_top, bar_width, bar_block))
-	_place(_fish_hp, Rect2(bars_right - bar_width, bars_top, bar_width, bar_block))
+	_place(_fish_hp, Rect2(area.x - bar_width, bars_top, bar_width, bar_block))
 
 	var under_bars := bars_top + bar_block + gap
 	var widget_width := minf(WIDGET_SIZE.x, area.x)
-	_place(_widget, Rect2((area.x - widget_width) * 0.5, under_bars + 34.0, widget_width, WIDGET_SIZE.y))
 	_place(_hint, Rect2(0.0, under_bars, area.x, 32.0))
-	_place(_banner_title, Rect2(0.0, area.y * (0.2 if portrait else 0.3), area.x, 56.0))
-	_place(_banner_body, Rect2(0.0, area.y * (0.2 if portrait else 0.3) + 58.0, area.x, 40.0))
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_place(_widget, Rect2((area.x - widget_width) * 0.5, under_bars + 34.0, widget_width, WIDGET_SIZE.y))
+	UiTokens.place_banner(_banner_title, _banner_body, area.y * 0.16, area.x)
 
-	_controls.visible = touch
-	_keys.visible = not touch
+	# Bottom: the thumb buttons under the fight.
+	var top := roundf(area.y * FIGHT_SHARE_PORTRAIT) + gap
+	_controls.visible = true
+	_place(_controls, Rect2(0.0, top, area.x, area.y - top))
+	_layout_controls()
+	_keys.visible = InputManager.is_keyboard_active()
 	_keys.text = _key_hint_text()
-	_place(_keys, Rect2(0.0, area.y - 30.0, area.x, 30.0))
-	if portrait:
-		# Bottom 38%: dodge on the left half, punches on the right half.
-		var top := roundf(area.y * FIGHT_SHARE_PORTRAIT) + gap
-		_place(_controls, Rect2(0.0, top, area.x, area.y - top))
-	else:
-		var height := 96.0
-		_place(_controls, Rect2(0.0, area.y - height, area.x, height))
-	_layout_controls(portrait)
+	_place(_keys, Rect2(0.0, top - 30.0, area.x, 28.0))
 
 
 ## Dodge buttons sit under the left thumb, punches under the right; a
 ## left-handed layout swaps the two groups (GDD 189.12). Inside a group the
 ## order never changes, so DODGE LEFT is always the left one of the pair.
-func _layout_controls(portrait: bool) -> void:
+func _layout_controls() -> void:
 	var box := _controls.size
 	var gap := float(UiTokens.SPACE_12)
 	var dodges := [_dodge_left, _dodge_right]
 	var punches := [_jab, _cross]
 	var first: Array = punches if UiTokens.is_left_handed() else dodges
 	var second: Array = dodges if UiTokens.is_left_handed() else punches
-	if portrait:
-		var half := (box.x - gap) * 0.5
-		var button := Vector2((half - gap) * 0.5, minf(box.y, 220.0))
-		var top := (box.y - button.y) * 0.5
-		_place(first[0], Rect2(0.0, top, button.x, button.y))
-		_place(first[1], Rect2(button.x + gap, top, button.x, button.y))
-		_place(second[0], Rect2(half + gap, top, button.x, button.y))
-		_place(second[1], Rect2(half + gap * 2.0 + button.x, top, button.x, button.y))
-	else:
-		var button := Vector2(168.0, box.y)
-		_place(first[0], Rect2(0.0, 0.0, button.x, button.y))
-		_place(first[1], Rect2(button.x + gap, 0.0, button.x, button.y))
-		_place(second[0], Rect2(box.x - button.x * 2.0 - gap, 0.0, button.x, button.y))
-		_place(second[1], Rect2(box.x - button.x, 0.0, button.x, button.y))
+	# Two pairs with a wider gap between the thumbs.
+	var middle := gap * 2.0
+	var button := Vector2((box.x - middle - gap * 2.0) * 0.25, minf(box.y, BUTTON_MAX_HEIGHT))
+	var top := box.y - button.y
+	var x := 0.0
+	for control: GameButton in [first[0], first[1], second[0], second[1]]:
+		_place(control, Rect2(x, top, button.x, button.y))
+		x += button.x + (middle if control == first[1] else gap)
 
 
 func _place(control: Control, rect: Rect2) -> void:

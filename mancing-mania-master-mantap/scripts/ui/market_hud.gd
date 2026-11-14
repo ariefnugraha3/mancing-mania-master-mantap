@@ -4,8 +4,9 @@ extends CanvasLayer
 ## a fixed order, one page open at a time, cash always in view and one explicit
 ## way out.
 ##
-## The ledger sits beside the warung on wide screens and under it on tall
-## ones, so Bu Yati and Darto stay visible while the player does business.
+## The ledger is a bottom sheet under the warung, so Bu Yati and Darto stay
+## visible while the player does business; its folder tabs work like a phone's
+## tab bar (an icon over a short label).
 ## The screen shows state and reports requests; it never changes game state.
 
 signal leave_pressed()
@@ -20,14 +21,21 @@ const TAB_RECORDS := &"records"
 ## The order is fixed by GDD 167.9.
 const TAB_ORDER: Array[StringName] = [TAB_SELL, TAB_UPGRADES, TAB_DEBT, TAB_FISH_BOOK, TAB_RECORDS]
 
-const TAB_HEIGHT := 48.0
-const TAB_FONT_SIZE := 15
-const LEDGER_WIDTH_RATIO := 0.48
-const LEDGER_WIDTH_RANGE := Vector2(500.0, 640.0)
-## On tall screens the ledger starts this far down; the warung shows above it.
-const LEDGER_TOP_RATIO_PORTRAIT := 0.37
-const LEAVE_WIDTH := 240.0
-const HINT_FONT_SIZE := 24
+const TAB_HEIGHT := 58.0
+const TAB_FONT_SIZE := 12
+const TAB_ICONS: Dictionary = {
+	TAB_SELL: IconPainter.CASH, TAB_UPGRADES: IconPainter.ARROW_UP, TAB_DEBT: IconPainter.LEDGER,
+	TAB_FISH_BOOK: IconPainter.FISH, TAB_RECORDS: IconPainter.TROPHY,
+}
+## Rim of the ledger card; the tabs overlap it by this much.
+const LEDGER_RIM := 4
+## The ledger sheet never gets wider than this (tablets).
+const LEDGER_MAX_WIDTH := 640.0
+## The sheet starts this far down the screen; the warung shows above it.
+const LEDGER_TOP_RATIO := 0.33
+const LEAVE_HEIGHT := float(UiTokens.TOUCH_TARGET_PREFERRED)
+const TITLE_FONT_SIZE := 24
+const HINT_FONT_SIZE := 18
 const CASH_COUNT_SEC := 0.45
 
 @onready var _safe_root: Control = $SafeRoot
@@ -45,6 +53,7 @@ var _tab_buttons: Dictionary[StringName, GameButton] = {}
 var _panels: Dictionary[StringName, MarketPanel] = {}
 var _current_tab: StringName = TAB_SELL
 var _cash_label: Label
+var _title: Label
 var _hint_label: Label
 var _hint_left: float = 0.0
 var _shown_cash: float = 0.0
@@ -70,6 +79,11 @@ func _ready() -> void:
 
 	_leave_button.text = TextDb.t(&"market.leave")
 	_leave_button.click_sfx = &"ui_back"
+	_leave_button.icon_id = IconPainter.BACK
+	_leave_button.set_side_padding(UiTokens.SPACE_16)
+	_leave_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# A wrapped label changes the button's height once it is laid out.
+	_leave_button.minimum_size_changed.connect(func() -> void: _layout.call_deferred())
 	_leave_button.pressed.connect(func() -> void: leave_pressed.emit())
 
 	_safe_root.resized.connect(_layout)
@@ -99,6 +113,8 @@ func select_tab(tab_id: StringName, announce: bool = true) -> void:
 		_style_tab(_tab_buttons[id], id == tab_id)
 	_panels[tab_id].refresh()
 	_panels[tab_id].scroll_to_top()
+	if is_node_ready():
+		_layout.call_deferred()
 	if announce:
 		tab_changed.emit(tab_id)
 
@@ -176,16 +192,22 @@ func _build_header() -> void:
 	cash_chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header.add_child(cash_chip)
 	_cash_label = HudChip.add_content(cash_chip, UiIcon.ICON_CASH)
-	_cash_label.custom_minimum_size.x = 132.0
+	_cash_label.custom_minimum_size.x = 92.0
 
-	var title := Label.new()
-	title.name = "Title"
-	title.text = TextDb.t(&"market.header.title")
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.clip_text = true
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UiTokens.outline_text(title, UiTokens.FONT_HEADER)
-	_header.add_child(title)
+	# The header holds the cash chip and Pause; the shop's painted name hangs
+	# on its own line under them, over the warung.
+	var spacer := Control.new()
+	spacer.name = "Spacer"
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_header.add_child(spacer)
+	_title = Label.new()
+	_title.name = "Title"
+	_title.text = TextDb.t(&"market.header.title")
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiSkin.sign_text(_title, TITLE_FONT_SIZE, DioramaStyle.BUTTER, 9)
+	_safe_root.add_child(_title)
 
 	var pause_button := GameButton.new()
 	pause_button.name = "PauseButton"
@@ -195,17 +217,25 @@ func _build_header() -> void:
 
 
 func _build_tabs() -> void:
-	_tab_bar.add_theme_constant_override(&"separation", UiTokens.SPACE_4)
+	_tab_bar.add_theme_constant_override(&"separation", 3)
 	# The open tab is drawn over the ledger's top edge, like a real divider.
 	_tab_bar.z_index = 1
 	for tab_id: StringName in TAB_ORDER:
 		var button := _tab_buttons[tab_id]
 		button.text = TextDb.t(StringName("market.tab.%s" % (&"savings" if tab_id == TAB_DEBT and MarketDebtPanel.is_savings_mode() else tab_id)))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.size_flags_stretch_ratio = 1.0
 		button.min_height = int(TAB_HEIGHT)
-		button.custom_minimum_size.y = TAB_HEIGHT
+		button.custom_minimum_size = Vector2(0.0, TAB_HEIGHT)
 		button.clip_text = true
-		button.add_theme_font_size_override(&"font_size", TAB_FONT_SIZE)
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(TAB_FONT_SIZE))
+		# Icon over label, like a phone's tab bar.
+		button.icon_id = TAB_ICONS[tab_id]
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		button.add_theme_constant_override(&"icon_max_width", 22)
+		button.add_theme_constant_override(&"h_separation", 0)
 		button.pressed.connect(select_tab.bind(tab_id))
 
 
@@ -223,41 +253,36 @@ func _style_tab(button: GameButton, active: bool) -> void:
 	button.add_theme_stylebox_override(&"normal", _tab_box(active, false))
 	button.add_theme_stylebox_override(&"hover", _tab_box(active, true))
 	button.add_theme_stylebox_override(&"pressed", _tab_box(true, false))
+	button.add_theme_stylebox_override(&"focus", UiSkin.focus_box(16))
+	if active:
+		button.add_theme_font_override(&"font", UiSkin.bold_font())
+	else:
+		button.remove_theme_font_override(&"font")
 	var text_color := UiTokens.INK_900 if active else UiTokens.INK_700
 	for color_name: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color"]:
 		button.add_theme_color_override(color_name, text_color)
 
 
-## A ledger divider tab: the open one is the colour of the page and has no
-## bottom edge, so it reads as part of the page below it.
+## A ledger folder tab: the open one is the colour of the page, stands a
+## little taller and has no bottom edge, so it reads as part of the page.
 func _tab_box(active: bool, hover: bool) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = UiTokens.CREAM_100
+	var box := UiSkin.tab(active, hover)
 	if not active:
-		box.bg_color = UiTokens.PAPER_200.lightened(0.12) if hover else UiTokens.PAPER_200
-	box.border_color = UiTokens.INK_700
-	box.set_border_width_all(UiTokens.BORDER_WIDTH)
-	box.border_width_bottom = 0 if active else UiTokens.BORDER_WIDTH
-	box.corner_radius_top_left = UiTokens.RADIUS_BUTTON
-	box.corner_radius_top_right = UiTokens.RADIUS_BUTTON
-	box.content_margin_left = UiTokens.SPACE_4
-	box.content_margin_right = UiTokens.SPACE_4
-	box.content_margin_top = UiTokens.SPACE_8
-	box.content_margin_bottom = UiTokens.SPACE_8
+		# Closed tabs keep the page's top rim, so only the open one joins it.
+		box.border_width_bottom = LEDGER_RIM
+	box.content_margin_left = 2.0
+	box.content_margin_right = 2.0
+	box.content_margin_top = 6.0 if active else 8.0
+	box.content_margin_bottom = 4.0
 	return box
 
 
+## The ledger page: the warm paper card, square at the top where the tabs
+## join it.
 func _ledger_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = UiTokens.CREAM_100
-	box.border_color = UiTokens.INK_700
-	box.set_border_width_all(UiTokens.BORDER_WIDTH)
-	box.corner_radius_bottom_left = UiTokens.RADIUS_PANEL
-	box.corner_radius_bottom_right = UiTokens.RADIUS_PANEL
-	box.set_content_margin_all(UiTokens.SPACE_16)
-	box.shadow_color = Color(UiTokens.INK_900, 0.2)
-	box.shadow_size = 8
-	box.shadow_offset = Vector2(0.0, 4.0)
+	var box := UiSkin.card(UiTokens.CREAM_100, UiTokens.RADIUS_PANEL, UiTokens.SPACE_16, LEDGER_RIM)
+	box.corner_radius_top_left = 0
+	box.corner_radius_top_right = 0
 	return box
 
 
@@ -267,38 +292,51 @@ func _on_viewport_class_changed(_viewport_class: StringName) -> void:
 	_layout()
 
 
-## Places every block for the current screen shape. Positions come from the
-## safe area and the tokens only, never from fixed screen coordinates.
+## Places every block on the portrait screen. Positions come from the safe
+## area and the tokens only, never from fixed screen coordinates.
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := _safe_root.size
 	var row := float(UiTokens.TOUCH_TARGET_PREFERRED)
-	var gap := float(UiTokens.SPACE_12)
-
 	_place(_header, Rect2(0.0, 0.0, area.x, row))
 
-	var ledger: Rect2
-	if portrait:
-		var top := roundf(area.y * LEDGER_TOP_RATIO_PORTRAIT)
-		ledger = Rect2(0.0, top, area.x, area.y - top - row - gap)
-		_place(_leave_button, Rect2(0.0, area.y - row, area.x, row))
-		# One line, resting just above the tabs.
-		_place(_hint_label, Rect2(0.0, top - HINT_FONT_SIZE * 2.0, area.x, HINT_FONT_SIZE * 2.0))
-		_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	else:
-		var width := clampf(area.x * LEDGER_WIDTH_RATIO, LEDGER_WIDTH_RANGE.x, LEDGER_WIDTH_RANGE.y)
-		var top := row + gap
-		ledger = Rect2(area.x - width, top, width, area.y - top)
-		_place(_leave_button, Rect2(0.0, area.y - row, LEAVE_WIDTH, row))
-		_place(_hint_label, Rect2(0.0, top + gap, area.x - width - UiTokens.SPACE_24, 120.0))
-		_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	# Bottom: LEAVE MARKET across the thumb zone; above it, the ledger sheet.
+	var width := minf(area.x, LEDGER_MAX_WIDTH)
+	var left := (area.x - width) * 0.5
+	# Very large text wraps the label, so the height is read at this width.
+	_leave_button.size.x = width
+	var leave_height := maxf(LEAVE_HEIGHT, _leave_button.get_combined_minimum_size().y)
+	_place(_leave_button, Rect2(left, area.y - leave_height, width, leave_height))
+	# The tabs are at least TAB_HEIGHT tall, more with large text.
+	var tab_height := maxf(TAB_HEIGHT, _tab_bar.get_combined_minimum_size().y)
+	var sheet_bottom := area.y - leave_height - UiTokens.SPACE_12
+	# The sheet starts a third of the way down, and rises higher when its page
+	# needs the room (large UI and text sizes on a small phone).
+	var page := _panels[_current_tab]
+	var chrome := _tab_content.get_theme_stylebox(&"panel").get_minimum_size().y
+	var page_needs := page.fixed_height() + chrome
+	var top := minf(roundf(area.y * LEDGER_TOP_RATIO), sheet_bottom - tab_height - page_needs)
+	top = maxf(top, row + UiTokens.SPACE_8)
+	var ledger := Rect2(left, top, width, sheet_bottom - top)
+	# The shop's name hangs under the header, and one line of guidance rests
+	# just above the tabs. When the sheet rises high, the name gives way.
+	var title_rect := Rect2(0.0, row + UiTokens.SPACE_4, area.x, TITLE_FONT_SIZE * 1.6)
+	var hint_height := HINT_FONT_SIZE * 2.2
+	var hint_top := top - hint_height - UiTokens.SPACE_4
+	_title.visible = hint_top >= title_rect.end.y
+	_place(_title, title_rect)
+	_place(_hint_label, Rect2(0.0, maxf(hint_top, row + UiTokens.SPACE_4), area.x, hint_height))
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
-	_place(_tab_bar, Rect2(ledger.position, Vector2(ledger.size.x, TAB_HEIGHT)))
+	# Still too short: every page lets its buttons scroll with the list.
+	var page_room := ledger.size.y - tab_height + float(LEDGER_RIM) - chrome
+	for id: StringName in _panels:
+		_panels[id].set_actions_scroll(_panels[id].fixed_height() > page_room)
+	_place(_tab_bar, Rect2(ledger.position, Vector2(ledger.size.x, tab_height)))
 	# The page starts under the tabs, sharing their bottom edge.
-	var overlap := float(UiTokens.BORDER_WIDTH)
+	var overlap := float(LEDGER_RIM)
 	_place(_tab_content, Rect2(
-		ledger.position + Vector2(0.0, TAB_HEIGHT - overlap),
-		ledger.size - Vector2(0.0, TAB_HEIGHT - overlap)))
+		ledger.position + Vector2(0.0, tab_height - overlap),
+		ledger.size - Vector2(0.0, tab_height - overlap)))
 
 
 func _place(control: Control, rect: Rect2) -> void:

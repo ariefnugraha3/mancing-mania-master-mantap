@@ -30,12 +30,29 @@ var _fade: ColorRect
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_speaker.theme_type_variation = UiTokens.TYPE_HEADER
+	# The same speech card as the in-game dialogue box: a crust name tag, the
+	# line in larger type and a bouncing arrow by the prompt.
+	_panel.add_theme_stylebox_override(&"panel", UiSkin.card(UiTokens.CREAM_50, 22, UiTokens.SPACE_16, 4))
+	_speaker.theme_type_variation = UiTokens.TYPE_NAME_TAG
+	_speaker.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_line.custom_minimum_size.y = 56.0
+	_line.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY + 2))
 	_prompt.text = TextDb.t(&"story.continue")
 	_prompt.theme_type_variation = UiTokens.TYPE_SMALL
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# The prompt and its bouncing arrow share a row at the foot of the card.
+	var foot := HBoxContainer.new()
+	foot.name = "Foot"
+	foot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	foot.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	_prompt.get_parent().add_child(foot)
+	_prompt.reparent(foot, false)
+	_prompt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var arrow := AdvanceArrow.new()
+	arrow.name = "AdvanceArrow"
+	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	foot.add_child(arrow)
 	_panel.visible = false
 	_phone.visible = false
 	_phone.clip_contents = true
@@ -55,6 +72,11 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
 	_unlock.add_child(column)
+	var badge := LogoEmblem.new()
+	badge.name = "UnlockEmblem"
+	badge.diameter = 64.0
+	badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(badge)
 	_unlock_title = Label.new()
 	_unlock_title.theme_type_variation = UiTokens.TYPE_SCREEN_TITLE
 	_unlock_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -76,6 +98,7 @@ func _ready() -> void:
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	(get_parent().get_parent().get_node("FadeLayer") as CanvasLayer).add_child(_fade)
 	resized.connect(_layout)
+	PlatformService.safe_area_changed.connect(_layout)
 	_layout.call_deferred()
 
 
@@ -107,12 +130,15 @@ func show_phone_line(text: String) -> void:
 func show_notification(title: String, body: String) -> void:
 	_open_phone()
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	var note_style := UiSkin.card(UiTokens.CREAM_50, 16, UiTokens.SPACE_12, 2)
+	note_style.shadow_size = 4
+	card.add_theme_stylebox_override(&"panel", note_style)
 	var column := VBoxContainer.new()
 	card.add_child(column)
 	var heading := Label.new()
 	heading.text = title
 	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	heading.add_theme_font_override(&"font", UiSkin.bold_font())
 	heading.add_theme_font_size_override(&"font_size", UiTokens.FONT_SMALL + 2)
 	column.add_child(heading)
 	if body != "":
@@ -130,8 +156,7 @@ func show_chat(sender: String, text: String, from_darto: bool) -> void:
 		_open_phone()
 		_add_phone_label(TextDb.t(&"story.phone.messages"), UiTokens.FONT_SMALL, HORIZONTAL_ALIGNMENT_CENTER)
 	var bubble := PanelContainer.new()
-	var style := HudChip.make_style()
-	style.bg_color = UiTokens.LAKE_500.lightened(0.45) if from_darto else UiTokens.CREAM_50
+	var style := UiSkin.pill(UiTokens.LAKE_500.lightened(0.5) if from_darto else UiTokens.CREAM_50, 2, 18, Vector2(UiTokens.SPACE_12, UiTokens.SPACE_8), 2)
 	bubble.add_theme_stylebox_override(&"panel", style)
 	bubble.size_flags_horizontal = Control.SIZE_SHRINK_END if from_darto else Control.SIZE_SHRINK_BEGIN
 	var label := Label.new()
@@ -219,13 +244,20 @@ func _add_phone_label(text: String, size: int, alignment: HorizontalAlignment) -
 	_phone_lines.add_child(label)
 
 
+## A chunky toy phone: a dark teal screen in a thick cocoa body.
 func _phone_style() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color("2f3a3a")
+	box.bg_color = Color("2f4746")
 	box.border_color = UiTokens.INK_900
-	box.set_border_width_all(6)
-	box.set_corner_radius_all(22)
+	box.set_border_width_all(10)
+	box.border_width_top = 22
+	box.border_width_bottom = 22
+	box.set_corner_radius_all(30)
 	box.set_content_margin_all(UiTokens.SPACE_16)
+	box.content_margin_top = 30.0
+	# No drop shadow: the phone clips its chat list, which would cut a shadow
+	# into a square band.
+	box.anti_aliasing = true
 	return box
 
 
@@ -235,22 +267,32 @@ func _outlined(size: int) -> Label:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.visible = false
-	UiTokens.outline_text(label, size)
+	UiSkin.sign_text(label, size, UiTokens.CREAM_50 if size < UiTokens.FONT_HERO else DioramaStyle.BUTTER, 12)
 	add_child(label)
 	return label
 
 
 func _layout() -> void:
-	var portrait := PlatformService.get_viewport_class() == PlatformService.PORTRAIT
 	var area := size
-	var width := minf(760.0, area.x)
-	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_panel.size = Vector2(width, PANEL_HEIGHT)
-	_panel.position = Vector2((area.x - width) * 0.5, area.y - PANEL_HEIGHT - UiTokens.SPACE_12)
-	var phone_width := minf(PHONE_WIDTH, area.x)
+	# Everything stays inside the safe area: clear of the notch at the top and
+	# the home indicator or gesture bar at the bottom.
+	var safe := Rect2(PlatformService.get_safe_rect())
+	var edge := float(UiTokens.SPACE_12)
+	var top_inset := safe.position.y + edge
+	var bottom_inset := area.y - safe.end.y + edge
+	var width := minf(640.0, safe.size.x - edge * 2.0)
+	# Anchored to the bottom and growing upward, so a long line never pushes
+	# the card off the screen.
+	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_panel.offset_left = -width * 0.5
+	_panel.offset_right = width * 0.5
+	_panel.offset_bottom = -bottom_inset
+	_panel.offset_top = -bottom_inset - PANEL_HEIGHT
+	var phone_width := minf(PHONE_WIDTH, safe.size.x - edge * 2.0)
 	_phone.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_phone.size = Vector2(phone_width, minf(area.y * 0.62, 460.0))
-	_phone.position = Vector2(area.x - phone_width - 16.0 if not portrait else (area.x - phone_width) * 0.5, 16.0)
+	_phone.size = Vector2(phone_width, minf(area.y * 0.56, 460.0))
+	_phone.position = Vector2((area.x - phone_width) * 0.5, top_inset)
 	_title.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_title.position = Vector2(0.0, area.y * 0.38)
 	_title.size = Vector2(area.x, 70.0)
@@ -263,4 +305,4 @@ func _layout() -> void:
 	_unlock.position = Vector2((area.x - unlock_width) * 0.5, area.y * 0.28)
 	_skip.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_skip.size = Vector2(200.0, 12.0)
-	_skip.position = Vector2(area.x - 216.0, area.y - PANEL_HEIGHT - 40.0)
+	_skip.position = Vector2(area.x - 216.0, area.y - bottom_inset - PANEL_HEIGHT - 28.0)

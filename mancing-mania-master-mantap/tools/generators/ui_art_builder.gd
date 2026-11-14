@@ -7,13 +7,13 @@ extends RefCounted
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
 
 const GENERATOR_ID := "ui_art_builder"
-const GENERATOR_VERSION := 1
+const GENERATOR_VERSION := 2
 
 const THEME_PATH := "res://generated/ui/ui_theme.tres"
 const ICON_PATH := "res://generated/ui/app_icon.png"
 const ICON_SIZE := 512
 const ICON_SUPERSAMPLE := 2
-const GRABBER_SIZE := 28
+const GRABBER_SIZE := 34
 
 
 ## Builds every UI asset and records it in `manifest`. Returns error messages.
@@ -42,157 +42,169 @@ func build_theme() -> Theme:
 	var theme := Theme.new()
 	theme.default_font_size = UiTokens.FONT_BODY
 
-	_style_labels(theme)
-	_style_buttons(theme)
-	_style_panels(theme)
-	_style_progress_bar(theme)
+	var bold := UiSkin.make_bold(0.55, 0)
+	_set_id(bold, "font_bold")
+	var heavy := UiSkin.make_bold(0.9, 1)
+	_set_id(heavy, "font_heavy")
+
+	_style_labels(theme, bold, heavy)
+	_style_buttons(theme, bold)
+	_style_panels(theme, bold)
+	_style_progress_bar(theme, bold)
 	_style_slider(theme)
-	_style_tabs(theme)
+	_style_tabs(theme, bold)
+	_style_scrollbars(theme)
 	_style_misc(theme)
 	return theme
 
 
-func _style_labels(theme: Theme) -> void:
+func _style_labels(theme: Theme, bold: FontVariation, heavy: FontVariation) -> void:
 	theme.set_color(&"font_color", &"Label", UiTokens.INK_900)
 	theme.set_constant(&"line_spacing", &"Label", 6)
 
-	_label_variation(theme, UiTokens.TYPE_TITLE, UiTokens.FONT_HERO, UiTokens.INK_900)
-	_label_variation(theme, UiTokens.TYPE_SCREEN_TITLE, UiTokens.FONT_SCREEN_TITLE, UiTokens.INK_900)
-	_label_variation(theme, UiTokens.TYPE_HEADER, UiTokens.FONT_HEADER, UiTokens.INK_900)
-	_label_variation(theme, UiTokens.TYPE_SMALL, UiTokens.FONT_SMALL, UiTokens.INK_700)
+	_label_variation(theme, UiTokens.TYPE_TITLE, UiTokens.FONT_HERO, UiTokens.INK_900, heavy)
+	_label_variation(theme, UiTokens.TYPE_SCREEN_TITLE, UiTokens.FONT_SCREEN_TITLE, UiTokens.INK_900, heavy)
+	_label_variation(theme, UiTokens.TYPE_HEADER, UiTokens.FONT_HEADER, UiTokens.INK_900, bold)
+	_label_variation(theme, UiTokens.TYPE_SMALL, UiTokens.FONT_SMALL, UiTokens.INK_700, null)
+
+	# Ribbon title on top of a card: cream letters with a rim of the ribbon colour.
+	_label_variation(theme, UiTokens.TYPE_RIBBON_LABEL, UiTokens.FONT_HEADER, UiTokens.CREAM_50, heavy)
+	theme.set_color(&"font_outline_color", UiTokens.TYPE_RIBBON_LABEL, UiSkin.edge_of(UiTokens.TERRACOTTA_500))
+	theme.set_constant(&"outline_size", UiTokens.TYPE_RIBBON_LABEL, 6)
+
+	# The speaker's name tag on dialogue cards.
+	_label_variation(theme, UiTokens.TYPE_NAME_TAG, UiTokens.FONT_BODY + 1, UiTokens.CREAM_50, bold)
+	var tag := UiSkin.pill(UiTokens.TERRACOTTA_500, 3, 16, Vector2(UiTokens.SPACE_16, 2.0))
+	_set_id(tag, "name_tag")
+	theme.set_stylebox(&"normal", UiTokens.TYPE_NAME_TAG, tag)
+	theme.set_color(&"font_outline_color", UiTokens.TYPE_NAME_TAG, UiSkin.edge_of(UiTokens.TERRACOTTA_500))
+	theme.set_constant(&"outline_size", UiTokens.TYPE_NAME_TAG, 4)
+
+	# Section headers inside long cards (Settings): a small paper tab.
+	_label_variation(theme, UiTokens.TYPE_SECTION, UiTokens.FONT_BODY, UiTokens.INK_900, bold)
+	var section := UiSkin.pill(UiTokens.PAPER_200, 3, 14, Vector2(UiTokens.SPACE_16, 3.0), 2)
+	section.shadow_size = 0
+	_set_id(section, "section_tag")
+	theme.set_stylebox(&"normal", UiTokens.TYPE_SECTION, section)
 
 
-func _label_variation(theme: Theme, type_name: StringName, font_size: int, color: Color) -> void:
+func _label_variation(theme: Theme, type_name: StringName, font_size: int, color: Color, font: Font) -> void:
 	theme.set_type_variation(type_name, &"Label")
 	theme.set_font_size(&"font_size", type_name, font_size)
 	theme.set_color(&"font_color", type_name, color)
+	if font != null:
+		theme.set_font(&"font", type_name, font)
 
 
-func _style_buttons(theme: Theme) -> void:
-	_button_family(theme, &"Button", "button", UiTokens.CREAM_50, UiTokens.INK_900)
+func _style_buttons(theme: Theme, bold: FontVariation) -> void:
+	_button_family(theme, &"Button", "button", UiTokens.CREAM_50, UiTokens.INK_900, bold)
 
 	theme.set_type_variation(UiTokens.TYPE_CTA_BUTTON, &"Button")
-	_button_family(theme, UiTokens.TYPE_CTA_BUTTON, "cta", UiTokens.TERRACOTTA_500, UiTokens.CREAM_50)
+	_button_family(theme, UiTokens.TYPE_CTA_BUTTON, "cta", UiTokens.TERRACOTTA_500, UiTokens.CREAM_50, bold)
 
 	theme.set_type_variation(UiTokens.TYPE_DANGER_BUTTON, &"Button")
-	_button_family(theme, UiTokens.TYPE_DANGER_BUTTON, "danger", UiTokens.RED_500, UiTokens.CREAM_50)
+	_button_family(theme, UiTokens.TYPE_DANGER_BUTTON, "danger", UiTokens.RED_500, UiTokens.CREAM_50, bold)
+
+	theme.set_type_variation(UiTokens.TYPE_ACCENT_BUTTON, &"Button")
+	_button_family(theme, UiTokens.TYPE_ACCENT_BUTTON, "accent", UiTokens.LAKE_500, UiTokens.CREAM_50, bold)
+
+	# A round cream button for icons only (Pause).
+	theme.set_type_variation(UiTokens.TYPE_ROUND_BUTTON, &"Button")
+	_button_family(theme, UiTokens.TYPE_ROUND_BUTTON, "round", UiTokens.CREAM_50, UiTokens.INK_900, bold, 30, Vector2(12.0, 8.0))
 
 
-## One button look in all five interaction states (GDD 167.5).
-func _button_family(theme: Theme, type_name: StringName, id_prefix: String, fill: Color, text: Color) -> void:
-	var is_light := fill.get_luminance() > 0.6
-	var hover_fill := fill.lerp(UiTokens.SUN_500, 0.3) if is_light else fill.lightened(0.12)
-	var pressed_fill := UiTokens.PAPER_200 if is_light else fill.darkened(0.16)
-
-	var normal := _button_box("%s_normal" % id_prefix, fill, UiTokens.INK_700, 3)
-	var hover := _button_box("%s_hover" % id_prefix, hover_fill, UiTokens.INK_900, 3)
-	var pressed := _button_box("%s_pressed" % id_prefix, pressed_fill, UiTokens.INK_900, 0)
-	# A pressed button sinks by the height of the shadow it just lost.
-	pressed.content_margin_top += 2.0
-	pressed.content_margin_bottom -= 2.0
-	var disabled := _button_box(
-		"%s_disabled" % id_prefix,
-		Color(UiTokens.CREAM_100, 0.55),
-		Color(UiTokens.INK_700, 0.35),
-		0)
-
-	var focus := StyleBoxFlat.new()
+## One button look in all five interaction states (GDD 167.5): a face, a rim,
+## a darker lip that the face sinks into when pressed, and a gold focus ring.
+func _button_family(theme: Theme, type_name: StringName, id_prefix: String, fill: Color, text: Color, font: Font,
+		radius: int = UiTokens.RADIUS_BUTTON, padding: Vector2 = Vector2(UiTokens.SPACE_24, 9.0)) -> void:
+	for state: String in [UiSkin.STATE_NORMAL, UiSkin.STATE_HOVER, UiSkin.STATE_PRESSED, UiSkin.STATE_DISABLED]:
+		var box := UiSkin.button_box(fill, state, radius, UiTokens.LIP, padding)
+		_set_id(box, "%s_%s" % [id_prefix, state])
+		theme.set_stylebox(StringName(state), type_name, box)
+		if state == UiSkin.STATE_PRESSED:
+			# Hover while held looks like pressed.
+			theme.set_stylebox(&"hover_pressed", type_name, box)
+	var focus := UiSkin.focus_box(radius)
 	_set_id(focus, "%s_focus" % id_prefix)
-	focus.draw_center = false
-	focus.border_color = UiTokens.LAKE_500
-	focus.set_border_width_all(3)
-	focus.set_corner_radius_all(UiTokens.RADIUS_BUTTON + 3)
-	focus.set_expand_margin_all(4.0)
-
-	theme.set_stylebox(&"normal", type_name, normal)
-	theme.set_stylebox(&"hover", type_name, hover)
-	theme.set_stylebox(&"pressed", type_name, pressed)
-	theme.set_stylebox(&"disabled", type_name, disabled)
 	theme.set_stylebox(&"focus", type_name, focus)
 
+	theme.set_font(&"font", type_name, font)
 	theme.set_font_size(&"font_size", type_name, UiTokens.FONT_BUTTON)
+	var light_text := text.get_luminance() > 0.6
 	for color_name: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color", &"font_hover_pressed_color"]:
 		theme.set_color(color_name, type_name, text)
-	if is_light:
-		theme.set_color(&"font_disabled_color", type_name, Color(UiTokens.INK_700, 0.6))
-	else:
-		theme.set_color(&"font_disabled_color", type_name, Color(UiTokens.INK_700, 0.6))
+	for color_name: StringName in [&"icon_normal_color", &"icon_hover_color", &"icon_pressed_color", &"icon_focus_color", &"icon_hover_pressed_color"]:
+		theme.set_color(color_name, type_name, text)
+	theme.set_color(&"font_disabled_color", type_name, Color(UiTokens.INK_700, 0.55))
+	theme.set_color(&"icon_disabled_color", type_name, Color(UiTokens.INK_700, 0.45))
+	# Cream letters on a coloured face get a rim of the face colour, like the
+	# painted lettering on a cart.
+	theme.set_color(&"font_outline_color", type_name, UiSkin.edge_of(fill) if light_text else Color(0, 0, 0, 0))
+	theme.set_constant(&"outline_size", type_name, 5 if light_text else 0)
+	theme.set_constant(&"h_separation", type_name, UiTokens.SPACE_12)
+	theme.set_constant(&"icon_max_width", type_name, 28)
 
 
-func _button_box(id: String, fill: Color, border: Color, shadow_size: int) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	_set_id(box, id)
-	box.bg_color = fill
-	box.border_color = border
-	box.set_border_width_all(UiTokens.BORDER_WIDTH)
-	box.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
-	box.content_margin_left = UiTokens.SPACE_24
-	box.content_margin_right = UiTokens.SPACE_24
-	box.content_margin_top = UiTokens.SPACE_12
-	box.content_margin_bottom = UiTokens.SPACE_12
-	if shadow_size > 0:
-		box.shadow_color = Color(UiTokens.INK_900, 0.22)
-		box.shadow_size = shadow_size
-		box.shadow_offset = Vector2(0.0, 2.0)
-	box.anti_aliasing = true
-	return box
-
-
-func _style_panels(theme: Theme) -> void:
-	var panel := StyleBoxFlat.new()
+func _style_panels(theme: Theme, bold: FontVariation) -> void:
+	var panel := UiSkin.card()
 	_set_id(panel, "panel")
-	panel.bg_color = UiTokens.CREAM_100
-	panel.border_color = UiTokens.INK_700
-	panel.set_border_width_all(UiTokens.BORDER_WIDTH)
-	panel.set_corner_radius_all(UiTokens.RADIUS_PANEL)
-	panel.set_content_margin_all(UiTokens.SPACE_24)
-	panel.shadow_color = Color(UiTokens.INK_900, 0.2)
-	panel.shadow_size = 8
-	panel.shadow_offset = Vector2(0.0, 4.0)
 	theme.set_stylebox(&"panel", &"PanelContainer", panel)
 	theme.set_stylebox(&"panel", &"Panel", panel)
+
+	# A smaller card inside a card (price cards, list rows).
+	theme.set_type_variation(UiTokens.TYPE_CARD_PANEL, &"PanelContainer")
+	var inner := UiSkin.card(UiTokens.CREAM_50, 18, UiTokens.SPACE_16, 3)
+	inner.shadow_size = 6
+	inner.shadow_offset = Vector2(0.0, 3.0)
+	_set_id(inner, "card_panel")
+	theme.set_stylebox(&"panel", UiTokens.TYPE_CARD_PANEL, inner)
+
+	theme.set_type_variation(UiTokens.TYPE_WELL_PANEL, &"PanelContainer")
+	var well := UiSkin.well(Color(UiTokens.PAPER_200, 0.7))
+	_set_id(well, "well_panel")
+	theme.set_stylebox(&"panel", UiTokens.TYPE_WELL_PANEL, well)
+
+	theme.set_type_variation(UiTokens.TYPE_RIBBON_PANEL, &"PanelContainer")
+	var ribbon := UiSkin.ribbon()
+	_set_id(ribbon, "ribbon_panel")
+	theme.set_stylebox(&"panel", UiTokens.TYPE_RIBBON_PANEL, ribbon)
 
 	theme.set_constant(&"separation", &"VBoxContainer", UiTokens.SPACE_12)
 	theme.set_constant(&"separation", &"HBoxContainer", UiTokens.SPACE_12)
 	theme.set_constant(&"h_separation", &"GridContainer", UiTokens.SPACE_16)
 	theme.set_constant(&"v_separation", &"GridContainer", UiTokens.SPACE_12)
 
+	var tooltip := UiSkin.pill(UiTokens.INK_900, 0, 12, Vector2(UiTokens.SPACE_12, UiTokens.SPACE_8))
+	_set_id(tooltip, "tooltip")
+	theme.set_stylebox(&"panel", &"TooltipPanel", tooltip)
+	theme.set_color(&"font_color", &"TooltipLabel", UiTokens.CREAM_50)
+	theme.set_font(&"font", &"TooltipLabel", bold)
 
-func _style_progress_bar(theme: Theme) -> void:
-	var background := StyleBoxFlat.new()
+
+func _style_progress_bar(theme: Theme, bold: FontVariation) -> void:
+	var background := UiSkin.bar_background()
 	_set_id(background, "progress_background")
-	background.bg_color = UiTokens.PAPER_200
-	background.border_color = UiTokens.INK_700
-	background.set_border_width_all(UiTokens.BORDER_WIDTH)
-	background.set_corner_radius_all(8)
-
-	var fill := StyleBoxFlat.new()
+	var fill := UiSkin.bar_fill(UiTokens.LAKE_500)
 	_set_id(fill, "progress_fill")
-	fill.bg_color = UiTokens.LAKE_500
-	fill.border_color = UiTokens.INK_700
-	fill.set_border_width_all(UiTokens.BORDER_WIDTH)
-	fill.set_corner_radius_all(8)
-
 	theme.set_stylebox(&"background", &"ProgressBar", background)
 	theme.set_stylebox(&"fill", &"ProgressBar", fill)
 	theme.set_color(&"font_color", &"ProgressBar", UiTokens.INK_900)
+	theme.set_color(&"font_outline_color", &"ProgressBar", UiTokens.CREAM_50)
+	theme.set_constant(&"outline_size", &"ProgressBar", 4)
+	theme.set_font(&"font", &"ProgressBar", bold)
 	theme.set_font_size(&"font_size", &"ProgressBar", UiTokens.FONT_SMALL)
 
 
 func _style_slider(theme: Theme) -> void:
-	var track := StyleBoxFlat.new()
+	var track := UiSkin.well(UiTokens.PAPER_200, 10, 0.0)
 	_set_id(track, "slider_track")
-	track.bg_color = UiTokens.PAPER_200
-	track.border_color = UiTokens.INK_700
-	track.set_border_width_all(1)
-	track.set_corner_radius_all(5)
-	track.content_margin_top = 5.0
-	track.content_margin_bottom = 5.0
+	track.content_margin_top = 7.0
+	track.content_margin_bottom = 7.0
 
-	var filled := StyleBoxFlat.new()
+	var filled := UiSkin.bar_fill(UiTokens.LAKE_500)
 	_set_id(filled, "slider_filled")
-	filled.bg_color = UiTokens.LAKE_500
-	filled.set_corner_radius_all(5)
+	filled.border_width_bottom = 2
+	filled.set_corner_radius_all(10)
 
 	theme.set_stylebox(&"slider", &"HSlider", track)
 	theme.set_stylebox(&"grabber_area", &"HSlider", filled)
@@ -203,15 +215,16 @@ func _style_slider(theme: Theme) -> void:
 	theme.set_icon(&"grabber_disabled", &"HSlider", _grabber_texture("slider_grabber_disabled", UiTokens.PAPER_200))
 
 
-## A round slider handle described purely by numbers: a radial gradient that is
-## solid fill in the middle, an ink ring near the rim and transparent outside.
+## A round slider knob described purely by numbers: a radial gradient with a
+## cream centre dot, the knob colour, a darker rim and a transparent outside.
 ## A parametric texture keeps the saved theme small and byte-identical between
 ## runs, which embedded pixel data would not.
 func _grabber_texture(id: String, fill: Color) -> GradientTexture2D:
+	var rim := UiSkin.edge_of(fill)
 	var gradient := Gradient.new()
 	_set_id(gradient, "%s_gradient" % id)
-	gradient.offsets = PackedFloat32Array([0.0, 0.72, 0.8, 0.9, 0.97])
-	gradient.colors = PackedColorArray([fill, fill, UiTokens.INK_900, UiTokens.INK_900, Color(UiTokens.INK_900, 0.0)])
+	gradient.offsets = PackedFloat32Array([0.0, 0.26, 0.32, 0.7, 0.76, 0.9, 0.97])
+	gradient.colors = PackedColorArray([UiTokens.CREAM_50, UiTokens.CREAM_50, fill, fill, rim, rim, Color(rim, 0.0)])
 
 	var texture := GradientTexture2D.new()
 	_set_id(texture, id)
@@ -224,16 +237,15 @@ func _grabber_texture(id: String, fill: Color) -> GradientTexture2D:
 	return texture
 
 
-func _style_tabs(theme: Theme) -> void:
-	var selected := _tab_box("tab_selected", UiTokens.CREAM_50, UiTokens.INK_900)
-	var unselected := _tab_box("tab_unselected", UiTokens.PAPER_200, Color(UiTokens.INK_700, 0.6))
-	var hovered := _tab_box("tab_hovered", UiTokens.PAPER_200.lerp(UiTokens.SUN_500, 0.3), UiTokens.INK_700)
-	var focus := StyleBoxFlat.new()
+func _style_tabs(theme: Theme, bold: FontVariation) -> void:
+	var selected := UiSkin.tab(true, false, UiTokens.CREAM_50)
+	_set_id(selected, "tab_selected")
+	var unselected := UiSkin.tab(false, false)
+	_set_id(unselected, "tab_unselected")
+	var hovered := UiSkin.tab(false, true)
+	_set_id(hovered, "tab_hovered")
+	var focus := UiSkin.focus_box(16)
 	_set_id(focus, "tab_focus")
-	focus.draw_center = false
-	focus.border_color = UiTokens.LAKE_500
-	focus.set_border_width_all(3)
-	focus.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
 
 	for type_name: StringName in [&"TabBar", &"TabContainer"]:
 		theme.set_stylebox(&"tab_selected", type_name, selected)
@@ -243,41 +255,49 @@ func _style_tabs(theme: Theme) -> void:
 		theme.set_color(&"font_selected_color", type_name, UiTokens.INK_900)
 		theme.set_color(&"font_unselected_color", type_name, UiTokens.INK_700)
 		theme.set_color(&"font_hovered_color", type_name, UiTokens.INK_900)
+		theme.set_font(&"font", type_name, bold)
 		theme.set_font_size(&"font_size", type_name, UiTokens.FONT_SMALL)
 		theme.set_constant(&"h_separation", type_name, UiTokens.SPACE_4)
 
-	var body := StyleBoxFlat.new()
+	var body := UiSkin.card(UiTokens.CREAM_50, UiTokens.RADIUS_PANEL, UiTokens.SPACE_16, 4)
 	_set_id(body, "tab_panel")
-	body.bg_color = UiTokens.CREAM_50
-	body.border_color = UiTokens.INK_700
-	body.set_border_width_all(UiTokens.BORDER_WIDTH)
-	body.set_corner_radius_all(UiTokens.RADIUS_BUTTON)
 	body.corner_radius_top_left = 0
-	body.set_content_margin_all(UiTokens.SPACE_16)
+	# The page sits inside a card whose body scrolls and clips, so it casts
+	# no shadow of its own (a clipped shadow reads as a square band).
+	body.shadow_size = 0
 	theme.set_stylebox(&"panel", &"TabContainer", body)
 
 
-func _tab_box(id: String, fill: Color, border: Color) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	_set_id(box, id)
-	box.bg_color = fill
-	box.border_color = border
-	box.set_border_width_all(UiTokens.BORDER_WIDTH)
-	box.border_width_bottom = 0
-	box.corner_radius_top_left = UiTokens.RADIUS_BUTTON
-	box.corner_radius_top_right = UiTokens.RADIUS_BUTTON
-	box.content_margin_left = UiTokens.SPACE_12
-	box.content_margin_right = UiTokens.SPACE_12
-	box.content_margin_top = UiTokens.SPACE_12
-	box.content_margin_bottom = UiTokens.SPACE_12
-	return box
+## Soft rounded scroll bars in the paper colours instead of the engine grey.
+func _style_scrollbars(theme: Theme) -> void:
+	for type_name: StringName in [&"VScrollBar", &"HScrollBar"]:
+		var vertical := type_name == &"VScrollBar"
+		var track := StyleBoxFlat.new()
+		_set_id(track, "%s_track" % type_name)
+		track.bg_color = Color(UiTokens.PAPER_200, 0.7)
+		track.set_corner_radius_all(8)
+		if vertical:
+			track.content_margin_left = 6.0
+			track.content_margin_right = 6.0
+		else:
+			track.content_margin_top = 6.0
+			track.content_margin_bottom = 6.0
+		theme.set_stylebox(&"scroll", type_name, track)
+		theme.set_stylebox(&"scroll_focus", type_name, track)
+		for item: Array in [[&"grabber", UiTokens.EDGE_CREAM], [&"grabber_highlight", UiTokens.EDGE_PAPER], [&"grabber_pressed", UiTokens.EDGE_PAPER.darkened(0.1)]]:
+			var grab := StyleBoxFlat.new()
+			_set_id(grab, "%s_%s" % [type_name, item[0]])
+			grab.bg_color = item[1]
+			grab.set_corner_radius_all(8)
+			grab.anti_aliasing = true
+			theme.set_stylebox(item[0], type_name, grab)
 
 
 func _style_misc(theme: Theme) -> void:
 	var separator := StyleBoxLine.new()
 	_set_id(separator, "separator")
-	separator.color = Color(UiTokens.INK_700, 0.35)
-	separator.thickness = 2
+	separator.color = Color(UiTokens.EDGE_CREAM, 0.8)
+	separator.thickness = 3
 	theme.set_stylebox(&"separator", &"HSeparator", separator)
 	theme.set_constant(&"separation", &"HSeparator", UiTokens.SPACE_12)
 
