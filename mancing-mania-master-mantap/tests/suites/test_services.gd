@@ -128,6 +128,35 @@ func test_key_events_reach_actions_through_the_input_map() -> bool:
 	return true
 
 
+func test_left_click_and_space_both_cast() -> bool:
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	Input.parse_input_event(click)
+	await wait_frames(3)
+	check(InputManager.consume_action_once(&"fish_cast"), "left click triggers fish_cast")
+	check_eq(InputManager.get_action_strength_safe(&"fish_reel"), 1.0, "and holds fish_reel")
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	Input.parse_input_event(release)
+	await wait_frames(3)
+	check_eq(InputManager.get_action_strength_safe(&"fish_reel"), 0.0, "releasing the button releases the reel")
+
+	var space := InputEventKey.new()
+	space.physical_keycode = KEY_SPACE
+	space.pressed = true
+	Input.parse_input_event(space)
+	await wait_frames(3)
+	check(InputManager.consume_action_once(&"fish_cast"), "Space triggers fish_cast")
+	var space_up := InputEventKey.new()
+	space_up.physical_keycode = KEY_SPACE
+	space_up.pressed = false
+	Input.parse_input_event(space_up)
+	await wait_frames(3)
+	return true
+
+
 func test_input_remap_applies_and_resets() -> bool:
 	InputManager.apply_input_remap({"open_market": ["key:%d" % KEY_M], "launch_rocket": ["key:65"]})
 	var events := InputMap.action_get_events(&"open_market")

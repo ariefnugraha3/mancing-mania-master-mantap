@@ -143,3 +143,102 @@ Sesuai Section 178.3, setelah cash, hutang, upgrade, atau seed diubah lewat `Deb
 ### D-022 — Catatan teknis: jangan pakai `SceneTreeTimer` untuk jendela waktu gameplay
 
 Ditemukan saat menulis test: timer yang dibuat di akhir frame yang lambat dipotong durasi seluruh frame itu pada frame berikutnya, sehingga bisa selesai jauh lebih cepat dari waktu nyata. Untuk strike window, telegraph, dan timer duel di milestone berikutnya, akumulasikan `delta` di `_process` dan batasi `delta` per frame agar satu frame yang tersendat tidak menghabiskan jendela reaksi pemain.
+
+
+## Milestone 2
+
+### D-023 — Field tambahan di `FishingBalance`
+
+Skema Section 170.3 tidak memuat beberapa angka yang dibutuhkan aturan memancing. Semuanya ditambahkan sebagai field dengan nilai default, supaya tetap berupa data dan bukan angka di script:
+
+| Field | Nilai | Sumber |
+|---|---|---|
+| `trash_strike_window_sec` | 0,90 | GDD Section 28 |
+| `zone_retarget_min_sec` / `max_sec` | 0,65 / 1,40 | GDD Section 33 |
+| `land_slowdown_sec` | 0,25 | GDD Section 37 |
+| `bite_warning_sec` | 1,1 | tidak ada di GDD; lama bayangan ikan terlihat sebelum gigitan asli |
+| `boss_feint_probability` / `boss_feint_sec` | 0,35 / 0,3 | tidak ada di GDD; Section 33 hanya menyebut Arowana "sesekali" feint |
+
+Dua baris terakhir adalah angka rasa yang boleh di-tuning setelah playtest manusia. Tabel authoritative GDD tidak berubah.
+
+### D-024 — Encounter di-roll saat cast, dari satu seed
+
+Section 29 berkata roll terjadi "setiap successful strike", tetapi jendela strike bergantung pada jenis ikan (Section 28), jadi isi kail harus sudah diketahui sebelum jendela dibuka. Encounter di-roll saat cast dimulai dari satu seed lewat channel RNG bernama (`trash`, `fish`, `trash_type`, `weight`, `big_one`, `wait`, `nibble_*`). Peluang per strike yang berhasil tetap sama dengan tabel Section 29, dan satu seed mereproduksi seluruh gigitan.
+
+### D-025 — Sampah tidak melewati reel
+
+GDD memberi jendela strike untuk sampah (0,90 detik) tetapi tidak memberi lebar zona, kecepatan, atau stress untuk reel. Sesuai aturan ambiguitas, pilihan paling sederhana diambil: strike yang berhasil pada sampah langsung mengangkatnya ke ember (QA FISH-010).
+
+### D-026 — Tujuan ikan yang mendarat sebelum duel ada
+
+Urutan routing: Wheel bila scene-nya ada; kalau tidak, duel pertama yang scene-nya ada (atau duel paksaan debug); kalau tidak ada duel sama sekali, ikan masuk ember dan HUD menampilkan "No duels in this build yet." Jalur terakhir hilang dengan sendirinya begitu scene duel pertama dibuat di Milestone 4. Di jalur itu `record_fish_win` tidak dipanggil, karena tidak ada duel yang dimenangkan; ikan belum tercatat "discovered" di Fish Book.
+
+### D-027 — Ikan pertama yang diskrip
+
+Selama `stats.fish_landed` masih 0 dan tutorial `reeling_seen` belum diset, setiap cast menghasilkan Bruiser Catfish (Section 13, 176.10). Aturan berhenti begitu satu ikan berhasil didaratkan, bukan setelah satu kali cast, supaya pemain yang gagal tetap mendapat lele berikutnya.
+
+### D-028 — Satu input kontekstual
+
+Space, klik kiri, dan tombol aksi sentuh memakai action yang sama: cast saat idle, strike saat menunggu atau saat gigitan, dan reel selama ditahan. Tekanan yang memicu strike boleh terus ditahan menjadi reel. Setiap tekanan dikonsumsi satu kali, jadi tap yang melempar tidak bisa ikut terhitung sebagai strike (Section 176.1).
+
+Strike saat belum ada gigitan asli, termasuk saat bayangan ikan sudah terlihat, dihitung false strike: tunda 0,8 detik, tanpa hukuman lain.
+
+### D-029 — Waktu yang tidak disebut GDD
+
+- Pelampung menyentuh air 1,05 detik setelah cast dimulai (lepas di 0,48; Section 24 menyebut ayunan selesai di 1,05).
+- Reveal tangkapan ikan 3,2 detik dan sampah 1,5 detik sebelum game lanjut.
+- Jeda setelah ikan lepas 1,3 detik.
+- Langkah waktu per frame dibatasi 0,1 detik (lihat D-022).
+
+### D-030 — Rig ikan dan karakter
+
+- Ikan memakai satu mesh yang di-skin sepanjang tulang punggung, sehingga badan melengkung mulus saat berenang dan menggelepar. Rig punya 9 tulang sesuai Section 184.7.
+- Karakter manusia memakai ikatan kaku: setiap bagian tubuh terikat penuh ke satu tulang (Section 184.6 mengizinkan). Rig Darto punya 18 tulang.
+- Tulang tidak punya rotasi rest, jadi nilai kunci animasi adalah sudut sendi itu sendiri.
+- Keenam ikan sudah punya profil badan, sirip, dan warna sendiri. Aksesori dan clip duel ditambahkan oleh milestone duel dan dialog masing-masing.
+
+### D-031 — Darto berdiri saat memancing
+
+GDD menggambarkan gerakan cast (joran ditarik ke belakang lalu diayun) tetapi tidak menyebut duduk atau berdiri di fase memancing. Darto berdiri di tepi. Posisi Darto, pelampung, ember, dan kamera disimpan sebagai marker di dalam `env_lake_set.tscn`, sehingga scene memancing dan Main Menu membaca titik yang sama.
+
+Kamera tetap per layout: satu bingkai untuk landscape, satu untuk portrait. Kamera hanya berpindah saat layout berubah dan tidak pernah bergetar.
+
+### D-032 — Rumput dan alang-alang dirakit saat scene dimuat
+
+MultiMesh menyimpan data instance di perangkat grafis, sehingga generator headless tidak bisa menuliskannya ke file. Generator menyimpan mesh rumpun dan daftar penempatan; `ScatterField` merakit MultiMesh saat node masuk scene. Hasilnya tetap instancing satu draw call per jenis, sesuai Section 101.
+
+### D-033 — Normalisasi file hasil generator
+
+Selain UID (D-013), penyimpan teks Godot memberi ID acak pada sub-resource, referensi eksternal, dan setiap node scene (`unique_id`). `generator_io.gd` menomori ulang ID resource menurut urutan muncul dan membuang `unique_id`. Dua run berturut-turut menghasilkan manifest yang identik.
+
+### D-034 — Lembar referensi
+
+`reference_sheet_generator.gd` dijalankan terpisah dengan jendela, karena render butuh kartu grafis. Outputnya dicatat di manifest yang sama; generator headless mempertahankan catatan itu saat menulis ulang manifest. Karena dirender GPU, file PNG bisa berbeda tipis antar mesin.
+
+Sheet model berisi tampak samping, depan, belakang, tiga perempat, siluet, pose hero, palet, dan skala setengah meter. Folder `generated/references/` diberi `.gdignore` agar tidak diimpor sebagai konten game.
+
+### D-035 — Ambience dirender menjadi loop
+
+Section 175.2 menyarankan `AudioStreamGenerator` untuk stream kontinu. Menyintesis 48.000 sampel per detik di GDScript setiap saat terlalu mahal untuk Web dan Android. Lapisan kontinu (air, angin) disintesis sekali menjadi loop mulus 6–8 detik pada 16 kHz, dikerjakan bertahap dengan anggaran 3 ms per frame agar tidak tersendat. Kicau burung adalah one-shot terpisah dengan jeda acak 5–12 detik, sehingga ambience tidak terdengar seperti loop pendek (Section 108).
+
+Tetap 100% dari kode: tidak ada file audio. Musik danau masih diam sampai mesin musik prosedural dibuat di Milestone 6.
+
+### D-036 — Tombol Music dan Sound di Pause
+
+Section 90 meminta toggle MUSIC dan SOUND. Toggle mengubah setting volume yang sama dengan slider: OFF menjadi 0, ON kembali ke nilai default. Nilai itu tersimpan seperti setting lain.
+
+### D-037 — Teks dan ikon di atas dunia 3D
+
+Prompt, banner, dan judul menu tampil langsung di atas scene 3D, jadi memakai teks terang dengan outline gelap agar terbaca di atas air, rumput, maupun kanopi pohon. Ikon digambar dengan `_draw()` dari garis, busur, dan poligon (Section 184.11); tidak ada file gambar ikon.
+
+### D-038 — Penempatan kontrol dengan `UiTokens.anchor_at()`
+
+Mode "minimum size" pada preset anchor Godot mengabaikan `custom_minimum_size`, sehingga tombol yang lebih besar dari teksnya menggantung di luar anchor dan bisa terpotong tepi layar. Helper `anchor_at()` mengukur kontrol dulu lalu menempatkannya dengan ukuran itu.
+
+### D-039 — Tool QA memancing
+
+Hanya di debug build: paksa tangkapan, waktu tunggu 0,5 detik, dan bot reel yang menahan saat marker di bawah tengah zona. Semuanya override runtime dan tidak pernah disimpan (Section 178.3). Langkah otomatis lewat command line dijelaskan di `README_TESTING.md`.
+
+### D-040 — Validasi aset
+
+Model hasil generator sekarang wajib untuk keenam ikan dan ketiga sampah; Boot gagal bila ada yang hilang. Potret Fish Book baru diwajibkan setelah dirender di Milestone 3 (`require_portraits`). Ini menggantikan flag tunggal di D-018.

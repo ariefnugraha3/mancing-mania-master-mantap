@@ -17,6 +17,9 @@ const BUTTON_WIDTH_PORTRAIT := 380.0
 @onready var _credits_button: GameButton = $MenuCanvas/SafeRoot/MenuButtons/CreditsButton
 @onready var _version_label: Label = $MenuCanvas/SafeRoot/VersionLabel
 @onready var _dialog: ModalDialog = $ConfirmOverlay
+@onready var _lake_set: Node3D = $World/LakeSet
+@onready var _darto_pose: Node3D = $World/DartoMenuPose
+@onready var _camera: Camera3D = $World/MenuCamera
 
 var _settings: SettingsOverlay
 var _how_to: HowToOverlay
@@ -39,6 +42,7 @@ func _ready() -> void:
 	_version_label.text = TextDb.tf(&"menu.version", {"version": SaveSchema.build_version()})
 	_version_label.visible = DebugService.is_debug_tools_allowed()
 	_version_label.gui_input.connect(_on_version_label_input)
+	UiTokens.outline_text(_version_label, UiTokens.FONT_SMALL, UiTokens.CREAM_50, 6)
 
 	_continue_button.pressed.connect(_on_continue_pressed)
 	_new_game_button.pressed.connect(_on_new_game_pressed)
@@ -53,6 +57,7 @@ func _ready() -> void:
 	_how_to.name = "HowToOverlay"
 	add_child(_how_to)
 
+	_darto_pose.position = (_lake_set.get_node("Markers/DartoSpot") as Node3D).position
 	PlatformService.viewport_class_changed.connect(_apply_layout)
 	_apply_layout(PlatformService.get_viewport_class())
 	_refresh()
@@ -68,6 +73,11 @@ func _ready() -> void:
 ## portrait centres the title at the top and the buttons at the bottom.
 func _apply_layout(viewport_class: StringName) -> void:
 	var portrait := viewport_class == PlatformService.PORTRAIT
+	# The lake set carries its own camera marks, so Darto and the water stay
+	# clear of the menu in both layouts.
+	var camera_mark := _lake_set.get_node("Markers/CameraPortrait" if portrait else "Markers/CameraMenu") as Node3D
+	_camera.global_transform = camera_mark.global_transform
+	_camera.fov = 62.0 if portrait else 50.0
 	var button_width := BUTTON_WIDTH_PORTRAIT if portrait else BUTTON_WIDTH_LANDSCAPE
 	for button: Control in _menu_buttons.get_children():
 		button.custom_minimum_size.x = button_width
@@ -75,27 +85,24 @@ func _apply_layout(viewport_class: StringName) -> void:
 	var title_alignment := HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
 	_title_line_1.horizontal_alignment = title_alignment
 	_title_line_2.horizontal_alignment = title_alignment
-	_title_line_1.add_theme_font_size_override(
-		&"font_size", UiTokens.FONT_HERO_PORTRAIT if portrait else UiTokens.FONT_HERO)
-	_title_line_2.add_theme_font_size_override(
-		&"font_size", UiTokens.FONT_SCREEN_TITLE_PORTRAIT if portrait else UiTokens.FONT_SCREEN_TITLE)
+	# The title sits over the lake scene, so it is light text with an outline.
+	UiTokens.outline_text(_title_line_1, UiTokens.FONT_HERO_PORTRAIT if portrait else UiTokens.FONT_HERO, UiTokens.CREAM_50, 12)
+	UiTokens.outline_text(
+		_title_line_2, UiTokens.FONT_SCREEN_TITLE_PORTRAIT if portrait else UiTokens.FONT_SCREEN_TITLE, Color("f2b79f"), 10)
 
 	# Presets size each block to its content, so they run after the content changed.
 	_place.call_deferred(portrait)
 
 
 func _place(portrait: bool) -> void:
-	_title_block.reset_size()
-	_menu_buttons.reset_size()
-	_version_label.reset_size()
 	if portrait:
-		_title_block.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
-		_menu_buttons.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE)
-		_version_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
+		UiTokens.anchor_at(_title_block, Control.PRESET_CENTER_TOP)
+		UiTokens.anchor_at(_menu_buttons, Control.PRESET_CENTER_BOTTOM)
+		UiTokens.anchor_at(_version_label, Control.PRESET_TOP_RIGHT)
 	else:
-		_title_block.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE)
-		_menu_buttons.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE)
-		_version_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+		UiTokens.anchor_at(_title_block, Control.PRESET_TOP_LEFT)
+		UiTokens.anchor_at(_menu_buttons, Control.PRESET_BOTTOM_LEFT)
+		UiTokens.anchor_at(_version_label, Control.PRESET_BOTTOM_RIGHT)
 
 
 ## Continue leads when there is a save; otherwise New Game does.
@@ -193,15 +200,7 @@ func _start_new_game() -> void:
 
 
 func _enter_game() -> void:
-	if SceneRouter.has_scene(SceneRouter.SCENE_FISHING):
-		SceneRouter.goto_fishing()
-		return
-	# The lake scene is built by the Fishing milestone. Until it exists, say so
-	# instead of routing into nothing.
-	await _dialog.prompt(
-		TextDb.t(&"menu.foundation.title"),
-		TextDb.t(&"menu.foundation.body"),
-		[ModalDialog.option(&"ok", TextDb.t(&"common.ok"), UiTokens.TYPE_CTA_BUTTON, true)])
+	SceneRouter.goto_fishing()
 
 
 ## Offers TRY AGAIN / START NEW GAME until the save loads or is replaced

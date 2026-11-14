@@ -1,0 +1,435 @@
+@tool
+extends RefCounted
+## Generates the six fish from procedural body profiles (GDD 184.7, 185.6-185.11).
+##
+## Each species has its own cross-section profile, fins and colours, so the
+## silhouettes differ by shape and not just by tint. The mesh is skinned along a
+## spine, which lets the body bend smoothly when the fish swims or flops.
+##
+## Bruiser Catfish is at final quality in this milestone. The other five have
+## their real body shapes; their signature accessories and personality clips
+## are added by the milestones that build their duels and dialogue.
+
+const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
+const RigBuilder := preload("res://tools/generators/rig_builder.gd")
+const GeneratorIo := preload("res://tools/generators/generator_io.gd")
+const MaterialBuilder := preload("res://tools/generators/material_builder.gd")
+
+const GENERATOR_ID := "fish_builder"
+const GENERATOR_VERSION := 1
+const SCENE_PATH := "res://generated/scenes/fish/fish_%s.tscn"
+
+const BODY_SEGMENTS := 12
+const EYE_WHITE := Color("efe9d8")
+const EYE_DARK := Color("1d1b19")
+const GLOVE_RED := Color("a4483f")
+const GLOVE_CUFF := Color("e9dcc0")
+
+## Spine joints along the body, from tail to head, as fractions of body length.
+const SPINE: Array = [
+	["tail_tip", -0.46], ["tail_base", -0.36], ["body_back", -0.22],
+	["body_mid", -0.05], ["body_front", 0.12], ["jaw_or_head", 0.30],
+]
+
+## Cross-sections are [x, half_width, half_height, y] in body lengths, listed
+## from the snout (+x) to the tail (-x). Fin outlines are in the side plane.
+const PROFILES: Dictionary = {
+	&"catfish_bruiser": {
+		"length": 0.82, "squareness": 2.6,
+		"top": Color("3f463a"), "belly": Color("b9b39a"), "fin": Color("2c3129"),
+		"sections": [
+			[0.50, 0.035, 0.020, -0.005], [0.46, 0.085, 0.040, 0.0], [0.38, 0.125, 0.062, 0.0],
+			[0.26, 0.130, 0.078, 0.005], [0.10, 0.105, 0.085, 0.01], [-0.08, 0.080, 0.080, 0.01],
+			[-0.25, 0.055, 0.068, 0.008], [-0.38, 0.030, 0.050, 0.005], [-0.46, 0.014, 0.036, 0.0]],
+		"tail": [[-0.44, 0.03], [-0.56, 0.085], [-0.60, 0.05], [-0.585, 0.0], [-0.60, -0.05], [-0.56, -0.085], [-0.44, -0.03]],
+		"dorsal": [[0.18, 0.082], [0.12, 0.14], [-0.10, 0.125], [-0.38, 0.07], [-0.40, 0.04], [-0.10, 0.07], [0.12, 0.078]],
+		"anal": [[-0.05, -0.068], [-0.10, -0.115], [-0.36, -0.07], [-0.38, -0.04], [-0.10, -0.058]],
+		"pectoral": [0.20, -0.03, 0.115, 0.15],
+		"eye": [0.395, 0.050, 0.094, 0.036],
+		"whiskers": true, "gloves": true, "brow": true,
+	},
+	&"tilapia_gym_rat": {
+		"length": 0.56, "squareness": 2.0,
+		"top": Color("71858c"), "belly": Color("dcd5c5"), "fin": Color("55666d"),
+		"sections": [
+			[0.50, 0.020, 0.030, 0.0], [0.44, 0.045, 0.090, 0.0], [0.32, 0.070, 0.170, 0.01],
+			[0.12, 0.080, 0.215, 0.01], [-0.08, 0.070, 0.200, 0.01], [-0.26, 0.045, 0.140, 0.0],
+			[-0.38, 0.025, 0.075, 0.0], [-0.45, 0.014, 0.050, 0.0]],
+		"tail": [[-0.43, 0.04], [-0.58, 0.13], [-0.60, 0.0], [-0.58, -0.13], [-0.43, -0.04]],
+		"dorsal": [[0.22, 0.18], [0.15, 0.27], [-0.05, 0.27], [-0.28, 0.21], [-0.33, 0.12], [-0.05, 0.19]],
+		"anal": [[-0.10, -0.18], [-0.16, -0.24], [-0.30, -0.17], [-0.32, -0.10]],
+		"pectoral": [0.22, -0.06, 0.07, 0.14],
+		"eye": [0.40, 0.045, 0.048, 0.024],
+	},
+	&"gourami_shady": {
+		"length": 0.60, "squareness": 2.0,
+		"top": Color("86775a"), "belly": Color("d9caa9"), "fin": Color("665840"),
+		"sections": [
+			[0.50, 0.018, 0.030, 0.0], [0.44, 0.040, 0.100, 0.0], [0.30, 0.060, 0.200, 0.0],
+			[0.10, 0.070, 0.250, 0.0], [-0.12, 0.065, 0.240, 0.0], [-0.30, 0.040, 0.160, 0.0],
+			[-0.42, 0.020, 0.070, 0.0], [-0.47, 0.012, 0.045, 0.0]],
+		"tail": [[-0.45, 0.04], [-0.56, 0.10], [-0.60, 0.05], [-0.60, -0.05], [-0.56, -0.10], [-0.45, -0.04]],
+		"dorsal": [[0.05, 0.235], [-0.05, 0.31], [-0.30, 0.24], [-0.36, 0.13], [-0.10, 0.20]],
+		"anal": [[0.10, -0.225], [0.0, -0.31], [-0.32, -0.22], [-0.38, -0.10], [-0.10, -0.20]],
+		"pectoral": [0.24, -0.05, 0.06, 0.12],
+		"eye": [0.40, 0.05, 0.043, 0.022],
+	},
+	&"carp_golden": {
+		"length": 0.66, "squareness": 2.1,
+		"top": Color("c8942e"), "belly": Color("f0d68c"), "fin": Color("d47a2c"),
+		"sections": [
+			[0.50, 0.030, 0.035, -0.01], [0.44, 0.060, 0.085, 0.0], [0.32, 0.085, 0.140, 0.015],
+			[0.12, 0.100, 0.180, 0.03], [-0.08, 0.090, 0.165, 0.025], [-0.26, 0.060, 0.115, 0.01],
+			[-0.39, 0.030, 0.065, 0.0], [-0.46, 0.016, 0.045, 0.0]],
+		"tail": [[-0.44, 0.04], [-0.60, 0.15], [-0.56, 0.0], [-0.60, -0.15], [-0.44, -0.04]],
+		"dorsal": [[0.16, 0.19], [0.08, 0.30], [-0.24, 0.20], [-0.28, 0.12], [-0.05, 0.17]],
+		"anal": [[-0.14, -0.14], [-0.20, -0.22], [-0.30, -0.13], [-0.30, -0.09]],
+		"pectoral": [0.24, -0.07, 0.085, 0.17],
+		"eye": [0.40, 0.04, 0.062, 0.024],
+	},
+	&"snakehead_sergeant": {
+		"length": 0.86, "squareness": 2.4,
+		"top": Color("3b4937"), "belly": Color("c9c3a5"), "fin": Color("2d382b"),
+		"bands": true,
+		"sections": [
+			[0.50, 0.035, 0.028, 0.0], [0.45, 0.065, 0.050, 0.0], [0.36, 0.078, 0.066, 0.0],
+			[0.18, 0.080, 0.075, 0.0], [-0.05, 0.075, 0.075, 0.0], [-0.25, 0.060, 0.066, 0.0],
+			[-0.40, 0.035, 0.050, 0.0], [-0.47, 0.016, 0.035, 0.0]],
+		"tail": [[-0.45, 0.03], [-0.57, 0.08], [-0.61, 0.0], [-0.57, -0.08], [-0.45, -0.03]],
+		"dorsal": [[0.14, 0.072], [0.10, 0.125], [-0.38, 0.105], [-0.42, 0.04], [-0.10, 0.068]],
+		"anal": [[-0.02, -0.07], [-0.06, -0.12], [-0.38, -0.10], [-0.42, -0.04], [-0.10, -0.066]],
+		"pectoral": [0.26, -0.03, 0.075, 0.13],
+		"eye": [0.42, 0.035, 0.06, 0.02],
+	},
+	&"arowana_don": {
+		"length": 1.0, "squareness": 2.0,
+		"top": Color("b3553b"), "belly": Color("e7b76c"), "fin": Color("73291f"),
+		"scales": true,
+		"sections": [
+			[0.50, 0.020, 0.030, 0.035], [0.45, 0.045, 0.070, 0.02], [0.34, 0.060, 0.105, 0.0],
+			[0.12, 0.065, 0.120, -0.005], [-0.12, 0.060, 0.115, -0.005], [-0.30, 0.045, 0.095, 0.0],
+			[-0.42, 0.028, 0.070, 0.0], [-0.48, 0.014, 0.045, 0.0]],
+		"tail": [[-0.46, 0.04], [-0.56, 0.085], [-0.61, 0.0], [-0.56, -0.085], [-0.46, -0.04]],
+		"dorsal": [[-0.20, 0.108], [-0.26, 0.17], [-0.44, 0.10], [-0.44, 0.055], [-0.30, 0.09]],
+		"anal": [[-0.10, -0.115], [-0.18, -0.19], [-0.44, -0.10], [-0.44, -0.055], [-0.20, -0.10]],
+		"pectoral": [0.26, -0.07, 0.058, 0.20],
+		"eye": [0.42, 0.055, 0.042, 0.022],
+	},
+}
+
+
+func build(manifest: RefCounted) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for fish_id: StringName in PROFILES:
+		var path := SCENE_PATH % fish_id
+		var root := build_fish(fish_id)
+		var save_error := GeneratorIo.save_scene(root, path)
+		root.free()
+		if save_error != OK:
+			errors.append("fish_%s: could not save (%s)" % [fish_id, error_string(save_error)])
+		else:
+			manifest.register("fish_%s" % fish_id, GENERATOR_ID, GENERATOR_VERSION, 0, path)
+	return errors
+
+
+func build_fish(fish_id: StringName) -> Node3D:
+	var profile: Dictionary = PROFILES[fish_id]
+	var length: float = profile["length"]
+
+	var root := Node3D.new()
+	root.name = ("fish_%s" % fish_id).to_pascal_case()
+
+	var skeleton := RigBuilder.make_skeleton(_bone_rows(profile))
+	root.add_child(skeleton)
+
+	var material: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var body_meshes := Node3D.new()
+	body_meshes.name = "BodyMeshes"
+	root.add_child(body_meshes)
+	body_meshes.add_child(_mesh_instance("Body", _build_body(profile, skeleton), material))
+
+	var accessories := Node3D.new()
+	accessories.name = "AccessoryMeshes"
+	root.add_child(accessories)
+	if profile.get("gloves", false):
+		accessories.add_child(_mesh_instance("Gloves", _build_gloves(profile, skeleton), material))
+
+	root.add_child(RigBuilder.make_player(_build_clips(skeleton, length)))
+	return root
+
+
+# --- Rig --------------------------------------------------------------------
+
+func _bone_rows(profile: Dictionary) -> Array:
+	var length: float = profile["length"]
+	var pectoral: Array = profile["pectoral"]
+	var fin_x: float = pectoral[0] * length
+	var fin_y: float = pectoral[1] * length
+	var fin_z: float = pectoral[2] * length
+	return [
+		["root", "", Vector3.ZERO],
+		["body_mid", "root", Vector3(-0.05 * length, 0.0, 0.0)],
+		["body_front", "body_mid", Vector3(0.12 * length, 0.0, 0.0)],
+		["jaw_or_head", "body_front", Vector3(0.30 * length, 0.0, 0.0)],
+		["fin_left", "body_front", Vector3(fin_x, fin_y, -fin_z)],
+		["fin_right", "body_front", Vector3(fin_x, fin_y, fin_z)],
+		["body_back", "body_mid", Vector3(-0.22 * length, 0.0, 0.0)],
+		["tail_base", "body_back", Vector3(-0.36 * length, 0.0, 0.0)],
+		["tail_tip", "tail_base", Vector3(-0.46 * length, 0.0, 0.0)],
+	]
+
+
+func _mesh_instance(node_name: String, mesh: ArrayMesh, material: Material) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = mesh
+	instance.material_override = material
+	instance.skeleton = NodePath("../../Skeleton3D")
+	return instance
+
+
+# --- Body -------------------------------------------------------------------
+
+func _build_body(profile: Dictionary, skeleton: Skeleton3D) -> ArrayMesh:
+	var length: float = profile["length"]
+	var top: Color = profile["top"]
+	var belly: Color = profile["belly"]
+	var fin: Color = profile["fin"]
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+
+	var spine_bones := PackedInt32Array()
+	var spine_stops := PackedFloat32Array()
+	for joint: Array in SPINE:
+		spine_bones.append(skeleton.find_bone(joint[0]))
+		spine_stops.append(float(joint[1]) * length)
+	builder.set_spine(spine_bones, spine_stops, Vector3.RIGHT)
+
+	# Body: back colour above, belly colour below, with optional markings.
+	var sections := _resample(profile["sections"])
+	var max_height := 0.0
+	for section: Array in sections:
+		max_height = maxf(max_height, section[2])
+	builder.color_rule = func(point: Vector3, _base: Color) -> Color:
+		var height := point.y / (max_height * length)
+		var shade := top.lerp(belly, smoothstep(0.05, -0.45, height))
+		if profile.get("bands", false) and height > -0.2 and sin(point.x / length * 46.0) > 0.35:
+			shade = shade.darkened(0.3)
+		if profile.get("scales", false):
+			var cell := int(floor(point.x / length * 16.0)) + int(floor(point.y / length * 16.0))
+			if cell % 2 == 0:
+				shade = shade.lightened(0.14)
+		return shade
+
+	var rings: Array = []
+	for section: Array in sections:
+		var centre := Vector3(section[0], section[3], 0.0) * length
+		rings.append(builder.ring(
+			centre, Vector3(0.0, 0.0, section[1] * length), Vector3(0.0, section[2] * length, 0.0),
+			BODY_SEGMENTS, profile["squareness"]))
+	builder.loft(rings, true, true)
+	builder.color_rule = Callable()
+
+	# Fins follow the spine so they bend with the body.
+	builder.color = fin
+	var fin_thickness := 0.012 * length
+	for fin_name: String in ["tail", "dorsal", "anal"]:
+		if profile.has(fin_name):
+			builder.slab(_outline(profile[fin_name], length), fin_thickness)
+
+	_add_pectoral_fins(builder, profile, skeleton)
+	_add_face(builder, profile, skeleton)
+	if profile.get("whiskers", false):
+		_add_whiskers(builder, length, skeleton, fin)
+	return builder.commit()
+
+
+func _add_pectoral_fins(builder: RefCounted, profile: Dictionary, skeleton: Skeleton3D) -> void:
+	var length: float = profile["length"]
+	var pectoral: Array = profile["pectoral"]
+	var span: float = pectoral[3] * length
+	var outline := PackedVector2Array([
+		Vector2(0.0, 0.30 * span), Vector2(0.85 * span, 0.16 * span),
+		Vector2(span, -0.24 * span), Vector2(0.1 * span, -0.36 * span)])
+	builder.color = profile["fin"]
+	for side: float in [-1.0, 1.0]:
+		var bone := "fin_left" if side < 0.0 else "fin_right"
+		builder.set_bone(skeleton.find_bone(bone))
+		# The outline's X runs outward and slightly down; its Y runs forward.
+		var outward := Vector3(0.0, -0.3, side).normalized()
+		var forward := Vector3(1.0, 0.0, 0.0)
+		var basis := Basis(outward, forward, outward.cross(forward))
+		builder.transform = Transform3D(basis, Vector3(pectoral[0], pectoral[1], pectoral[2] * side) * length)
+		builder.slab(outline, 0.014 * length)
+	builder.transform = Transform3D.IDENTITY
+
+
+func _add_face(builder: RefCounted, profile: Dictionary, skeleton: Skeleton3D) -> void:
+	var length: float = profile["length"]
+	var eye: Array = profile["eye"]
+	builder.set_bone(skeleton.find_bone("jaw_or_head"))
+	for side: float in [-1.0, 1.0]:
+		var centre := Vector3(eye[0], eye[1], eye[2] * side) * length
+		var radius: float = eye[3] * length
+		builder.color = EYE_WHITE
+		builder.blob(centre, Vector3.ONE * radius, 6, 4)
+		builder.color = EYE_DARK
+		builder.blob(centre + Vector3(0.45, 0.0, 0.5 * side) * radius, Vector3.ONE * radius * 0.6, 6, 4)
+		if profile.get("brow", false):
+			# A heavy lid over the top of the eye, lower toward the middle:
+			# unimpressed and tough, not evil.
+			var tilt := Basis(Vector3(1.0, 0.0, 0.0), deg_to_rad(-20.0 * side)) * Basis(Vector3(0.0, 0.0, 1.0), deg_to_rad(-10.0))
+			builder.transform = Transform3D(tilt, centre + Vector3(0.2, 0.72, 0.1 * side) * radius)
+			builder.color = profile["top"].darkened(0.25)
+			builder.box(Vector3(2.3, 0.42, 2.1) * radius)
+			builder.transform = Transform3D.IDENTITY
+
+	# A wide mouth line wrapped around the snout.
+	var first: Array = profile["sections"][1]
+	builder.color = EYE_DARK
+	builder.box(
+		Vector3(0.05, 0.011, first[1] * 2.05) * length,
+		Vector3(first[0] - 0.004, first[3] - first[2] * 0.45, 0.0) * length)
+
+
+## Four pairs of barbels (GDD 185.6): long maxillary, short nasal, two chin pairs.
+func _add_whiskers(builder: RefCounted, length: float, skeleton: Skeleton3D, tint: Color) -> void:
+	var paths: Array = [
+		[Vector3(0.46, -0.010, 0.070), Vector3(0.51, -0.020, 0.200), Vector3(0.42, -0.055, 0.330), 0.0075],
+		[Vector3(0.47, 0.020, 0.030), Vector3(0.53, 0.062, 0.062), Vector3(0.55, 0.105, 0.085), 0.0055],
+		[Vector3(0.44, -0.034, 0.052), Vector3(0.47, -0.082, 0.112), Vector3(0.42, -0.130, 0.152), 0.0055],
+		[Vector3(0.455, -0.036, 0.020), Vector3(0.485, -0.082, 0.036), Vector3(0.47, -0.128, 0.046), 0.005],
+	]
+	builder.set_bone(skeleton.find_bone("jaw_or_head"))
+	builder.color = tint.lightened(0.08)
+	for path: Array in paths:
+		for side: float in [-1.0, 1.0]:
+			var mirror := Vector3(1.0, 1.0, side)
+			var start: Vector3 = path[0] * mirror * length
+			var middle: Vector3 = path[1] * mirror * length
+			var tip: Vector3 = path[2] * mirror * length
+			var radius: float = path[3] * length
+			builder.tube(start, middle, radius, radius * 0.7, 5, true)
+			builder.tube(middle, tip, radius * 0.7, radius * 0.25, 5, true)
+
+
+## Worn red boxing gloves on the pectoral fins: fist, thumb and a cream cuff.
+func _build_gloves(profile: Dictionary, skeleton: Skeleton3D) -> ArrayMesh:
+	var length: float = profile["length"]
+	var pectoral: Array = profile["pectoral"]
+	var span: float = pectoral[3] * length
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+	for side: float in [-1.0, 1.0]:
+		builder.set_bone(skeleton.find_bone("fin_left" if side < 0.0 else "fin_right"))
+		var base := Vector3(pectoral[0], pectoral[1], pectoral[2] * side) * length
+		var outward := Vector3(0.0, -0.3, side).normalized()
+		var wrist := base + outward * span * 0.55
+		var fist := base + outward * span * 1.05
+		var size := 0.074 * length
+		builder.color = GLOVE_CUFF
+		builder.tube(wrist, wrist + outward * size * 0.5, size * 0.62, size * 0.7, 8, true)
+		builder.color = GLOVE_RED
+		builder.blob(fist, Vector3(1.05, 1.0, 0.95) * size, 8, 5, 0.04, 11)
+		builder.blob(fist + Vector3(0.75, 0.25, -0.2 * side) * size, Vector3(0.48, 0.42, 0.42) * size, 6, 4)
+		# A lighter worn patch on the knuckles.
+		builder.color = GLOVE_RED.lightened(0.22)
+		builder.blob(fist + Vector3(0.35, 0.55, 0.35 * side) * size, Vector3(0.42, 0.3, 0.42) * size, 6, 3)
+	return builder.commit()
+
+
+# --- Animation --------------------------------------------------------------
+
+## The fishing-phase clips of the universal fish contract (GDD 172.6).
+## Duel clips are added by the milestone that builds each duel.
+func _build_clips(skeleton: Skeleton3D, length: float) -> Array:
+	var clips: Array = []
+
+	var idle := RigBuilder.Clip.new(skeleton, &"fish_idle_water", 2.4, true)
+	_sway(idle, 2.4, 1, 7.0, 12.0, 16.0)
+	idle.rot("fin_left", 0.0, Vector3(0, 0, -8)).rot("fin_left", 1.2, Vector3(0, 0, 10)).rot("fin_left", 2.4, Vector3(0, 0, -8))
+	idle.rot("fin_right", 0.0, Vector3(0, 0, 8)).rot("fin_right", 1.2, Vector3(0, 0, -10)).rot("fin_right", 2.4, Vector3(0, 0, 8))
+	clips.append(idle)
+
+	var hooked := RigBuilder.Clip.new(skeleton, &"fish_hooked_pull", 0.6, true)
+	_sway(hooked, 0.6, 2, 16.0, 26.0, 34.0)
+	hooked.rot("body_front", 0.0, Vector3(0, -9, 0)).rot("body_front", 0.15, Vector3(0, 9, 0)).rot("body_front", 0.3, Vector3(0, -9, 0))
+	hooked.rot("body_front", 0.45, Vector3(0, 9, 0)).rot("body_front", 0.6, Vector3(0, -9, 0))
+	clips.append(hooked)
+
+	# Out of the water: two flops on the bank, then still.
+	var flop := RigBuilder.Clip.new(skeleton, &"fish_land_flop", 1.1)
+	flop.move("root", 0.0, Vector3.ZERO).move("root", 0.18, Vector3(0, 0.22, 0) * length).move("root", 0.36, Vector3.ZERO)
+	flop.move("root", 0.54, Vector3(0, 0.12, 0) * length).move("root", 0.72, Vector3.ZERO).move("root", 1.1, Vector3.ZERO)
+	flop.rot("root", 0.0, Vector3(0, 0, 0)).rot("root", 0.18, Vector3(35, 0, 14)).rot("root", 0.36, Vector3(70, 0, 0))
+	flop.rot("root", 0.54, Vector3(82, 0, -8)).rot("root", 0.72, Vector3(90, 0, 0)).rot("root", 1.1, Vector3(90, 0, 0))
+	flop.rot("tail_base", 0.0, Vector3(0, 0, 0)).rot("tail_base", 0.18, Vector3(0, 34, 0)).rot("tail_base", 0.36, Vector3(0, -30, 0))
+	flop.rot("tail_base", 0.54, Vector3(0, 22, 0)).rot("tail_base", 0.72, Vector3(0, -10, 0)).rot("tail_base", 1.1, Vector3(0, 0, 0))
+	clips.append(flop)
+
+	# The fish rears up on its tail and squares its fins.
+	var challenge := RigBuilder.Clip.new(skeleton, &"fish_challenge", 1.6)
+	challenge.rot("root", 0.0, Vector3(0, 0, 0)).rot("root", 0.5, Vector3(0, 0, 96)).rot("root", 0.75, Vector3(0, 0, 80)).rot("root", 1.6, Vector3(0, 0, 84))
+	challenge.move("root", 0.0, Vector3.ZERO).move("root", 0.5, Vector3(0, 0.50, 0) * length).move("root", 1.6, Vector3(0, 0.46, 0) * length)
+	challenge.rot("body_back", 0.0, Vector3(0, 0, 0)).rot("body_back", 0.5, Vector3(0, 0, -16)).rot("body_back", 1.6, Vector3(0, 0, -12))
+	challenge.rot("tail_base", 0.0, Vector3(0, 0, 0)).rot("tail_base", 0.5, Vector3(0, 0, -34)).rot("tail_base", 1.6, Vector3(0, 0, -30))
+	challenge.rot("fin_left", 0.0, Vector3(0, 0, 0)).rot("fin_left", 0.6, Vector3(0, -30, 0)).rot("fin_left", 0.9, Vector3(0, -72, 0)).rot("fin_left", 1.6, Vector3(0, -64, 0))
+	challenge.rot("fin_right", 0.0, Vector3(0, 0, 0)).rot("fin_right", 0.6, Vector3(0, 30, 0)).rot("fin_right", 0.9, Vector3(0, 72, 0)).rot("fin_right", 1.6, Vector3(0, 64, 0))
+	challenge.rot("jaw_or_head", 0.0, Vector3(0, 0, 0)).rot("jaw_or_head", 0.9, Vector3(0, 0, -14)).rot("jaw_or_head", 1.6, Vector3(0, 0, -10))
+	clips.append(challenge)
+
+	var defeat := RigBuilder.Clip.new(skeleton, &"fish_bucket_defeat", 1.0)
+	defeat.rot("root", 0.0, Vector3(0, 0, 0)).rot("root", 0.4, Vector3(0, 0, -30)).rot("root", 1.0, Vector3(0, 0, -78))
+	defeat.rot("tail_base", 0.0, Vector3(0, 0, 0)).rot("tail_base", 0.5, Vector3(0, 0, 18)).rot("tail_base", 1.0, Vector3(0, 0, 8))
+	defeat.rot("jaw_or_head", 0.0, Vector3(0, 0, 0)).rot("jaw_or_head", 1.0, Vector3(0, 0, -12))
+	clips.append(defeat)
+
+	# One arc back into the lake.
+	var escape := RigBuilder.Clip.new(skeleton, &"fish_escape_jump", 1.0)
+	escape.move("root", 0.0, Vector3.ZERO).move("root", 0.35, Vector3(0.7, 0.75, 0) * length)
+	escape.move("root", 0.7, Vector3(1.6, 0.55, 0) * length).move("root", 1.0, Vector3(2.4, -0.5, 0) * length)
+	escape.rot("root", 0.0, Vector3(0, 0, 50)).rot("root", 0.35, Vector3(0, 0, 12)).rot("root", 0.7, Vector3(0, 0, -32)).rot("root", 1.0, Vector3(0, 0, -70))
+	escape.rot("tail_base", 0.0, Vector3(0, 28, 0)).rot("tail_base", 0.25, Vector3(0, -28, 0)).rot("tail_base", 0.5, Vector3(0, 28, 0))
+	escape.rot("tail_base", 0.75, Vector3(0, -28, 0)).rot("tail_base", 1.0, Vector3(0, 0, 0))
+	clips.append(escape)
+	return clips
+
+
+## A travelling S-wave down the spine; amplitudes are in degrees.
+func _sway(clip: RefCounted, duration: float, cycles: int, back: float, base: float, tip: float) -> void:
+	var steps := cycles * 4
+	for step: int in steps + 1:
+		var time := duration * float(step) / float(steps)
+		var phase := TAU * float(step) / 4.0
+		clip.rot("body_back", time, Vector3(0, sin(phase) * back, 0))
+		clip.rot("tail_base", time, Vector3(0, sin(phase - 0.9) * base, 0))
+		clip.rot("tail_tip", time, Vector3(0, sin(phase - 1.8) * tip, 0))
+
+
+# --- Helpers ----------------------------------------------------------------
+
+func _outline(points: Array, length: float) -> PackedVector2Array:
+	var outline := PackedVector2Array()
+	for point: Array in points:
+		outline.append(Vector2(point[0], point[1]) * length)
+	return outline
+
+
+## Doubles the cross-sections with a smooth curve through the given ones.
+func _resample(sections: Array) -> Array:
+	var result: Array = []
+	for index: int in sections.size() - 1:
+		var before: Array = sections[maxi(index - 1, 0)]
+		var from: Array = sections[index]
+		var to: Array = sections[index + 1]
+		var after: Array = sections[mini(index + 2, sections.size() - 1)]
+		result.append(from)
+		var middle: Array = []
+		for field: int in 4:
+			middle.append(cubic_interpolate(float(from[field]), float(to[field]), float(before[field]), float(after[field]), 0.5))
+		# Overshoot can make a radius negative near the tips; keep it sane.
+		middle[1] = maxf(middle[1], minf(from[1], to[1]))
+		middle[2] = maxf(middle[2], minf(from[2], to[2]))
+		result.append(middle)
+	result.append(sections[sections.size() - 1])
+	return result

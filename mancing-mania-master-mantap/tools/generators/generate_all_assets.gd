@@ -17,8 +17,17 @@ const Validation := preload("res://tools/generators/generator_validation.gd")
 ## Builders run in this order. Each milestone that needs new generated content
 ## adds its builder here (meshes, characters, fish, props, environment...).
 const BUILDERS: Array[String] = [
+	"res://tools/generators/material_builder.gd",
 	"res://tools/generators/ui_art_builder.gd",
+	"res://tools/generators/prop_builder.gd",
+	"res://tools/generators/fish_builder.gd",
+	"res://tools/generators/character_builder.gd",
+	"res://tools/generators/environment_builder.gd",
 ]
+
+## Reference sheets need a graphics device and are rendered by a separate run
+## (reference_sheet_generator.gd); their manifest records are carried over.
+const REFERENCE_GENERATOR := "reference_sheet_generator"
 
 
 func _initialize() -> void:
@@ -30,6 +39,7 @@ func _initialize() -> void:
 
 func _generate() -> int:
 	var manifest := Manifest.new()
+	manifest.adopt(Manifest.read(), REFERENCE_GENERATOR)
 	var errors := PackedStringArray()
 
 	for builder_path: String in BUILDERS:

@@ -7,7 +7,7 @@ extends RefCounted
 const PROBABILITY_TOLERANCE := 0.0001
 
 
-static func validate_fish_set(fish: Array, require_assets: bool = false) -> PackedStringArray:
+static func validate_fish_set(fish: Array, require_models: bool = false, require_portraits: bool = false) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var seen: Dictionary[StringName, bool] = {}
 	var chance_total := 0.0
@@ -64,11 +64,10 @@ static func validate_fish_set(fish: Array, require_assets: bool = false) -> Pack
 			errors.append("%s: weight_max_kg must be greater than weight_min_kg" % tag)
 		if data.dialogue_sequence_id == &"":
 			errors.append("%s: dialogue_sequence_id is empty" % tag)
-		if require_assets:
-			if data.model_scene == null:
-				errors.append("%s: model_scene is missing" % tag)
-			if data.portrait_texture == null:
-				errors.append("%s: portrait_texture is missing" % tag)
+		if require_models and data.model_scene == null:
+			errors.append("%s: model_scene is missing" % tag)
+		if require_portraits and data.portrait_texture == null:
+			errors.append("%s: portrait_texture is missing" % tag)
 		chance_total += data.conditional_chance
 
 	for fish_id: StringName in ContentIds.FISH_IDS:
@@ -79,7 +78,7 @@ static func validate_fish_set(fish: Array, require_assets: bool = false) -> Pack
 	return errors
 
 
-static func validate_trash_set(trash: Array) -> PackedStringArray:
+static func validate_trash_set(trash: Array, require_models: bool = false) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var seen: Dictionary[StringName, bool] = {}
 	var chance_total := 0.0
@@ -104,6 +103,8 @@ static func validate_trash_set(trash: Array) -> PackedStringArray:
 			errors.append("%s: chance must be in (0, 1]" % tag)
 		if data.sale_value <= 0:
 			errors.append("%s: sale_value must be > 0" % tag)
+		if require_models and data.model_scene == null:
+			errors.append("%s: model_scene is missing" % tag)
 		chance_total += data.chance
 
 	for trash_id: StringName in ContentIds.TRASH_IDS:

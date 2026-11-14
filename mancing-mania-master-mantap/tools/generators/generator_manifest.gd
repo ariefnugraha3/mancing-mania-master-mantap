@@ -21,6 +21,18 @@ func register(asset_id: String, generator: String, generator_version: int, seed:
 	}
 
 
+## Carries over the entries another manifest holds for one generator, as long
+## as their files still exist. Used to keep reference-sheet records, which are
+## produced by a separate (windowed) run.
+func adopt(other: RefCounted, generator: String) -> void:
+	if other == null:
+		return
+	for asset_id: String in other.get_asset_ids():
+		var entry: Dictionary = other.get_entry(asset_id)
+		if str(entry.get("generator", "")) == generator and FileAccess.file_exists(str(entry.get("output", ""))):
+			_assets[asset_id] = entry
+
+
 func get_asset_ids() -> PackedStringArray:
 	var ids := PackedStringArray(_assets.keys())
 	ids.sort()

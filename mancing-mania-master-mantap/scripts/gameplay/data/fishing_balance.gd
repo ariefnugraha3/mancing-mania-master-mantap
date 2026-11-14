@@ -24,6 +24,24 @@ extends Resource
 @export var rod_half_width_per_level: float = 0.035
 @export var rod_half_width_max: float = 0.245
 
+@export_group("Bite")
+## Reaction window for a trash bite (GDD Section 28).
+@export var trash_strike_window_sec: float = 0.90
+## How long the fish shadow circles the float before the real bite.
+@export var bite_warning_sec: float = 1.1
+
+@export_group("Green Zone")
+## The fish picks a new target position at this interval (GDD Section 33).
+@export var zone_retarget_min_sec: float = 0.65
+@export var zone_retarget_max_sec: float = 1.40
+## Chance that a boss-tier fish feints before each new target.
+@export var boss_feint_probability: float = 0.35
+@export var boss_feint_sec: float = 0.3
+
+@export_group("Landing")
+## Slow-motion beat when the catch breaks the surface (GDD Section 37).
+@export var land_slowdown_sec: float = 0.25
+
 @export_group("Line Stress")
 @export var stress_recover_inside_per_sec: float = 30.0
 @export var stress_recover_release_per_sec: float = 16.0

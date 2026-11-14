@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"sfx_line_stress"
+synth_type = &"creak"
+base_gain_db = -11.0
+attack_sec = 0.01
+decay_sec = 0.12
+sustain = 0.6
+release_sec = 0.08
+pitch_hz = 520.0
+noise_amount = 0.3
+filter_cutoff_hz = 1600.0
+seed_mode = &"varied"

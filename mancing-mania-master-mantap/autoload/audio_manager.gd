@@ -19,6 +19,12 @@ const CHILD_BUSES: Array[StringName] = [BUS_MUSIC, BUS_SFX, BUS_AMBIENCE, BUS_UI
 const PRESET_PATH := "res://data/audio/%s.tres"
 ## Sounds that must answer input instantly; rendered once during Boot.
 const CRITICAL_SFX_IDS: Array[StringName] = [&"ui_click", &"ui_back", &"ui_disabled"]
+## Fishing sounds (GDD 175.6). The first use renders and caches each one.
+const FISHING_SFX_IDS: Array[StringName] = [
+	&"sfx_cast_whoosh", &"sfx_float_plip", &"sfx_false_nibble", &"sfx_real_bite",
+	&"sfx_strike_success", &"sfx_reel_tick", &"sfx_line_stress", &"sfx_line_break",
+	&"sfx_large_splash",
+]
 
 const UI_VOICES := 4
 const SFX_VOICES := 8
@@ -46,6 +52,7 @@ var _next_sfx_voice: int = 0
 var _music_state: StringName = &"silence"
 var _ambience_state: StringName = &"silence"
 var _rhythm_offset_ms: int = 0
+var _ambience: AmbienceEngine
 
 
 func _ready() -> void:
@@ -63,6 +70,10 @@ func initialize_procedural_audio() -> void:
 	_ensure_buses()
 	_ui_players = _make_voices(UI_VOICES, BUS_UI)
 	_sfx_players = _make_voices(SFX_VOICES, BUS_SFX)
+	_ambience = AmbienceEngine.new()
+	_ambience.name = "AmbienceEngine"
+	add_child(_ambience)
+	_ambience.set_state(_ambience_state)
 	for sfx_id: StringName in CRITICAL_SFX_IDS:
 		_get_stream(sfx_id, -1)
 	_apply_all_volumes()
@@ -94,19 +105,29 @@ func play_ui(sfx_id: StringName) -> void:
 	_play_on(_ui_players, sfx_id, 0.0, -1, true)
 
 
-## Ambience generators arrive with the Fishing milestone; until then the
-## requested state is tracked so scenes can already declare what they want.
+## Switches the ambience bed, e.g. &"lake" or &"silence". The bed fades in
+## and out; a state requested before Boot finished is applied afterwards.
 func set_ambience_state(state_id: StringName, _seed: int = -1) -> void:
 	_ambience_state = state_id
+	if _ambience != null:
+		_ambience.set_state(state_id)
 
 
-## Music generators arrive with the procedural music milestone; the state and
-## its signal are live now so scenes and tests can depend on them.
+## Music generators arrive with the procedural music milestone. Until then
+## every music state is silent, which is a valid state at the lake
+## (GDD 175.11); the state and its signal are live so scenes can depend on them.
 func set_music_state(state_id: StringName, _seed: int = -1, _bpm_override: float = -1.0) -> void:
 	if _music_state == state_id:
 		return
 	_music_state = state_id
 	music_state_changed.emit(_music_state)
+
+
+## Briefly lowers the ambience so a critical cue such as the bite is never
+## masked (GDD 111, 175.5).
+func duck_ambience(amount_db: float, seconds: float) -> void:
+	if _ambience != null:
+		_ambience.duck(amount_db, seconds)
 
 
 func stop_music(_fade_sec: float = 0.5) -> void:
@@ -128,6 +149,8 @@ func set_paused(paused: bool) -> void:
 	_paused = paused
 	for player: AudioStreamPlayer in _sfx_players:
 		player.stream_paused = paused
+	if _ambience != null:
+		_ambience.set_paused(paused)
 
 
 ## Position of the current song on the audio clock. 0.0 while no song plays.
@@ -153,6 +176,10 @@ func get_ambience_state() -> StringName:
 	return _ambience_state
 
 
+func get_ambience_engine() -> AmbienceEngine:
+	return _ambience
+
+
 func get_rhythm_calibration_ms() -> int:
 	return _rhythm_offset_ms
 
@@ -166,6 +193,8 @@ func get_active_voice_count() -> int:
 	for player: AudioStreamPlayer in _ui_players + _sfx_players:
 		if player.playing:
 			active += 1
+	if _ambience != null:
+		active += _ambience.get_voice_count()
 	return active
 
 

@@ -20,6 +20,9 @@ signal state_replaced()
 ## Runtime-only encounter context; never saved.
 var current_fish: StringName = &""
 var current_duel: StringName = &""
+## The fish just landed and on its way to a duel: fish_id, weight_kg,
+## is_big_one and seed. Empty outside an encounter.
+var current_catch: Dictionary = {}
 var session_seed: int = 0
 
 var _data: Dictionary = {}
@@ -70,6 +73,7 @@ func clear_game() -> void:
 	_has_active_game = false
 	current_fish = &""
 	current_duel = &""
+	current_catch = {}
 	_emit_all()
 
 

@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/foliage_sway.gdshader" id="ext_1"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("ext_1")
+shader_parameter/sway_amount = 0.035
+shader_parameter/sway_speed = 0.9
+shader_parameter/sway_height = 5.0
