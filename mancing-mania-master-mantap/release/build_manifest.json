@@ -65,6 +65,6 @@
   "generator_manifest_sha256": "d005e913a564bbaa62d0416df1fb4f2206585167918004c84d390ff31f0d5aca",
   "product": "Mancing Mania: Gelut Edition",
   "renderer": "gl_compatibility",
-  "source_commit": "e0b9a044df62c90d130af0d40c5980aec410eb36",
+  "source_commit": "15230ce40986ee4eb4dc249cf86c3739863087aa",
   "version": "1.0.0-rc.1"
 }
