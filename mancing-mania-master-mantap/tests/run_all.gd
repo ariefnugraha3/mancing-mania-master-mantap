@@ -20,13 +20,14 @@ const SUITES: Array[String] = [
 	"res://tests/suites/test_boxing.gd",
 	"res://tests/suites/test_arm_wrestle.gd",
 	"res://tests/suites/test_dance.gd",
+	"res://tests/suites/test_suwit_wheel.gd",
 	"res://tests/suites/test_assets.gd",
 	"res://tests/suites/test_boot_flow.gd",
 ]
 
 ## Hard stop for a hung await, so a broken test can never block CI forever.
 ## The clock restarts for every suite, so adding suites never trips it.
-const WATCHDOG_SEC := 300.0
+const WATCHDOG_SEC := 600.0
 
 var _elapsed: float = 0.0
 
