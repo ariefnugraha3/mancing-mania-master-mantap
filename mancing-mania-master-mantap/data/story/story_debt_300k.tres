@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoryEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/story_event.gd" id="1_event"]
+
+[resource]
+script = ExtResource("1_event")
+id = &"story_debt_300k"
+priority = 450
+trigger_type = &"lifetime_debt_paid"
+trigger_value = 300000
+market_event = true
+supersedes = Array[StringName]([])
+requires_seen = Array[StringName]([])
+timeline_id = &"story_debt_300k"

@@ -242,3 +242,83 @@ Hanya di debug build: paksa tangkapan, waktu tunggu 0,5 detik, dan bot reel yang
 ### D-040 — Validasi aset
 
 Model hasil generator sekarang wajib untuk keenam ikan dan ketiga sampah; Boot gagal bila ada yang hilang. Potret Fish Book baru diwajibkan setelah dirender di Milestone 3 (`require_portraits`). Ini menggantikan flag tunggal di D-018.
+
+## Milestone 3 — Market, ekonomi, upgrade, Book, Records
+
+### D-041 — Event cerita sebelum Story scene ada
+
+Target Milestone 3 adalah antrean trigger tanpa cutscene final. Selama `story.tscn` belum ada, event yang terpilih saat keluar Market langsung diselesaikan seolah di-skip: ditandai sudah dilihat, unlock-nya diterapkan, chapter diperbarui, lalu disimpan. Dengan begitu Fish Book tetap terbuka di lifetime debt Rp 600,000 walaupun adegannya belum bisa ditonton.
+
+Event yang membuka sesuatu diumumkan lewat dialog singkat (`story.notice.<id>`). Saat ini hanya `story_debt_600k`. Begitu Story scene ada di Milestone 8, `MarketController.leave_market()` menyerahkan event ke `StoryDirector.play_event()` dan dialog ini tidak dipakai lagi.
+
+### D-042 — Tutorial Market
+
+`story_first_market` (Section 173.6) ditandai selesai pada kunjungan pertama, karena adegannya belum ada. Bagian yang bisa dimainkan sudah ada: tiga petunjuk berurutan dari Section 183.20 (`SELL YOUR CATCH`, `OPEN THE DEBT TAB`, `PAY Rp 10,000`) dan tombol pembayaran Rp 10,000 di tab Debt.
+
+Petunjuk tidak mengunci apa pun; pemain boleh mengabaikannya dan pergi. Tutorial selesai (`market_seen`) setelah pembayaran hutang pertama, berapa pun jumlahnya, lalu muncul `UPGRADES CAN WAIT — OR NOT. YOUR CHOICE.` selama 6 detik. Dialog Darto dan Bu Yati di Section 183.5 menunggu sistem dialog.
+
+### D-043 — Aturan antrean event
+
+- Hanya event bertanda `market_event` yang dievaluasi setelah transaksi. Prolog, ikan pertama, dan ending punya alur sendiri (Section 177).
+- Prioritas: 100k 400, 300k 450, 600k 500, 1000k 550, 1400k 600, 1650k 650, kemenangan pertama atas Arowana 800, hutang lunas 1000. Bila sama: urutan masuk antrean, lalu urutan abjad.
+- `story_debt_paid` menggantikan keenam milestone hutang. Event yang digantikan ditandai sudah dilihat dan dikeluarkan dari antrean, sehingga tidak pernah diputar setelah ending.
+- Satu event per kunjungan. Kunjungan dihitung saat scene Market dibuka (`begin_market_visit()`).
+- `DataValidator.validate_story_events()` memeriksa ID, tipe trigger, prioritas, dan rujukan `supersedes` saat Boot.
+
+### D-044 — Urutan dan kunci transaksi
+
+Setiap transaksi berjalan: validasi → ubah `GameState` → evaluasi trigger cerita → autosave → sinyal ke UI. GDD memberi dua urutan: Section 169.12 menaruh evaluasi trigger setelah autosave dan refresh UI, Section 171.13 menaruhnya sebelum save. Yang dipakai urutan 171.13, supaya antrean event ikut tersimpan bersama transaksinya dan tidak hilang bila aplikasi ditutup tepat setelahnya. Hasil yang dilihat pemain sama.
+
+Setelah transaksi diterima, `MarketController` menolak transaksi berikutnya selama 250 ms. Tap ganda tidak membeli atau membayar dua kali (MKT-010).
+
+Bila autosave gagal, state tetap di memori dan muncul dialog RETRY SAVE / CONTINUE WITHOUT SAVING (Section 176.8). Keluar dari Market menunggu dialog itu ditutup.
+
+### D-045 — Tombol pembayaran hutang
+
+- Tombol nominal aktif bila cash cukup untuk nominal itu, atau cukup untuk melunasi sisa yang lebih kecil. Jumlah yang dibayar selalu dibatasi cash dan sisa hutang.
+- PAY CUSTOM memakai tombol langkah −10K, −1K, +1K, +10K di sekitar tombol bayar. Tidak ada kolom ketik: keyboard virtual di Web dan Android menutupi layar dan menambah banyak kasus tepi untuk hal yang jarang dipakai.
+- PAY ALL AVAILABLE langsung membayar tanpa konfirmasi, seperti yang tertulis di Section 79. Jumlahnya ditampilkan di atas tombol sebelum ditekan.
+- Tombol di halaman ini setinggi 48 px (batas minimum sentuh), bukan 56 px, agar baris ledger tetap terlihat di atasnya pada 720p.
+
+### D-046 — Tata letak Market
+
+Ledger berada di kanan pada layar lebar (48% lebar, 500–640 px) dan di bagian bawah pada layar tinggi (mulai 37% dari atas). Warung, Bu Yati, dan Darto tetap terlihat di sisanya; set punya satu marker kamera untuk tiap bentuk layar.
+
+Tab digambar sebagai pembatas buku besar: tab yang terbuka sewarna halaman dan tanpa garis bawah. Tab FISH BOOK selalu ada; sebelum dibuka cerita, halamannya berisi satu kalimat.
+
+Tidak ada interaksi berjalan di Market (Section 176.16). LEAVE MARKET adalah satu-satunya jalan keluar selain Quit to Menu di Pause.
+
+### D-047 — Fish Book dan potret
+
+- Entri terbuka setelah kemenangan duel pertama atas ikan itu (`discovered`). Sebelum itu: siluet, `???`, dan `Not beaten yet.` Angka pertemuan tetap ditampilkan bila sudah pernah bertemu.
+- Potret dirender oleh `reference_sheet_generator.gd` ke `generated/textures/fish_book/tex_fishbook_<id>.png`: 512×288, latar transparan, ikan menghadap kanan. Siluet memakai potret yang sama lewat `shaders/ui_silhouette.gdshader`, jadi tidak ada file kedua.
+- Potret sekarang wajib untuk keenam ikan; `GameData.validate_all()` tidak lagi punya parameter `require_portraits`. Ini menutup D-018 dan D-040.
+- Belum ada duel, jadi di build ini Fish Book hanya terisi lewat tool debug. Datanya sudah dicatat `GameState.record_fish_win()` sejak Milestone 1.
+
+### D-048 — Records
+
+Keenam belas baris mengikuti Section 83. `Lifetime Fish Sales` menampilkan statistik `lifetime_sales`, yaitu seluruh hasil penjualan termasuk sampah; skema save hanya punya satu angka penjualan. Play time sekarang juga dihitung selama berada di Market.
+
+### D-049 — Set Market
+
+- Kesembilan prop Section 72 dibuat sebagai scene tersendiri dan dipasang di set sebagai instance. `GeneratorIo` berhenti mengklaim node di dalam instance, sehingga file set hanya menyimpan referensi.
+- Papan harga dan spanduk tidak memuat tulisan. Teks di tekstur 3D tidak bisa diterjemahkan atau diperbesar, dan semua teks pemain harus lewat tabel teks.
+- Motor Bu Yati (Section 72) belum ada. Ia dibuat bersama motor Darto oleh `vehicle_builder` di Milestone 9.
+- Baling-baling kipas adalah node terpisah dan berputar terus (Section 172.9).
+- Reaksi Bu Yati: menimbang lalu menghitung uang saat penjualan, menghitung uang saat upgrade, menoleh ke Darto saat hutang dibayar. `deadpan_blink` adalah anggukan kecil karena wajahnya tidak punya kelopak mata.
+
+### D-050 — Audio Market
+
+- Tiga resep baru di `SfxRenderer`: `tick_cluster` (`ui_sell`), `two_note` (`ui_purchase`), `chime` (`ui_debt_ding`), mengikuti Section 175.7. `ui_save` bersifat opsional dan tidak dibuat.
+- `AmbienceEngine` sekarang menyusun ambience per tempat. Warung punya tiga lapisan: radio, dengung freezer, dan angin yang sama dengan danau dengan volume lebih rendah. Kicau burung tetap ada, lebih pelan.
+- Radio (Section 175.12) adalah loop 9,6 detik: melodi pentatonik hasil jalan acak ber-seed tetap, ketukan sederhana, dibatasi ke pita tengah, dengan flutter amplitudo. Bukan lagu yang ada.
+- Loop warung dirender saat pemain masih di danau, sehingga sudah siap ketika Market dibuka.
+- State musik `market` masih diam sampai mesin musik Milestone 6.
+
+### D-051 — Tool QA Market
+
+Langkah command line baru untuk debug build: `--mm-goto`, `--mm-cash`, `--mm-debt-left`, `--mm-bucket`, `--mm-win`, `--mm-story`. Semuanya menandai `DEV DIRTY STATE`, jadi tidak ada yang tersimpan. Halaman Market ikut diperbarui bila cash, hutang, ember, atau upgrade berubah dari luar transaksi.
+
+### D-052 — Banter Market ditunda
+
+Banter Bu Yati dan Darto (Section 183.17) membutuhkan kotak dialog, yang dibuat di Milestone 8. Belum ada di build ini.

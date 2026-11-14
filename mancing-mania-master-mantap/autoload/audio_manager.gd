@@ -25,6 +25,8 @@ const FISHING_SFX_IDS: Array[StringName] = [
 	&"sfx_strike_success", &"sfx_reel_tick", &"sfx_line_stress", &"sfx_line_break",
 	&"sfx_large_splash",
 ]
+## Market sounds (GDD 175.7): sale, purchase and the debt payment chime.
+const MARKET_SFX_IDS: Array[StringName] = [&"ui_sell", &"ui_purchase", &"ui_debt_ding"]
 
 const UI_VOICES := 4
 const SFX_VOICES := 8
@@ -105,7 +107,7 @@ func play_ui(sfx_id: StringName) -> void:
 	_play_on(_ui_players, sfx_id, 0.0, -1, true)
 
 
-## Switches the ambience bed, e.g. &"lake" or &"silence". The bed fades in
+## Switches the ambience bed: &"lake", &"market" or &"silence". The bed fades in
 ## and out; a state requested before Boot finished is applied afterwards.
 func set_ambience_state(state_id: StringName, _seed: int = -1) -> void:
 	_ambience_state = state_id

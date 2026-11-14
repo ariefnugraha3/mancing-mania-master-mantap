@@ -25,11 +25,12 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 | `state` | `tests/suites/test_game_state.gd` | API GameState, SAVE-012 (4.000 transaksi acak tanpa melanggar invariant) |
 | `save` | `tests/suites/test_save.gd` | SAVE-001..009, migrasi, import/export, penulisan terputus, DEV DIRTY |
 | `rng` | `tests/suites/test_rng.gd` | determinisme seed, distribusi 100.000 encounter |
-| `audio` | `tests/suites/test_audio.gd` | sintesis SFX UI dan memancing tanpa NaN/clipping, ambience danau, bus, volume mengikuti setting |
+| `audio` | `tests/suites/test_audio.gd` | sintesis SFX UI, memancing, dan Market tanpa NaN/clipping; ambience danau dan warung; bus; volume mengikuti setting |
 | `services` | `tests/suites/test_services.gd` | PlatformService, InputManager, StoryDirector, DebugService, SceneRouter |
 | `fishing` | `tests/suites/test_fishing.gd` | FISH-002..016: timeline cast, waktu tunggu, jendela strike, sampah, distribusi 100.000 encounter, aturan reel, line break, landing |
-| `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate |
-| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD |
+| `market` | `tests/suites/test_market.gd` | MKT-001..011, STORY-001..007 dan 011, BOOK-001..005: harga jual, Sell All dan per kategori, harga upgrade, batas pembayaran hutang, double tap, autosave gagal, antrean event cerita, round-trip save |
+| `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate, aset Market, potret Fish Book |
+| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait |
 
 Test manual (MAN) di matriks QA GDD Section 180, seperti BOOT-005/006 dan SAVE-010/011, membutuhkan build Web dan perangkat Android. Itu dikerjakan saat export preset tersedia.
 
@@ -63,6 +64,12 @@ Langkah dijalankan berurutan sesuai urutan di command line:
 | `--mm-fast-wait` | gigitan datang setengah detik setelah cast |
 | `--mm-auto-reel` | bot memainkan reel |
 | `--mm-overlay` | membuka Debug Overlay |
+| `--mm-goto=<fishing\|market>` | memulai game bila belum ada, lalu pindah ke scene itu |
+| `--mm-cash=<jumlah>` | mengatur cash |
+| `--mm-debt-left=<jumlah>` | mengatur sisa hutang |
+| `--mm-bucket=<id>:<jumlah>` | menaruh tangkapan di ember, misalnya `catfish_bruiser:3` |
+| `--mm-win=<id ikan>` | mencatat satu kemenangan duel atas ikan itu (untuk Fish Book) |
+| `--mm-story=<kunci>` | menyalakan satu flag cerita, misalnya `fish_book_unlocked` |
 | `--mm-shot=<path png>` | menyimpan screenshot; run berhenti setelah langkah terakhir |
 
 Contoh satu tangkapan penuh di portrait:
@@ -72,6 +79,12 @@ godot --path . --resolution 540x960 -- --mm-fast-wait --mm-auto-reel --mm-press=
 ```
 
 Perintah ini memakai save asli di `user://`. Menekan `NewGameButton` akan membuat save sungguhan.
+
+Contoh halaman Debt di Market tanpa menyentuh save (langkah `--mm-goto`, `--mm-cash`, `--mm-bucket`, dan sejenisnya menandai state sebagai `DEV DIRTY STATE`, sehingga tidak ada yang disimpan):
+
+```text
+godot --path . --resolution 1280x720 -- --mm-goto=fishing --mm-bucket=catfish_bruiser:3 --mm-cash=261000 --mm-goto=market --mm-wait=2 --mm-press=MarketCanvas/SafeRoot/TabBar/DebtTabButton --mm-shot=C:/tmp/debt.png
+```
 
 ## Peringatan yang boleh diabaikan
 

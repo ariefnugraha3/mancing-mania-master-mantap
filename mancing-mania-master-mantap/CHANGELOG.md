@@ -2,6 +2,32 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.3.0 — Milestone 3: Market, Economy, Upgrades, Book, Records
+
+### Ditambahkan
+
+- Warung Bu Yati sebagai scene Market: set warung, Bu Yati di balik meja, Darto di depannya, kamera tetap untuk landscape dan portrait.
+- Lima tab ledger: SELL, UPGRADES, DEBT, FISH BOOK, RECORDS. Market selalu terbuka di SELL.
+- Jual semua atau per kategori dengan struk rincian. Ikan baru menjadi uang setelah dijual.
+- Lima keluarga upgrade dengan level, efek sekarang, efek berikutnya, harga pasti, dan level maksimum.
+- Debt Ledger: asal, terbayar, sisa, progress bar, PAY 25,000 / 50,000 / 100,000, PAY CUSTOM, PAY ALL AVAILABLE.
+- Tutorial kunjungan pertama: jual, buka tab Debt, bayar Rp 10,000.
+- Fish Book dengan potret hasil render; ikan yang belum dikalahkan tampil sebagai siluet. Halaman Records.
+- Antrean event cerita: trigger milestone hutang, prioritas, satu event per kunjungan Market, tersimpan di save. Cutscene final menyusul di Milestone 8.
+- Autosave setelah setiap transaksi, dengan dialog bila penyimpanan gagal.
+- Bu Yati (rig dan lima clip), sembilan prop warung, set Market, enam potret Fish Book, dan tiga lembar referensi baru, semuanya dari generator.
+- Tiga SFX Market (jual, beli, bayar hutang) dan ambience warung: radio kecil, dengung freezer, angin sore.
+- Debug: langkah command line untuk menyiapkan cash, hutang, ember, dan flag cerita.
+- 32 test baru (total 154), termasuk satu kunjungan Market penuh lewat tombol asli.
+
+### Diubah
+
+- Tombol MARKET di danau sekarang aktif.
+- Validasi Boot mewajibkan potret Fish Book dan memeriksa data event cerita.
+- Ambience disusun per tempat; lapisan yang dipakai bersama (angin) tidak terputus saat berpindah.
+- Generator menyimpan prop yang dipakai sebuah set sebagai referensi scene, bukan salinan.
+- Chip cash dan tombol Pause dipakai bersama oleh HUD danau dan Market (`HudChip`).
+
 ## 0.2.0 — Milestone 2: Fishing Vertical Slice
 
 ### Ditambahkan

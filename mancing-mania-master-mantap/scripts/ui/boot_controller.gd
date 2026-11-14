@@ -60,12 +60,13 @@ func _run() -> void:
 ## Everything Boot checks before the game is allowed to start.
 static func collect_validation_errors() -> PackedStringArray:
 	var errors := GameData.validate_all()
+	errors.append_array(DataValidator.validate_story_events(StoryDirector.get_all_events(), StoryDirector.TRIGGER_TYPES))
 	for action: StringName in InputActions.get_all():
 		if not InputMap.has_action(action):
 			errors.append("input: action '%s' is missing from the InputMap" % action)
 		elif InputMap.action_get_events(action).is_empty():
 			errors.append("input: action '%s' has no default binding" % action)
-	for sfx_id: StringName in AudioManager.CRITICAL_SFX_IDS + AudioManager.FISHING_SFX_IDS:
+	for sfx_id: StringName in AudioManager.CRITICAL_SFX_IDS + AudioManager.FISHING_SFX_IDS + AudioManager.MARKET_SFX_IDS:
 		if not ResourceLoader.exists(AudioManager.PRESET_PATH % sfx_id):
 			errors.append("audio: preset '%s' is missing" % sfx_id)
 	return errors

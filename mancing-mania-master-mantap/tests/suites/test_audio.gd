@@ -198,3 +198,66 @@ func test_lake_ambience_is_synthesized() -> bool:
 	AudioManager.set_ambience_state(&"silence")
 	check_eq(engine.get_state(), AmbienceEngine.STATE_SILENCE, "ambience can be switched off")
 	return true
+
+
+# Market sounds (GDD 175.7) and the warung ambience (GDD 175.12).
+func test_market_sfx_render_cleanly() -> bool:
+	var mix_rate := AudioManager.get_mix_rate()
+	var expected_ids: Array[StringName] = [&"ui_sell", &"ui_purchase", &"ui_debt_ding"]
+	check_eq(AudioManager.MARKET_SFX_IDS, expected_ids, "sale, purchase and debt sounds")
+	for sfx_id: StringName in AudioManager.MARKET_SFX_IDS:
+		var preset := AudioManager.get_preset(sfx_id)
+		if not check(preset != null, "%s preset exists" % sfx_id):
+			continue
+		check_eq(preset.id, sfx_id, "%s preset id matches its file" % sfx_id)
+		check(SfxRenderer.SUPPORTED_SYNTH_TYPES.has(preset.synth_type), "%s uses a supported synth type" % sfx_id)
+		var samples := SfxRenderer.render(preset, mix_rate)
+		check(not samples.is_empty() and not SynthDsp.has_invalid_samples(samples), "%s renders valid samples" % sfx_id)
+		var peak := SynthDsp.peak(samples)
+		check(peak >= 0.03 and peak <= 1.0, "%s peak %.3f is audible and within full scale" % [sfx_id, peak])
+		check_eq(SfxRenderer.render(preset, mix_rate), samples, "%s always renders the same" % sfx_id)
+		check(float(samples.size()) / float(mix_rate) <= 1.2, "%s is short" % sfx_id)
+		check(AudioManager.get_sfx_stream(sfx_id) != null, "%s is playable through the manager" % sfx_id)
+
+	# The debt chime is one calm note: it rings longer than the sale ticks and
+	# stays quieter than the bite, the loudest cue in the game.
+	var ding := SfxRenderer.render(AudioManager.get_preset(&"ui_debt_ding"), mix_rate)
+	var sell := SfxRenderer.render(AudioManager.get_preset(&"ui_sell"), mix_rate)
+	var bite := SfxRenderer.render(AudioManager.get_preset(&"sfx_real_bite"), mix_rate)
+	check(ding.size() > sell.size() * 2, "the chime rings longer than the sale ticks")
+	check(SynthDsp.peak(ding) < SynthDsp.peak(bite), "the chime is understated next to the bite")
+	# Purchase is two notes: there is clear signal after the second one starts.
+	var purchase := SfxRenderer.render(AudioManager.get_preset(&"ui_purchase"), mix_rate)
+	@warning_ignore("integer_division")
+	var middle := purchase.slice(purchase.size() / 3, purchase.size() * 2 / 3)
+	check(_rms(middle) > 0.01, "the second purchase note sounds")
+	return true
+
+
+func test_market_ambience_is_synthesized() -> bool:
+	var engine := AudioManager.get_ambience_engine()
+	if not check(engine != null, "ambience engine exists after Boot"):
+		return true
+	AudioManager.set_ambience_state(&"market")
+	check_eq(engine.get_state(), AmbienceEngine.STATE_MARKET, "market state reached the engine")
+	check(await wait_until(func() -> bool: return not engine.is_rendering(), 60.0), "the loops finish rendering in the background")
+
+	for layer: StringName in AmbienceEngine.MARKET_LAYERS:
+		var stream := engine.get_layer_stream(layer)
+		if not check(stream != null, "%s layer has a stream" % layer):
+			continue
+		check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % layer)
+		@warning_ignore("integer_division")
+		var seconds := float(stream.data.size() / 2) / float(stream.mix_rate)
+		check_near(seconds, float(AmbienceEngine.MARKET_LAYERS[layer][0]), 0.01, "%s loop length" % layer)
+		var loudest := 0
+		for index: int in range(0, stream.data.size() - 1, 2):
+			loudest = maxi(loudest, absi(stream.data.decode_s16(index)))
+		check(loudest > 300 and loudest < 32767, "%s has signal without clipping (peak %d)" % [layer, loudest])
+
+	# The radio stays in the background, far below the UI sounds.
+	check(float(AmbienceEngine.MARKET_LAYERS[&"radio"][1]) <= -20.0, "the radio is mixed well under the UI")
+	check(AmbienceEngine.MARKET_LAYERS.has(&"wind") and AmbienceEngine.LAKE_LAYERS.has(&"wind"), "the afternoon wind is shared with the lake")
+	AudioManager.set_ambience_state(&"silence")
+	check_eq(engine.get_state(), AmbienceEngine.STATE_SILENCE, "ambience can be switched off")
+	return true

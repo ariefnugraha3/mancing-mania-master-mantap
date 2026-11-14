@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"ui_sell"
+synth_type = &"tick_cluster"
+base_gain_db = -9.0
+attack_sec = 0.001
+decay_sec = 0.3
+sustain = 0.0
+release_sec = 0.08
+pitch_hz = 1900.0
+noise_amount = 0.55
+filter_cutoff_hz = 5200.0
+seed_mode = &"fixed"

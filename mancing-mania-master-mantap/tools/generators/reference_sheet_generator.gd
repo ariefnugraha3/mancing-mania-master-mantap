@@ -9,6 +9,10 @@ extends SceneTree
 ## Model sheets show side, front, back, three-quarter, silhouette and a hero
 ## pose on neutral cream, with the palette and a scale bar underneath.
 ## Set sheets are a single shot through the set's own lighting.
+##
+## The same run renders the Fish Book portraits (GDD 174.9). Unlike the
+## sheets those are runtime textures: one fish each on a transparent
+## background, so the book can also show them as an ink silhouette.
 
 const Manifest := preload("res://tools/generators/generator_manifest.gd")
 
@@ -17,6 +21,13 @@ const GENERATOR_VERSION := 1
 const OUTPUT_DIR := "res://generated/references/"
 const CELL := 512
 const STRIP_HEIGHT := 96
+const PORTRAIT_DIR := "res://generated/textures/fish_book/"
+const PORTRAIT_SIZE := Vector2i(512, 288)
+const FISH_SCENE := "res://generated/scenes/fish/fish_%s.tscn"
+const FISH_IDS: Array[String] = [
+	"catfish_bruiser", "tilapia_gym_rat", "gourami_shady",
+	"carp_golden", "snakehead_sergeant", "arowana_don",
+]
 const BACKGROUND := Color("fff7e6")
 const INK := Color("352f29")
 
@@ -41,6 +52,31 @@ const SUBJECTS: Array = [
 		"id": "ref_set_lake", "kind": "set",
 		"scene": "res://generated/scenes/environment/env_lake_set.tscn",
 		"camera_position": Vector3(4.6, 2.5, 9.2), "camera_target": Vector3(-0.6, 0.7, -3.5), "fov": 50.0,
+	},
+	{
+		"id": "ref_chr_bu_yati", "kind": "model",
+		"scene": "res://generated/scenes/characters/chr_bu_yati.tscn",
+		"size": 1.9, "centre": Vector3(0.0, 0.8, 0.0), "front_axis": Vector3(0.0, 0.0, -1.0),
+		"hero_clip": "weigh_fish", "hero_time": 0.9, "hero_centre": Vector3(0.0, 0.8, 0.0),
+		"palette": ["7c4a44", "6b6a4b", "d6c4a0", "b08260", "5a554f"],
+	},
+	{
+		"id": "ref_set_market", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_market_set.tscn",
+		"camera_marker": "Markers/CameraLandscape", "fov": 50.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_bu_yati.tscn", "marker": "Markers/BuYatiSpot", "clip": "market_idle"},
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
+		],
+	},
+	{
+		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
+		"scene": "res://generated/scenes/environment/env_market_set.tscn",
+		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_bu_yati.tscn", "marker": "Markers/BuYatiSpot", "clip": "market_idle"},
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
+		],
 	},
 ]
 
@@ -75,6 +111,21 @@ func _run() -> void:
 			continue
 		manifest.register(subject["id"], GENERATOR_ID, GENERATOR_VERSION, 0, output)
 		print("[REF] %s" % output)
+
+	DirAccess.make_dir_recursive_absolute(PORTRAIT_DIR)
+	for fish_id: String in FISH_IDS:
+		var scene_path := FISH_SCENE % fish_id
+		if not ResourceLoader.exists(scene_path):
+			print("[REF] skipped portrait %s (fish not generated yet)" % fish_id)
+			continue
+		var portrait: Image = await _render_portrait(scene_path)
+		var portrait_path := "%stex_fishbook_%s.png" % [PORTRAIT_DIR, fish_id]
+		if portrait == null or portrait.save_png(portrait_path) != OK:
+			push_error("[REF] could not render portrait %s" % fish_id)
+			failures += 1
+			continue
+		manifest.register("tex_fishbook_%s" % fish_id, GENERATOR_ID, GENERATOR_VERSION, 0, portrait_path)
+		print("[REF] %s" % portrait_path)
 
 	if not manifest.write():
 		failures += 1
@@ -157,13 +208,57 @@ func _draw_strip(sheet: Image, subject: Dictionary, size: float) -> void:
 # --- Set sheets -------------------------------------------------------------
 
 func _render_set(subject: Dictionary) -> Image:
-	_open_stage(Vector2i(1280, 720), false)
-	_stage.add_child(load(subject["scene"]).instantiate())
+	_open_stage(subject.get("size", Vector2i(1280, 720)), false)
+	var set_root: Node3D = load(subject["scene"]).instantiate()
+	_stage.add_child(set_root)
+	# Sets can be shot with their cast standing on the set's own markers.
+	for actor: Dictionary in subject.get("actors", []):
+		var spot := set_root.get_node_or_null(actor["marker"]) as Node3D
+		if spot == null or not ResourceLoader.exists(actor["scene"]):
+			continue
+		var model: Node3D = load(actor["scene"]).instantiate()
+		_stage.add_child(model)
+		model.global_transform = spot.global_transform
+		var player := model.get_node_or_null("AnimationPlayer") as AnimationPlayer
+		if player != null and player.has_animation(actor["clip"]):
+			player.play(actor["clip"])
+			player.seek(0.0, true)
+			player.pause()
 	_camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 	_camera.fov = subject["fov"]
 	_camera.near = 0.1
 	_camera.far = 400.0
-	_camera.look_at_from_position(subject["camera_position"], subject["camera_target"], Vector3.UP)
+	var camera_spot := set_root.get_node_or_null(subject.get("camera_marker", "")) as Node3D
+	if camera_spot != null:
+		_camera.global_transform = camera_spot.global_transform
+	else:
+		_camera.look_at_from_position(subject["camera_position"], subject["camera_target"], Vector3.UP)
+	var image: Image = await _capture()
+	_close_stage()
+	return image
+
+
+# --- Fish Book portraits ----------------------------------------------------
+
+## One fish, facing right and turned slightly toward the viewer, on a
+## transparent background. The frame is fitted to the fish itself, so a small
+## catfish and Don Arowana fill their portraits equally.
+func _render_portrait(scene_path: String) -> Image:
+	_open_stage(PORTRAIT_SIZE, true, true)
+	var model: Node3D = load(scene_path).instantiate()
+	_stage.add_child(model)
+	await process_frame
+	var bounds := AABB()
+	var first := true
+	for mesh: MeshInstance3D in _mesh_instances(model):
+		var box: AABB = mesh.global_transform * mesh.get_aabb()
+		bounds = box if first else bounds.merge(box)
+		first = false
+	var direction := Vector3(0.36, 0.2, 1.0).normalized()
+	# An orthographic `size` is the frame height: fit the length to the width.
+	var aspect := float(PORTRAIT_SIZE.x) / float(PORTRAIT_SIZE.y)
+	var size := maxf((bounds.size.x * 0.97 + bounds.size.z * 0.4) / aspect, bounds.size.y * 1.1) * 1.06
+	_aim(bounds.get_center(), direction, size, true)
 	var image: Image = await _capture()
 	_close_stage()
 	return image
@@ -173,9 +268,10 @@ func _render_set(subject: Dictionary) -> Image:
 
 ## A private 3D world. Model sheets get neutral cream and a studio light; set
 ## sheets bring their own environment and sun.
-func _open_stage(size: Vector2i, studio: bool) -> void:
+func _open_stage(size: Vector2i, studio: bool, transparent: bool = false) -> void:
 	_viewport = SubViewport.new()
 	_viewport.size = size
+	_viewport.transparent_bg = transparent
 	_viewport.own_world_3d = true
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_viewport.msaa_3d = Viewport.MSAA_4X
@@ -190,7 +286,8 @@ func _open_stage(size: Vector2i, studio: bool) -> void:
 		return
 
 	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
+	# A portrait keeps the viewport's transparent clear colour as background.
+	environment.background_mode = Environment.BG_CLEAR_COLOR if transparent else Environment.BG_COLOR
 	environment.background_color = BACKGROUND
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(1.0, 0.97, 0.92)

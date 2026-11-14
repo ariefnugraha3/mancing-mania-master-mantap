@@ -334,3 +334,179 @@ func test_stress_shakes_the_hud_by_setting_and_never_the_camera() -> bool:
 	check_eq(off[3], 0.0, "OFF removes the shake completely")
 	check(camera.global_transform.is_equal_approx(camera_before), "the camera never moves with line stress")
 	return true
+
+
+# --- Market (GDD 168.5, 176.16, 177) ----------------------------------------
+
+const LEDGER := "MarketCanvas/SafeRoot/"
+
+
+## From the lake, press the Market button and wait until the warung is up.
+func _enter_market(bucket: Dictionary = {}) -> bool:
+	if not await _enter_lake():
+		return false
+	for item_id: StringName in bucket:
+		GameState.add_bucket_item(item_id, bucket[item_id])
+	(tree.current_scene.get_node("FishingCanvas/SafeRoot/MarketButton") as BaseButton).pressed.emit()
+	var reached := await wait_until(func() -> bool: return _finished_transitions.has(&"market"), BOOT_TIMEOUT_SEC)
+	await wait_frames(3)
+	return reached and tree.current_scene != null and tree.current_scene.name == &"Market"
+
+
+func test_market_scene_follows_the_scene_blueprint() -> bool:
+	if not check(await _enter_market(), "the Market button at the lake reaches the Market"):
+		return true
+	var scene := tree.current_scene
+	for path: String in [
+		"MarketController", "World/MarketSet", "World/BuYati", "World/DartoMarketPose", "World/MarketCamera",
+		LEDGER + "HeaderBar", LEDGER + "TabBar/SellTabButton", LEDGER + "TabBar/UpgradeTabButton",
+		LEDGER + "TabBar/DebtTabButton", LEDGER + "TabBar/FishBookTabButton", LEDGER + "TabBar/RecordsTabButton",
+		LEDGER + "TabContent/SellPanel", LEDGER + "TabContent/UpgradePanel", LEDGER + "TabContent/DebtPanel",
+		LEDGER + "TabContent/FishBookPanel", LEDGER + "TabContent/RecordsPanel", LEDGER + "LeaveMarketButton",
+		"ReceiptOverlay", "PauseOverlay",
+	]:
+		check(scene.has_node(path), "node %s exists (GDD 168.5)" % path)
+
+	var hud := scene.get_node("MarketCanvas") as MarketHud
+	check_eq(hud.get_current_tab(), MarketHud.TAB_SELL, "the Market opens on SELL")
+	check((scene.get_node(LEDGER + "TabContent/SellPanel") as Control).visible, "the SELL page is showing")
+	check(not (scene.get_node(LEDGER + "TabContent/DebtPanel") as Control).visible, "the other pages are closed")
+	var expected_order: Array[StringName] = [&"sell", &"upgrades", &"debt", &"fish_book", &"records"]
+	check_eq(MarketHud.TAB_ORDER, expected_order, "tab order (GDD 167.9)")
+	for index: int in MarketHud.TAB_ORDER.size():
+		check_eq(hud.get_tab_button(MarketHud.TAB_ORDER[index]).get_index(), index, "tab %s is in position %d" % [MarketHud.TAB_ORDER[index], index])
+	check_eq(scene.get_node(LEDGER + "TabBar").get_child_count(), 5, "five tabs")
+
+	check_eq(AudioManager.get_ambience_state(), &"market", "the warung ambience is on")
+	check_eq(int(GameState.get_story_value(StoryDirector.KEY_VISIT_SERIAL)), 1, "entering counts as one Market visit")
+	check(StoryDirector.is_event_seen(&"story_first_market"), "the first-visit event is settled")
+	var world := scene.get_node("World") as MarketWorld
+	check_eq(world.get_bu_yati_clip(), &"market_idle", "Bu Yati idles behind the counter")
+	var markers := scene.get_node("World/MarketSet/Markers")
+	check((scene.get_node("World/BuYati") as Node3D).position.is_equal_approx((markers.get_node("BuYatiSpot") as Node3D).position), "Bu Yati stands on her marker")
+	check((scene.get_node("World/MarketCamera") as Camera3D).current, "the Market camera is live")
+	return true
+
+
+# MKT-001..009 through the real buttons, plus the first-visit tutorial.
+func test_market_visit_in_the_real_scene() -> bool:
+	if not check(await _enter_market({&"catfish_bruiser": 3, &"trash_sandal": 2}), "reach the Market with a catch"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("MarketCanvas") as MarketHud
+	var receipt := scene.get_node("ReceiptOverlay") as ReceiptOverlay
+	var start_cash := ContentIds.STARTING_CASH
+	check_eq(GameState.get_cash(), start_cash, "the catch is not cash yet")
+	check_eq(hud.get_hint_text(), TextDb.t(&"market.hint.sell"), "first visit: the hint says to sell")
+
+	hud.sell_panel.get_sell_all_button().pressed.emit()
+	check_eq(GameState.get_cash(), start_cash + 55000, "3 catfish and 2 sandals sell for Rp 55,000")
+	check_eq(GameState.get_bucket_total_count(), 0, "the Bucket is empty after SELL ALL")
+	check(await wait_until(receipt.is_open, 2.0), "the receipt opens")
+	check_eq(read_json(SaveManager.get_save_path())["cash"], start_cash + 55000, "the sale was saved at once")
+	check(hud.sell_panel.get_sell_all_button().disabled, "nothing left to sell")
+	receipt.hide_overlay()
+	check_eq(hud.get_hint_text(), TextDb.t(&"market.hint.debt_tab"), "next hint: open the Debt tab")
+
+	await wait_seconds(0.3)
+	hud.get_tab_button(MarketHud.TAB_DEBT).pressed.emit()
+	check_eq(hud.get_current_tab(), MarketHud.TAB_DEBT, "the Debt tab opens")
+	check_eq(hud.get_hint_text(), TextDb.t(&"market.hint.pay"), "next hint: pay Rp 10,000")
+	var tutorial_pay := hud.debt_panel.get_pay_button(MarketDebtPanel.TUTORIAL_AMOUNT)
+	check(tutorial_pay.visible and not tutorial_pay.disabled, "the tutorial payment is offered")
+	check(hud.debt_panel.get_pay_button(100000).disabled, "PAY 100,000 is disabled without the cash")
+	check(not hud.debt_panel.get_pay_button(25000).disabled, "PAY 25,000 is affordable")
+	tutorial_pay.pressed.emit()
+	check_eq(GameState.get_debt_remaining(), 1790000, "debt remaining Rp 1,790,000 (GDD 183.5)")
+	check_eq(GameState.get_cash(), start_cash + 45000, "the payment came out of cash")
+	check(GameState.is_tutorial_seen(&"market_seen"), "the Market tutorial is done after the first payment")
+	check_eq(hud.get_hint_text(), TextDb.t(&"market.hint.upgrades"), "last hint: upgrades are optional")
+	check(not tutorial_pay.visible, "the tutorial payment button is gone")
+
+	await wait_seconds(0.3)
+	hud.get_tab_button(MarketHud.TAB_UPGRADES).pressed.emit()
+	var buy_bait := hud.upgrade_panel.get_buy_button(&"bait")
+	var bait_price := GameData.get_upgrade(&"bait").get_price_for_level(0)
+	check(not buy_bait.disabled, "bait level 1 is affordable")
+	check(buy_bait.text.contains(Money.format_rp(bait_price)), "the button shows the exact price")
+	var cash_before := GameState.get_cash()
+	buy_bait.pressed.emit()
+	check_eq(GameState.get_upgrade_level(&"bait"), 1, "bait is level 1")
+	check_eq(GameState.get_cash(), cash_before - bait_price, "the exact price was charged")
+	buy_bait.pressed.emit()
+	check_eq(GameState.get_upgrade_level(&"bait"), 1, "a double tap does not buy twice")
+
+	(scene.get_node(LEDGER + "LeaveMarketButton") as BaseButton).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "LEAVE MARKET returns to the lake")
+	var saved: Dictionary = read_json(SaveManager.get_save_path())
+	check_eq(saved["cash"], GameState.get_cash(), "cash survived the visit")
+	check_eq(saved["debt"]["paid"], 10000, "the payment is in the save")
+	check_eq(saved["upgrades"]["bait"], 1, "the upgrade is in the save")
+	check_eq(saved["tutorials"]["market_seen"], true, "the tutorial flag is in the save")
+	check_eq(AudioManager.get_ambience_state(), &"lake", "back to the lake ambience")
+	return true
+
+
+# STORY-004 / BOOK-001 in the real scene: the event resolves on the way out.
+func test_leaving_the_market_announces_the_fish_book() -> bool:
+	if not check(await _enter_market(), "reach the Market"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("MarketCanvas") as MarketHud
+	var controller := scene.get_node("MarketController") as MarketController
+	var notice := scene.get_node("NoticeDialog") as ModalDialog
+	hud.get_tab_button(MarketHud.TAB_FISH_BOOK).pressed.emit()
+	await wait_frames(2)
+	check_eq(hud.fish_book_panel.body.get_child_count(), 1, "the Fish Book is closed before the story opens it")
+
+	GameState.debug_set_cash(600000)
+	check_eq(controller.pay_debt(600000), 600000, "pay Rp 600,000")
+	check(not notice.is_open(), "no story interrupts the visit itself")
+	(scene.get_node(LEDGER + "LeaveMarketButton") as BaseButton).pressed.emit()
+	check(await wait_until(notice.is_open, 3.0), "leaving shows the Fish Book notice")
+	check(bool(GameState.get_story_value(&"fish_book_unlocked")), "the Fish Book is unlocked")
+	check(StoryDirector.is_event_seen(&"story_debt_600k"), "the 600k event was this visit's event")
+	check(StoryDirector.get_pending_events().has(&"story_debt_300k"), "the smaller milestones wait for another visit")
+	check(_finished_transitions.count(&"fishing") < 2, "the lake waits for the notice")
+	notice.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "then the visit ends at the lake")
+	return true
+
+
+func test_market_pause_and_both_screen_shapes() -> bool:
+	if not check(await _enter_market({&"catfish_bruiser": 1}), "reach the Market"):
+		return true
+	var scene := tree.current_scene
+	var pause := scene.get_node("PauseOverlay") as PauseOverlay
+	var safe_root := scene.get_node("MarketCanvas/SafeRoot") as Control
+	var tabs := scene.get_node(LEDGER + "TabBar") as Control
+	var page := scene.get_node(LEDGER + "TabContent") as Control
+	var leave := scene.get_node(LEDGER + "LeaveMarketButton") as Control
+	var camera := scene.get_node("World/MarketCamera") as Camera3D
+	var markers := scene.get_node("World/MarketSet/Markers")
+
+	InputManager.press_action(InputActions.PAUSE)
+	check(await wait_until(pause.is_open, 2.0), "the pause action opens the pause menu")
+	check(tree.paused, "the Market is paused")
+	InputManager.release_action(InputActions.PAUSE)
+	pause.resume()
+	check(not tree.paused, "resume unpauses the Market")
+
+	var window := tree.root
+	var original_size := window.size
+	for shape: Array in [[Vector2i(1280, 720), "CameraLandscape"], [Vector2i(720, 1280), "CameraPortrait"]]:
+		var size: Vector2i = shape[0]
+		window.size = size
+		await wait_frames(4)
+		var bounds := safe_root.get_global_rect().grow(1.0)
+		var label := "%dx%d" % [size.x, size.y]
+		check(bounds.encloses(tabs.get_global_rect()), "%s: tabs are inside the safe area" % label)
+		check(bounds.encloses(page.get_global_rect()), "%s: the ledger page is inside the safe area" % label)
+		check(bounds.encloses(leave.get_global_rect()), "%s: LEAVE MARKET is inside the safe area" % label)
+		check(not page.get_global_rect().intersects(leave.get_global_rect()), "%s: LEAVE MARKET is not under the ledger" % label)
+		check(tabs.get_global_rect().end.y <= page.get_global_rect().position.y + 3.0, "%s: tabs sit on top of the page" % label)
+		check(page.size.y >= 320.0, "%s: the page has room to work in (%d px)" % [label, int(page.size.y)])
+		check(camera.transform.is_equal_approx((markers.get_node(shape[1]) as Node3D).transform), "%s: camera uses %s" % [label, shape[1]])
+	window.size = original_size
+	await wait_frames(3)
+	return true

@@ -1,11 +1,18 @@
 {
   "assets": {
+    "chr_bu_yati": {
+      "generator": "character_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/characters/chr_bu_yati.tscn",
+      "seed": 0,
+      "sha256": "91daa6551585b196433a9e065e84187f227e190710f0fab50984f8f3cb391ed4"
+    },
     "chr_darto": {
       "generator": "character_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
       "seed": 0,
-      "sha256": "d6219e2192175be7fd0372b63e721c73531d8e1a26ce90fb14faa9e709ba29d7"
+      "sha256": "cf4ea79b1f14cad1fe9d08ec857dfa6da80807d5c9c3e4f603e20cd8ccfbade3"
     },
     "env_lake_set": {
       "generator": "environment_builder",
@@ -13,6 +20,13 @@
       "output": "res://generated/scenes/environment/env_lake_set.tscn",
       "seed": 20261112,
       "sha256": "a8f21ee7879278023a6ae5349e253cd7d27b73c61f258341be5456223e9834b8"
+    },
+    "env_market_set": {
+      "generator": "environment_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/environment/env_market_set.tscn",
+      "seed": 20261112,
+      "sha256": "740e44302eaefab9b49ac2f6edd40d07b0afb1553b53eacc89e157f3d409bf35"
     },
     "fish_arowana_don": {
       "generator": "fish_builder",
@@ -126,6 +140,69 @@
       "seed": 0,
       "sha256": "5b59065b833490809704627728e74ff72f477fbf9fe66e19f40d25f155e13409"
     },
+    "prop_hanging_lamp": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_hanging_lamp.tscn",
+      "seed": 0,
+      "sha256": "1f3cd84a03e814bbf414f2c98e7f7c86b7632fbb56674d64c30adf0c2ecfe758"
+    },
+    "prop_market_fan": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_fan.tscn",
+      "seed": 0,
+      "sha256": "8942b4be738175058652f6b8634a8293d435bc9d7d922839194b7254ebeeb819"
+    },
+    "prop_market_freezer": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_freezer.tscn",
+      "seed": 0,
+      "sha256": "51585e6bab66209ad61a4143257976075cba26c3fef21e0de9b1d8be72213582"
+    },
+    "prop_market_jar_set": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_jar_set.tscn",
+      "seed": 0,
+      "sha256": "cebd759d83d9d73b652913f26a0f6c4afbd87d59b0208fe2cb636e2fc0ce64e6"
+    },
+    "prop_market_price_board": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_price_board.tscn",
+      "seed": 0,
+      "sha256": "6e58cedd954383eac192de48224eff79022305085c36ffcb5e5857cbbc046962"
+    },
+    "prop_market_scale": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_scale.tscn",
+      "seed": 0,
+      "sha256": "4c930829d532b1082ef042732132744712d8e97655b511fe294bb9d45a04a730"
+    },
+    "prop_market_table": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_table.tscn",
+      "seed": 0,
+      "sha256": "2e27401c63601eee4c68742195e310b62f3761b21e30ee66f5c301b0308e9000"
+    },
+    "prop_market_thermos": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_market_thermos.tscn",
+      "seed": 0,
+      "sha256": "241d58f286545bc369e451134e10a87e1de9b9f9872c9a196ac412a6b3c64146"
+    },
+    "prop_plastic_chair": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_plastic_chair.tscn",
+      "seed": 0,
+      "sha256": "5c26947b6c0e5cc0e0d3b7d65409541770c0da23b7674dc9a7f8f06a7ffce39f"
+    },
     "prop_trash_ancient_tyre": {
       "generator": "prop_builder",
       "generator_version": 1,
@@ -147,6 +224,13 @@
       "seed": 0,
       "sha256": "1f5879bce06608d7a3f008a7b36b61ea7a4a4897b588cd2ca8e784335481b387"
     },
+    "ref_chr_bu_yati": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_chr_bu_yati.png",
+      "seed": 0.0,
+      "sha256": "14c33ca36760079f8b0cabb47fdd3933698b0114b8438d74a92739593d11f116"
+    },
     "ref_chr_darto": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
@@ -166,7 +250,63 @@
       "generator_version": 1.0,
       "output": "res://generated/references/ref_set_lake.png",
       "seed": 0.0,
-      "sha256": "6249dcaaa3dda982977fe0bf8daebacf3c4bba4daf6c476708578413744a1cdf"
+      "sha256": "c67a93ecb30414b2df74009c7d9c74aa1c5d25541b449b4fc1341e07a2c2c0a1"
+    },
+    "ref_set_market": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_set_market.png",
+      "seed": 0.0,
+      "sha256": "84ace3ada63952d8daa9f7295d5985f26184dad74c7dc20a9058b3cde7968ff1"
+    },
+    "ref_set_market_portrait": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_set_market_portrait.png",
+      "seed": 0.0,
+      "sha256": "18539d4a4a4731a1ef6388a527841937b53352e54d4fcc580c3fcc88dae8d322"
+    },
+    "tex_fishbook_arowana_don": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_arowana_don.png",
+      "seed": 0.0,
+      "sha256": "f4605b437278772b84d5d361487f12bfad31ce60d0b44b192e259c85eb8de222"
+    },
+    "tex_fishbook_carp_golden": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_carp_golden.png",
+      "seed": 0.0,
+      "sha256": "2813405ba448c78fb375f0322e210ed03924ec322ef6bde84830857b8e27e6bd"
+    },
+    "tex_fishbook_catfish_bruiser": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_catfish_bruiser.png",
+      "seed": 0.0,
+      "sha256": "3fd099077ea7b450888fffe182a11189b75ca66ec401b23430084a64ae3cc63e"
+    },
+    "tex_fishbook_gourami_shady": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_gourami_shady.png",
+      "seed": 0.0,
+      "sha256": "2e443aa2dea38dab7a4bc1f0d8871a5ffa2b36d78db3ff1398d44638fa0eb1ff"
+    },
+    "tex_fishbook_snakehead_sergeant": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_snakehead_sergeant.png",
+      "seed": 0.0,
+      "sha256": "6e0e7de32534183b430c29d26dd26bae5e5c91a60f6d02f28dad1ead35a79675"
+    },
+    "tex_fishbook_tilapia_gym_rat": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/textures/fish_book/tex_fishbook_tilapia_gym_rat.png",
+      "seed": 0.0,
+      "sha256": "7f531513c6cac7d6d5bd4254c1adebb5c2c8a74eda67ef71122c7057bae2fb15"
     },
     "ui_app_icon": {
       "generator": "ui_art_builder",
@@ -184,5 +324,5 @@
     }
   },
   "generator_schema": 1,
-  "project_version": "0.2.0"
+  "project_version": "0.3.0"
 }
