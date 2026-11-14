@@ -8,6 +8,8 @@ extends MarketPanel
 ## asked for, MarketController never pays more than the cash or the debt left.
 
 signal payment_requested(amount: int)
+## After the story the page becomes FAMILY SAVINGS (GDD 19, 183.15).
+signal savings_requested(amount: int)
 
 const PRESET_AMOUNTS: Array[int] = [25000, 50000, 100000]
 ## The first payment taught by the Market tutorial (GDD 183.5).
@@ -36,6 +38,10 @@ var _custom_confirm: GameButton
 var _step_buttons: Dictionary[int, GameButton] = {}
 var _custom_amount: int = 0
 var _tutorial_offer: bool = false
+var _savings_root: VBoxContainer
+var _saved_label: Label
+var _savings_buttons: Dictionary[int, GameButton] = {}
+var _save_all_button: GameButton
 
 
 func build() -> void:
@@ -109,9 +115,60 @@ func build() -> void:
 		_custom_box.add_child(button)
 		_step_buttons[step] = button
 	make_compact(_custom_confirm)
+	_build_savings()
+
+
+func _build_savings() -> void:
+	_savings_root = VBoxContainer.new()
+	_savings_root.name = "Savings"
+	_savings_root.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
+	_savings_root.visible = false
+	body.add_child(_savings_root)
+	_saved_label = add_value_row(_savings_root, TextDb.t(&"market.savings.total"), UiTokens.TYPE_HEADER)
+	_savings_root.add_child(make_label(TextDb.t(&"market.savings.terms"), UiTokens.TYPE_SMALL))
+	var presets := HBoxContainer.new()
+	presets.name = "SavePresets"
+	presets.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	_savings_root.add_child(presets)
+	for amount: int in PRESET_AMOUNTS:
+		var button := _action_button(TextDb.tf(&"market.savings.deposit", {"amount": Money.group_thousands(amount)}))
+		button.name = "Save%d" % amount
+		button.pressed.connect(func() -> void: savings_requested.emit(amount))
+		presets.add_child(button)
+		_savings_buttons[amount] = button
+	_save_all_button = _action_button(TextDb.t(&"market.savings.deposit_all"), UiTokens.TYPE_CTA_BUTTON)
+	_save_all_button.name = "SaveAllButton"
+	_save_all_button.pressed.connect(func() -> void: savings_requested.emit(GameState.get_cash()))
+	_savings_root.add_child(_save_all_button)
+
+
+## True once the post-game has turned the ledger into savings.
+static func is_savings_mode() -> bool:
+	return bool(GameState.get_story_value(&"postgame_unlocked"))
+
+
+func get_save_button(amount: int) -> GameButton:
+	return _savings_buttons.get(amount)
+
+
+func get_save_all_button() -> GameButton:
+	return _save_all_button
 
 
 func refresh() -> void:
+	var savings := is_savings_mode()
+	set_heading(TextDb.t(&"market.savings.title" if savings else &"market.debt.title"))
+	_savings_root.visible = savings
+	for row: Control in [_original_label.get_parent(), _paid_label.get_parent(), _remaining_label.get_parent(), _progress, _note_label]:
+		row.visible = not savings
+	if savings:
+		actions.visible = false
+		var cash_now := GameState.get_cash()
+		_saved_label.text = Money.format_rp(int(GameState.get_stat(&"family_savings")))
+		for amount: int in _savings_buttons:
+			_savings_buttons[amount].disabled = cash_now < amount
+		_save_all_button.disabled = cash_now <= 0
+		return
 	var original := GameState.get_debt_original()
 	var paid := GameState.get_debt_paid()
 	var remaining := GameState.get_debt_remaining()

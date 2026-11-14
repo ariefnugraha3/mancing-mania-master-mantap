@@ -1,0 +1,1844 @@
+{
+	"timelines": {
+		"story_prologue_zero": {
+			"set": "home",
+			"ambience": "silence",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				},
+				{
+					"who": "rini",
+					"marker": "RiniSpot",
+					"clip": "put_on_shoes"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraWide",
+					"fov": 48
+				},
+				"darto": {
+					"marker": "CameraDarto",
+					"fov": 42
+				},
+				"rini": {
+					"marker": "CameraRini",
+					"fov": 42
+				},
+				"door": {
+					"marker": "CameraDoor",
+					"fov": 44
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"phone": "story.story_prologue_zero.01"
+				},
+				{
+					"pause": 1.0
+				},
+				{
+					"phone": "story.story_prologue_zero.02"
+				},
+				{
+					"note": [
+						"story.story_prologue_zero.03",
+						"story.story_prologue_zero.04"
+					]
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.05"
+				},
+				{
+					"cam": "rini"
+				},
+				{
+					"clip": "rini",
+					"name": "put_on_shoes"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.06"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.07"
+				},
+				{
+					"clip": "rini",
+					"name": "look_darto"
+				},
+				{
+					"pause": 0.6
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.08"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.10"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.11"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.12"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.13"
+				},
+				{
+					"clip": "rini",
+					"name": "deadpan_pause"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.14"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.15"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.16"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.17"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_prologue_zero.18"
+				},
+				{
+					"hide": "rini"
+				},
+				{
+					"sfx": "ui_back"
+				},
+				{
+					"pause": 1.0
+				},
+				{
+					"cam": "door"
+				},
+				{
+					"clip": "darto",
+					"name": "market_idle"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.19"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.20"
+				},
+				{
+					"fade": "out"
+				},
+				{
+					"stage": "lake_road"
+				},
+				{
+					"title": "story.story_prologue_zero.21",
+					"sub": "story.story_prologue_zero.22"
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_first_fish": {
+			"set": "lake",
+			"ambience": "lake",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"spot": "DartoSpot",
+					"clip": "market_idle",
+					"yaw": 200
+				},
+				{
+					"who": "catfish_bruiser",
+					"spot": "DartoSpot",
+					"offset": [
+						0.7,
+						0.0,
+						0.3
+					],
+					"yaw": 160,
+					"clip": "fish_challenge",
+					"scale": 1.3
+				}
+			],
+			"cameras": {
+				"wide": {
+					"offset_from": [
+						2.6,
+						2.3,
+						6.4
+					],
+					"offset_to": [
+						-0.4,
+						0.5,
+						-2.0
+					],
+					"fov": 50
+				},
+				"medium": {
+					"offset_from": [
+						0.9,
+						1.45,
+						2.4
+					],
+					"offset_to": [
+						-0.3,
+						0.95,
+						0.4
+					],
+					"fov": 44
+				},
+				"darto": {
+					"offset_from": [
+						0.6,
+						1.4,
+						1.6
+					],
+					"offset_to": [
+						0.0,
+						1.0,
+						0.0
+					],
+					"fov": 42
+				},
+				"water": {
+					"offset_from": [
+						0.4,
+						1.0,
+						1.2
+					],
+					"offset_to": [
+						0.4,
+						0.2,
+						-4.0
+					],
+					"fov": 46
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "medium"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "catfish_bruiser",
+					"text": "story.story_first_fish.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_fish.02"
+				},
+				{
+					"say": "catfish_bruiser",
+					"text": "story.story_first_fish.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_fish.04"
+				},
+				{
+					"say": "catfish_bruiser",
+					"text": "story.story_first_fish.05"
+				},
+				{
+					"pause": 0.9
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_fish.06"
+				},
+				{
+					"say": "catfish_bruiser",
+					"text": "story.story_first_fish.07"
+				},
+				{
+					"pause": 0.7
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_first_market": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "market_idle"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "wide"
+				},
+				{
+					"pause": 1.2
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_market.02"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_market.04"
+				},
+				{
+					"clip": "bu_yati",
+					"name": "look_darto"
+				},
+				{
+					"pause": 0.7
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.05"
+				},
+				{
+					"fade": "out"
+				}
+			],
+			"after_sale": [
+				{
+					"say": "darto",
+					"text": "story.story_first_market.06"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.07"
+				}
+			],
+			"after_payment": [
+				{
+					"say": "darto",
+					"text": "story.story_first_market.08"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_first_market.10"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_first_market.11"
+				}
+			]
+		},
+		"story_debt_100k": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "market_idle"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"phone": "story.story_debt_100k.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_100k.02"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_100k.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_100k.04"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_100k.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_100k.06"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_100k.07"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"sfx": "ui_click"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_100k.09"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_100k.11"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_100k.13"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_100k.15"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_100k.17"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 0.6
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_300k": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"sfx": "ui_click"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_300k.02"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_300k.04"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_300k.06"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_300k.08"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_300k.10"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 0.4
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_600k": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"call": "nisa"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.02"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.04"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.06"
+				},
+				{
+					"pause": 0.5
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.07"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.08"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.10"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.11"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.12"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.13"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.14"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.15"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.16"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.17"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.18"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.19"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_debt_600k.20"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_600k.21"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"unlock": "story.story_debt_600k.22",
+					"body": "story.story_debt_600k.23"
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_1000k": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"call": "rini"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.02"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.04"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.06"
+				},
+				{
+					"pause": 0.9
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.07"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.08"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.09"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.10"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.11"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_debt_1000k.12"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.13"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1000k.14"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 0.6
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_1400k": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "cash_count"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.02"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.04"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.06"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.07"
+				},
+				{
+					"pause": 0.7
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.08"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.10"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.11"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.12"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.13"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1400k.14"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_debt_1400k.15"
+				},
+				{
+					"pause": 0.6
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_1650k": {
+			"set": "lake",
+			"ambience": "lake",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"spot": "DartoSpot",
+					"clip": "phone_sit",
+					"yaw": 180
+				}
+			],
+			"cameras": {
+				"wide": {
+					"offset_from": [
+						2.6,
+						2.3,
+						6.4
+					],
+					"offset_to": [
+						-0.4,
+						0.5,
+						-2.0
+					],
+					"fov": 50
+				},
+				"medium": {
+					"offset_from": [
+						0.9,
+						1.45,
+						2.4
+					],
+					"offset_to": [
+						-0.3,
+						0.95,
+						0.4
+					],
+					"fov": 44
+				},
+				"darto": {
+					"offset_from": [
+						0.6,
+						1.4,
+						1.6
+					],
+					"offset_to": [
+						0.0,
+						1.0,
+						0.0
+					],
+					"fov": 42
+				},
+				"water": {
+					"offset_from": [
+						0.4,
+						1.0,
+						1.2
+					],
+					"offset_to": [
+						0.4,
+						0.2,
+						-4.0
+					],
+					"fov": 46
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "wide"
+				},
+				{
+					"pause": 2.0
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"phone": "story.story_debt_1650k.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1650k.02"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 1.2
+				},
+				{
+					"cam": "water"
+				},
+				{
+					"clip": "darto",
+					"name": "sit_lake"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1650k.03"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_1650k.04"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_arowana_first_win": {
+			"set": "lake",
+			"ambience": "lake",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"spot": "DartoSpot",
+					"clip": "market_idle",
+					"yaw": 200
+				},
+				{
+					"who": "arowana_don",
+					"spot": "DartoSpot",
+					"offset": [
+						0.8,
+						0.0,
+						0.3
+					],
+					"yaw": 160,
+					"clip": "fish_bucket_defeat",
+					"scale": 1.3
+				}
+			],
+			"cameras": {
+				"wide": {
+					"offset_from": [
+						2.6,
+						2.3,
+						6.4
+					],
+					"offset_to": [
+						-0.4,
+						0.5,
+						-2.0
+					],
+					"fov": 50
+				},
+				"medium": {
+					"offset_from": [
+						0.9,
+						1.45,
+						2.4
+					],
+					"offset_to": [
+						-0.3,
+						0.95,
+						0.4
+					],
+					"fov": 44
+				},
+				"darto": {
+					"offset_from": [
+						0.6,
+						1.4,
+						1.6
+					],
+					"offset_to": [
+						0.0,
+						1.0,
+						0.0
+					],
+					"fov": 42
+				},
+				"water": {
+					"offset_from": [
+						0.4,
+						1.0,
+						1.2
+					],
+					"offset_to": [
+						0.4,
+						0.2,
+						-4.0
+					],
+					"fov": 46
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "medium"
+				},
+				{
+					"say": "arowana_don",
+					"text": "story.story_arowana_first_win.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_arowana_first_win.02"
+				},
+				{
+					"say": "arowana_don",
+					"text": "story.story_arowana_first_win.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_arowana_first_win.04"
+				},
+				{
+					"pause": 0.9
+				},
+				{
+					"say": "darto",
+					"text": "story.story_arowana_first_win.05"
+				},
+				{
+					"say": "arowana_don",
+					"text": "story.story_arowana_first_win.06"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_arowana_first_win.07"
+				},
+				{
+					"pause": 0.6
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_debt_paid": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "phone_look"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "market_idle"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"marker": "CameraLandscape",
+					"fov": 50
+				},
+				"two_shot": {
+					"from": [
+						0.6,
+						1.55,
+						3.4
+					],
+					"to": [
+						-0.7,
+						1.15,
+						0.6
+					],
+					"fov": 44
+				},
+				"darto": {
+					"from": [
+						-2.2,
+						1.6,
+						0.6
+					],
+					"to": [
+						-1.25,
+						1.3,
+						2.05
+					],
+					"fov": 42
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"phone": "story.story_debt_paid.01"
+				},
+				{
+					"pause": 1.0
+				},
+				{
+					"note": [
+						"story.story_debt_paid.02",
+						"story.story_debt_paid.03"
+					]
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"note": [
+						"story.story_debt_paid.04",
+						"story.story_debt_paid.05"
+					]
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_paid.06"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_paid.07"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"clip": "darto",
+					"name": "small_laugh"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_debt_paid.08"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_paid.10"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_paid.12"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_paid.14"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_debt_paid.16"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_debt_paid.18"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_final_family": {
+			"set": "lake",
+			"ambience": "lake",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"spot": "DartoSpot",
+					"offset": [
+						-0.3,
+						0.0,
+						0.5
+					],
+					"yaw": 210,
+					"clip": "sit_lake"
+				},
+				{
+					"who": "rini",
+					"spot": "DartoSpot",
+					"offset": [
+						0.5,
+						0.0,
+						0.9
+					],
+					"yaw": 160,
+					"clip": "sit_lake"
+				},
+				{
+					"who": "nisa",
+					"spot": "DartoSpot",
+					"offset": [
+						-1.1,
+						0.0,
+						1.1
+					],
+					"yaw": 220,
+					"clip": "sit_lake"
+				},
+				{
+					"who": "arowana_don",
+					"spot": "FloatSpot",
+					"offset": [
+						0.0,
+						-0.2,
+						0.0
+					],
+					"yaw": 180,
+					"clip": "fish_escape_jump",
+					"hidden": true,
+					"scale": 1.4
+				}
+			],
+			"props": [
+				{
+					"prop": "prop_picnic_mat",
+					"spot": "DartoSpot",
+					"offset": [
+						-0.3,
+						0.02,
+						1.0
+					]
+				},
+				{
+					"prop": "prop_motorcycle_darto",
+					"spot": "DartoSpot",
+					"offset": [
+						2.6,
+						0.0,
+						1.6
+					],
+					"yaw": 20
+				},
+				{
+					"prop": "prop_helmet",
+					"spot": "DartoSpot",
+					"offset": [
+						2.0,
+						0.0,
+						1.0
+					]
+				},
+				{
+					"prop": "prop_helmet",
+					"spot": "DartoSpot",
+					"offset": [
+						2.2,
+						0.0,
+						1.25
+					]
+				},
+				{
+					"prop": "prop_fishing_rod_basic",
+					"spot": "DartoSpot",
+					"offset": [
+						0.2,
+						0.0,
+						0.1
+					],
+					"yaw": 90
+				}
+			],
+			"cameras": {
+				"wide": {
+					"offset_from": [
+						2.6,
+						2.3,
+						6.4
+					],
+					"offset_to": [
+						-0.4,
+						0.5,
+						-2.0
+					],
+					"fov": 50
+				},
+				"medium": {
+					"offset_from": [
+						0.9,
+						1.45,
+						2.4
+					],
+					"offset_to": [
+						-0.3,
+						0.95,
+						0.4
+					],
+					"fov": 44
+				},
+				"darto": {
+					"offset_from": [
+						0.6,
+						1.4,
+						1.6
+					],
+					"offset_to": [
+						0.0,
+						1.0,
+						0.0
+					],
+					"fov": 42
+				},
+				"water": {
+					"offset_from": [
+						0.4,
+						1.0,
+						1.2
+					],
+					"offset_to": [
+						0.4,
+						0.2,
+						-4.0
+					],
+					"fov": 46
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "wide"
+				},
+				{
+					"pause": 3.0
+				},
+				{
+					"cam": "medium"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_final_family.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.02"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_final_family.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.04"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_final_family.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.06"
+				},
+				{
+					"clip": "nisa",
+					"name": "lean_forward"
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_final_family.07"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.08"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_final_family.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.10"
+				},
+				{
+					"clip": "nisa",
+					"name": "laugh_small"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_final_family.11"
+				},
+				{
+					"cam": "water"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.12"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_final_family.13"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.14"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"say": "nisa",
+					"text": "story.story_final_family.15"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.16"
+				},
+				{
+					"sfx": "sfx_real_bite"
+				},
+				{
+					"clip": "darto",
+					"name": "market_idle"
+				},
+				{
+					"say": "rini",
+					"text": "story.story_final_family.17"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_final_family.18"
+				},
+				{
+					"show": "arowana_don"
+				},
+				{
+					"clip": "arowana_don",
+					"name": "fish_challenge"
+				},
+				{
+					"sfx": "sfx_large_splash"
+				},
+				{
+					"say": "arowana_don",
+					"text": "story.story_final_family.19"
+				},
+				{
+					"pause": 0.8
+				},
+				{
+					"cut_black": true
+				}
+			]
+		},
+		"story_postgame_unlock": {
+			"set": "none",
+			"ambience": "lake",
+			"music": "silence",
+			"steps": [
+				{
+					"unlock": "story.story_postgame_unlock.01",
+					"body": "story.story_postgame_unlock.02"
+				},
+				{
+					"unlock": "story.story_postgame_unlock.03",
+					"body": "story.story_postgame_unlock.04",
+					"button": "story.story_postgame_unlock.05"
+				}
+			]
+		}
+	},
+	"credits": [
+		{
+			"kind": "heading",
+			"key": "credits.01"
+		},
+		{
+			"kind": "sub",
+			"key": "credits.02"
+		},
+		{
+			"kind": "role",
+			"key": "credits.03"
+		},
+		{
+			"kind": "name",
+			"key": "credits.04"
+		},
+		{
+			"kind": "role",
+			"key": "credits.05"
+		},
+		{
+			"kind": "name",
+			"key": "credits.06"
+		},
+		{
+			"kind": "role",
+			"key": "credits.07"
+		},
+		{
+			"kind": "name",
+			"key": "credits.08"
+		},
+		{
+			"kind": "role",
+			"key": "credits.09"
+		},
+		{
+			"kind": "name",
+			"key": "credits.10"
+		},
+		{
+			"kind": "role",
+			"key": "credits.11"
+		},
+		{
+			"kind": "name",
+			"key": "credits.12"
+		},
+		{
+			"kind": "role",
+			"key": "credits.13"
+		},
+		{
+			"kind": "name",
+			"key": "credits.14"
+		},
+		{
+			"kind": "role",
+			"key": "credits.15"
+		},
+		{
+			"kind": "name",
+			"key": "credits.16"
+		},
+		{
+			"kind": "final",
+			"key": "credits.17"
+		},
+		{
+			"kind": "final",
+			"key": "credits.18"
+		}
+	],
+	"banter": [
+		[
+			{
+				"say": "bu_yati",
+				"text": "banter.1.1"
+			},
+			{
+				"say": "darto",
+				"text": "banter.1.2"
+			}
+		],
+		[
+			{
+				"say": "darto",
+				"text": "banter.2.1"
+			},
+			{
+				"say": "bu_yati",
+				"text": "banter.2.2"
+			},
+			{
+				"say": "darto",
+				"text": "banter.2.3"
+			},
+			{
+				"say": "bu_yati",
+				"text": "banter.2.4"
+			}
+		],
+		[
+			{
+				"say": "bu_yati",
+				"text": "banter.3.1"
+			},
+			{
+				"say": "darto",
+				"text": "banter.3.2"
+			},
+			{
+				"say": "bu_yati",
+				"text": "banter.3.3"
+			}
+		]
+	],
+	"cepatcash": {
+		"count": 5,
+		"darto": 4
+	}
+}

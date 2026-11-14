@@ -22,6 +22,7 @@ var _leaving: bool = false
 var _dialogue: DialogueBox
 ## Seconds of the catch reveal before the fish starts talking.
 const DIALOGUE_DELAY_SEC := 1.4
+const FIRST_FISH_EVENT := &"story_first_fish"
 
 
 func _ready() -> void:
@@ -55,6 +56,8 @@ func _process(delta: float) -> void:
 		return
 	_read_input()
 	var state := _controller.get_state()
+	if state == FishingController.STATE_IDLE or state == FishingController.STATE_WAITING:
+		_check_phone()
 	if state == FishingController.STATE_STRIKE_WINDOW:
 		_hud.set_strike_ratio(_controller.get_strike_window_ratio())
 	elif state == FishingController.STATE_REELING:
@@ -186,6 +189,21 @@ func _on_fish_landed(fish_id: StringName, weight_kg: float) -> void:
 	_speak_on_landing(fish_id, int(encounter.get("seed", 0)))
 
 
+## A CePatCash notification, when one is due (GDD 183.16).
+func _check_phone() -> void:
+	if _dialogue.is_playing():
+		return
+	var notice := CePatCash.poll(float(GameState.get_stat(&"play_time_sec")))
+	if notice.is_empty():
+		return
+	var body: String = notice["body"]
+	if str(notice["reply"]) != "":
+		body += "
+%s: %s" % [TextDb.t(&"speaker.darto"), notice["reply"]]
+	_hud.show_banner(notice["title"], body, 6.0, false)
+	AudioManager.play_ui(&"ui_click")
+
+
 ## The fish talks before the Wheel: its first-meeting conversation the first
 ## time, one LAND line after that (GDD 166). The catch waits for it.
 func _speak_on_landing(fish_id: StringName, seed: int) -> void:
@@ -196,12 +214,18 @@ func _speak_on_landing(fish_id: StringName, seed: int) -> void:
 	if _leaving:
 		return
 	var lines: Array[Dictionary] = []
-	if int(GameState.get_fish_book_entry(fish_id).get("encounters", 0)) <= 1:
+	# The very first fish is the story's: the Catfish speaks (GDD 183.4).
+	var first_fish := not StoryDirector.is_event_seen(FIRST_FISH_EVENT)
+	if first_fish:
+		lines = StoryTimelines.to_dialogue(StoryTimelines.get_timeline(FIRST_FISH_EVENT).get("steps", []))
+	elif int(GameState.get_fish_book_entry(fish_id).get("encounters", 0)) <= 1:
 		lines = FishDialogue.first_meeting(fish_id)
 	if lines.is_empty():
 		lines.append(FishDialogue.pick(fish_id, FishDialogue.POOL_LAND, seed))
 	_dialogue.play(lines)
 	await _dialogue.finished
+	if first_fish:
+		StoryDirector.complete_event(FIRST_FISH_EVENT, false)
 	_controller.route_hold = false
 
 

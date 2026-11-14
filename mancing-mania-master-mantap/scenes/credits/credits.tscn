@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/story/credits_scene.gd" id="1_credits"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="2_safe"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_lake_set.tscn" id="3_lake"]
+
+[node name="Credits" type="Node"]
+script = ExtResource("1_credits")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="LakeSet" parent="World" instance=ExtResource("3_lake")]
+
+[node name="CreditsCamera" type="Camera3D" parent="World"]
+current = true
+fov = 50.0
+far = 300.0
+
+[node name="CreditsCanvas" type="CanvasLayer" parent="."]
+
+[node name="Shade" type="ColorRect" parent="CreditsCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.208, 0.184, 0.161, 0.45)
+
+[node name="SafeRoot" type="Control" parent="CreditsCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_safe")
+
+[node name="Roll" type="VBoxContainer" parent="CreditsCanvas/SafeRoot"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="SkipLabel" type="Label" parent="CreditsCanvas/SafeRoot"]
+layout_mode = 0
+
+[node name="SkipHoldIndicator" type="ProgressBar" parent="CreditsCanvas/SafeRoot"]
+layout_mode = 0

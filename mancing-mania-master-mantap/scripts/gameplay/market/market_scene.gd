@@ -11,6 +11,10 @@ const TUTORIAL_ID := &"market_seen"
 const UPGRADE_HINT_SEC := 6.0
 ## Play time is counted in capped steps, like at the lake.
 const MAX_TIME_STEP_SEC := 0.1
+const FIRST_MARKET_EVENT := &"story_first_market"
+## Bu Yati and Darto trade a few words now and then: never on the first
+## visit, never when a story event is waiting, at most once a visit.
+const BANTER_EVERY_VISITS := 3
 
 @onready var _controller: MarketController = $MarketController
 @onready var _world: MarketWorld = $World
@@ -22,12 +26,19 @@ var _dialog: ModalDialog
 var _leaving: bool = false
 var _save_prompt_open: bool = false
 var _refresh_queued: bool = false
+var _talk: DialogueBox
+var _first_visit: bool = false
+var _first_sale_spoken: bool = false
 
 
 func _ready() -> void:
 	_dialog = ModalDialog.new()
 	_dialog.name = "NoticeDialog"
 	add_child(_dialog)
+	_talk = DialogueBox.new()
+	_talk.name = "DialogueBox"
+	add_child(_talk)
+	_first_visit = not StoryDirector.is_event_seen(FIRST_MARKET_EVENT)
 
 	# This scene routes after the visit itself, so it can show a notice first.
 	_controller.auto_route = false
@@ -42,6 +53,7 @@ func _ready() -> void:
 	_hud.sell_panel.sell_category_requested.connect(_controller.sell_category)
 	_hud.upgrade_panel.upgrade_requested.connect(_controller.purchase_upgrade)
 	_hud.debt_panel.payment_requested.connect(_controller.pay_debt)
+	_hud.debt_panel.savings_requested.connect(_controller.deposit_savings)
 	_pause.quit_requested.connect(_quit_to_menu)
 	# Anything that changes the numbers from outside a transaction (the debug
 	# overlay, for one) still reaches the pages.
@@ -55,6 +67,28 @@ func _ready() -> void:
 	AudioManager.set_music_state(&"market")
 	_refresh()
 	_hud.focus_default()
+	_open_conversation()
+
+
+## First visit: Bu Yati's welcome (GDD 183.5). Later visits: sometimes a
+## short exchange (GDD 177.10).
+func _open_conversation() -> void:
+	var lines: Array[Dictionary] = []
+	if _first_visit:
+		lines = StoryTimelines.to_dialogue(StoryTimelines.get_timeline(FIRST_MARKET_EVENT).get("steps", []))
+	else:
+		lines = pick_banter(int(GameState.get_story_value(&"market_visit_serial")), StoryDirector.get_pending_events().size())
+	if not lines.is_empty():
+		_talk.play(lines)
+
+
+## The banter for this visit, or nothing.
+static func pick_banter(visit_serial: int, pending_events: int) -> Array[Dictionary]:
+	var banter := StoryTimelines.get_banter()
+	if banter.is_empty() or pending_events > 0 or visit_serial < 2 or visit_serial % BANTER_EVERY_VISITS != 0:
+		return []
+	var exchange: Array = banter[(visit_serial / BANTER_EVERY_VISITS - 1) % banter.size()]
+	return StoryTimelines.to_dialogue(exchange)
 
 
 func _process(delta: float) -> void:
@@ -128,7 +162,17 @@ func _on_transaction_completed(kind: StringName, result: Dictionary) -> void:
 			# One soft ding. No confetti (GDD 183.5).
 			AudioManager.play_ui(&"ui_debt_ding")
 			_world.react_payment()
+		MarketController.KIND_SAVINGS:
+			AudioManager.play_ui(&"ui_debt_ding")
+			_world.react_payment()
 	var first_payment := kind == MarketController.KIND_DEBT and not GameState.is_tutorial_seen(TUTORIAL_ID)
+	if _first_visit:
+		var timeline := StoryTimelines.get_timeline(FIRST_MARKET_EVENT)
+		if kind == MarketController.KIND_SELL and not _first_sale_spoken:
+			_first_sale_spoken = true
+			_talk.play(StoryTimelines.to_dialogue(timeline.get("after_sale", [])))
+		elif first_payment:
+			_talk.play(StoryTimelines.to_dialogue(timeline.get("after_payment", [])))
 	if first_payment:
 		GameState.set_tutorial_seen(TUTORIAL_ID)
 		if not SaveManager.save_game(&"tutorial"):
@@ -165,12 +209,13 @@ func _leave() -> void:
 	_controller.leave_market()
 
 
-## The visit is over. When the Story scene exists it plays the event; until
-## then an event that unlocks something is announced with a short notice.
+## The visit is over: the Story scene plays this visit's event, if any.
+## A build without it announces an unlock with a short notice instead.
 func _on_market_left(event_id: StringName) -> void:
 	while _save_prompt_open:
 		await get_tree().process_frame
 	if event_id != &"" and SceneRouter.has_scene(SceneRouter.SCENE_STORY):
+		StoryDirector.play_event(event_id)
 		return
 	var title_key := StringName("story.notice.%s.title" % event_id)
 	if event_id != &"" and TextDb.has_key(title_key):

@@ -200,7 +200,7 @@ func _build_tabs() -> void:
 	_tab_bar.z_index = 1
 	for tab_id: StringName in TAB_ORDER:
 		var button := _tab_buttons[tab_id]
-		button.text = TextDb.t(StringName("market.tab.%s" % tab_id))
+		button.text = TextDb.t(StringName("market.tab.%s" % (&"savings" if tab_id == TAB_DEBT and MarketDebtPanel.is_savings_mode() else tab_id)))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.min_height = int(TAB_HEIGHT)
 		button.custom_minimum_size.y = TAB_HEIGHT

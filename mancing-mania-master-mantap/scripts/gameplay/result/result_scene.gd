@@ -62,6 +62,10 @@ func _ready() -> void:
 	await _dialogue.finished
 	if not is_inside_tree():
 		return
+	if first_boss_win:
+		# The exchange is the story event (GDD 173.8), so it never plays twice.
+		StoryDirector.complete_event(&"story_arowana_first_win", false)
+		SaveManager.save_game(&"story")
 	_continue.disabled = false
 	_continue.grab_focus()
 	_controller.start_auto_continue()
