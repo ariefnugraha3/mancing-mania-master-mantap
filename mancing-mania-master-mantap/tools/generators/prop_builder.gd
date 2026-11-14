@@ -48,6 +48,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		ARM_ELBOW_PAD: _build_elbow_pad,
 		DANCE_PLATFORM: _build_dance_platform,
 		DANCE_STRING_LIGHT: _build_string_light,
+		SUWIT_TABLE: _build_suwit_table,
 	}
 	for prop_id: String in props:
 		var root: Node3D = props[prop_id].call()
@@ -596,3 +597,24 @@ func _build_string_light() -> Node3D:
 	bulb_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(bulb_mesh)
 	return root
+
+
+# --- Suwit props (GDD 174.7, 185.19) ----------------------------------------
+
+const SUWIT_TABLE := "prop_suwit_table"
+const SUWIT_TABLE_HEIGHT := 0.76
+
+
+## A small round table with a woven cloth: calm, not a gambling table.
+func _build_suwit_table() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = WOOD.darkened(0.08)
+	builder.tube(Vector3(0, SUWIT_TABLE_HEIGHT - 0.05, 0), Vector3(0, SUWIT_TABLE_HEIGHT, 0), 0.5, 0.5, 16, true)
+	builder.color = WOOD_DARK
+	builder.tube(Vector3(0, 0.0, 0), Vector3(0, SUWIT_TABLE_HEIGHT - 0.05, 0), 0.06, 0.05, 8, false)
+	builder.tube(Vector3(0, 0.0, 0), Vector3(0, 0.04, 0), 0.3, 0.28, 12, true)
+	builder.color = OLIVE.lerp(CREAM, 0.35)
+	builder.tube(Vector3(0, SUWIT_TABLE_HEIGHT, 0), Vector3(0, SUWIT_TABLE_HEIGHT + 0.006, 0), 0.36, 0.36, 16, true)
+	builder.color = FADED_RED.lerp(CREAM, 0.3)
+	builder.tube(Vector3(0, SUWIT_TABLE_HEIGHT + 0.006, 0), Vector3(0, SUWIT_TABLE_HEIGHT + 0.01, 0), 0.2, 0.2, 16, true)
+	return _wrap(builder)

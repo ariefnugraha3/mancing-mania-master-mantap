@@ -63,6 +63,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		"env_boxing_set": [build_boxing_set, BOXING_SET_PATH],
 		"env_arm_set": [build_arm_set, ARM_SET_PATH],
 		"env_dance_set": [build_dance_set, DANCE_SET_PATH],
+		"env_suwit_set": [build_suwit_set, SUWIT_SET_PATH],
 	}
 	for set_id: String in sets:
 		var root: Node3D = sets[set_id][0].call()
@@ -1109,6 +1110,75 @@ func build_dance_set() -> Node3D:
 		# Landscape keeps the dancers on the left; the lanes sit on the right.
 		"CameraLandscape": _look(Vector3(0.95, 1.5, 3.7), Vector3(0.95, 1.12, 0.0)),
 		"CameraPortrait": _look(Vector3(0.0, 1.55, 4.6), Vector3(0.0, 0.35, 0.0)),
+	}
+	for marker_name: String in spots:
+		var marker := Marker3D.new()
+		marker.name = marker_name
+		marker.transform = spots[marker_name]
+		markers.add_child(marker)
+	return root
+
+
+# --- Suwit set (GDD 185.19) -------------------------------------------------
+# A calm round table on the bank at dusk under one warm lamp: theatrical but
+# understated suspense. Darto and the fish face each other across it.
+
+const SUWIT_SET_PATH := "res://generated/scenes/environment/env_suwit_set.tscn"
+
+
+func build_suwit_set() -> Node3D:
+	var random := RandomNumberGenerator.new()
+	random.seed = PLACEMENT_SEED + 7
+	var solid: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var foliage: Material = load(MaterialBuilder.FOLIAGE_SWAY)
+	var root := Node3D.new()
+	root.name = "EnvSuwitSet"
+	var lighting := _build_lighting()
+	var sun := lighting.get_node("Sun") as DirectionalLight3D
+	sun.transform = Transform3D(Basis.looking_at(-Vector3(-0.8, 0.22, 0.3).normalized(), Vector3.UP), Vector3(0, 12, 0))
+	sun.light_color = Color(1.0, 0.7, 0.5)
+	sun.light_energy = 0.55
+	var environment := (lighting.get_node("WorldEnvironment") as WorldEnvironment).environment
+	environment.ambient_light_energy = 0.38
+	root.add_child(lighting)
+	root.add_child(_instance("Ground", _build_boxing_ground(random), solid, false))
+	root.add_child(_instance("EnvLakeWater", _build_boxing_water(), load(MaterialBuilder.LAKE_WATER), false))
+	root.add_child(_instance("FarShore", _build_boxing_far_shore(random), solid, false))
+	var trees := Node3D.new()
+	trees.name = "Trees"
+	root.add_child(trees)
+	for spot: Array in [[Vector2(-4.5, -2.0), 6.6, 3.2, 0.8], [Vector2(4.8, -3.0), 7.0, 2.6, 1.1]]:
+		var tree := _build_tree("Tree%d" % trees.get_child_count(), Vector2.ZERO, spot[1], spot[2], spot[3], random, solid, foliage)
+		tree.position = Vector3(spot[0].x, 0.0, spot[0].y)
+		trees.add_child(tree)
+	var props := Node3D.new()
+	props.name = "Props"
+	root.add_child(props)
+	for placement: Array in [
+		["prop_suwit_table", "Table", Vector3(0, 0.04, 0), 0.0],
+		["prop_boxing_corner_stool", "FishStool", Vector3(0.62, 0.04, 0.0), 0.0],
+		["prop_hanging_lamp", "Lamp", Vector3(0, 2.6, 0.0), 0.0],
+	]:
+		var prop: Node3D = (load(PROP_PATH % placement[0]) as PackedScene).instantiate()
+		prop.name = placement[1]
+		prop.transform = Transform3D(Basis(Vector3.UP, placement[3]), placement[2])
+		props.add_child(prop)
+	var lamp := SpotLight3D.new()
+	lamp.name = "LampLight"
+	lamp.transform = Transform3D(Basis.looking_at(Vector3.DOWN, Vector3.FORWARD), Vector3(0, 1.95, 0))
+	lamp.light_color = Color(1.0, 0.82, 0.55)
+	lamp.light_energy = 2.2
+	lamp.spot_range = 4.0
+	lamp.spot_angle = 48.0
+	root.add_child(lamp)
+	var markers := Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	var spots: Dictionary[String, Transform3D] = {
+		"DartoSpot": Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-0.78, 0.04, 0.0)),
+		"FishSpot": Transform3D(Basis(Vector3.UP, PI), Vector3(0.62, 0.66, 0.0)),
+		"CameraLandscape": _look(Vector3(0.0, 1.55, 2.9), Vector3(0.0, 1.05, 0.0)),
+		"CameraPortrait": _look(Vector3(0.0, 1.7, 3.7), Vector3(0.0, 0.75, 0.0)),
 	}
 	for marker_name: String in spots:
 		var marker := Marker3D.new()

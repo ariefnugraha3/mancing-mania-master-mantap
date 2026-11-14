@@ -12,7 +12,7 @@
       "generator_version": 1.0,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
       "seed": 0.0,
-      "sha256": "293bf69325894ce7381cb5f2522c648ea5c02236f5006e59dcbd342815b97e81"
+      "sha256": "c50126af5217af0066194c368966c5fbd74944d7bf08d366efce893a8a8f7691"
     },
     "env_arm_set": {
       "generator": "environment_builder",
@@ -49,47 +49,54 @@
       "seed": 20261112.0,
       "sha256": "740e44302eaefab9b49ac2f6edd40d07b0afb1553b53eacc89e157f3d409bf35"
     },
+    "env_suwit_set": {
+      "generator": "environment_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/environment/env_suwit_set.tscn",
+      "seed": 20261112.0,
+      "sha256": "55d20b42630e8f5f9917bc9b70533f39a1bb9777f865afcc917412b04fb08122"
+    },
     "fish_arowana_don": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_arowana_don.tscn",
       "seed": 0.0,
-      "sha256": "833dcb8f15ac567d8a9d0b4cc66ff40d37ed463bb1de43c21b27fca32d2f8f69"
+      "sha256": "2a5223bb565abce4f59ca2be4c0484d8cd96f9907cbb3ab65695d1d5566200c5"
     },
     "fish_carp_golden": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_carp_golden.tscn",
       "seed": 0.0,
-      "sha256": "85c4d728e85c34c53c8c37401e492a7f08106583ec326537ebb255aa5f6c0ab7"
+      "sha256": "e492f549b193df52c58888b9525c2a2337d25fcc4f064b6401d1e514578fefa4"
     },
     "fish_catfish_bruiser": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
       "seed": 0.0,
-      "sha256": "8ab0e2339a2ee2445dc7a3e003b5af4edc96919b2744942667e2c6558670c3c4"
+      "sha256": "e8b6eecc4577fc8a96f0741f1a2cc258551fa4171391d19d717eeb91b927826e"
     },
     "fish_gourami_shady": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_gourami_shady.tscn",
       "seed": 0.0,
-      "sha256": "7159d9dce9893f633da96e63e42f35d31fa172b8fe889700a9c25c56277eb523"
+      "sha256": "6c71cfcb0087061b7ab6b600be558fbdff03bfe223cc7f163a672dcd6552ac9c"
     },
     "fish_snakehead_sergeant": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_snakehead_sergeant.tscn",
       "seed": 0.0,
-      "sha256": "e5133c08be04a67dbbb83bcff1823bd7164044bd299773f4e93418328572382e"
+      "sha256": "c05829364143cff32e7d3e6e7ab2ab8060055d5f9c692230c6d300078d2e01e3"
     },
     "fish_tilapia_gym_rat": {
       "generator": "fish_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/fish/fish_tilapia_gym_rat.tscn",
       "seed": 0.0,
-      "sha256": "5c16aa246c7d47d1f6736271049ac6c2cd79cd1366309272a3c2f652ed9dba10"
+      "sha256": "f8d82aacb76d08063eae8641d904824cb2ee8239cd9defdc7b722112eb8a7fbb"
     },
     "mat_fishing_line": {
       "generator": "material_builder",
@@ -273,6 +280,13 @@
       "seed": 0.0,
       "sha256": "5c26947b6c0e5cc0e0d3b7d65409541770c0da23b7674dc9a7f8f06a7ffce39f"
     },
+    "prop_suwit_table": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_suwit_table.tscn",
+      "seed": 0.0,
+      "sha256": "73073e0e3beef5c9725a0dee281dfa0964f7b7f8f8201faa30148ca2b8747570"
+    },
     "prop_trash_ancient_tyre": {
       "generator": "prop_builder",
       "generator_version": 1.0,
@@ -315,68 +329,82 @@
       "seed": 0,
       "sha256": "5326f83031b4ed77ba0eb57ac68c1be00446bbca137d27b5c3ddc5ce31ecebd7"
     },
+    "ref_fish_lineup": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1,
+      "output": "res://generated/references/ref_fish_lineup.png",
+      "seed": 0,
+      "sha256": "78c1a22db81b33007fcc551a24042f10fa0c7fc2544127c3f6ff0fc8299b8c12"
+    },
     "ref_set_arm": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_arm.png",
       "seed": 0,
-      "sha256": "1adc4e40854351cb5fbe49388bf8b25d3e0db6634f8eafbbed0f8da4f37445a6"
+      "sha256": "0685a48c695c89f623dabf941610e9af9fe0974f1b918c0f71d7977b280f2d47"
     },
     "ref_set_boxing": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing.png",
       "seed": 0,
-      "sha256": "5ae003804147e6075f4397b521bac321043f938ab05c187a5d93b63d4c7813b2"
+      "sha256": "2428734043b05fe1dd8d27e1fa52598b2cf15b771bc22a0fd84ff2009738a470"
     },
     "ref_set_boxing_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing_portrait.png",
       "seed": 0,
-      "sha256": "43b2ae5a2525deaa279a4cb32b4ef2762f4646e34919d93eb10844121f7c96b8"
+      "sha256": "cb54f1e47263246bafa2b0dd69850f560a3081a029b68c0c8bebd2f5eac2c94c"
     },
     "ref_set_dance": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_dance.png",
       "seed": 0,
-      "sha256": "6929e47297527b829889c5e26445e0007d81215dacac8ddc07f404d1a8fe1175"
+      "sha256": "6903200c41edee628952bf8cde7148b5390e6d716d420ee30d66f2728aeded77"
     },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_lake.png",
       "seed": 0,
-      "sha256": "9c4de8ee16c590e8b4359ff9d34432d63cb6731e88ba8091a01e056d83c10016"
+      "sha256": "4a43bb902bb829493890036e1467cc7446a4e975de59e581fd53890145f543d2"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_market.png",
       "seed": 0,
-      "sha256": "7425f3ce4160a39c17599ea1f95efae20ffde45b870e41623b4d8791f3339a6d"
+      "sha256": "7ef1c4b8ec7b1d2392c8f52413c6240a999fe808830f44190c18fdc6f3b49261"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_market_portrait.png",
       "seed": 0,
-      "sha256": "e0c11648bf933e54f5a310d1005d11e03f9390298a821270752972a31ec0cce2"
+      "sha256": "18539d4a4a4731a1ef6388a527841937b53352e54d4fcc580c3fcc88dae8d322"
+    },
+    "ref_set_suwit": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1,
+      "output": "res://generated/references/ref_set_suwit.png",
+      "seed": 0,
+      "sha256": "64722ff4cee94ceb92374441953e702232b9896c79d45b7182ed0fc904d8c844"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/textures/fish_book/tex_fishbook_arowana_don.png",
       "seed": 0,
-      "sha256": "3bf822ea0882c06bf1a4079e18585731656b88b3bf44c0f56a9560e440dbec76"
+      "sha256": "2c44843e4aa0330d76c617cbe277460a345ac1842d8196936aeae943acff2e42"
     },
     "tex_fishbook_carp_golden": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/textures/fish_book/tex_fishbook_carp_golden.png",
       "seed": 0,
-      "sha256": "1f221abc77597072e810b09aa724db2cac81997bdbbbc5252d124d7643a0fd96"
+      "sha256": "0e451e0305b50787a4c29a66be7457ff1c6868b6864f73fcb1d7972d30e0cf45"
     },
     "tex_fishbook_catfish_bruiser": {
       "generator": "reference_sheet_generator",
@@ -390,21 +418,21 @@
       "generator_version": 1,
       "output": "res://generated/textures/fish_book/tex_fishbook_gourami_shady.png",
       "seed": 0,
-      "sha256": "3153f7f3e9b46fd607350c2f4d3367731822005fdeb1af93e5a046a7fe6444ba"
+      "sha256": "d1a9aa577bdd7e1c1900937d49505182a9917bdfe8ec9e5462f5e442d9523f8a"
     },
     "tex_fishbook_snakehead_sergeant": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/textures/fish_book/tex_fishbook_snakehead_sergeant.png",
       "seed": 0,
-      "sha256": "f862e2b1ce4c104e1138d182c6551b02cd406485f5c5b8cc622e999579680cfc"
+      "sha256": "58d6b14a7772353613d2c6f3d40669b068f0f0bd5b410bb7ed2efbe016585fb3"
     },
     "tex_fishbook_tilapia_gym_rat": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/textures/fish_book/tex_fishbook_tilapia_gym_rat.png",
       "seed": 0,
-      "sha256": "ccbcd9b08ae1159d27d7846b6cbbe8e2de7f92c2c89b1d666e089bb3be24e1c0"
+      "sha256": "388015d2e88056acd50347cbe6f239aa76ca9a7d1b3c280b5b3a7dfc46b2a4c2"
     },
     "ui_app_icon": {
       "generator": "ui_art_builder",
@@ -422,5 +450,5 @@
     }
   },
   "generator_schema": 1,
-  "project_version": "0.6.0"
+  "project_version": "0.7.0"
 }
