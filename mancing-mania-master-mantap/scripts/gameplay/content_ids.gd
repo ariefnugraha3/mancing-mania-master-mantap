@@ -77,6 +77,9 @@ const TUTORIAL_IDS: Array[StringName] = [
 const DEBT_ORIGINAL: int = 1_800_000
 const STARTING_CASH: int = 8_430
 const UPGRADE_MAX_LEVEL: int = 3
+## Don Arowana's tier. The boss attacks on a shorter cooldown (GDD Section 49).
+const BOSS_TIER: int = 5
+const BOSS_FISH_ID: StringName = &"arowana_don"
 
 
 static func get_bucket_item_ids() -> Array[StringName]:

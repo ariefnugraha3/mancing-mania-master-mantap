@@ -38,6 +38,7 @@ func before_each() -> void:
 	SaveManager.configure_storage(STORAGE_DIR)
 	GameState.clear_game()
 	DebugService.clear_dev_dirty()
+	DebugService.clear_forces()
 
 
 # --- Helpers ----------------------------------------------------------------
@@ -509,4 +510,218 @@ func test_market_pause_and_both_screen_shapes() -> bool:
 		check(camera.transform.is_equal_approx((markers.get_node(shape[1]) as Node3D).transform), "%s: camera uses %s" % [label, shape[1]])
 	window.size = original_size
 	await wait_frames(3)
+	return true
+
+
+# --- Boxing (GDD 168.7, 94, 176.10, 176.14) ---------------------------------
+
+const RING := "BoxingCanvas/SafeRoot/"
+
+
+## From the lake, hand a hooked fish to the boxing ring.
+func _enter_boxing(fish_id: StringName) -> bool:
+	if not await _enter_lake():
+		return false
+	var fish := GameData.get_fish(fish_id)
+	GameState.record_encounter(fish_id)
+	GameState.current_fish = fish_id
+	GameState.current_duel = &"boxing"
+	GameState.current_catch = {"fish_id": fish_id, "weight_kg": fish.weight_min_kg, "is_big_one": false, "seed": 9}
+	SceneRouter.goto_duel(&"boxing", fish_id)
+	var reached := await wait_until(func() -> bool: return _finished_transitions.has(&"boxing"), BOOT_TIMEOUT_SEC)
+	await wait_frames(3)
+	return reached and tree.current_scene != null and tree.current_scene.name == &"Boxing"
+
+
+func test_boxing_scene_follows_the_scene_blueprint() -> bool:
+	if not check(await _enter_boxing(&"tilapia_gym_rat"), "a hooked fish reaches the ring"):
+		return true
+	var scene := tree.current_scene
+	for path: String in [
+		"BoxingController", "World/BoxingSet", "World/DartoFighter", "World/FishFighter", "World/BoxingCamera",
+		RING + "PlayerHP", RING + "FishHP", RING + "RoundTimer", RING + "TelegraphWidget",
+		RING + "MobileControls/DodgeLeftButton", RING + "MobileControls/DodgeRightButton",
+		RING + "MobileControls/JabButton", RING + "MobileControls/CrossButton", "PauseOverlay",
+	]:
+		check(scene.has_node(path), "node %s exists (GDD 168.7)" % path)
+
+	var controller := scene.get_node("BoxingController") as BoxingController
+	var world := scene.get_node("World") as BoxingWorld
+	var hud := scene.get_node("BoxingCanvas") as BoxingHud
+	var snapshot := controller.get_snapshot()
+	check_eq(snapshot["fish_id"], &"tilapia_gym_rat", "the ring holds the fish that was hooked")
+	check_eq(snapshot["fish_max_hp"], 90.0, "Gym-Rat Tilapia has 90 HP")
+	check_eq(snapshot["player_max_hp"], 100.0, "Darto has 100 HP without Tonic")
+	check((scene.get_node(RING + "FishHP/Name") as Label).text == "GYM-RAT TILAPIA", "the fish is named on its HP bar")
+	check(world.get_fish_rig() != null and world.get_fish_rig().get_parent() == scene.get_node("World/FishFighter"), "the fish stands in the ring")
+	check((world.get_fish_rig().get_node("AccessoryMeshes/Gloves") as Node3D).visible, "the fish wears its gloves")
+	check((scene.get_node("World/DartoFighter/Rig/AccessoryMeshes/BoxingGloves") as Node3D).visible, "Darto wears his gloves")
+	check_eq(world.get_fish_clip(), &"box_idle", "the fish starts in its guard")
+	check((scene.get_node("World/BoxingCamera") as Camera3D).current, "the boxing camera is live")
+	check_eq(hud.get_shown_hp(), Vector2(100.0, 90.0), "both HP bars start full")
+	check(InputManager.is_gameplay_input_enabled(), "gameplay input is live")
+	check(not GameState.is_tutorial_seen(&"boxing_seen") and hud.get_hint_text() != "", "the first duel shows guidance")
+	return true
+
+
+# Exit gate: a catch at the lake is boxed, won and ends up in the Bucket.
+func test_first_catch_is_boxed_and_a_win_fills_the_bucket() -> bool:
+	if not check(await _enter_lake(), "New Game reaches the lake"):
+		return true
+	DebugService.set_fast_wait(true)
+	DebugService.set_auto_reel(true)
+	DebugService.set_auto_duel(true)
+	var fishing := tree.current_scene.get_node("FishingController") as FishingController
+	InputManager.press_action(&"fish_cast")
+	InputManager.release_action(&"fish_cast")
+	check(await wait_until(func() -> bool: return fishing.get_state() == FishingController.STATE_STRIKE_WINDOW, 8.0), "a bite arrives")
+	InputManager.press_action(&"fish_cast")
+	InputManager.release_action(&"fish_cast")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"boxing"), 60.0), "the landed fish is taken to the ring")
+	await wait_frames(3)
+	var scene := tree.current_scene
+	if not check(scene != null and scene.name == &"Boxing", "the Boxing scene is up"):
+		return true
+	var controller := scene.get_node("BoxingController") as BoxingController
+	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
+	check_eq(controller.get_snapshot()["fish_id"], &"catfish_bruiser", "the first fish is Bruiser Catfish, and the first duel is Boxing")
+	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 0, "a hooked fish is not in the Bucket yet")
+
+	check(await wait_until(func() -> bool: return controller.get_state() == BoxingController.STATE_FINISHED, 70.0), "the fight ends")
+	check(controller.get_result()["player_won"], "the bot beats the catfish")
+	check(await wait_until(overlay.is_open, 5.0), "the result is shown")
+	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.win.title"), "YOU WIN")
+	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 1, "the catfish is in the Bucket")
+	check(GameState.is_tutorial_seen(&"boxing_seen"), "the boxing lesson is done")
+	check_eq(GameState.get_stat(&"boxing_wins"), 1, "one boxing win")
+	check(GameState.is_fish_discovered(&"catfish_bruiser"), "the Fish Book entry opened")
+	var saved: Dictionary = read_json(SaveManager.get_save_path())
+	check_eq(saved["bucket"]["catfish_bruiser"], 1, "the result was saved")
+
+	overlay.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
+	check_eq(GameState.current_catch, {}, "no catch is pending any more")
+	DebugService.clear_forces()
+	return true
+
+
+# GDD 176.10 and 176.11: the lesson can be lost for free; a real loss costs the fish only.
+func test_losing_the_lesson_is_a_retry_and_a_real_loss_costs_only_the_fish() -> bool:
+	DebugService.set_forced_result(&"loss")
+	if not check(await _enter_boxing(&"catfish_bruiser"), "reach the ring"):
+		return true
+	var scene := tree.current_scene
+	var controller := scene.get_node("BoxingController") as BoxingController
+	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
+	check(await wait_until(overlay.is_open, 8.0), "losing the first duel shows the retry")
+	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.retry.title"), "it is the retry, not a loss")
+	check_eq(GameState.get_stat(&"duel_losses"), 0, "nothing was recorded")
+	check_eq(GameState.get_fish_book_entry(&"catfish_bruiser")["losses"], 0, "no Fish Book loss")
+	check_eq(GameState.current_fish, &"catfish_bruiser", "the fish is still on its stool")
+
+	DebugService.clear_forces()
+	overlay.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return controller.get_state() == BoxingController.STATE_INTRO or controller.get_state() == BoxingController.STATE_FIGHTING, 3.0), "the duel starts again")
+	check_eq(controller.get_snapshot()["player_hp"], 100.0, "with full HP")
+
+	# Past the lesson a loss is a loss: the fish leaves, everything else stays.
+	GameState.set_tutorial_seen(&"boxing_seen")
+	GameState.add_bucket_item(&"trash_can", 2)
+	var cash := GameState.get_cash()
+	DebugService.set_forced_result(&"loss")
+	GameState.record_encounter(&"carp_golden")
+	GameState.current_fish = &"carp_golden"
+	GameState.current_catch = {"fish_id": &"carp_golden", "weight_kg": 2.0, "is_big_one": false, "seed": 3}
+	SceneRouter.goto_duel(&"boxing", &"carp_golden")
+	if not check(await wait_until(func() -> bool: return _finished_transitions.count(&"boxing") >= 2, BOOT_TIMEOUT_SEC), "a second fish reaches the ring"):
+		return true
+	await wait_frames(3)
+	scene = tree.current_scene
+	overlay = scene.get_node("ResultOverlay") as DuelResultOverlay
+	check(await wait_until(overlay.is_open, 8.0), "the result is shown")
+	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.loss.title"), "THE FISH GOT AWAY")
+	check_eq(GameState.get_bucket_quantity(&"carp_golden"), 0, "the carp is gone")
+	check_eq(GameState.get_stat(&"duel_losses"), 1, "the loss is recorded")
+	check_eq(GameState.get_cash(), cash, "no cash lost")
+	overlay.footer.get_child(0).pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "back to the lake")
+	DebugService.clear_forces()
+	return true
+
+
+# BOX-004, BOX-013 and input parity through the real scene.
+func test_boxing_inputs_pause_and_both_screen_shapes() -> bool:
+	DebugService.set_forced_attack_direction(&"right")
+	if not check(await _enter_boxing(&"catfish_bruiser"), "reach the ring"):
+		return true
+	var scene := tree.current_scene
+	var controller := scene.get_node("BoxingController") as BoxingController
+	var world := scene.get_node("World") as BoxingWorld
+	var hud := scene.get_node("BoxingCanvas") as BoxingHud
+	var pause := scene.get_node("PauseOverlay") as PauseOverlay
+	var widget := hud.get_widget()
+
+	check(await wait_until(func() -> bool: return controller.get_snapshot()["attack_direction"] != &"", 6.0), "the fish winds up")
+	await wait_frames(2)
+	check_eq(world.get_fish_clip(), BoxingWorld.get_attack_clip(&"right", int(controller.get_snapshot()["attack_variant"])), "a dodge-right attack plays the mirrored clip")
+	check(String(world.get_fish_clip()).ends_with(BoxingWorld.MIRROR_SUFFIX), "which is the mirror of the dodge-left one")
+	check_eq(widget.get_shown_direction(), &"right", "the read-out shows the dodge direction")
+	check_eq(widget.get_prompt_text(), TextDb.t(&"boxing.prompt.dodge_right"), "and says it in words")
+
+	# A blocked punch during the wind-up must not hide the attack.
+	var attack_clip := world.get_fish_clip()
+	InputManager.press_action(&"box_jab")
+	InputManager.release_action(&"box_jab")
+	await wait_seconds(0.2)
+	if controller.get_snapshot()["attack_direction"] != &"":
+		check_eq(world.get_fish_clip(), attack_clip, "the wind-up keeps playing through a blocked jab")
+	check(await wait_until(func() -> bool: return float(controller.get_snapshot()["player_hp"]) < 100.0, 3.0), "punching through the telegraph gets Darto hit")
+
+	# Pause stops the clock; the dodge action answers the next attack.
+	InputManager.press_action(InputActions.PAUSE)
+	check(await wait_until(pause.is_open, 2.0), "the pause action opens the pause menu")
+	InputManager.release_action(InputActions.PAUSE)
+	var frozen: float = controller.get_snapshot()["time_left"]
+	await wait_seconds(0.4)
+	check_eq(controller.get_snapshot()["time_left"], frozen, "the round clock is frozen while paused")
+	pause.resume()
+
+	check(await wait_until(func() -> bool: return controller.get_snapshot()["attack_direction"] != &"", 6.0), "the fish winds up again")
+	InputManager.press_action(&"box_dodge_right")
+	InputManager.release_action(&"box_dodge_right")
+	check(await wait_until(func() -> bool: return controller.get_snapshot()["counter_open"], 3.0), "the dodge action opens the counter window")
+	await wait_frames(2)
+	check(widget.get_prompt_text() == TextDb.t(&"boxing.prompt.counter") or widget.get_prompt_text() == TextDb.t(&"boxing.prompt.perfect"), "the read-out says COUNTER")
+	var fish_hp: float = controller.get_snapshot()["fish_hp"]
+	InputManager.press_action(&"box_cross")
+	InputManager.release_action(&"box_cross")
+	check(await wait_until(func() -> bool: return float(controller.get_snapshot()["fish_hp"]) <= fish_hp - 36.0 + 0.001, 2.0), "the cross action lands a counter")
+
+	# BOX-013: four controls, none overlapping, all inside the safe area.
+	var safe_root := scene.get_node("BoxingCanvas/SafeRoot") as Control
+	var controls: Array[Control] = []
+	for button: String in ["DodgeLeftButton", "DodgeRightButton", "JabButton", "CrossButton"]:
+		controls.append(scene.get_node(RING + "MobileControls/" + button) as Control)
+	var window := tree.root
+	var original_size := window.size
+	window.size = Vector2i(720, 1280)
+	await wait_frames(4)
+	check(hud.uses_touch_layout() and (scene.get_node(RING + "MobileControls") as Control).visible, "portrait shows the four touch controls")
+	var bounds := safe_root.get_global_rect().grow(1.0)
+	var fight_bottom := safe_root.get_global_rect().position.y + safe_root.size.y * BoxingHud.FIGHT_SHARE_PORTRAIT
+	for index: int in controls.size():
+		var rect := controls[index].get_global_rect()
+		check(bounds.encloses(rect), "%s is inside the safe area" % controls[index].name)
+		check(rect.position.y >= fight_bottom, "%s stays under the fight (GDD 94)" % controls[index].name)
+		check(rect.size.x >= 48.0 and rect.size.y >= 48.0, "%s is a real touch target" % controls[index].name)
+		for other: int in range(index + 1, controls.size()):
+			check(not rect.intersects(controls[other].get_global_rect()), "%s and %s do not overlap" % [controls[index].name, controls[other].name])
+	check(controls[0].get_global_rect().end.x <= controls[2].get_global_rect().position.x, "dodge on the left, punches on the right")
+	var widget_rect := widget.get_global_rect()
+	check(widget_rect.end.y <= fight_bottom, "the telegraph read-out is in the fight area")
+	var camera := scene.get_node("World/BoxingCamera") as Camera3D
+	check(camera.transform.is_equal_approx((scene.get_node("World/BoxingSet/Markers/CameraPortrait") as Node3D).transform), "portrait uses its own camera")
+	window.size = original_size
+	await wait_frames(3)
+	DebugService.clear_forces()
 	return true

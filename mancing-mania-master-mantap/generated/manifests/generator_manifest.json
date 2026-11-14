@@ -12,7 +12,14 @@
       "generator_version": 1,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
       "seed": 0,
-      "sha256": "cf4ea79b1f14cad1fe9d08ec857dfa6da80807d5c9c3e4f603e20cd8ccfbade3"
+      "sha256": "0ec6c598d0d6b6aa2a3dcac4ef22031f7d1bd73a8afbc0285c5b7e46bacfc959"
+    },
+    "env_boxing_set": {
+      "generator": "environment_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/environment/env_boxing_set.tscn",
+      "seed": 20261112,
+      "sha256": "0e06ee5a562b8772e002ce9fd67604a93e481222da538f57082f23f7b893be49"
     },
     "env_lake_set": {
       "generator": "environment_builder",
@@ -33,42 +40,42 @@
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_arowana_don.tscn",
       "seed": 0,
-      "sha256": "795917e98e5d21db7c903c1938019c93d7bb7824902e9487d0a3094204823c3d"
+      "sha256": "63f9ae065c68f4b1ceee3bc691d4fe76ec33192fc4424770148be9289d0c2cd1"
     },
     "fish_carp_golden": {
       "generator": "fish_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_carp_golden.tscn",
       "seed": 0,
-      "sha256": "b4c227361f5d4014a28bae836870443789e9c01a1f455110415f343e11c50b01"
+      "sha256": "5cb7c315816d77d1d6e0de866a22e6c0c0901d27f680af67b3970777a19055a7"
     },
     "fish_catfish_bruiser": {
       "generator": "fish_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_catfish_bruiser.tscn",
       "seed": 0,
-      "sha256": "8600b4ca273ed3ae36de5fb887cf53125053a24f1e6c1cfecbe5aa18b5fc606f"
+      "sha256": "d1d4a9baa68324abeba0facf16b0bcf7b5fadda5dd529f90752ea8c969796ab7"
     },
     "fish_gourami_shady": {
       "generator": "fish_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_gourami_shady.tscn",
       "seed": 0,
-      "sha256": "4a629e68d533374a321c8e238b21309031f44d16eab28d5b8e2e41dfc94c4bbb"
+      "sha256": "aaadcd87c93f88d9534e476cf751f3f86771d96e568638e487b05fee7921790e"
     },
     "fish_snakehead_sergeant": {
       "generator": "fish_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_snakehead_sergeant.tscn",
       "seed": 0,
-      "sha256": "867fd657fb12871204fcf1f1b27698b7a4c9a4b589efe47f371f826a7e5813b8"
+      "sha256": "3f8c241ec71fb0d558f9575946b175cbfd68444a02011adae1d314e7735e7be1"
     },
     "fish_tilapia_gym_rat": {
       "generator": "fish_builder",
       "generator_version": 1,
       "output": "res://generated/scenes/fish/fish_tilapia_gym_rat.tscn",
       "seed": 0,
-      "sha256": "ad9b13ec6ffdff9a94b740263b49f34339024e830403b3c8ff49fe96ccfef62e"
+      "sha256": "57db7d10b9ebb3ecaf6d872120c48b023cf9dc8d9290cc118b7419d1d5e91cea"
     },
     "mat_fishing_line": {
       "generator": "material_builder",
@@ -118,6 +125,27 @@
       "output": "res://generated/materials/mat_water_shadow.tres",
       "seed": 0,
       "sha256": "0ebb8e0126e6229ad388cc7b59d96cbfea441fbf052762dea62411707cadcabf"
+    },
+    "prop_boxing_corner_stool": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_boxing_corner_stool.tscn",
+      "seed": 0,
+      "sha256": "55e58e3bf2a3f88b0d86cf71716b75b4fb6efe7a13908dc69565862476156ca7"
+    },
+    "prop_boxing_mat": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_boxing_mat.tscn",
+      "seed": 0,
+      "sha256": "712ce5060a946be4ecd52a4c690788b37ffbc58d017ecc10061eda643e436690"
+    },
+    "prop_boxing_ropes": {
+      "generator": "prop_builder",
+      "generator_version": 1,
+      "output": "res://generated/scenes/props/prop_boxing_ropes.tscn",
+      "seed": 0,
+      "sha256": "2b9bf0670f738ec22ade5e2b5479c29b325e4e6e26649c95526b58f2e480fbab"
     },
     "prop_bucket_blue": {
       "generator": "prop_builder",
@@ -245,68 +273,82 @@
       "seed": 0.0,
       "sha256": "5326f83031b4ed77ba0eb57ac68c1be00446bbca137d27b5c3ddc5ce31ecebd7"
     },
+    "ref_set_boxing": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_set_boxing.png",
+      "seed": 0.0,
+      "sha256": "ba60c0fd1878c295774d53a25c7856d191ccf793f2768229a7476fd5a39e9ab4"
+    },
+    "ref_set_boxing_portrait": {
+      "generator": "reference_sheet_generator",
+      "generator_version": 1.0,
+      "output": "res://generated/references/ref_set_boxing_portrait.png",
+      "seed": 0.0,
+      "sha256": "8920c34b7d0afb6cee686ae4f3f50319d735762e2780b100967108a00bd25c91"
+    },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/references/ref_set_lake.png",
       "seed": 0.0,
-      "sha256": "c67a93ecb30414b2df74009c7d9c74aa1c5d25541b449b4fc1341e07a2c2c0a1"
+      "sha256": "acd77326f957ff6f053d780aca38a07af869b3b7ad6e71a6751932b2d0653d86"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/references/ref_set_market.png",
       "seed": 0.0,
-      "sha256": "84ace3ada63952d8daa9f7295d5985f26184dad74c7dc20a9058b3cde7968ff1"
+      "sha256": "8b2c39fd686efa27db4d5a9c9550ebb3ef7dd99fc2f3fbc77708b8401f9c32c2"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/references/ref_set_market_portrait.png",
       "seed": 0.0,
-      "sha256": "18539d4a4a4731a1ef6388a527841937b53352e54d4fcc580c3fcc88dae8d322"
+      "sha256": "e6661c6a7e7f4de97436dce51243d0ecdc511fa015a7a7362d46a83a49fd7085"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_arowana_don.png",
       "seed": 0.0,
-      "sha256": "f4605b437278772b84d5d361487f12bfad31ce60d0b44b192e259c85eb8de222"
+      "sha256": "3bf822ea0882c06bf1a4079e18585731656b88b3bf44c0f56a9560e440dbec76"
     },
     "tex_fishbook_carp_golden": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_carp_golden.png",
       "seed": 0.0,
-      "sha256": "2813405ba448c78fb375f0322e210ed03924ec322ef6bde84830857b8e27e6bd"
+      "sha256": "1f221abc77597072e810b09aa724db2cac81997bdbbbc5252d124d7643a0fd96"
     },
     "tex_fishbook_catfish_bruiser": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_catfish_bruiser.png",
       "seed": 0.0,
-      "sha256": "3fd099077ea7b450888fffe182a11189b75ca66ec401b23430084a64ae3cc63e"
+      "sha256": "6770d9de2253ed6973a96105419faafdd26e58fde12c59a0e7f0aa91a445d455"
     },
     "tex_fishbook_gourami_shady": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_gourami_shady.png",
       "seed": 0.0,
-      "sha256": "2e443aa2dea38dab7a4bc1f0d8871a5ffa2b36d78db3ff1398d44638fa0eb1ff"
+      "sha256": "3153f7f3e9b46fd607350c2f4d3367731822005fdeb1af93e5a046a7fe6444ba"
     },
     "tex_fishbook_snakehead_sergeant": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_snakehead_sergeant.png",
       "seed": 0.0,
-      "sha256": "6e0e7de32534183b430c29d26dd26bae5e5c91a60f6d02f28dad1ead35a79675"
+      "sha256": "f862e2b1ce4c104e1138d182c6551b02cd406485f5c5b8cc622e999579680cfc"
     },
     "tex_fishbook_tilapia_gym_rat": {
       "generator": "reference_sheet_generator",
       "generator_version": 1.0,
       "output": "res://generated/textures/fish_book/tex_fishbook_tilapia_gym_rat.png",
       "seed": 0.0,
-      "sha256": "7f531513c6cac7d6d5bd4254c1adebb5c2c8a74eda67ef71122c7057bae2fb15"
+      "sha256": "ccbcd9b08ae1159d27d7846b6cbbe8e2de7f92c2c89b1d666e089bb3be24e1c0"
     },
     "ui_app_icon": {
       "generator": "ui_art_builder",
@@ -324,5 +366,5 @@
     }
   },
   "generator_schema": 1,
-  "project_version": "0.3.0"
+  "project_version": "0.4.0"
 }

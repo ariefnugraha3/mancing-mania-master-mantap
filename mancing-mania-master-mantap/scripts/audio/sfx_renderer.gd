@@ -23,10 +23,11 @@ const SYNTH_SPLASH := &"splash"
 const SYNTH_TWO_NOTE := &"two_note"
 const SYNTH_TICK_CLUSTER := &"tick_cluster"
 const SYNTH_CHIME := &"chime"
+const SYNTH_TOM_SEQUENCE := &"tom_sequence"
 const SUPPORTED_SYNTH_TYPES: Array[StringName] = [
 	SYNTH_CLICK, SYNTH_NOISE_SWEEP, SYNTH_DROPLET, SYNTH_THUMP,
 	SYNTH_PLUCK, SYNTH_CREAK, SYNTH_SNAP, SYNTH_SPLASH,
-	SYNTH_TWO_NOTE, SYNTH_TICK_CLUSTER, SYNTH_CHIME,
+	SYNTH_TWO_NOTE, SYNTH_TICK_CLUSTER, SYNTH_CHIME, SYNTH_TOM_SEQUENCE,
 ]
 const EDGE_FADE_SEC := 0.0015
 const PEAK_LIMIT := 0.98
@@ -63,6 +64,8 @@ static func render(preset: AudioPreset, mix_rate: int, seed: int = -1) -> Packed
 			samples = _render_tick_cluster(preset, mix_rate, random)
 		SYNTH_CHIME:
 			samples = _render_chime(preset, mix_rate, random)
+		SYNTH_TOM_SEQUENCE:
+			samples = _render_tom_sequence(preset, mix_rate, random)
 		_:
 			GameLog.error(&"AUDIO", "unsupported synth type", {"preset": preset.id, "type": preset.synth_type})
 			return PackedFloat32Array()
@@ -325,6 +328,35 @@ static func _render_chime(preset: AudioPreset, mix_rate: int, random: RandomNumb
 		filtered += coefficient * (random.randf_range(-1.0, 1.0) - filtered)
 		var strike := filtered * SynthDsp.exp_decay(time_sec, 0.008) * preset.noise_amount
 		samples[index] = (tone * 0.7 + strike) * minf(time_sec / maxf(preset.attack_sec, 0.000001), 1.0)
+	return samples
+
+
+## Knockout (GDD 175.8): three low toms stepping down, each a sine that drops
+## in pitch with a soft stick hit on top. Comic, not violent.
+static func _render_tom_sequence(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	var coefficient := SynthDsp.one_pole_coefficient(preset.filter_cutoff_hz, float(mix_rate))
+	var steps: Array[float] = [1.0, 0.8, 0.62]
+	var spacing := duration * 0.27
+	for tom: int in steps.size():
+		var start := int(spacing * float(tom) * mix_rate)
+		var ring_sec := duration - spacing * float(tom)
+		var count := samples.size() - start
+		var pitch := preset.pitch_hz * steps[tom]
+		var phase := 0.0
+		var filtered := 0.0
+		for index: int in count:
+			var time_sec := float(index) / float(mix_rate)
+			# The head tightens back down after the hit: the pitch falls fast.
+			phase += TAU * pitch * (1.0 + 0.5 * SynthDsp.exp_decay(time_sec, 0.06)) / float(mix_rate)
+			filtered += coefficient * (random.randf_range(-1.0, 1.0) - filtered)
+			var body := sin(phase) * SynthDsp.exp_decay(time_sec, minf(ring_sec, 0.34))
+			var stick := filtered * SynthDsp.exp_decay(time_sec, 0.012) * preset.noise_amount * 1.6
+			samples[start + index] += (body + stick) * 0.75
+	for index: int in samples.size():
+		var time_sec := float(index) / float(mix_rate)
+		samples[index] *= minf((duration - time_sec) / maxf(preset.release_sec, 0.000001), 1.0)
 	return samples
 
 

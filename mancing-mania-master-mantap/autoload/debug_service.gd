@@ -19,9 +19,11 @@ var simulate_release_build: bool = false
 var _forced_fish: StringName = &""
 var _forced_duel: StringName = &""
 var _forced_result: StringName = &""
+var _forced_attack_direction: StringName = &""
 var _dev_dirty: bool = false
 var _fast_wait: bool = false
 var _auto_reel: bool = false
+var _auto_duel: bool = false
 var _overlay: CanvasLayer
 var _version_tap_times: Array[int] = []
 
@@ -96,8 +98,10 @@ func clear_forces() -> void:
 	_forced_fish = &""
 	_forced_duel = &""
 	_forced_result = &""
+	_forced_attack_direction = &""
 	_fast_wait = false
 	_auto_reel = false
+	_auto_duel = false
 
 
 # --- Extras -----------------------------------------------------------------
@@ -132,6 +136,27 @@ func set_auto_reel(enabled: bool) -> void:
 
 func is_auto_reel_enabled() -> bool:
 	return _auto_reel and is_debug_tools_allowed()
+
+
+## Lets a bot play the duel, for unattended QA runs.
+func set_auto_duel(enabled: bool) -> void:
+	if is_debug_tools_allowed():
+		_auto_duel = enabled
+
+
+func is_auto_duel_enabled() -> bool:
+	return _auto_duel and is_debug_tools_allowed()
+
+
+## Makes every boxing attack come from one side: &"left", &"right" or &""
+## for the normal random choice (GDD 178.2).
+func set_forced_attack_direction(direction: StringName) -> void:
+	if is_debug_tools_allowed() and (direction == &"" or direction == &"left" or direction == &"right"):
+		_forced_attack_direction = direction
+
+
+func get_forced_attack_direction() -> StringName:
+	return _forced_attack_direction if is_debug_tools_allowed() else &""
 
 
 ## True while the state carries debug mutations that were not explicitly saved.
@@ -216,6 +241,11 @@ func _mark_dirty() -> void:
 ##   --mm-force=<fish or trash id>                   force the next catch
 ##   --mm-fast-wait                                  half-second bite wait
 ##   --mm-auto-reel                                  a bot plays the reel
+##   --mm-auto-duel                                  a bot plays the duel
+##   --mm-duel=<fish id>                             start a game if needed and box that fish
+##   --mm-result=<win|loss>                          force the result of the next duel
+##   --mm-attack-side=<left|right>                   force the boxing attack direction
+##   --mm-upgrade=<upgrade id>:<level>               set an upgrade level
 ##   --mm-overlay                                    open the debug overlay
 ##   --mm-goto=<fishing|market>                      start a game if needed and go there
 ##   --mm-cash=<amount>                              set cash
@@ -264,6 +294,29 @@ func _run_command_line_tools() -> void:
 				set_fast_wait(true)
 			"auto-reel":
 				set_auto_reel(true)
+			"auto-duel":
+				set_auto_duel(true)
+			"duel":
+				if not GameState.has_active_game():
+					GameState.new_game()
+				_mark_dirty()
+				var duel_fish := GameData.get_fish(StringName(value))
+				if duel_fish == null:
+					GameLog.error(&"DEBUG", "--mm-duel got an unknown fish", {"fish": value})
+				else:
+					GameState.record_encounter(duel_fish.id)
+					GameState.current_fish = duel_fish.id
+					GameState.current_duel = &"boxing"
+					GameState.current_catch = {"fish_id": duel_fish.id, "weight_kg": duel_fish.weight_max_kg * 0.7, "is_big_one": false, "seed": 1}
+					SceneRouter.goto_duel(&"boxing", duel_fish.id)
+					await SceneRouter.transition_finished
+			"result":
+				set_forced_result(StringName(value))
+			"attack-side":
+				set_forced_attack_direction(StringName(value))
+			"upgrade":
+				var upgrade := value.split(":")
+				set_upgrade_level(StringName(upgrade[0]), upgrade[1].to_int() if upgrade.size() > 1 else 1)
 			"overlay":
 				toggle_overlay()
 			"goto":

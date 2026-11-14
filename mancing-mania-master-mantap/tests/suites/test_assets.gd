@@ -194,3 +194,71 @@ func test_fish_book_portraits_are_rendered() -> bool:
 		# The fish fills a good part of the frame, but never all of it.
 		check(opaque > 180 and opaque < 1800, "%s is framed in its portrait (%d of 2304 samples)" % [fish.id, opaque])
 	return true
+
+
+# Boxing content (GDD 172.2, 172.6, 174.7, 185.16).
+func test_boxing_assets_follow_the_animation_contract() -> bool:
+	var manifest := GeneratorManifest.read()
+	if not check(manifest != null, "manifest loads"):
+		return true
+	var ids: PackedStringArray = manifest.get_asset_ids()
+	for asset_id: String in ["env_boxing_set", "prop_boxing_corner_stool", "prop_boxing_ropes", "prop_boxing_mat"]:
+		check(ids.has(asset_id), "manifest lists %s" % asset_id)
+
+	# Every fish: gloves and the boxing clips of the universal contract.
+	var fish_clips: Array[StringName] = [&"box_idle", &"box_block", &"box_hit", &"box_ko"]
+	for fish: FishData in GameData.get_all_fish():
+		var rig: Node = fish.model_scene.instantiate()
+		check(rig.get_node_or_null("AccessoryMeshes/Gloves") is MeshInstance3D, "%s has boxing gloves" % fish.id)
+		var player := rig.get_node("AnimationPlayer") as AnimationPlayer
+		for clip: StringName in fish_clips:
+			check(player.has_animation(clip), "%s clip %s (GDD 172.6)" % [fish.id, clip])
+		check_eq(player.get_animation(&"box_idle").loop_mode, Animation.LOOP_LINEAR, "%s guard loops" % fish.id)
+		for variant: String in BoxingWorld.ATTACK_VARIANTS:
+			for suffix: String in ["", BoxingWorld.MIRROR_SUFFIX]:
+				var clip_name := StringName("box_attack_%s%s" % [variant, suffix])
+				if not check(player.has_animation(clip_name), "%s clip %s" % [fish.id, clip_name]):
+					continue
+				var attack := player.get_animation(clip_name)
+				check(attack.has_marker(&"telegraph_start") and attack.has_marker(&"impact") and attack.has_marker(&"recovery_end"), "%s %s has the three markers" % [fish.id, clip_name])
+				check_eq(attack.get_marker_time(&"telegraph_start"), 0.0, "%s %s telegraph starts the clip" % [fish.id, clip_name])
+				check_eq(attack.get_marker_time(&"impact"), BoxingWorld.ATTACK_IMPACT_TIME, "%s %s impact is at the normalized 1.0" % [fish.id, clip_name])
+		rig.free()
+
+	# Darto: nine clips whose timing is the combat timing (GDD 172.2).
+	var config := GameData.get_boxing_config()
+	var darto: Node = (load("res://generated/scenes/characters/chr_darto.tscn") as PackedScene).instantiate()
+	var gloves := darto.get_node_or_null("AccessoryMeshes/BoxingGloves") as Node3D
+	check(gloves != null and not gloves.visible, "Darto owns gloves and they are off outside the ring")
+	var darto_player := darto.get_node("AnimationPlayer") as AnimationPlayer
+	var lengths: Dictionary = {
+		&"box_dodge_left": BoxingController.DODGE_SEC, &"box_dodge_right": BoxingController.DODGE_SEC,
+		&"box_jab": config.jab_startup_sec + config.jab_recovery_sec,
+		&"box_cross": config.cross_startup_sec + config.cross_recovery_sec,
+		&"box_hit_left": BoxingController.HIT_STUN_SEC, &"box_hit_right": BoxingController.HIT_STUN_SEC,
+		&"box_ko": 1.2, &"box_win": 1.1,
+	}
+	check(darto_player.has_animation(&"box_idle") and darto_player.get_animation(&"box_idle").loop_mode == Animation.LOOP_LINEAR, "Darto's guard loops")
+	for clip: StringName in lengths:
+		if check(darto_player.has_animation(clip), "Darto clip %s" % clip):
+			check_near(darto_player.get_animation(clip).length, lengths[clip], 0.0001, "%s length" % clip)
+	check_near(darto_player.get_animation(&"box_jab").get_marker_time(&"hit_frame"), config.jab_startup_sec, 0.0001, "jab hit_frame is the jab startup")
+	check_near(darto_player.get_animation(&"box_cross").get_marker_time(&"hit_frame"), config.cross_startup_sec, 0.0001, "cross hit_frame is the cross startup")
+	check(darto_player.get_animation(&"box_dodge_left").has_marker(&"lean_peak"), "the dodge marks where the lean is held")
+	darto.free()
+
+	var ring: Node = (load("res://generated/scenes/environment/env_boxing_set.tscn") as PackedScene).instantiate()
+	for marker: String in ["DartoSpot", "FishSpot", "CameraLandscape", "CameraPortrait"]:
+		check(ring.get_node_or_null("Markers/%s" % marker) is Marker3D, "boxing set marker %s" % marker)
+	for prop: String in ["Mat", "Ropes", "FishStool"]:
+		var node := ring.get_node_or_null("Props/%s" % prop)
+		check(node != null and node.scene_file_path.begins_with("res://generated/scenes/props/"), "%s is an instanced generated prop" % prop)
+	# The fish stands at Darto's chest height and the two face each other.
+	var fish_spot := ring.get_node("Markers/FishSpot") as Node3D
+	var darto_spot := ring.get_node("Markers/DartoSpot") as Node3D
+	var to_darto := (darto_spot.position - fish_spot.position).slide(Vector3.UP).normalized()
+	check(fish_spot.transform.basis.x.dot(to_darto) > 0.99, "the fish's belly faces Darto")
+	check((-darto_spot.transform.basis.z).dot(-to_darto) > 0.99, "Darto faces the fish")
+	check(fish_spot.position.y > 0.5, "the fish stands on the stool")
+	ring.free()
+	return true

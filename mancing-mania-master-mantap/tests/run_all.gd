@@ -17,12 +17,13 @@ const SUITES: Array[String] = [
 	"res://tests/suites/test_services.gd",
 	"res://tests/suites/test_fishing.gd",
 	"res://tests/suites/test_market.gd",
+	"res://tests/suites/test_boxing.gd",
 	"res://tests/suites/test_assets.gd",
 	"res://tests/suites/test_boot_flow.gd",
 ]
 
 ## Hard stop for a hung await, so a broken test can never block CI forever.
-const WATCHDOG_SEC := 180.0
+const WATCHDOG_SEC := 300.0
 
 var _elapsed: float = 0.0
 

@@ -111,6 +111,9 @@ func build_darto() -> Node3D:
 	accessories.name = "AccessoryMeshes"
 	root.add_child(accessories)
 	accessories.add_child(_mesh_instance("Accessories", _build_darto_accessories(skeleton), material))
+	var gloves := _mesh_instance("BoxingGloves", _build_darto_gloves(skeleton), material)
+	gloves.visible = false
+	accessories.add_child(gloves)
 
 	# Anchors that follow the head, for dialogue and look-at targets.
 	var face := BoneAttachment3D.new()
@@ -125,7 +128,9 @@ func build_darto() -> Node3D:
 		node.position = marker[1]
 		face.add_child(node)
 
-	root.add_child(RigBuilder.make_player(_build_darto_clips(skeleton)))
+	var clips := _build_darto_clips(skeleton)
+	clips.append_array(_build_darto_boxing_clips(skeleton))
+	root.add_child(RigBuilder.make_player(clips))
 	return root
 
 
@@ -645,3 +650,166 @@ func _build_bu_yati_clips(skeleton: Skeleton3D) -> Array:
 func _pose_from(clip: RefCounted, base: Dictionary, time: float, changes: Dictionary = {}) -> void:
 	for bone: String in base:
 		clip.rot(bone, time, changes.get(bone, base[bone]))
+
+
+# --- Darto: boxing (GDD 172.2) ----------------------------------------------
+
+const GLOVE_RED := Color("a4483f")
+const GLOVE_CUFF := Color("e9dcc0")
+## Guarded but slightly awkward: fists up, knees soft, chin down.
+const BOX_GUARD: Dictionary = {
+	"pelvis": Vector3(0, 0, 0),
+	"spine_lower": Vector3(-6, 0, 0),
+	"spine_upper": Vector3(-8, 0, 0),
+	"neck": Vector3(0, 0, 0),
+	"head": Vector3(4, 0, 0),
+	"upper_arm_r": Vector3(46, 0, 14),
+	"forearm_r": Vector3(112, 0, 0),
+	"hand_r": Vector3(0, 0, 0),
+	"upper_arm_l": Vector3(54, 0, -12),
+	"forearm_l": Vector3(104, 0, 0),
+	"hand_l": Vector3(0, 0, 0),
+	"thigh_l": Vector3(22, 0, -4),
+	"shin_l": Vector3(-30, 0, 0),
+	"foot_l": Vector3(8, 0, 0),
+	"thigh_r": Vector3(-6, 0, 5),
+	"shin_r": Vector3(-22, 0, 0),
+	"foot_r": Vector3(22, 0, 0),
+}
+## Soft knees drop the hips; the root offset keeps the feet on the ground.
+const BOX_CROUCH := Vector3(0, -0.045, 0)
+
+
+## Worn red gloves over both hands. Hidden in the scene file; only the boxing
+## scene shows them.
+func _build_darto_gloves(skeleton: Skeleton3D) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+	for side: float in [-1.0, 1.0]:
+		builder.set_bone(skeleton.find_bone("hand_l" if side < 0.0 else "hand_r"))
+		var x := 0.22 * side
+		builder.color = GLOVE_CUFF
+		builder.tube(Vector3(x, 0.915, 0), Vector3(x, 0.865, 0), 0.05, 0.056, 8, true)
+		builder.color = GLOVE_RED
+		builder.blob(Vector3(x, 0.805, -0.008), Vector3(0.072, 0.082, 0.078), 8, 5, 0.04, 23)
+		builder.blob(Vector3(x - 0.05 * side, 0.83, -0.035), Vector3(0.034, 0.042, 0.034), 6, 4)
+		builder.color = GLOVE_RED.lightened(0.2)
+		builder.blob(Vector3(x, 0.765, -0.03), Vector3(0.05, 0.03, 0.045), 6, 3)
+	return builder.commit()
+
+
+func _build_darto_boxing_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+
+	var idle := RigBuilder.Clip.new(skeleton, &"box_idle", 1.2, true)
+	for step: int in 5:
+		var down := step % 2 == 1
+		_box_pose(idle, 0.3 * float(step), {
+			"spine_upper": Vector3(-10 if down else -8, 0, 0),
+			"upper_arm_l": Vector3(57 if down else 54, 0, -12), "upper_arm_r": Vector3(49 if down else 46, 0, 14),
+		}, Vector3(0, -0.018 if down else 0.0, 0))
+	clips.append(idle)
+
+	# A lean from the hips with the head kept level. The lean is reached at
+	# `lean_peak`, where the scene can hold it until the punch has passed.
+	for side: float in [-1.0, 1.0]:
+		var dodge := RigBuilder.Clip.new(skeleton, &"box_dodge_left" if side < 0.0 else &"box_dodge_right", 0.32)
+		var lean := {
+			"spine_lower": Vector3(-6, 0, -17 * side), "spine_upper": Vector3(-8, 0, -13 * side),
+			"head": Vector3(4, 0, 16 * side), "pelvis": Vector3(0, 0, -6 * side),
+			"thigh_l": Vector3(22, 0, -4 + 9 * side), "thigh_r": Vector3(-6, 0, 5 + 9 * side),
+		}
+		_box_pose(dodge, 0.0)
+		_box_pose(dodge, 0.10, lean, Vector3(0.24 * side, -0.05, 0))
+		_box_pose(dodge, 0.20, lean, Vector3(0.24 * side, -0.05, 0))
+		_box_pose(dodge, 0.32)
+		dodge.mark(&"lean_peak", 0.10)
+		clips.append(dodge)
+
+	# Jab: the lead (left) hand snaps out. Lands at 0.11 s, back by 0.36 s.
+	var jab := RigBuilder.Clip.new(skeleton, &"box_jab", 0.36)
+	var jab_out := {
+		"upper_arm_l": Vector3(92, 0, -4), "forearm_l": Vector3(6, 0, 0),
+		"spine_upper": Vector3(-10, -14, 0), "spine_lower": Vector3(-7, -6, 0)}
+	_box_pose(jab, 0.0)
+	_box_pose(jab, 0.11, jab_out, Vector3(0, 0, -0.05))
+	_box_pose(jab, 0.17, jab_out, Vector3(0, 0, -0.05))
+	_box_pose(jab, 0.36)
+	jab.mark(&"hit_frame", 0.11)
+	clips.append(jab)
+
+	# Cross: the rear (right) hand with the whole body behind it. Lands at
+	# 0.20 s, back by 0.64 s.
+	var cross := RigBuilder.Clip.new(skeleton, &"box_cross", 0.64)
+	var cross_load := {
+		"upper_arm_r": Vector3(30, 0, 22), "forearm_r": Vector3(124, 0, 0),
+		"spine_upper": Vector3(-6, -16, 0)}
+	var cross_out := {
+		"upper_arm_r": Vector3(94, 0, 2), "forearm_r": Vector3(4, 0, 0),
+		"upper_arm_l": Vector3(40, 0, -16), "spine_upper": Vector3(-14, 28, 0),
+		"spine_lower": Vector3(-9, 12, 0), "thigh_r": Vector3(4, 0, 5), "shin_r": Vector3(-30, 0, 0)}
+	_box_pose(cross, 0.0)
+	_box_pose(cross, 0.08, cross_load)
+	_box_pose(cross, 0.20, cross_out, Vector3(0, -0.01, -0.12))
+	_box_pose(cross, 0.30, cross_out, Vector3(0, -0.01, -0.12))
+	_box_pose(cross, 0.64)
+	cross.mark(&"hit_frame", 0.20)
+	clips.append(cross)
+
+	# Knocked toward his left (a punch from the right) and the mirror of it.
+	for side: float in [-1.0, 1.0]:
+		var hit := RigBuilder.Clip.new(skeleton, &"box_hit_left" if side < 0.0 else &"box_hit_right", 0.45)
+		var rocked := {
+			"spine_lower": Vector3(8, 10 * side, -10 * side), "spine_upper": Vector3(10, 16 * side, -8 * side),
+			"head": Vector3(-12, 22 * side, -10 * side),
+			"upper_arm_l": Vector3(34, 0, -30), "upper_arm_r": Vector3(30, 0, 30),
+			"forearm_l": Vector3(70, 0, 0), "forearm_r": Vector3(74, 0, 0)}
+		_box_pose(hit, 0.0)
+		_box_pose(hit, 0.08, rocked, Vector3(0.10 * side, -0.02, 0.10))
+		_box_pose(hit, 0.24, rocked, Vector3(0.12 * side, -0.02, 0.12))
+		_box_pose(hit, 0.45)
+		clips.append(hit)
+
+	# Down on his back, arms out. The last pose is held.
+	var ko := RigBuilder.Clip.new(skeleton, &"box_ko", 1.2)
+	var stagger := {
+		"spine_lower": Vector3(10, 0, 0), "spine_upper": Vector3(14, 0, 0), "head": Vector3(-16, 0, 0),
+		"upper_arm_l": Vector3(20, 0, -34), "upper_arm_r": Vector3(18, 0, 34),
+		"forearm_l": Vector3(40, 0, 0), "forearm_r": Vector3(44, 0, 0)}
+	var flat := {
+		"spine_lower": Vector3(0, 0, 0), "spine_upper": Vector3(0, 0, 0), "head": Vector3(-8, 0, 0),
+		"upper_arm_l": Vector3(0, 0, -62), "upper_arm_r": Vector3(0, 0, 62),
+		"forearm_l": Vector3(12, 0, 0), "forearm_r": Vector3(12, 0, 0),
+		"thigh_l": Vector3(4, 0, -8), "thigh_r": Vector3(-2, 0, 8),
+		"shin_l": Vector3(-6, 0, 0), "shin_r": Vector3(-4, 0, 0), "foot_l": Vector3(0, 0, 0), "foot_r": Vector3(0, 0, 0)}
+	_box_pose(ko, 0.0)
+	_box_pose(ko, 0.3, stagger, Vector3(0, -0.02, 0.14), 14.0)
+	_box_pose(ko, 0.75, flat, Vector3(0, 0.13, 0.3), 86.0)
+	_box_pose(ko, 0.88, flat, Vector3(0, 0.17, 0.3), 82.0)
+	_box_pose(ko, 1.2, flat, Vector3(0, 0.13, 0.3), 86.0)
+	clips.append(ko)
+
+	# Understated: the guard comes down and one fist goes up, barely.
+	var win := RigBuilder.Clip.new(skeleton, &"box_win", 1.1)
+	var relief := {
+		"spine_lower": Vector3(-2, 0, 0), "spine_upper": Vector3(-2, 0, 0), "head": Vector3(-6, 0, 0),
+		"upper_arm_l": Vector3(8, 0, -8), "forearm_l": Vector3(20, 0, 0),
+		"upper_arm_r": Vector3(64, 0, 10), "forearm_r": Vector3(96, 0, 0),
+		"thigh_l": Vector3(6, 0, -4), "shin_l": Vector3(-8, 0, 0), "foot_l": Vector3(2, 0, 0),
+		"thigh_r": Vector3(-2, 0, 5), "shin_r": Vector3(-6, 0, 0), "foot_r": Vector3(8, 0, 0)}
+	_box_pose(win, 0.0)
+	_box_pose(win, 0.45, relief, -BOX_CROUCH)
+	_box_pose(win, 0.7, relief.merged({"upper_arm_r": Vector3(70, 0, 10), "head": Vector3(-9, 0, 0)}, true), -BOX_CROUCH)
+	_box_pose(win, 1.1, relief, -BOX_CROUCH)
+	clips.append(win)
+	return clips
+
+
+## Keys the whole body at `time`: the boxing guard with `changes` on top.
+## `offset` moves the whole body from the guard position and `tip` pitches it
+## backward around the feet (used when he goes down).
+func _box_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset: Vector3 = Vector3.ZERO, tip: float = 0.0) -> void:
+	clip.rot("root", time, Vector3(tip, 0, 0))
+	clip.move("root", time, BOX_CROUCH + offset)
+	for bone: String in BOX_GUARD:
+		clip.rot(bone, time, changes.get(bone, BOX_GUARD[bone]))

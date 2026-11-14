@@ -11,8 +11,9 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 1 | Foundation: data, save, input, audio dasar, debug, Boot, Main Menu | selesai (`0.1.0`) |
 | 2 | Fishing vertical slice: danau, Darto, cast → strike → reel | selesai (`0.2.0`) |
 | 3 | Market, ekonomi, upgrade, Fish Book, Records | selesai (`0.3.0`) |
-| 4 | Tinju lengkap | berikutnya |
-| 5–10 | Tiga duel lain, cerita, art/audio final, QA dan rilis | belum |
+| 4 | Tinju lengkap | selesai (`0.4.0`) |
+| 5 | Panco lengkap | berikutnya |
+| 6–10 | Dua duel lain, cerita, art/audio final, QA dan rilis | belum |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -69,8 +70,8 @@ Jangan mengedit file di `generated/` dengan tangan. Ubah generator di `tools/gen
 autoload/     9 service global: GameState, SaveManager, SceneRouter, AudioManager,
               InputManager, PlatformService, RNGService, StoryDirector, DebugService
 data/         data authoritative (.tres): ikan, sampah, upgrade, balance, audio, teks
-scenes/       scene per layar (boot, menu, fishing, market, lalu duel, ...)
-scripts/      gameplay/ (data, validasi, skema save, fishing/, market/), actors/,
+scenes/       scene per layar (boot, menu, fishing, market, boxing, lalu duel lain, ...)
+scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, duel/), actors/,
               ui/ (termasuk ui/market/ untuk halaman ledger), audio/, utilities/
 shaders/      shader buatan project (air danau, goyangan dedaunan, siluet Fish Book)
 tools/        generators/ (pembuat aset) dan validation/ (pemeriksa kebijakan aset)
@@ -91,6 +92,7 @@ docs/         keputusan implementasi dan laporan milestone
 
 - `F10` membuka Debug Overlay. Di Android: ketuk label versi 5 kali dalam 3 detik.
 - Overlay bisa memaksa tangkapan berikutnya (lele, arwana, sampah), memendekkan waktu tunggu gigitan, dan menampilkan nilai internal reel.
+- Dari command line: bot yang memainkan duel, paksa arah serangan tinju, paksa hasil duel, dan langsung masuk ring melawan ikan tertentu.
 - Mengubah cash/hutang lewat overlay menandai state sebagai `DEV DIRTY STATE`; autosave diblokir sampai Anda menekan `SAVE DEBUG STATE`. Halaman Market ikut diperbarui saat nilainya diubah dari overlay.
 - Screenshot UI dari terminal dijelaskan di [README_TESTING.md](README_TESTING.md).
 

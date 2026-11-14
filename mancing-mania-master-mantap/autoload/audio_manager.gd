@@ -27,6 +27,11 @@ const FISHING_SFX_IDS: Array[StringName] = [
 ]
 ## Market sounds (GDD 175.7): sale, purchase and the debt payment chime.
 const MARKET_SFX_IDS: Array[StringName] = [&"ui_sell", &"ui_purchase", &"ui_debt_ding"]
+## Boxing sounds (GDD 175.8).
+const BOXING_SFX_IDS: Array[StringName] = [
+	&"box_glove_swing", &"box_hit_light", &"box_hit_heavy", &"box_block",
+	&"box_dodge", &"box_perfect", &"box_ko",
+]
 
 const UI_VOICES := 4
 const SFX_VOICES := 8
