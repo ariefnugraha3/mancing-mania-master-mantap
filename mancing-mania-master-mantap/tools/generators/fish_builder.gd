@@ -157,6 +157,7 @@ func build_fish(fish_id: StringName) -> Node3D:
 
 	var clips := _build_clips(skeleton, length)
 	clips.append_array(_build_boxing_clips(skeleton, fish_id, length))
+	clips.append_array(_build_arm_clips(skeleton, fish_id, length))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -594,3 +595,51 @@ func _side_offset(offset: Vector3, side: float) -> Vector3:
 ## Fin angles are written for the left fin; the right fin is its mirror.
 func _fin_rot(rotation: Vector3, side: float) -> Vector3:
 	return Vector3(rotation.x * side, rotation.y * side, rotation.z)
+
+
+# --- Arm wrestling clips (GDD 172.6) ----------------------------------------
+# The fish stands on its tail on the table, belly toward Darto (+X), and
+# grips with fin_left. How far the hands lean is applied by the scene; these
+# clips are the body around it.
+
+const ARM_GRIP_FIN := Vector3(-58, -34, 0)
+
+
+func _build_arm_clips(skeleton: Skeleton3D, fish_id: StringName, length: float) -> Array:
+	var clips: Array = []
+	var style: Array = BOX_STYLE[fish_id]
+	var sway: float = style[2]
+
+	var idle := RigBuilder.Clip.new(skeleton, &"arm_idle", 1.6, true)
+	for step: int in 5:
+		var strain := 1.0 if step % 2 == 1 else 0.0
+		_box_pose(idle, length, 0.4 * float(step), Vector3(sway * 0.5 * strain, 0, STAND_PITCH - 6.0), Vector3(0.02, 0, 0), {
+			"fin_left": ARM_GRIP_FIN + Vector3(0, 0, 3 * strain), "fin_right": Vector3(0, 40, 0),
+			"jaw_or_head": Vector3(0, 0, -14 - 3 * strain), "tail_base": Vector3(0, 0, -34)})
+	clips.append(idle)
+
+	# The burst: it hunches over the grip, tail braced, and trembles.
+	var burst := RigBuilder.Clip.new(skeleton, &"arm_burst", 0.24, true)
+	for step: int in 4:
+		var shake := 1.5 if step % 2 == 1 else -1.5
+		_box_pose(burst, length, 0.08 * float(step), Vector3(shake, 0, STAND_PITCH - 22.0), Vector3(0.07, -0.03, 0), {
+			"fin_left": ARM_GRIP_FIN + Vector3(-10, 6, 0), "fin_right": Vector3(-20, 70, 0),
+			"jaw_or_head": Vector3(0, 0, -26), "body_back": Vector3(0, 0, -22), "tail_base": Vector3(0, 0, -46)})
+	clips.append(burst)
+
+	# Won: it straightens, the gripping fin goes up.
+	var win := RigBuilder.Clip.new(skeleton, &"arm_win", 1.0)
+	_box_pose(win, length, 0.0, Vector3(0, 0, STAND_PITCH - 6.0), Vector3.ZERO, {"fin_left": ARM_GRIP_FIN})
+	var proud := {"fin_left": Vector3(0, -120, 0), "fin_right": Vector3(0, 50, 0), "jaw_or_head": Vector3(0, 0, 8)}
+	_box_pose(win, length, 0.4, Vector3(0, 0, STAND_PITCH + 6.0), Vector3(-0.02, 0.04, 0), proud)
+	_box_pose(win, length, 1.0, Vector3(0, 0, STAND_PITCH + 4.0), Vector3(-0.02, 0.03, 0), proud)
+	clips.append(win)
+
+	# Lost: pinned, it slumps over sideways onto the table.
+	var lose := RigBuilder.Clip.new(skeleton, &"arm_lose", 1.0)
+	_box_pose(lose, length, 0.0, Vector3(0, 0, STAND_PITCH - 6.0), Vector3.ZERO, {"fin_left": ARM_GRIP_FIN})
+	var slump := {"fin_left": Vector3(-30, -20, 0), "fin_right": Vector3(0, 20, 0), "jaw_or_head": Vector3(0, 0, 10), "tail_base": Vector3(0, 0, 10)}
+	_box_pose(lose, length, 0.5, Vector3(-60, 0, STAND_PITCH - 10.0), Vector3(0, -0.2, 0.1), slump)
+	_box_pose(lose, length, 1.0, Vector3(-82, 0, STAND_PITCH - 12.0), Vector3(0, -0.33, 0.12), slump)
+	clips.append(lose)
+	return clips

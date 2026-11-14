@@ -7,9 +7,8 @@ extends RefCounted
 ## poles and low-detail houses on the far side. Everything is placed from a
 ## fixed seed, so the set is identical on every run.
 ##
-## The lake, the Market and the boxing ring are built here. The home and the
-## other duel sets are added by their own milestones; the motorcycles arrive
-## with the vehicle builder.
+## The lake, the Market and the duel sets are built here. The home is added
+## by its own milestone; the motorcycles arrive with the vehicle builder.
 
 const MeshBuilder := preload("res://tools/generators/mesh_builder.gd")
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
@@ -62,6 +61,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		"env_lake_set": [build_lake_set, LAKE_SET_PATH],
 		"env_market_set": [build_market_set, MARKET_SET_PATH],
 		"env_boxing_set": [build_boxing_set, BOXING_SET_PATH],
+		"env_arm_set": [build_arm_set, ARM_SET_PATH],
 	}
 	for set_id: String in sets:
 		var root: Node3D = sets[set_id][0].call()
@@ -955,3 +955,81 @@ func _build_bulb_string() -> ArrayMesh:
 			builder.blob(point - Vector3(0, 0.06, 0), Vector3(0.04, 0.05, 0.04), 6, 4)
 		previous = point
 	return builder.commit()
+
+
+# --- Arm wrestling set (GDD 185.17) -----------------------------------------
+# One sturdy table on the bank, a quiet background and an intimate camera over
+# Darto's right shoulder. Darto stands on the -X side facing +X, the fish
+# stands on the table at the +X end. The hands meet over the middle.
+
+const ARM_SET_PATH := "res://generated/scenes/environment/env_arm_set.tscn"
+const ARM_TABLE_TOP := 0.99
+const ARM_GRIP_POINT := Vector3(-0.02, 1.3, 0.18)
+const ARM_DARTO_SPOT := Vector3(-0.78, 0.04, 0.02)
+const ARM_FISH_SPOT := Vector3(0.24, ARM_TABLE_TOP, 0.12)
+
+
+func build_arm_set() -> Node3D:
+	var random := RandomNumberGenerator.new()
+	random.seed = PLACEMENT_SEED + 5
+	var solid: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var foliage: Material = load(MaterialBuilder.FOLIAGE_SWAY)
+
+	var root := Node3D.new()
+	root.name = "EnvArmSet"
+	var lighting := _build_lighting()
+	var sun := lighting.get_node("Sun") as DirectionalLight3D
+	sun.transform = Transform3D(Basis.looking_at(-Vector3(-0.4, 0.5, 0.75).normalized(), Vector3.UP), Vector3(0, 12, 0))
+	sun.light_energy = 0.85
+	sun.directional_shadow_max_distance = 20.0
+	root.add_child(lighting)
+
+	root.add_child(_instance("Ground", _build_boxing_ground(random), solid, false))
+	root.add_child(_instance("EnvLakeWater", _build_boxing_water(), load(MaterialBuilder.LAKE_WATER), false))
+	root.add_child(_instance("FarShore", _build_boxing_far_shore(random), solid, false))
+	var trees := Node3D.new()
+	trees.name = "Trees"
+	root.add_child(trees)
+	for spot: Array in [[Vector2(5.5, -3.2), 6.8, 3.2, 0.8], [Vector2(-4.8, 3.6), 6.2, 2.6, 1.0]]:
+		var tree := _build_tree("Tree%d" % trees.get_child_count(), Vector2.ZERO, spot[1], spot[2], spot[3], random, solid, foliage)
+		tree.position = Vector3(spot[0].x, 0.0, spot[0].y)
+		trees.add_child(tree)
+
+	var props := Node3D.new()
+	props.name = "Props"
+	root.add_child(props)
+	var placements: Array = [
+		["prop_arm_table", "Table", Vector3(0, 0.04, 0), 0.0],
+		["prop_arm_elbow_pad", "PadDarto", Vector3(-0.26, ARM_TABLE_TOP, 0.18), 0.0],
+		["prop_arm_elbow_pad", "PadFish", Vector3(0.22, ARM_TABLE_TOP, 0.18), 0.0],
+		["prop_bucket_blue", "Bucket", Vector3(1.1, 0.04, 0.9), 0.0],
+		["prop_boxing_corner_stool", "Stool", Vector3(-1.3, 0.04, -1.1), 0.4],
+	]
+	for placement: Array in placements:
+		var scene := load(PROP_PATH % placement[0]) as PackedScene
+		if scene == null:
+			push_error("environment_builder: missing prop scene %s" % placement[0])
+			continue
+		var prop: Node3D = scene.instantiate()
+		prop.name = placement[1]
+		prop.transform = Transform3D(Basis(Vector3.UP, placement[3]), placement[2])
+		props.add_child(prop)
+
+	var markers := Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	var spots: Dictionary[String, Transform3D] = {
+		# Darto (who faces -Z) turned to face +X; the fish's belly (+X in its
+		# stance) turned to face -X.
+		"DartoSpot": Transform3D(Basis(Vector3.UP, -PI * 0.5), ARM_DARTO_SPOT),
+		"FishSpot": Transform3D(Basis(Vector3.UP, PI), ARM_FISH_SPOT),
+		"GripPoint": Transform3D(Basis.IDENTITY, ARM_GRIP_POINT),
+		"CameraLandscape": _look(Vector3(-1.95, 2.05, 1.7), Vector3(0.1, 1.2, 0.12)),
+		"CameraPortrait": _look(Vector3(-2.3, 2.4, 1.9), Vector3(0.05, 0.92, 0.1)),
+	}
+	for marker_name: String in spots:
+		var marker := Marker3D.new()
+		marker.name = marker_name
+		marker.transform = spots[marker_name]
+		markers.add_child(marker)
+	return root

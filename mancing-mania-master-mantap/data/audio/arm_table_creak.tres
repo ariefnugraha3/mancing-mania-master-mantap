@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"arm_table_creak"
+synth_type = &"creak"
+base_gain_db = -9.0
+attack_sec = 0.02
+decay_sec = 0.25
+sustain = 0.0
+release_sec = 0.1
+pitch_hz = 140.0
+noise_amount = 0.25
+filter_cutoff_hz = 900.0
+seed_mode = &"varied"

@@ -44,6 +44,8 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		BOXING_STOOL: _build_stool,
 		BOXING_ROPES: _build_ropes,
 		BOXING_MAT: _build_mat,
+		ARM_TABLE: _build_arm_table,
+		ARM_ELBOW_PAD: _build_elbow_pad,
 	}
 	for prop_id: String in props:
 		var root: Node3D = props[prop_id].call()
@@ -493,4 +495,39 @@ func _build_mat() -> Node3D:
 	builder.box(Vector3(0.7, 0.012, 0.5), Vector3(-0.9, 0.034, 0.7))
 	builder.color = FADED_RED
 	builder.box(Vector3(0.42, 0.012, 0.42), Vector3(1.1, 0.034, -0.9))
+	return _wrap(builder)
+
+
+# --- Arm wrestling props (GDD 174.7, 185.17) --------------------------------
+
+const ARM_TABLE := "prop_arm_table"
+const ARM_ELBOW_PAD := "prop_arm_elbow_pad"
+const ARM_TABLE_HEIGHT := 0.95
+
+
+## A single sturdy table: thick top, four heavy legs and cross braces.
+func _build_arm_table() -> Node3D:
+	var builder := MeshBuilder.new()
+	var top := Vector3(1.1, 0.07, 0.8)
+	builder.color = WOOD.darkened(0.05)
+	builder.box(top, Vector3(0, ARM_TABLE_HEIGHT - top.y * 0.5, 0))
+	builder.color = WOOD.lightened(0.06)
+	builder.box(Vector3(top.x - 0.06, 0.01, top.z - 0.06), Vector3(0, ARM_TABLE_HEIGHT + 0.004, 0))
+	builder.color = WOOD_DARK
+	for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		builder.box(Vector3(0.1, ARM_TABLE_HEIGHT - top.y, 0.1), Vector3(corner.x * 0.46, (ARM_TABLE_HEIGHT - top.y) * 0.5, corner.y * 0.31))
+	builder.box(Vector3(0.84, 0.06, 0.05), Vector3(0, 0.2, 0.31))
+	builder.box(Vector3(0.84, 0.06, 0.05), Vector3(0, 0.2, -0.31))
+	builder.box(Vector3(0.05, 0.06, 0.56), Vector3(0.46, 0.2, 0))
+	builder.box(Vector3(0.05, 0.06, 0.56), Vector3(-0.46, 0.2, 0))
+	return _wrap(builder)
+
+
+## An exaggerated elbow pad: a fat stitched cushion, faded red.
+func _build_elbow_pad() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = FADED_RED.lightened(0.05)
+	builder.blob(Vector3(0, 0.045, 0), Vector3(0.16, 0.05, 0.14), 10, 4)
+	builder.color = CREAM.darkened(0.1)
+	builder.tube(Vector3(0, 0.0, 0), Vector3(0, 0.012, 0), 0.165, 0.165, 12, true)
 	return _wrap(builder)

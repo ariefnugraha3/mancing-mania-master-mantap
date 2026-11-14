@@ -234,5 +234,18 @@ entries = Dictionary[String, String]({
 "duel.result.continue": "CONTINUE",
 "duel.result.retry.title": "THAT WAS ROUGH.",
 "duel.result.retry.body": "No harm done. Again.",
-"duel.result.retry.button": "TRY AGAIN"
+"duel.result.retry.button": "TRY AGAIN",
+"arm.hud.power": "POWER {percent}%",
+"arm.hud.sudden_grip": "GRIP",
+"arm.hud.burst_warning": "! THE FISH IS TENSING !",
+"arm.hud.burst": "!! BURST !!",
+"arm.button.mash": "MASH!",
+"arm.keys": "{key}  MASH",
+"arm.intro.subtitle": "ARM WRESTLING",
+"arm.tutorial.mash": "MASH TO PUSH THE HANDS TOWARD YOUR SIDE",
+"arm.tutorial.rest": "LOW STAMINA MEANS WEAKER PUSHES. STOP BRIEFLY TO RECOVER.",
+"arm.sudden_grip.title": "SUDDEN GRIP",
+"arm.sudden_grip.body": "Too close to call. First to break away wins.",
+"arm.rematch.title": "REMATCH",
+"arm.rematch.body": "Don Arowana does not accept a draw. Ten seconds."
 })

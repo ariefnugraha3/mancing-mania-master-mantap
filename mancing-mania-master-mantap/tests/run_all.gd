@@ -18,11 +18,13 @@ const SUITES: Array[String] = [
 	"res://tests/suites/test_fishing.gd",
 	"res://tests/suites/test_market.gd",
 	"res://tests/suites/test_boxing.gd",
+	"res://tests/suites/test_arm_wrestle.gd",
 	"res://tests/suites/test_assets.gd",
 	"res://tests/suites/test_boot_flow.gd",
 ]
 
 ## Hard stop for a hung await, so a broken test can never block CI forever.
+## The clock restarts for every suite, so adding suites never trips it.
 const WATCHDOG_SEC := 300.0
 
 var _elapsed: float = 0.0
@@ -35,7 +37,7 @@ func _initialize() -> void:
 func _process(delta: float) -> bool:
 	_elapsed += delta
 	if _elapsed > WATCHDOG_SEC:
-		push_error("[TEST] watchdog: run exceeded %d seconds" % int(WATCHDOG_SEC))
+		push_error("[TEST] watchdog: a suite ran longer than %d seconds" % int(WATCHDOG_SEC))
 		quit(2)
 	return false
 
@@ -66,6 +68,7 @@ func _run_all() -> void:
 		if filter != "" and suite.get_suite_name() != filter:
 			continue
 		suite.tree = self
+		_elapsed = 0.0
 		await suite.run()
 		print("[TEST] %-12s %3d passed, %d failed" % [suite.get_suite_name(), suite.passed, suite.failed])
 		total_passed += suite.passed

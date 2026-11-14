@@ -24,10 +24,14 @@ const SYNTH_TWO_NOTE := &"two_note"
 const SYNTH_TICK_CLUSTER := &"tick_cluster"
 const SYNTH_CHIME := &"chime"
 const SYNTH_TOM_SEQUENCE := &"tom_sequence"
+const SYNTH_RISING_PULSE := &"rising_pulse"
+const SYNTH_FANFARE := &"fanfare"
+const SYNTH_TWO_NOTE_DOWN := &"two_note_down"
 const SUPPORTED_SYNTH_TYPES: Array[StringName] = [
 	SYNTH_CLICK, SYNTH_NOISE_SWEEP, SYNTH_DROPLET, SYNTH_THUMP,
 	SYNTH_PLUCK, SYNTH_CREAK, SYNTH_SNAP, SYNTH_SPLASH,
 	SYNTH_TWO_NOTE, SYNTH_TICK_CLUSTER, SYNTH_CHIME, SYNTH_TOM_SEQUENCE,
+	SYNTH_RISING_PULSE, SYNTH_FANFARE, SYNTH_TWO_NOTE_DOWN,
 ]
 const EDGE_FADE_SEC := 0.0015
 const PEAK_LIMIT := 0.98
@@ -66,6 +70,12 @@ static func render(preset: AudioPreset, mix_rate: int, seed: int = -1) -> Packed
 			samples = _render_chime(preset, mix_rate, random)
 		SYNTH_TOM_SEQUENCE:
 			samples = _render_tom_sequence(preset, mix_rate, random)
+		SYNTH_RISING_PULSE:
+			samples = _render_rising_pulse(preset, mix_rate)
+		SYNTH_FANFARE:
+			samples = _render_fanfare(preset, mix_rate, random)
+		SYNTH_TWO_NOTE_DOWN:
+			samples = _render_two_note_down(preset, mix_rate, random)
 		_:
 			GameLog.error(&"AUDIO", "unsupported synth type", {"preset": preset.id, "type": preset.synth_type})
 			return PackedFloat32Array()
@@ -358,6 +368,59 @@ static func _render_tom_sequence(preset: AudioPreset, mix_rate: int, random: Ran
 		var time_sec := float(index) / float(mix_rate)
 		samples[index] *= minf((duration - time_sec) / maxf(preset.release_sec, 0.000001), 1.0)
 	return samples
+
+
+## Burst telegraph (GDD 175.9): a low pulse that rises from pitch_hz to
+## filter_cutoff_hz and beats faster as it goes.
+static func _render_rising_pulse(preset: AudioPreset, mix_rate: int) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	var phase := 0.0
+	var beat := 0.0
+	for index: int in samples.size():
+		var time_sec := float(index) / float(mix_rate)
+		var progress := time_sec / duration
+		phase += TAU * lerpf(preset.pitch_hz, preset.filter_cutoff_hz, progress) / float(mix_rate)
+		beat += TAU * lerpf(5.0, 11.0, progress) / float(mix_rate)
+		var pulse := 0.5 + 0.5 * sin(beat)
+		var body := sin(phase) + 0.3 * sin(phase * 2.0)
+		samples[index] = body * pulse * pulse * minf(time_sec / maxf(preset.attack_sec, 0.000001), 1.0) \
+			* minf((duration - time_sec) / maxf(preset.release_sec, 0.000001), 1.0) * 0.8
+	return samples
+
+
+## A short parody fanfare (GDD 175.9): root, fifth, octave, the last one held.
+static func _render_fanfare(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	var notes: Array[float] = [1.0, 1.5, 2.0]
+	var starts: Array[float] = [0.0, 0.12, 0.24]
+	for note: int in notes.size():
+		_add_brass(samples, int(starts[note] * duration / 0.85 * mix_rate), preset.pitch_hz * notes[note],
+			duration - starts[note], mix_rate, 0.55 if note < 2 else 0.75)
+	return samples
+
+
+## Losing (GDD 175.9): two notes stepping down, a little flat.
+static func _render_two_note_down(preset: AudioPreset, mix_rate: int, random: RandomNumberGenerator) -> PackedFloat32Array:
+	var duration := _duration(preset)
+	var samples := _buffer(duration, mix_rate)
+	_add_brass(samples, 0, preset.pitch_hz, duration * 0.45, mix_rate, 0.6)
+	_add_brass(samples, int(duration * 0.42 * mix_rate), preset.pitch_hz * 0.75 * 0.985, duration * 0.58, mix_rate, 0.6)
+	return samples
+
+
+## A soft square-ish note with a quick swell and a slow fade.
+static func _add_brass(samples: PackedFloat32Array, start: int, pitch_hz: float, length_sec: float, mix_rate: int, gain: float) -> void:
+	var count := mini(int(length_sec * mix_rate), samples.size() - start)
+	var phase := 0.0
+	for index: int in count:
+		var time_sec := float(index) / float(mix_rate)
+		phase += TAU * pitch_hz / float(mix_rate)
+		var tone := sin(phase) + 0.33 * sin(phase * 3.0) + 0.18 * sin(phase * 5.0)
+		var envelope := minf(time_sec / 0.02, 1.0) * SynthDsp.exp_decay(time_sec, length_sec * 1.4) \
+			* minf((length_sec - time_sec) / 0.03, 1.0)
+		samples[start + index] += tone * envelope * gain * 0.6
 
 
 # --- Shared -----------------------------------------------------------------

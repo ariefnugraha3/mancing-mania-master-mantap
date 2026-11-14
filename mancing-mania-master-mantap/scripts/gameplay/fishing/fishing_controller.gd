@@ -283,7 +283,7 @@ func _resolve_catch() -> void:
 		catch_resolved.emit({"outcome": OUTCOME_DUEL, "item_id": item_id})
 		SceneRouter.goto_wheel(item_id)
 		return
-	var duel := _first_available_duel()
+	var duel := pick_duel(int(_encounter["seed"]))
 	if duel != &"":
 		GameState.current_duel = duel
 		catch_resolved.emit({"outcome": OUTCOME_DUEL, "item_id": item_id})
@@ -305,14 +305,23 @@ func _finish(outcome: StringName, item_id: StringName) -> void:
 	catch_resolved.emit({"outcome": outcome, "item_id": item_id})
 
 
-func _first_available_duel() -> StringName:
+## Which duel settles this catch while the Wheel is not in the build. The very
+## first duel is always Boxing (GDD 176.10); after that every duel in the
+## build is equally likely, chosen from the encounter seed, so the choice is
+## fixed before anything is shown (GDD Section 38).
+static func pick_duel(seed: int) -> StringName:
 	var forced := DebugService.get_forced_duel()
 	if forced != &"" and SceneRouter.has_scene(forced):
 		return forced
+	var available: Array[StringName] = []
 	for duel_id: StringName in ContentIds.DUEL_IDS:
 		if SceneRouter.has_scene(duel_id):
-			return duel_id
-	return &""
+			available.append(duel_id)
+	if available.is_empty():
+		return &""
+	if not GameState.is_tutorial_seen(&"boxing_seen") and available.has(&"boxing"):
+		return &"boxing"
+	return available[RNGService.choose_index(&"duel_pick", seed, available.size())]
 
 
 func _reveal_duration() -> float:

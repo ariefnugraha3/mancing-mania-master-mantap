@@ -293,3 +293,27 @@ func test_boxing_sfx_render_cleanly() -> bool:
 	for part: int in 3:
 		check(_rms(ko.slice(third * part, third * (part + 1))) > 0.01, "knockout tom %d sounds" % (part + 1))
 	return true
+
+
+# Arm wrestling sounds (GDD 175.9).
+func test_arm_sfx_render_cleanly() -> bool:
+	var mix_rate := AudioManager.get_mix_rate()
+	check_eq(AudioManager.ARM_SFX_IDS.size(), 6, "six arm wrestling sounds (GDD 175.9)")
+	for sfx_id: StringName in AudioManager.ARM_SFX_IDS:
+		var preset := AudioManager.get_preset(sfx_id)
+		if not check(preset != null, "%s preset exists" % sfx_id):
+			continue
+		check(SfxRenderer.SUPPORTED_SYNTH_TYPES.has(preset.synth_type), "%s uses a supported synth type" % sfx_id)
+		var samples := SfxRenderer.render(preset, mix_rate, 3)
+		check(not samples.is_empty() and not SynthDsp.has_invalid_samples(samples), "%s renders valid samples" % sfx_id)
+		var peak := SynthDsp.peak(samples)
+		check(peak >= 0.03 and peak <= 1.0, "%s peak %.3f is audible and within full scale" % [sfx_id, peak])
+		check(float(samples.size()) / float(mix_rate) <= 1.2, "%s is short" % sfx_id)
+	# The mash click is the lightest sound in the game (it plays ten times a second).
+	var click := SfxRenderer.render(AudioManager.get_preset(&"arm_mash_click"), mix_rate)
+	check(float(click.size()) / float(mix_rate) <= 0.06, "the mash click is very short")
+	check(_rms(click) < _rms(SfxRenderer.render(AudioManager.get_preset(&"ui_click"), mix_rate)), "and lighter than a UI click")
+	# Winning goes up, losing goes down.
+	check_eq(AudioManager.get_preset(&"arm_win").synth_type, &"fanfare", "a short fanfare for the win")
+	check_eq(AudioManager.get_preset(&"arm_lose").synth_type, &"two_note_down", "two falling notes for the loss")
+	return true

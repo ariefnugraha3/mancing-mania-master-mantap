@@ -2,6 +2,26 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.5.0 — Milestone 5: Arm Wrestling Complete
+
+### Ditambahkan
+
+- Panco Maut: MASH mendorong posisi ke arah Darto, menghabiskan stamina, dan memakai band tenaga 100/85/65/42%.
+- Batas 10 tekan/detik tanpa hukuman: menekan lebih cepat tetap menghasilkan 10, bukan setengahnya.
+- Stamina kembali 26/detik setelah jeda 0,35 detik. Herbal Tonic menaikkan stamina maksimum.
+- Ikan mendorong terus dan melakukan burst dengan peringatan 0,7 detik; tier lebih tinggi burst lebih kuat.
+- Ronde 32 detik, Sudden Grip saat hampir nol, dan rematch 10 detik untuk Don Arowana bila seri tepat.
+- Meja panco di tepi danau dengan bantalan siku; clip panco Darto dan keenam ikan; lengan bersandar sesuai posisi.
+- HUD panco: bar posisi, stamina dengan takik band, jam, peringatan burst yang berdenyut, tombol MASH besar.
+- Enam SFX panco dengan tiga resep baru.
+- 19 test baru (total 199).
+
+### Diubah
+
+- Selama Wheel belum ada, duel pertama tetap tinju; sesudahnya duel diundi dari seed encounter di antara duel yang tersedia.
+- `--mm-duel` menerima id duel.
+- Watchdog test sekarang per suite.
+
 ## 0.4.0 — Milestone 4: Boxing Complete
 
 ### Ditambahkan
