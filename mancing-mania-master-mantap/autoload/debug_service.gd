@@ -24,6 +24,7 @@ var _dev_dirty: bool = false
 var _fast_wait: bool = false
 var _auto_reel: bool = false
 var _auto_duel: bool = false
+var _auto_dialogue: bool = false
 var _overlay: CanvasLayer
 var _version_tap_times: Array[int] = []
 
@@ -102,6 +103,7 @@ func clear_forces() -> void:
 	_fast_wait = false
 	_auto_reel = false
 	_auto_duel = false
+	_auto_dialogue = false
 
 
 # --- Extras -----------------------------------------------------------------
@@ -146,6 +148,16 @@ func set_auto_duel(enabled: bool) -> void:
 
 func is_auto_duel_enabled() -> bool:
 	return _auto_duel and is_debug_tools_allowed()
+
+
+## Lets dialogue advance by itself, for unattended QA runs and tests.
+func set_auto_dialogue(enabled: bool) -> void:
+	if is_debug_tools_allowed():
+		_auto_dialogue = enabled
+
+
+func is_auto_dialogue_enabled() -> bool:
+	return _auto_dialogue and is_debug_tools_allowed()
 
 
 ## Makes every boxing attack come from one side: &"left", &"right" or &""
@@ -242,6 +254,7 @@ func _mark_dirty() -> void:
 ##   --mm-fast-wait                                  half-second bite wait
 ##   --mm-auto-reel                                  a bot plays the reel
 ##   --mm-auto-duel                                  a bot plays the duel
+##   --mm-auto-dialogue                              dialogue advances by itself
 ##   --mm-duel=<fish id>[:<duel id>]                 start a game if needed and duel that fish
 ##   --mm-result=<win|loss>                          force the result of the next duel
 ##   --mm-attack-side=<left|right>                   force the boxing attack direction
@@ -296,6 +309,8 @@ func _run_command_line_tools() -> void:
 				set_auto_reel(true)
 			"auto-duel":
 				set_auto_duel(true)
+			"auto-dialogue":
+				set_auto_dialogue(true)
 			"duel":
 				if not GameState.has_active_game():
 					GameState.new_game()

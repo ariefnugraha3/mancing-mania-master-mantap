@@ -132,6 +132,7 @@ func build_darto() -> Node3D:
 	clips.append_array(_build_darto_boxing_clips(skeleton))
 	clips.append_array(_build_darto_arm_clips(skeleton))
 	clips.append_array(_build_darto_dance_clips(skeleton))
+	clips.append_array(_build_darto_suwit_clips(skeleton))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -1003,3 +1004,50 @@ func _dance_pose(clip: RefCounted, time: float, changes: Dictionary = {}, offset
 	clip.move("root", time, offset)
 	for bone: String in DANCE_POSE:
 		clip.rot(bone, time, changes.get(bone, DANCE_POSE[bone]))
+
+
+# --- Darto: Suwit (GDD 172.5) -----------------------------------------------
+# At the table, right fist shaking on the count, then thrown forward. With no
+# finger bones the three moves differ by wrist and arm; the UI names them.
+
+func _build_darto_suwit_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+	var ready_pose := {"upper_arm_r": Vector3(40, 0, 10), "forearm_r": Vector3(70, 0, 0), "spine_upper": Vector3(-6, 0, 0)}
+	var ready := RigBuilder.Clip.new(skeleton, &"suwit_ready", 0.5, true)
+	_dance_pose(ready, 0.0, ready_pose)
+	_dance_pose(ready, 0.25, ready_pose.merged({"forearm_r": Vector3(95, 0, 0)}, true))
+	_dance_pose(ready, 0.5, ready_pose)
+	clips.append(ready)
+
+	var throws: Dictionary = {
+		&"suwit_rock": {"upper_arm_r": Vector3(70, 0, 6), "forearm_r": Vector3(20, 0, 0), "hand_r": Vector3(0, 0, 0)},
+		&"suwit_scissors": {"upper_arm_r": Vector3(70, 0, 6), "forearm_r": Vector3(20, 0, 0), "hand_r": Vector3(0, 70, 0)},
+		&"suwit_paper": {"upper_arm_r": Vector3(70, 0, 6), "forearm_r": Vector3(20, 0, 0), "hand_r": Vector3(-60, 0, 0)},
+	}
+	for clip_name: StringName in throws:
+		var clip := RigBuilder.Clip.new(skeleton, clip_name, 0.6)
+		_dance_pose(clip, 0.0, ready_pose)
+		var thrown: Dictionary = (throws[clip_name] as Dictionary).merged({"spine_upper": Vector3(-10, 0, 0)}, true)
+		_dance_pose(clip, 0.12, thrown, Vector3(0, 0, -0.04))
+		_dance_pose(clip, 0.6, thrown, Vector3(0, 0, -0.04))
+		clips.append(clip)
+
+	var win := RigBuilder.Clip.new(skeleton, &"suwit_win", 0.9)
+	_dance_pose(win, 0.0, ready_pose)
+	_dance_pose(win, 0.4, {"upper_arm_r": Vector3(30, 0, 150), "forearm_r": Vector3(20, 0, 0), "head": Vector3(-6, 0, 0)})
+	_dance_pose(win, 0.9, {"upper_arm_r": Vector3(30, 0, 140), "forearm_r": Vector3(30, 0, 0)})
+	clips.append(win)
+
+	var lose := RigBuilder.Clip.new(skeleton, &"suwit_lose", 0.9)
+	_dance_pose(lose, 0.0, ready_pose)
+	var defeated := {"spine_upper": Vector3(16, 0, 0), "head": Vector3(18, 0, 0), "upper_arm_r": Vector3(6, 0, 8), "forearm_r": Vector3(10, 0, 0)}
+	_dance_pose(lose, 0.5, defeated)
+	_dance_pose(lose, 0.9, defeated)
+	clips.append(lose)
+
+	var draw := RigBuilder.Clip.new(skeleton, &"suwit_draw", 0.7)
+	_dance_pose(draw, 0.0, ready_pose)
+	_dance_pose(draw, 0.3, {"upper_arm_r": Vector3(30, 0, 40), "upper_arm_l": Vector3(30, 0, -40), "forearm_r": Vector3(60, 0, 0), "forearm_l": Vector3(60, 0, 0), "head": Vector3(0, 0, 10)})
+	_dance_pose(draw, 0.7, ready_pose)
+	clips.append(draw)
+	return clips

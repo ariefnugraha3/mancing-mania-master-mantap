@@ -2,6 +2,26 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.7.0 — Milestone 7: Suwit, Wheel, Full Fish Personality Content
+
+### Ditambahkan
+
+- Suwit: first-to-two, seri diulang, pilihan ikan ditetapkan di awal hitungan, tell jujur atau bohong menurut stat ikan, PANIC PICK saat terlambat, Agate Charm yang menunjukkan langkah asli 0,8 detik.
+- Wheel of Fate: delapan segmen dicat, hasil dipilih sebelum berputar, putaran 3,1–4,0 detik, tahan 0,6 detik untuk melewati setelah Wheel pertama; Wheel pertama selalu tinju.
+- Scene Result: YOU WIN atau THE FISH GOT AWAY di tepi danau, ikan berbicara lalu Darto menjawab, CONTINUE dengan auto-continue 5 detik.
+- Seluruh dialog ikan GDD 166: percakapan pertama tiap ikan, pool LAND, PLAYER_WIN, FISH_WIN_ESCAPE, REEL_ESCAPE, reaksi Darto, dan percakapan khusus kemenangan pertama atas Don Arowana.
+- Kotak dialog di bagian bawah layar dengan nama pembicara; maju hanya dengan tap atau tombol.
+- Aksesori khas: headband nila, kacamata hitam gurami, kalung emas ikan mas, ikat kepala militer gabus, rantai tipis dan bekas luka arwana.
+- Set Suwit, meja bundar, clip Suwit Darto (7) dan keenam ikan (7).
+- Alur lengkap danau → dialog → Wheel → keempat duel → Result → danau.
+- 15 test baru (total 232), termasuk 24 pasangan ikan×duel lewat scene asli.
+
+### Diubah
+
+- Pemilihan duel sementara (D-071) digantikan Wheel.
+- Duel tidak lagi menampilkan overlay hasil; hasilnya ditampilkan scene Result.
+- Watchdog test per suite dinaikkan ke 600 detik.
+
 ## 0.6.0 — Milestone 6: Dance + Procedural Music Engine
 
 ### Ditambahkan

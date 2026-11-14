@@ -106,6 +106,21 @@ const SUBJECTS: Array = [
 		],
 	},
 	{
+		"id": "ref_set_suwit", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_suwit_set.tscn",
+		"camera_marker": "Markers/CameraLandscape", "fov": 45.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "suwit_ready"},
+			{"scene": "res://generated/scenes/fish/fish_gourami_shady.tscn", "marker": "Markers/FishSpot", "clip": "suwit_tell_fake", "time": 0.3},
+		],
+	},
+	{
+		"id": "ref_fish_lineup", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"camera_position": Vector3(0.0, 1.0, 3.2), "camera_target": Vector3(0.0, 0.85, 0.0), "fov": 42.0,
+		"lineup": true,
+	},
+	{
 		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
 		"scene": "res://generated/scenes/environment/env_market_set.tscn",
 		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,
@@ -247,6 +262,21 @@ func _render_set(subject: Dictionary) -> Image:
 	_open_stage(subject.get("size", Vector2i(1280, 720)), false)
 	var set_root: Node3D = load(subject["scene"]).instantiate()
 	_stage.add_child(set_root)
+	# A line-up of all six fish in their dance pose, gloves off.
+	if subject.get("lineup", false):
+		var ids: Array[String] = FISH_IDS
+		for index: int in ids.size():
+			var fish: Node3D = load(FISH_SCENE % ids[index]).instantiate()
+			_stage.add_child(fish)
+			fish.position = Vector3(-1.75 + 0.7 * float(index), 0.34, 0.0)
+			fish.rotation.y = PI
+			var gloves := fish.get_node_or_null("AccessoryMeshes/Gloves") as Node3D
+			if gloves != null:
+				gloves.visible = false
+			var fish_player := fish.get_node("AnimationPlayer") as AnimationPlayer
+			fish_player.play(&"dance_idle")
+			fish_player.seek(0.0, true)
+			fish_player.pause()
 	# Sets can be shot with their cast standing on the set's own markers.
 	for actor: Dictionary in subject.get("actors", []):
 		var spot := set_root.get_node_or_null(actor["marker"]) as Node3D

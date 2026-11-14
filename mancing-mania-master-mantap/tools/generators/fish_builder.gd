@@ -152,6 +152,9 @@ func build_fish(fish_id: StringName) -> Node3D:
 	var accessories := Node3D.new()
 	accessories.name = "AccessoryMeshes"
 	root.add_child(accessories)
+	var signature := _build_signature(fish_id, profile, skeleton)
+	if signature != null:
+		accessories.add_child(_mesh_instance("Signature", signature, material))
 	# Every fish boxes, so every fish has gloves. Scenes hide them until needed.
 	accessories.add_child(_mesh_instance("Gloves", _build_gloves(profile, skeleton), material))
 
@@ -159,6 +162,7 @@ func build_fish(fish_id: StringName) -> Node3D:
 	clips.append_array(_build_boxing_clips(skeleton, fish_id, length))
 	clips.append_array(_build_arm_clips(skeleton, fish_id, length))
 	clips.append_array(_build_dance_clips(skeleton, fish_id, length))
+	clips.append_array(_build_suwit_clips(skeleton, fish_id, length))
 	root.add_child(RigBuilder.make_player(clips))
 	return root
 
@@ -699,4 +703,156 @@ func _build_dance_clips(skeleton: Skeleton3D, fish_id: StringName, length: float
 	_box_pose(lose, length, 0.5, Vector3(0, 0, STAND_PITCH - 30.0), Vector3(0, -0.05, 0), slump)
 	_box_pose(lose, length, 1.0, Vector3(0, 0, STAND_PITCH - 34.0), Vector3(0, -0.06, 0), slump)
 	clips.append(lose)
+	return clips
+
+
+# --- Signature accessories (GDD Section 69, 185.7-185.11) -------------------
+# Bruiser Catfish has its whiskers and brow; the others get the one item that
+# tells who they are at a glance.
+
+const HEADBAND_RED := Color("b8443c")
+const HEADBAND_WHITE := Color("efe9d8")
+const MILITARY_OLIVE := Color("4f5a3a")
+const BADGE_BRASS := Color("c9a24a")
+const SHADES := Color("1d1b19")
+const GOLD := Color("e1b23c")
+const SILVER := Color("b9bdb8")
+const SCAR := Color("e8c9a8")
+
+
+func _build_signature(fish_id: StringName, profile: Dictionary, skeleton: Skeleton3D) -> ArrayMesh:
+	var length: float = profile["length"]
+	var eye: Array = profile["eye"]
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+	builder.set_bone(skeleton.find_bone("jaw_or_head"))
+	match fish_id:
+		&"tilapia_gym_rat":
+			# A red sweatband with a white stripe, round the forehead.
+			_head_ring(builder, profile, float(eye[0]) - 0.06, 0.05, 1.12, HEADBAND_RED)
+			_head_ring(builder, profile, float(eye[0]) - 0.06, 0.016, 1.15, HEADBAND_WHITE)
+		&"gourami_shady":
+			# Black sunglasses over both eyes, joined by a bridge.
+			for side: float in [-1.0, 1.0]:
+				var centre := Vector3(eye[0], eye[1], float(eye[2]) * side) * length
+				builder.color = SHADES
+				builder.box(Vector3(0.1, 0.065, 0.02) * length, centre + Vector3(0.006, 0.004, 0.016 * side) * length)
+				builder.box(Vector3(0.13, 0.012, 0.012) * length, centre + Vector3(-0.08, 0.016, 0.008 * side) * length)
+			builder.box(Vector3(0.012, 0.01, float(eye[2]) * 2.0) * length, Vector3(float(eye[0]) + 0.03, float(eye[1]) + 0.012, 0.0) * length)
+		&"carp_golden":
+			# An oversized gold chain of beads behind the head.
+			builder.set_bone(skeleton.find_bone("body_front"))
+			_bead_ring(builder, profile, 0.24, 1.18, 14, 0.026, GOLD, 0.05)
+			builder.color = GOLD.lightened(0.15)
+			var section := _section_at(profile, 0.24)
+			builder.blob(Vector3(0.24, float(section[3]) - float(section[2]) * 1.3, 0.0) * length, Vector3.ONE * 0.04 * length, 7, 4)
+		&"snakehead_sergeant":
+			# An olive military headband with a brass badge in front.
+			_head_ring(builder, profile, float(eye[0]) - 0.07, 0.045, 1.12, MILITARY_OLIVE)
+			var section := _section_at(profile, float(eye[0]) - 0.07)
+			builder.color = BADGE_BRASS
+			builder.box(Vector3(0.03, 0.03, 0.03) * length, Vector3(float(eye[0]) - 0.03, float(section[3]) + float(section[2]) * 1.08, 0.0) * length)
+		&"arowana_don":
+			# Only a thin chain, a scar and darker fin edges (GDD Section 69).
+			builder.set_bone(skeleton.find_bone("body_front"))
+			_bead_ring(builder, profile, 0.26, 1.08, 20, 0.008, SILVER, 0.02)
+			builder.set_bone(skeleton.find_bone("jaw_or_head"))
+			builder.color = SCAR
+			var centre := Vector3(float(eye[0]) - 0.07, float(eye[1]) - 0.035, 0.0) * length
+			var section := _section_at(profile, float(eye[0]) - 0.07)
+			var side := float(section[1]) * length * 1.02
+			builder.transform = Transform3D(Basis(Vector3.RIGHT, 0.0) * Basis(Vector3.BACK, deg_to_rad(28.0)), centre + Vector3(0, 0, side))
+			builder.box(Vector3(0.09, 0.006, 0.004) * length)
+			builder.transform = Transform3D.IDENTITY
+			builder.set_bone(skeleton.find_bone("tail_base"))
+			builder.color = Color("3a1510")
+			builder.slab(_outline([[-0.56, 0.085], [-0.61, 0.0], [-0.56, -0.085], [-0.58, 0.0]], length), 0.014 * length)
+	return builder.commit() if not builder.is_empty() else null
+
+
+## Cross-section [x, half_width, half_height, y] at `x`, interpolated.
+func _section_at(profile: Dictionary, x: float) -> Array:
+	var sections: Array = profile["sections"]
+	for index: int in sections.size() - 1:
+		var front: Array = sections[index]
+		var back: Array = sections[index + 1]
+		if x <= float(front[0]) and x >= float(back[0]):
+			var weight := (float(front[0]) - x) / maxf(float(front[0]) - float(back[0]), 0.0001)
+			return [x, lerpf(front[1], back[1], weight), lerpf(front[2], back[2], weight), lerpf(front[3], back[3], weight)]
+	return sections[0]
+
+
+## A band round the head at `x`, `width` body lengths wide.
+func _head_ring(builder: RefCounted, profile: Dictionary, x: float, width: float, scale: float, color: Color) -> void:
+	var length: float = profile["length"]
+	builder.color = color
+	var rings: Array = []
+	for offset: float in [-width * 0.5, width * 0.5]:
+		var section := _section_at(profile, x + offset)
+		var centre := Vector3(x + offset, float(section[3]), 0.0) * length
+		rings.append(builder.ring(centre, Vector3(0, 0, float(section[1]) * scale * length), Vector3(0, float(section[2]) * scale * length, 0), 12, float(profile["squareness"])))
+	builder.loft(rings, false, false)
+
+
+## A loop of beads round the body at `x`, sagging toward the belly.
+func _bead_ring(builder: RefCounted, profile: Dictionary, x: float, scale: float, count: int, bead: float, color: Color, sag: float) -> void:
+	var length: float = profile["length"]
+	var section := _section_at(profile, x)
+	builder.color = color
+	for index: int in count:
+		var angle := TAU * float(index) / float(count)
+		var droop := sag * maxf(-sin(angle), 0.0)
+		var point := Vector3(x - droop * 0.5, float(section[3]) + sin(angle) * float(section[2]) * scale - droop, cos(angle) * float(section[1]) * scale)
+		builder.blob(point * length, Vector3.ONE * bead * length, 5, 3)
+
+
+# --- Suwit clips (GDD 172.6) ------------------------------------------------
+# The fish stands behind the table. Its tell is mostly in the UI; the body
+# only adds attitude: a calm nod for a true tell, a shifty glance for a lie.
+
+func _build_suwit_clips(skeleton: Skeleton3D, fish_id: StringName, length: float) -> Array:
+	var clips: Array = []
+	var ready_pose := {"fin_left": Vector3(-20, -70, 0), "fin_right": Vector3(0, 30, 0)}
+	var ready := RigBuilder.Clip.new(skeleton, &"suwit_ready", 0.6, true)
+	for step: int in 3:
+		var lift := 0.03 if step == 1 else 0.0
+		_box_pose(ready, length, 0.3 * float(step), Vector3(0, 0, STAND_PITCH), Vector3(0, lift, 0), ready_pose.merged({"fin_left": Vector3(-20, -70 - 30 * int(step == 1), 0)}, true))
+	clips.append(ready)
+
+	var truth := RigBuilder.Clip.new(skeleton, &"suwit_tell_true", 0.8)
+	_box_pose(truth, length, 0.0, Vector3(0, 0, STAND_PITCH), Vector3.ZERO, ready_pose)
+	_box_pose(truth, length, 0.3, Vector3(0, 0, STAND_PITCH - 8.0), Vector3.ZERO, ready_pose.merged({"jaw_or_head": Vector3(0, 0, -22)}, true))
+	_box_pose(truth, length, 0.8, Vector3(0, 0, STAND_PITCH), Vector3.ZERO, ready_pose)
+	clips.append(truth)
+
+	var fake := RigBuilder.Clip.new(skeleton, &"suwit_tell_fake", 0.8)
+	_box_pose(fake, length, 0.0, Vector3(0, 0, STAND_PITCH), Vector3.ZERO, ready_pose)
+	_box_pose(fake, length, 0.25, Vector3(0, 18, STAND_PITCH), Vector3.ZERO, ready_pose.merged({"jaw_or_head": Vector3(0, 20, 0)}, true))
+	_box_pose(fake, length, 0.55, Vector3(0, -14, STAND_PITCH), Vector3.ZERO, ready_pose.merged({"jaw_or_head": Vector3(0, -16, 0)}, true))
+	_box_pose(fake, length, 0.8, Vector3(0, 0, STAND_PITCH), Vector3.ZERO, ready_pose)
+	clips.append(fake)
+
+	var reveal := RigBuilder.Clip.new(skeleton, &"suwit_reveal", 0.5)
+	_box_pose(reveal, length, 0.0, Vector3(0, 0, STAND_PITCH), Vector3.ZERO, ready_pose)
+	_box_pose(reveal, length, 0.15, Vector3(0, -20, STAND_PITCH - 10.0), Vector3(0.06, 0, 0), {"fin_left": Vector3(-80, -20, 0), "fin_right": Vector3(0, 30, 0)})
+	_box_pose(reveal, length, 0.5, Vector3(0, -20, STAND_PITCH - 10.0), Vector3(0.06, 0, 0), {"fin_left": Vector3(-80, -20, 0), "fin_right": Vector3(0, 30, 0)})
+	clips.append(reveal)
+
+	var win := RigBuilder.Clip.new(skeleton, &"suwit_win", 0.9)
+	_box_pose(win, length, 0.0)
+	_box_pose(win, length, 0.4, Vector3(0, 0, STAND_PITCH + 8.0), Vector3(0, 0.05, 0), {"fin_left": Vector3(0, -130, 0), "fin_right": Vector3(0, 130, 0), "jaw_or_head": Vector3(0, 0, 10)})
+	_box_pose(win, length, 0.9, Vector3(0, 0, STAND_PITCH + 6.0), Vector3(0, 0.03, 0), {"fin_left": Vector3(0, -120, 0), "fin_right": Vector3(0, 120, 0)})
+	clips.append(win)
+
+	var lose := RigBuilder.Clip.new(skeleton, &"suwit_lose", 0.9)
+	_box_pose(lose, length, 0.0)
+	_box_pose(lose, length, 0.5, Vector3(0, 0, STAND_PITCH - 24.0), Vector3(0, -0.04, 0), {"fin_left": Vector3(10, -10, 0), "fin_right": Vector3(-10, 10, 0), "jaw_or_head": Vector3(0, 0, 18)})
+	_box_pose(lose, length, 0.9, Vector3(0, 0, STAND_PITCH - 26.0), Vector3(0, -0.05, 0), {"fin_left": Vector3(10, -10, 0), "fin_right": Vector3(-10, 10, 0), "jaw_or_head": Vector3(0, 0, 20)})
+	clips.append(lose)
+
+	var draw := RigBuilder.Clip.new(skeleton, &"suwit_draw", 0.7)
+	_box_pose(draw, length, 0.0)
+	_box_pose(draw, length, 0.3, Vector3(0, 0, STAND_PITCH), Vector3(0, 0.02, 0), {"fin_left": Vector3(30, -60, 0), "fin_right": Vector3(-30, 60, 0), "jaw_or_head": Vector3(10, 0, 0)})
+	_box_pose(draw, length, 0.7)
+	clips.append(draw)
 	return clips

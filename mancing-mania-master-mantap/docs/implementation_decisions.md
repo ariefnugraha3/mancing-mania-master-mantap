@@ -509,3 +509,41 @@ Wizard di Settings: click track 100 BPM, 16 ketukan; dua tekanan pertama diabaik
 ### D-081 — Tampilan joget
 
 Di landscape lajur berada di kanan (lebar 460 px) agar Darto dan ikan terlihat di kiri. Di portrait lajur memenuhi lebar layar di 58% bawah. Setiap lajur punya bentuk sendiri (lingkaran, belah ketupat, kotak, segitiga) selain warnanya. Ikan diperbesar 1,5× di panggung dan menghadapkan sisinya ke kamera.
+
+## Milestone 7 — Suwit, Wheel, Result, kepribadian ikan
+
+### D-082 — Ronde Suwit
+
+- Pilihan ikan, apakah tell-nya jujur, dan kebohongan yang akan dipakai ditetapkan di awal hitungan; tell muncul 1,1 detik kemudian (SUWIT-003).
+- Pilihan pemain dikunci saat pertama ditekan. Ronde selesai saat hitungan habis, bukan saat pemain memilih.
+- Gerakan PANIC PICK diundi di awal ronde, jadi terlambat memilih tidak menggeser urutan acak ronde berikutnya.
+- Charm hanya bisa dipakai saat hitungan berjalan, satu per ronde, dan tidak pernah mengubah pilihan ikan.
+- Setelah ronde, hasil ditampilkan 1,4 detik sebelum hitungan berikutnya.
+
+### D-083 — Wheel
+
+- Hasil dipilih dari seed encounter tangkapan itu (jadi tangkapan yang sama selalu mendarat di duel yang sama), lalu putaran diatur agar berhenti tepat di salah satu dari dua segmen duel itu.
+- Langkah waktu putaran dibatasi 0,1 detik per frame; frame yang sangat lambat memperlambat putaran tetapi tidak mengubah hasil.
+- Wheel pertama di sebuah save selalu tinju dan tidak bisa dilewati (Section 176.10, WHEEL-003).
+- Menahan aksi utama 0,6 detik melewati putaran; reveal 0,8 detik tetap ditampilkan.
+
+### D-084 — Dialog ikan
+
+- Teks GDD 166 disimpan apa adanya. Pool ada di tabel teks (`dialogue.<ikan>.<pool>.<n>`); percakapan pertama tiap ikan adalah `DialogueSequence` di `data/dialogue/fish_<id>.tres`.
+- Pilihan baris memakai seed encounter dengan aliran acak sendiri; dialog tidak pernah menyentuh RNG gameplay (diuji).
+- Percakapan pertama diputar saat ikan spesies itu pertama kali mendarat; sesudahnya satu baris LAND. Tangkapan menunggu sampai dialog selesai sebelum Wheel.
+- Kemenangan pertama atas Don Arowana memakai percakapan khusus Section 166.6 di layar Result. Adegan lengkapnya (Section 173.8) dibuat di Milestone 8.
+- Dialog hanya maju dengan tap atau tombol; Esc melewati semuanya. Kecepatan munculnya teks mengikuti setting `dialogue_speed`.
+
+### D-085 — Scene Result
+
+- Panggungnya tepi danau di tempat Darto memancing. Saat menang, ikan terkulai di dekat ember; saat kalah, ikan melompat kembali ke danau.
+- Auto-continue 5 detik (Section 88) baru berjalan setelah dialog selesai, supaya dialog penting tidak maju sendiri.
+
+### D-086 — Aksesori khas
+
+Sesuai Section 69: headband merah-putih (nila), kacamata hitam (gurami), kalung emas besar (ikan mas), ikat kepala militer dengan lencana (gabus), rantai perak tipis, bekas luka, dan ujung sirip ekor gelap (arwana). Semuanya mesh hasil generator di `AccessoryMeshes/Signature`. Gerak khas spesies (Section 172.7) masih sebatas tempo, lompatan, dan goyangan kuda-kuda.
+
+### D-087 — Tool QA
+
+`--mm-auto-dialogue` membuat dialog maju sendiri setiap 0,25 detik (debug build saja), supaya alur penuh bisa diuji tanpa tangan.

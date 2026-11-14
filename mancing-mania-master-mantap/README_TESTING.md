@@ -12,7 +12,7 @@ godot --headless --path . --script res://tests/run_all.gd -- --suite=save
 
 - `--import` diperlukan sekali setelah checkout baru, dan setiap kali ada script baru yang memakai `class_name`. Tanpa itu test gagal dengan `Identifier "X" not declared`.
 - `--suite=<nama>` menjalankan satu suite saja.
-- Exit code `0` berarti semua lulus, `1` berarti ada yang gagal atau tidak ada test yang berjalan, `2` berarti watchdog menghentikan suite yang berjalan lebih dari 300 detik.
+- Exit code `0` berarti semua lulus, `1` berarti ada yang gagal atau tidak ada test yang berjalan, `2` berarti watchdog menghentikan suite yang berjalan lebih dari 600 detik.
 - Di CI atau script, bungkus perintah dengan batas waktu. Script yang error sebelum memanggil `quit()` membuat proses Godot tidak pernah berhenti.
 
 Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
@@ -32,8 +32,9 @@ Semua test bekerja di `user://test_tmp/` dan tidak pernah menyentuh save pemain.
 | `boxing` | `tests/suites/test_boxing.gd` | BOX-001..012: HP dan Tonic, nilai dan waktu jab/cross, setiap serangan ber-telegraph, dodge benar/salah, jendela perfect 180 ms, pengali 2,0× dan 2,4×, block 40%, timeout, sudden death, keenam ikan bisa dikalahkan, commit hasil duel |
 | `arm_wrestle` | `tests/suites/test_arm_wrestle.gd` | ARM-001..011: posisi awal, impuls dan biaya stamina, batas 10 tekan/detik, jeda dan laju regen, stamina Tonic, band tenaga, burst dengan peringatan, timeout, Sudden Grip, rematch Arowana, setiap ikan kalah pada 7 tekan/detik |
 | `dance` | `tests/suites/test_dance.gd` | DANCE-001..011, AUD-011: rentang BPM dan durasi, seed yang sama menghasilkan chart dan jadwal musik yang sama, jendela PERFECT/GREAT/GOOD, skor dan bonus combo, Coffee hanya visual, penilaian tidak bergantung FPS, offset kalibrasi, AI ikan per nada, tiebreak dan encore, loop musik |
+| `suwit_wheel` | `tests/suites/test_suwit_wheel.gd` | SUWIT-001..008, WHEEL-001, 002, 005: first-to-two, seri diulang, pilihan tersembunyi sebelum tell, peluang tell jujur per ikan, panic pick, Charm, peluang Wheel 25%, hasil Wheel tetap di setiap FPS, Wheel pertama selalu tinju; kelengkapan dan keterpisahan dialog ikan |
 | `assets` | `tests/suites/test_assets.gd` | kebijakan tanpa aset internet, manifest generator, tema hasil generate, aset Market, potret Fish Book, kontrak animasi tinju |
-| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait; lalu tinju: blueprint scene, tangkapan pertama sampai ember lewat duel, kalah di pelajaran pertama, input, pause, dan empat kontrol sentuh; lalu panco: blueprint, aksi dan tombol MASH, arah lengan, pause, hasil, layout portrait |
+| `boot` | `tests/suites/test_boot_flow.gd` | scene asli: Boot → Main Menu → danau, New Game, Continue, pemulihan save rusak, satu tangkapan penuh, pause, guncangan HUD; lalu Market: blueprint scene, satu kunjungan penuh lewat tombol asli, pemberitahuan Fish Book saat keluar, pause, tata letak landscape dan portrait; lalu tinju: blueprint scene, tangkapan pertama sampai ember lewat duel, kalah di pelajaran pertama, input, pause, dan empat kontrol sentuh; lalu panco: blueprint, aksi dan tombol MASH, arah lengan, pause, hasil, layout portrait; joget, Suwit, Wheel, Result, dan setiap ikan di setiap duel lewat scene asli |
 
 Test manual (MAN) di matriks QA GDD Section 180, seperti BOOT-005/006 dan SAVE-010/011, membutuhkan build Web dan perangkat Android. Itu dikerjakan saat export preset tersedia.
 
@@ -67,6 +68,7 @@ Langkah dijalankan berurutan sesuai urutan di command line:
 | `--mm-fast-wait` | gigitan datang setengah detik setelah cast |
 | `--mm-auto-reel` | bot memainkan reel |
 | `--mm-auto-duel` | bot memainkan duel |
+| `--mm-auto-dialogue` | dialog maju sendiri |
 | `--mm-duel=<id ikan>[:<id duel>]` | memulai game bila belum ada, lalu langsung berduel melawan ikan itu (default tinju), misalnya `carp_golden:arm_wrestle` |
 | `--mm-result=<win\|loss>` | memaksa hasil duel berikutnya |
 | `--mm-attack-side=<left\|right>` | memaksa arah serangan tinju |
