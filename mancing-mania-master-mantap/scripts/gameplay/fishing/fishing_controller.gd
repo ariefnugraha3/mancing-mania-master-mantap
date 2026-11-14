@@ -58,6 +58,8 @@ const DEBUG_FAST_WAIT_SEC := 0.5
 
 ## Set false to drive the controller by hand (tests).
 var auto_advance: bool = true
+## The scene holds the catch here while the fish is talking (GDD 166).
+var route_hold: bool = false
 
 var _state: StringName = STATE_IDLE
 var _encounter: Dictionary = {}
@@ -158,7 +160,7 @@ func advance(delta: float) -> void:
 			_advance_reel(step)
 		STATE_LANDED:
 			_timer += step
-			if not _resolved and _timer >= _reveal_duration():
+			if not _resolved and not route_hold and _timer >= _reveal_duration():
 				_resolve_catch()
 		STATE_ESCAPED:
 			_timer += step

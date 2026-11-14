@@ -238,6 +238,7 @@ func test_full_catch_in_the_real_scene() -> bool:
 	var controller := scene.get_node("FishingController") as FishingController
 	DebugService.set_fast_wait(true)
 	DebugService.set_auto_reel(true)
+	DebugService.set_auto_dialogue(true)
 
 	# Cast with the real input action, exactly as the keyboard or CAST button does.
 	InputManager.press_action(&"fish_cast")
@@ -518,6 +519,22 @@ func test_market_pause_and_both_screen_shapes() -> bool:
 const RING := "BoxingCanvas/SafeRoot/"
 
 
+## Waits for the Result scene; returns it (or null).
+func _await_result() -> Node:
+	var before := _finished_transitions.count(&"result")
+	if not await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 20.0):
+		return null
+	await wait_frames(3)
+	return tree.current_scene
+
+
+## Lets the Result dialogue run, then presses CONTINUE.
+func _continue_from_result(scene: Node) -> void:
+	var button := scene.get_node("ResultCanvas/SafeRoot/ContinueButton") as BaseButton
+	await wait_until(func() -> bool: return not button.disabled, 10.0)
+	button.pressed.emit()
+
+
 ## From the lake, hand a hooked fish to the boxing ring.
 func _enter_boxing(fish_id: StringName) -> bool:
 	if not await _enter_lake():
@@ -571,26 +588,30 @@ func test_first_catch_is_boxed_and_a_win_fills_the_bucket() -> bool:
 	DebugService.set_fast_wait(true)
 	DebugService.set_auto_reel(true)
 	DebugService.set_auto_duel(true)
+	DebugService.set_auto_dialogue(true)
 	var fishing := tree.current_scene.get_node("FishingController") as FishingController
 	InputManager.press_action(&"fish_cast")
 	InputManager.release_action(&"fish_cast")
 	check(await wait_until(func() -> bool: return fishing.get_state() == FishingController.STATE_STRIKE_WINDOW, 8.0), "a bite arrives")
 	InputManager.press_action(&"fish_cast")
 	InputManager.release_action(&"fish_cast")
-	check(await wait_until(func() -> bool: return _finished_transitions.has(&"boxing"), 60.0), "the landed fish is taken to the ring")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"wheel"), 60.0), "the landed fish talks, then the Wheel spins")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"boxing"), 30.0), "the first Wheel lands on Boxing")
 	await wait_frames(3)
 	var scene := tree.current_scene
 	if not check(scene != null and scene.name == &"Boxing", "the Boxing scene is up"):
 		return true
 	var controller := scene.get_node("BoxingController") as BoxingController
-	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
 	check_eq(controller.get_snapshot()["fish_id"], &"catfish_bruiser", "the first fish is Bruiser Catfish, and the first duel is Boxing")
+	check(GameState.is_tutorial_seen(&"wheel_seen"), "the first Wheel has been seen")
 	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 0, "a hooked fish is not in the Bucket yet")
 
 	check(await wait_until(func() -> bool: return controller.get_state() == BoxingController.STATE_FINISHED, 70.0), "the fight ends")
 	check(controller.get_result()["player_won"], "the bot beats the catfish")
-	check(await wait_until(overlay.is_open, 5.0), "the result is shown")
-	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.win.title"), "YOU WIN")
+	var result_scene := await _await_result()
+	if not check(result_scene != null and result_scene.name == &"Result", "the Result scene follows the duel"):
+		return true
+	check_eq((result_scene.get_node("ResultCanvas/SafeRoot/ResultTitle") as Label).text, TextDb.t(&"duel.result.win.title"), "YOU WIN")
 	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 1, "the catfish is in the Bucket")
 	check(GameState.is_tutorial_seen(&"boxing_seen"), "the boxing lesson is done")
 	check_eq(GameState.get_stat(&"boxing_wins"), 1, "one boxing win")
@@ -598,7 +619,7 @@ func test_first_catch_is_boxed_and_a_win_fills_the_bucket() -> bool:
 	var saved: Dictionary = read_json(SaveManager.get_save_path())
 	check_eq(saved["bucket"]["catfish_bruiser"], 1, "the result was saved")
 
-	overlay.footer.get_child(0).pressed.emit()
+	await _continue_from_result(result_scene)
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
 	check_eq(GameState.current_catch, {}, "no catch is pending any more")
 	DebugService.clear_forces()
@@ -636,14 +657,15 @@ func test_losing_the_lesson_is_a_retry_and_a_real_loss_costs_only_the_fish() -> 
 	if not check(await wait_until(func() -> bool: return _finished_transitions.count(&"boxing") >= 2, BOOT_TIMEOUT_SEC), "a second fish reaches the ring"):
 		return true
 	await wait_frames(3)
-	scene = tree.current_scene
-	overlay = scene.get_node("ResultOverlay") as DuelResultOverlay
-	check(await wait_until(overlay.is_open, 8.0), "the result is shown")
-	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.loss.title"), "THE FISH GOT AWAY")
+	DebugService.set_auto_dialogue(true)
+	var loss_scene := await _await_result()
+	if not check(loss_scene != null and loss_scene.name == &"Result", "the Result scene follows the loss"):
+		return true
+	check_eq((loss_scene.get_node("ResultCanvas/SafeRoot/ResultTitle") as Label).text, TextDb.t(&"duel.result.loss.title"), "THE FISH GOT AWAY")
 	check_eq(GameState.get_bucket_quantity(&"carp_golden"), 0, "the carp is gone")
 	check_eq(GameState.get_stat(&"duel_losses"), 1, "the loss is recorded")
 	check_eq(GameState.get_cash(), cash, "no cash lost")
-	overlay.footer.get_child(0).pressed.emit()
+	await _continue_from_result(loss_scene)
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "back to the lake")
 	DebugService.clear_forces()
 	return true
@@ -733,10 +755,12 @@ const TABLE := "ArmCanvas/SafeRoot/"
 
 
 ## From the lake, hand a hooked fish to any duel scene.
-func _enter_duel(duel_id: StringName, fish_id: StringName) -> bool:
+func _enter_duel(duel_id: StringName, fish_id: StringName, prepare: Callable = Callable()) -> bool:
 	if not await _enter_lake():
 		return false
 	GameState.set_tutorial_seen(&"boxing_seen")
+	if prepare.is_valid():
+		prepare.call()
 	var fish := GameData.get_fish(fish_id)
 	GameState.record_encounter(fish_id)
 	GameState.current_fish = fish_id
@@ -801,13 +825,16 @@ func test_arm_wrestle_scene_follows_the_blueprint_and_plays() -> bool:
 
 	# A bot finishes it; the shared result flow takes over.
 	DebugService.set_auto_duel(true)
-	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
-	check(await wait_until(overlay.is_open, 40.0), "the match ends and the result is shown")
-	check(controller.get_result()["player_won"], "a steady seven taps a second beats the gourami")
+	DebugService.set_auto_dialogue(true)
+	check(await wait_until(func() -> bool: return controller.get_state() == ArmWrestleController.STATE_FINISHED, 40.0), "the match ends")
+	var arm_result := controller.get_result()
+	var result_scene := await _await_result()
+	check(result_scene != null, "and the Result scene is shown")
+	check(arm_result["player_won"], "a steady seven taps a second beats the gourami")
 	check_eq(GameState.get_bucket_quantity(&"gourami_shady"), 1, "the gourami is in the Bucket")
 	check_eq(GameState.get_stat(&"arm_wrestle_wins"), 1, "one arm wrestling win")
 	check(GameState.is_tutorial_seen(&"arm_wrestle_seen"), "the arm wrestling hint is done")
-	overlay.footer.get_child(0).pressed.emit()
+	await _continue_from_result(result_scene)
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
 	DebugService.clear_forces()
 	return true
@@ -887,11 +914,12 @@ func test_dance_scene_plays_on_the_audio_clock() -> bool:
 	check(await wait_until(music.is_song_playing, 10.0), "and the track starts again")
 
 	DebugService.set_forced_result(&"win")
-	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
-	check(await wait_until(overlay.is_open, 10.0), "the result is shown")
+	DebugService.set_auto_dialogue(true)
+	var result_scene := await _await_result()
+	check(result_scene != null, "the Result scene is shown")
 	check_eq(GameState.get_stat(&"dance_wins"), 1, "one dance win")
 	check(not music.is_song_playing(), "the track stops after the dance")
-	overlay.footer.get_child(0).pressed.emit()
+	await _continue_from_result(result_scene)
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "CONTINUE returns to the lake")
 	DebugService.clear_forces()
 	return true
@@ -918,4 +946,124 @@ func test_dance_portrait_lanes_are_full_touch_targets() -> bool:
 	check(widths.max() - widths.min() < 1.0 and widths[0] >= 150.0, "four equal, wide lanes (%d px)" % int(widths[0]))
 	window.size = original
 	await wait_frames(3)
+	return true
+
+
+# --- Suwit, Wheel and Result (GDD 168.6, 168.10, 168.11) --------------------
+
+func test_suwit_scene_follows_the_blueprint_and_plays() -> bool:
+	if not check(await _enter_duel(&"suwit", &"gourami_shady", func() -> void: GameState.debug_set_upgrade_level(&"charm", 1)), "a hooked fish reaches the table"):
+		return true
+	var scene := tree.current_scene
+	check_eq(scene.name, &"Suwit", "the Suwit scene is up")
+	for path: String in [
+		"SuwitController", "World/SuwitSet", "World/DartoSuwitPose", "World/FishSuwitPose", "World/SuwitCamera",
+		"SuwitCanvas/SafeRoot/ScoreDots", "SuwitCanvas/SafeRoot/Countdown", "SuwitCanvas/SafeRoot/TellWidget",
+		"SuwitCanvas/SafeRoot/ChoiceRow/RockButton", "SuwitCanvas/SafeRoot/ChoiceRow/ScissorsButton",
+		"SuwitCanvas/SafeRoot/ChoiceRow/PaperButton", "SuwitCanvas/SafeRoot/CharmButton", "PauseOverlay",
+	]:
+		check(scene.has_node(path), "node %s exists (GDD 168.10)" % path)
+	var controller := scene.get_node("SuwitController") as SuwitController
+	var hud := scene.get_node("SuwitCanvas") as SuwitHud
+	check(await wait_until(func() -> bool: return controller.get_state() == SuwitController.STATE_COUNTDOWN, 4.0), "the first countdown starts")
+	check_eq(controller.get_snapshot()["charm_charges"], 1, "Charm Lv1: one charge this duel")
+	InputManager.press_action(&"suwit_charm")
+	InputManager.release_action(&"suwit_charm")
+	check(await wait_until(func() -> bool: return controller.get_snapshot()["charm_move"] != &"", 1.0), "C uses the charm")
+	await wait_frames(2)
+	check(hud.get_tell_label_text().begins_with("REAL MOVE"), "the HUD shows the real move")
+	InputManager.press_action(&"suwit_paper")
+	InputManager.release_action(&"suwit_paper")
+	check(await wait_until(func() -> bool: return controller.get_snapshot()["player_move"] == &"paper", 1.0), "3 picks PAPER")
+
+	# Button layout: three large moves, never touching (SUWIT-009, automatic part).
+	var buttons: Array[Rect2] = []
+	for move: StringName in SuwitController.MOVES:
+		buttons.append(hud.get_move_button(move).get_global_rect())
+	for index: int in buttons.size():
+		check(buttons[index].size.x >= 150.0 and buttons[index].size.y >= 120.0, "move button %d is large" % index)
+		if index > 0:
+			check(buttons[index].position.x - buttons[index - 1].end.x >= 20.0, "move buttons %d and %d have a clear gap" % [index - 1, index])
+
+	DebugService.set_auto_duel(true)
+	DebugService.set_auto_dialogue(true)
+	var result_scene := await _await_result()
+	check(result_scene != null, "the match ends at the Result scene")
+	check_eq(GameState.get_stat(&"suwit_wins") + GameState.get_stat(&"duel_losses"), 1, "the match was recorded once")
+	await _continue_from_result(result_scene)
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "back to the lake")
+	DebugService.clear_forces()
+	return true
+
+
+func test_wheel_and_result_follow_their_blueprints() -> bool:
+	if not check(await _enter_lake(), "reach the lake"):
+		return true
+	GameState.set_tutorial_seen(&"boxing_seen")
+	GameState.set_tutorial_seen(&"wheel_seen")
+	GameState.current_fish = &"tilapia_gym_rat"
+	GameState.current_catch = {"fish_id": &"tilapia_gym_rat", "weight_kg": 1.0, "is_big_one": false, "seed": 777}
+	SceneRouter.goto_wheel(&"tilapia_gym_rat")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"wheel"), BOOT_TIMEOUT_SEC), "the Wheel opens")
+	await wait_frames(3)
+	var scene := tree.current_scene
+	for path: String in ["WheelController", "World/FishDisplayAnchor", "World/WheelCamera", "WheelCanvas/SafeRoot/FishTitle",
+		"WheelCanvas/SafeRoot/WheelGraphic", "WheelCanvas/SafeRoot/Pointer", "WheelCanvas/SafeRoot/ResultLabel", "WheelCanvas/SafeRoot/SkipHoldIndicator"]:
+		check(scene.has_node(path), "node %s exists (GDD 168.6)" % path)
+	var wheel := scene.get_node("WheelController") as WheelController
+	var chosen := wheel.get_preselected_duel_id()
+	check(ContentIds.DUEL_IDS.has(chosen), "the duel is chosen before the spin (%s)" % chosen)
+	check_eq(chosen, WheelController.pick_duel(&"tilapia_gym_rat", 777), "and it comes from the catch's seed")
+	# Holding the action for 0.6 s skips to the reveal on later Wheels.
+	InputManager.press_action(&"fish_cast")
+	check(await wait_until(func() -> bool: return wheel.was_skipped(), 2.0), "a held action skips the spin")
+	InputManager.release_action(&"fish_cast")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(chosen), BOOT_TIMEOUT_SEC), "the chosen duel starts")
+
+	# Straight to a Result: its blueprint and the dialogue gate on CONTINUE.
+	await wait_until(func() -> bool: return not SceneRouter.is_transitioning(), BOOT_TIMEOUT_SEC)
+	SceneRouter.goto_result({"duel_id": &"suwit", "fish_id": &"carp_golden", "player_won": false, "duration_sec": 9.0, "seed": 4, "metrics": {}})
+	var result_scene := await _await_result()
+	if not check(result_scene != null, "the Result scene opens"):
+		return true
+	for path: String in ["ResultController", "World/ResultStageAnchor", "World/DartoResultPose", "World/FishResultPose", "World/ResultCamera",
+		"ResultCanvas/SafeRoot/ResultTitle", "ResultCanvas/SafeRoot/DetailLabel", "ResultCanvas/SafeRoot/ContinueButton", "ResultCanvas/SafeRoot/AutoContinueProgress"]:
+		check(result_scene.has_node(path), "node %s exists (GDD 168.11)" % path)
+	var box := result_scene.get_node("DialogueBox") as DialogueBox
+	check(box.is_playing(), "the fish has its say first")
+	check_eq(box.get_current_line()["speaker"], "GOLDEN CARP", "the carp speaks")
+	check((result_scene.get_node("ResultCanvas/SafeRoot/ContinueButton") as BaseButton).disabled, "CONTINUE waits for the dialogue")
+	box.advance()
+	box.advance()
+	box.advance()
+	box.advance()
+	check(not box.is_playing(), "tapping through ends the dialogue")
+	await wait_frames(2)
+	var controller := result_scene.get_node("ResultController") as ResultController
+	check(controller.is_counting(), "then the five-second auto continue runs")
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, 8.0), "and returns to the lake by itself")
+	return true
+
+
+# Exit gate: every fish works in every duel (in the real scenes).
+func test_every_fish_in_every_duel_scene() -> bool:
+	if not check(await _enter_lake(), "reach the lake"):
+		return true
+	GameState.set_tutorial_seen(&"boxing_seen")
+	DebugService.set_auto_dialogue(true)
+	DebugService.set_forced_result(&"win")
+	var played := 0
+	for duel_id: StringName in ContentIds.DUEL_IDS:
+		for fish: FishData in GameData.get_all_fish():
+			await wait_until(func() -> bool: return not SceneRouter.is_transitioning(), BOOT_TIMEOUT_SEC)
+			GameState.current_fish = fish.id
+			GameState.current_catch = {"fish_id": fish.id, "weight_kg": fish.weight_min_kg, "is_big_one": false, "seed": played + 1}
+			var before := _finished_transitions.count(&"result")
+			SceneRouter.goto_duel(duel_id, fish.id)
+			var reached := await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 30.0)
+			check(reached, "%s vs %s reaches the Result" % [duel_id, fish.id])
+			played += 1 if reached else 0
+	check_eq(played, 24, "all 24 fish-duel pairs run")
+	check_eq(GameState.get_stat(&"duel_wins"), 24, "and each one is recorded once")
+	DebugService.clear_forces()
 	return true

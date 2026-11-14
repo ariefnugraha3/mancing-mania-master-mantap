@@ -184,39 +184,11 @@ func _on_duel_finished(result: Dictionary) -> void:
 			_start_round()
 		return
 
-	var saved := DuelOutcome.commit(result)
 	if result["player_won"]:
 		GameState.set_tutorial_seen(TUTORIAL_ID)
 		_tutorial = false
-		saved = SaveManager.save_game(&"tutorial") and saved
-	if not saved:
-		await _report_save_failure()
-	_result_overlay.show_result(result)
-	await _result_overlay.continued
-	_leave(result)
-
-
-## The save after the result failed. The state is kept in memory and the
-## player decides whether to retry (GDD 176.8).
-func _report_save_failure() -> void:
-	while true:
-		var choice: StringName = await _dialog.prompt(
-			TextDb.t(&"error.save_failed.title"), TextDb.t(&"error.save_failed.body"), [
-				ModalDialog.option(&"continue", TextDb.t(&"error.save_failed.continue"), &"", true),
-				ModalDialog.option(&"retry", TextDb.t(&"error.save_failed.retry"), UiTokens.TYPE_CTA_BUTTON),
-			])
-		if choice != &"retry" or SaveManager.save_game(&"retry"):
-			return
-
-
-func _leave(result: Dictionary) -> void:
-	if _leaving:
-		return
 	_leaving = true
-	if SceneRouter.has_scene(SceneRouter.SCENE_RESULT):
-		SceneRouter.goto_result(result)
-	else:
-		SceneRouter.goto_fishing()
+	await DuelExit.leave(result, _result_overlay, _dialog)
 
 
 ## Walking away mid-fight loses the fish and nothing else.

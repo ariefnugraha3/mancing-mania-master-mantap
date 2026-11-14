@@ -1,0 +1,71 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/suwit/suwit_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/suwit/suwit_controller.gd" id="2_controller"]
+[ext_resource type="Script" path="res://scripts/actors/suwit_world.gd" id="3_world"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_suwit_set.tscn" id="4_set"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="5_darto"]
+[ext_resource type="Script" path="res://scripts/ui/suwit_hud.gd" id="6_hud"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="7_safe"]
+[ext_resource type="Script" path="res://scripts/ui/game_button.gd" id="8_button"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="9_pause"]
+
+[node name="Suwit" type="Node"]
+script = ExtResource("1_scene")
+
+[node name="SuwitController" type="Node" parent="."]
+script = ExtResource("2_controller")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("3_world")
+
+[node name="SuwitSet" parent="World" instance=ExtResource("4_set")]
+
+[node name="DartoSuwitPose" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/DartoSuwitPose" instance=ExtResource("5_darto")]
+
+[node name="FishSuwitPose" type="Node3D" parent="World"]
+
+[node name="SuwitCamera" type="Camera3D" parent="World"]
+current = true
+fov = 45.0
+far = 300.0
+
+[node name="SuwitCanvas" type="CanvasLayer" parent="."]
+script = ExtResource("6_hud")
+
+[node name="SafeRoot" type="Control" parent="SuwitCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_safe")
+
+[node name="ScoreDots" type="HBoxContainer" parent="SuwitCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="Countdown" type="Label" parent="SuwitCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="TellWidget" type="PanelContainer" parent="SuwitCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="ChoiceRow" type="HBoxContainer" parent="SuwitCanvas/SafeRoot"]
+mouse_filter = 2
+
+[node name="RockButton" type="Button" parent="SuwitCanvas/SafeRoot/ChoiceRow"]
+script = ExtResource("8_button")
+
+[node name="ScissorsButton" type="Button" parent="SuwitCanvas/SafeRoot/ChoiceRow"]
+script = ExtResource("8_button")
+
+[node name="PaperButton" type="Button" parent="SuwitCanvas/SafeRoot/ChoiceRow"]
+script = ExtResource("8_button")
+
+[node name="CharmButton" type="Button" parent="SuwitCanvas/SafeRoot"]
+script = ExtResource("8_button")
+
+[node name="PauseOverlay" parent="." instance=ExtResource("9_pause")]

@@ -17,6 +17,8 @@ const STATE_STYLES: Dictionary = {
 	&"fishing": MusicSequencer.STYLE_FISHING,
 	&"boxing": MusicSequencer.STYLE_BOXING,
 	&"arm_wrestle": MusicSequencer.STYLE_ARM,
+	&"suwit": MusicSequencer.STYLE_FISHING,
+	&"result": MusicSequencer.STYLE_FISHING,
 }
 ## Fixed seeds keep each state's loop the same every session.
 const STATE_SEEDS: Dictionary = {

@@ -19,9 +19,15 @@ const STRESS_SOUND_INTERVAL_SEC := 0.55
 var _reel_tick_left: float = 0.0
 var _stress_sound_left: float = 0.0
 var _leaving: bool = false
+var _dialogue: DialogueBox
+## Seconds of the catch reveal before the fish starts talking.
+const DIALOGUE_DELAY_SEC := 1.4
 
 
 func _ready() -> void:
+	_dialogue = DialogueBox.new()
+	_dialogue.name = "DialogueBox"
+	add_child(_dialogue)
 	_controller.fishing_state_changed.connect(_on_state_changed)
 	_controller.float_released.connect(_on_float_released)
 	_controller.float_landed.connect(_on_float_landed)
@@ -177,6 +183,26 @@ func _on_fish_landed(fish_id: StringName, weight_kg: float) -> void:
 		subtitle += "   " + TextDb.t(&"fishing.result.big_one")
 	# Fish introduction sting (GDD Section 37).
 	_hud.show_banner(GameData.get_item_display_name(fish_id).to_upper(), subtitle, FishingController.FISH_REVEAL_SEC + 1.2)
+	_speak_on_landing(fish_id, int(encounter.get("seed", 0)))
+
+
+## The fish talks before the Wheel: its first-meeting conversation the first
+## time, one LAND line after that (GDD 166). The catch waits for it.
+func _speak_on_landing(fish_id: StringName, seed: int) -> void:
+	if not SceneRouter.has_scene(SceneRouter.SCENE_WHEEL):
+		return
+	_controller.route_hold = true
+	await get_tree().create_timer(DIALOGUE_DELAY_SEC).timeout
+	if _leaving:
+		return
+	var lines: Array[Dictionary] = []
+	if int(GameState.get_fish_book_entry(fish_id).get("encounters", 0)) <= 1:
+		lines = FishDialogue.first_meeting(fish_id)
+	if lines.is_empty():
+		lines.append(FishDialogue.pick(fish_id, FishDialogue.POOL_LAND, seed))
+	_dialogue.play(lines)
+	await _dialogue.finished
+	_controller.route_hold = false
 
 
 func _on_trash_caught(item_id: StringName) -> void:
@@ -193,6 +219,13 @@ func _on_fishing_failed(reason: StringName) -> void:
 	if reason == FishingController.REASON_LINE_BREAK:
 		AudioManager.play_sfx(&"sfx_line_break")
 		_hud.show_banner(TextDb.t(&"fishing.result.line_break.title"), TextDb.t(&"fishing.result.line_break.body"), FishingController.ESCAPE_HOLD_SEC)
+		# The fish's identity was known: it gets a parting shot (GDD 166).
+		var encounter := _controller.get_encounter()
+		if encounter.get("kind") == EncounterRoller.KIND_FISH:
+			var seed := int(encounter.get("seed", 0))
+			var fish_id: StringName = encounter["item_id"]
+			_dialogue.play([FishDialogue.pick(fish_id, FishDialogue.POOL_REEL_ESCAPE, seed),
+				FishDialogue.pick_darto(FishDialogue.DARTO_AFTER_REEL_ESCAPE, seed)] as Array[Dictionary])
 	else:
 		AudioManager.play_sfx(&"sfx_float_plip")
 		_hud.show_banner(TextDb.t(&"fishing.result.missed.title"), TextDb.t(&"fishing.result.missed.body"), FishingController.ESCAPE_HOLD_SEC)

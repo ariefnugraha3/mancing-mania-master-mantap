@@ -157,32 +157,8 @@ func _on_duel_finished(result: Dictionary) -> void:
 	if _leaving:
 		return
 	GameState.set_tutorial_seen(TUTORIAL_ID)
-	if not DuelOutcome.commit(result):
-		await _report_save_failure()
-	_result_overlay.show_result(result)
-	await _result_overlay.continued
-	_leave(result)
-
-
-func _report_save_failure() -> void:
-	while true:
-		var choice: StringName = await _dialog.prompt(
-			TextDb.t(&"error.save_failed.title"), TextDb.t(&"error.save_failed.body"), [
-				ModalDialog.option(&"continue", TextDb.t(&"error.save_failed.continue"), &"", true),
-				ModalDialog.option(&"retry", TextDb.t(&"error.save_failed.retry"), UiTokens.TYPE_CTA_BUTTON),
-			])
-		if choice != &"retry" or SaveManager.save_game(&"retry"):
-			return
-
-
-func _leave(result: Dictionary) -> void:
-	if _leaving:
-		return
 	_leaving = true
-	if SceneRouter.has_scene(SceneRouter.SCENE_RESULT):
-		SceneRouter.goto_result(result)
-	else:
-		SceneRouter.goto_fishing()
+	await DuelExit.leave(result, _result_overlay, _dialog)
 
 
 func _quit_to_menu() -> void:
