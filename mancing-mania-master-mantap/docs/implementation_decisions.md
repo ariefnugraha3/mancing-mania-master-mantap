@@ -634,3 +634,29 @@ Danau: tombol Market pindah ke kanan bawah. Tinju: kelompok tombol menghindar da
 ### D-102 — Pengukuran performa
 
 `tools/perf/perf_probe.gd` membuka setiap scene lewat router di jendela nyata, menunggu 2,5 detik, lalu mengambil sampel 4 detik: FPS rata-rata, frame terburuk, draw call dan primitif maksimum, memori statis, memori video. Diakhiri 20 kali bolak-balik Danau ↔ Market untuk cek kebocoran (Section 190.4). Hasilnya di `docs/performance_report.md`. Ini baseline di mesin pengembang, bukan perangkat referensi Section 190.1.
+
+## Milestone 10 — Balance, QA, release candidate
+
+### D-103 — Simulasi balance
+
+Bagian distribusi memakai kode game sendiri pada seed 1–100.000, jadi hasilnya pasti untuk build. Bagian ekonomi adalah model: peluang menang dari titik tengah Section 179.3, waktu per langkah diperkirakan dari timing game (lihat `docs/balance_report.md`). Model memakai `RandomNumberGenerator` sendiri dengan seed tetap per konfigurasi, jadi hasilnya bisa diulang.
+
+### D-104 — Angka balance tidak diubah
+
+Model menunjukkan ekonomi ~3× lebih cepat dari target Section 179.4–179.5 karena satu putaran tangkapan (waktu tunggu 4,5–9,5 dtk + duel) jauh lebih singkat daripada yang diandaikan target pendapatan. Section 179.9 dan 191.12 meminta perubahan angka authoritative dicatat di GDD, dan keputusan sebelumnya untuk D-058 adalah menunggu pemilik. Jadi angka tetap; usulan (harga lima ikan biasa ×0,22, Arowana tetap Rp300.000) dan hasil modelnya ada di laporan balance.
+
+### D-105 — Build Web single-threaded
+
+Preset Web memakai `thread_support=false` agar berjalan di itch.io tanpa header cross-origin isolation (Section 135). Musik prosedural sudah dirender bertahap dalam anggaran 4 ms per frame sejak Milestone 6, jadi tidak membutuhkan thread.
+
+### D-106 — Android
+
+Preset Android dibuat sesuai Section 135 dan 186.3, tetapi build belum dibuat: butuh path Android SDK dan JDK 17+ di Editor Settings Godot (pengaturan global milik pengguna, tidak diubah otomatis), template build Android di project, dan keystore rilis milik pemilik. Langkahnya di `README_BUILD.md`. versionCode release candidate 9901 agar rilis 1.0.0 tetap bisa memakai 10000.
+
+### D-107 — Store art
+
+Screenshot toko diambil dari scene asli lewat router. Jendela desktop tidak bisa lebih tinggi dari layar, jadi screenshot portrait dirender pada 590×1049 (9:16) lalu diperbesar ke 1080×1920; untuk listing final diambil ulang di perangkat. Feature graphic adalah Main Menu tanpa tombol pada 1024×500 asli. Layer ikon adaptive dibuat dari ikon generator (latar krem polos, ikon di zona aman 288 px).
+
+### D-108 — Privasi di dalam game
+
+Settings → PRIVACY AND LICENSES menampilkan ringkasan Section 187.7, kebijakan lengkap Section 187.6, dan teks lisensi Godot beserta daftar komponennya dari `Engine`, semuanya offline; tidak ada tombol yang membuka URL karena game tidak membuka koneksi apa pun. Email dukungan tetap placeholder `[PUBLISHER SUPPORT EMAIL]` sampai pemilik mengisinya; validator rilis menolak build publik selama placeholder itu ada.

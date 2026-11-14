@@ -17,7 +17,7 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 7 | Suwit, Wheel, Result, kepribadian ikan | selesai (`0.7.0`) |
 | 8 | Cerita, cutscene, ending | selesai (`0.8.0`) |
 | 9 | Art/UI/audio final, aksesibilitas, performa | selesai (`0.9.0`) |
-| 10 | Balance, QA penuh, export, rilis | berikutnya |
+| 10 | Balance, QA penuh, export, release candidate | `1.0.0-rc.1` — human playtest pending |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 
@@ -78,7 +78,9 @@ scenes/       scene per layar (boot, menu, fishing, market, wheel, empat duel, r
 scripts/      gameplay/ (data, validasi, skema save, fishing/, market/, boxing/, arm_wrestle/, duel/), actors/,
               ui/ (termasuk ui/market/ untuk halaman ledger), audio/, utilities/
 shaders/      shader buatan project (air danau, goyangan dedaunan, siluet Fish Book)
-tools/        generators/ (pembuat aset), validation/ (pemeriksa kebijakan aset), perf/ (probe performa)
+tools/        generators/ (pembuat aset dan store art), validation/ (pemeriksa kebijakan aset),
+              perf/ (probe performa), sim/ (simulasi balance), release/ (validator dan manifest rilis)
+release/      kebijakan privasi HTML, contoh metadata publisher, manifest build
 generated/    output generator; boleh di-commit, bisa dibuat ulang kapan saja
 tests/        test headless
 docs/         keputusan implementasi dan laporan milestone
@@ -111,6 +113,6 @@ godot --path . --resolution 1280x720 --script res://tools/perf/perf_probe.gd -- 
 
 Hasil dan pembacaannya ada di `docs/performance_report.md`.
 
-## Belum tersedia
+## Build dan rilis
 
-Export preset Web/Android, panduan signing Android, dan pengemasan itch.io dikerjakan di Milestone 10 dan akan didokumentasikan di `README_BUILD.md`.
+Export Web/itch.io, Android, store art, validasi rilis, dan manifest checksum dijelaskan di [README_BUILD.md](README_BUILD.md). Status rilis, kepatuhan toko, dan masalah yang diketahui ada di `docs/release_checklist_v1.0.md`, `docs/store_compliance_report.md`, dan `docs/known_issues.md`.

@@ -28,6 +28,7 @@ const ACCESSIBILITY_OPTIONS: Array[StringName] = [
 
 var _option_buttons: Dictionary[StringName, GameButton] = {}
 var _controls: ControlsOverlay
+var _privacy: PrivacyOverlay
 
 
 func build_content() -> void:
@@ -74,7 +75,19 @@ func build_content() -> void:
 		controls.pressed.connect(func() -> void: _controls.open())
 		content.add_child(controls)
 
+	# Privacy summary and policy, offline (GDD 187.7).
+	content.add_child(make_label(TextDb.t(&"settings.section.privacy"), UiTokens.TYPE_HEADER))
+	var privacy := make_button(TextDb.t(&"settings.privacy.open"))
+	privacy.name = "PrivacyButton"
+	privacy.pressed.connect(func() -> void: _privacy.open())
+	content.add_child(privacy)
+
 	content.add_child(make_label(TextDb.t(&"settings.section.save"), UiTokens.TYPE_HEADER))
+	# Browser storage can be cleared by the player (GDD 115).
+	var web_note := make_label(TextDb.t(&"settings.web_storage_note"), UiTokens.TYPE_SMALL)
+	web_note.name = "WebStorageNote"
+	web_note.visible = PlatformService.is_web()
+	content.add_child(web_note)
 	_reset_note = make_label(TextDb.t(&"settings.no_save"), UiTokens.TYPE_SMALL)
 	content.add_child(_reset_note)
 	_reset_button = make_button(TextDb.t(&"settings.reset_save"), UiTokens.TYPE_DANGER_BUTTON)
@@ -96,6 +109,9 @@ func build_content() -> void:
 	_controls = ControlsOverlay.new()
 	_controls.name = "Controls"
 	add_child(_controls)
+	_privacy = PrivacyOverlay.new()
+	_privacy.name = "Privacy"
+	add_child(_privacy)
 
 
 ## A setting with a few allowed values: its name and a button that moves to
