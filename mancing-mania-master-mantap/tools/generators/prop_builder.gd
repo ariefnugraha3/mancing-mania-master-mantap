@@ -50,6 +50,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		DANCE_STRING_LIGHT: _build_string_light,
 		SUWIT_TABLE: _build_suwit_table,
 		MOTORCYCLE: _build_motorcycle,
+		PHONE: _build_phone,
 		HELMET: _build_helmet,
 		DRINK_GLASS: _build_drink_glass,
 		PICNIC_MAT: _build_picnic_mat,
@@ -628,6 +629,7 @@ func _build_suwit_table() -> Node3D:
 # --- Story props (GDD 72, 156, 157, 174.5) ----------------------------------
 
 const MOTORCYCLE := "prop_motorcycle_darto"
+const PHONE := "prop_phone"
 const HELMET := "prop_helmet"
 const DRINK_GLASS := "prop_drink_glass"
 const PICNIC_MAT := "prop_picnic_mat"
@@ -636,24 +638,51 @@ const HOME_FAN := "prop_home_fan"
 
 
 ## Darto's old step-through motorcycle: two wheels, a faded body, a seat.
+## Darto's old underbone motorcycle (motor bebek): thin tyres, a front fork,
+## the leg shield in front of the seat and a long exhaust, so it reads as a
+## motorcycle from the side and from three-quarters (GDD 157).
 func _build_motorcycle() -> Node3D:
 	var builder := MeshBuilder.new()
-	builder.color = Color("2a2622")
-	for x: float in [-0.62, 0.6]:
-		builder.tube(Vector3(x, 0.3, -0.05), Vector3(x, 0.3, 0.05), 0.3, 0.3, 14, true)
-	builder.color = Color("9aa39e")
-	for x: float in [-0.62, 0.6]:
-		builder.tube(Vector3(x, 0.3, -0.055), Vector3(x, 0.3, 0.055), 0.1, 0.1, 10, true)
-	builder.color = Color("6f7a5e")
-	builder.box(Vector3(0.8, 0.22, 0.26), Vector3(-0.1, 0.55, 0))
-	builder.box(Vector3(0.24, 0.5, 0.2), Vector3(0.38, 0.62, 0))
+	var body := Color("6f7a5e")
+	var metal := Color("9aa39e")
+	var dark := Color("2a2622")
+	for x: float in [-0.6, 0.58]:
+		builder.color = dark
+		builder.tube(Vector3(x, 0.27, -0.045), Vector3(x, 0.27, 0.045), 0.27, 0.27, 16, true)
+		builder.color = metal
+		builder.tube(Vector3(x, 0.27, -0.05), Vector3(x, 0.27, 0.05), 0.09, 0.09, 10, true)
+	builder.color = body
+	builder.box(Vector3(0.34, 0.035, 0.12), Vector3(0.6, 0.58, 0))
+	builder.box(Vector3(0.36, 0.035, 0.13), Vector3(-0.62, 0.6, 0))
+	builder.tube(Vector3(0.42, 0.86, 0), Vector3(-0.02, 0.42, 0), 0.045, 0.045, 8, true)
+	builder.box(Vector3(0.42, 0.24, 0.2), Vector3(-0.2, 0.45, 0))
+	builder.box(Vector3(0.55, 0.18, 0.2), Vector3(-0.36, 0.63, 0))
+	builder.box(Vector3(0.06, 0.44, 0.3), Vector3(0.32, 0.62, 0))
 	builder.color = Color("3a3631")
-	builder.box(Vector3(0.62, 0.08, 0.28), Vector3(-0.22, 0.72, 0))
-	builder.color = Color("9aa39e")
-	builder.tube(Vector3(0.5, 0.36, 0), Vector3(0.48, 0.95, 0), 0.025, 0.025, 6)
-	builder.tube(Vector3(0.48, 0.95, -0.3), Vector3(0.48, 0.95, 0.3), 0.018, 0.018, 6)
+	builder.box(Vector3(0.5, 0.07, 0.21), Vector3(-0.32, 0.755, 0))
+	builder.color = metal
+	for z: float in [-0.06, 0.06]:
+		builder.tube(Vector3(0.58, 0.27, z), Vector3(0.46, 0.9, z), 0.02, 0.02, 6, true)
+	builder.tube(Vector3(0.45, 0.95, -0.3), Vector3(0.45, 0.95, 0.3), 0.017, 0.017, 6, true)
+	builder.tube(Vector3(-0.08, 0.27, 0.13), Vector3(-0.72, 0.33, 0.13), 0.035, 0.03, 8, true)
+	builder.color = dark
+	for z: float in [-0.3, 0.3]:
+		builder.tube(Vector3(0.45, 0.95, z * 0.82), Vector3(0.45, 0.95, z), 0.024, 0.024, 6, true)
 	builder.color = Color("fff0c2")
-	builder.blob(Vector3(0.55, 0.88, 0), Vector3(0.05, 0.05, 0.06), 6, 4)
+	builder.blob(Vector3(0.53, 0.88, 0), Vector3(0.05, 0.06, 0.07), 6, 4)
+	builder.color = Color("b8442e")
+	builder.blob(Vector3(-0.9, 0.62, 0), Vector3(0.025, 0.03, 0.05), 6, 4)
+	return _wrap(builder)
+
+
+## A cheap smartphone: dark body, lit screen on the -Z face. Held in the
+## hand during story phone moments (GDD 173).
+func _build_phone() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = Color("2f3a3a")
+	builder.box(Vector3(0.07, 0.14, 0.012), Vector3.ZERO)
+	builder.color = Color("cfe3dc")
+	builder.box(Vector3(0.06, 0.12, 0.002), Vector3(0, 0.004, -0.007))
 	return _wrap(builder)
 
 

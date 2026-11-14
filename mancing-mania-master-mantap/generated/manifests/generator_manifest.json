@@ -12,21 +12,21 @@
       "generator_version": 1.0,
       "output": "res://generated/scenes/characters/chr_darto.tscn",
       "seed": 0.0,
-      "sha256": "05e40ef75c52cebcc6132ce545eb1f9e1246ebbe4e58f117bba3326dead3eca3"
+      "sha256": "9c73cf0c5d8d6bfaced298dc233a5a8f52b9bf8c08cf88ea4cc104a33e647c34"
     },
     "chr_nisa": {
       "generator": "character_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/characters/chr_nisa.tscn",
       "seed": 0.0,
-      "sha256": "c74b96fa609b9d5a76dc717e2954634c769d6b07a983da9dd129b1c0223be0da"
+      "sha256": "36cd35dddb2709b495c6a3329e7ad613b011b66179191a85f36a6b35627e0841"
     },
     "chr_rini": {
       "generator": "character_builder",
       "generator_version": 1.0,
       "output": "res://generated/scenes/characters/chr_rini.tscn",
       "seed": 0.0,
-      "sha256": "432b17e5c74292670e38503f13abd5505c8cac840ff8e525de89be5988c11854"
+      "sha256": "8c805b67067837e32ba9758db95799e80bbf79982a7a9a9a536782b3e341f34c"
     },
     "env_arm_set": {
       "generator": "environment_builder",
@@ -313,7 +313,14 @@
       "generator_version": 1.0,
       "output": "res://generated/scenes/props/prop_motorcycle_darto.tscn",
       "seed": 0.0,
-      "sha256": "507cb092ed2fdb28c580b9b452b1f00e83e32816ff958de20e8b8f0b838f3972"
+      "sha256": "0d9123710143d516a2824743fa40e166366f34ea1d25dc1728bba610decd85e8"
+    },
+    "prop_phone": {
+      "generator": "prop_builder",
+      "generator_version": 1.0,
+      "output": "res://generated/scenes/props/prop_phone.tscn",
+      "seed": 0.0,
+      "sha256": "017a85cb183c20d43e314120b1b0c07347d962c69e2094d190190014e1ffa25f"
     },
     "prop_picnic_mat": {
       "generator": "prop_builder",
@@ -390,56 +397,56 @@
       "generator_version": 1,
       "output": "res://generated/references/ref_fish_lineup.png",
       "seed": 0,
-      "sha256": "0d70184a254180f2b7781300123cb30d661365d0fac37f067d940eb77f0c698f"
+      "sha256": "15e66d0d97c62d29131eccaed1eb585dfbf7961d1346acb160c47fda232ef0f9"
     },
     "ref_set_arm": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_arm.png",
       "seed": 0,
-      "sha256": "2beaef59a8f67cf3d674fa31aaf140a2187224bbb7e1f5d2bdb71c3efa73c125"
+      "sha256": "893f7e6163d7d3a354f0aeaee15bf0fd72d2cdd057330ee37097b6077542f248"
     },
     "ref_set_boxing": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing.png",
       "seed": 0,
-      "sha256": "f9133b137af18c6b5a21fa3b4e6c6e0b96fb0af8f879a7639eb821c76b89286c"
+      "sha256": "630e496fe141cfbdcde2050875bf9fda8325a174a0c799ab3f302853741bc11f"
     },
     "ref_set_boxing_portrait": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_boxing_portrait.png",
       "seed": 0,
-      "sha256": "7112a8203dc6339f179c0655101578dd00920d9cae297ad67c2430abd2b9be42"
+      "sha256": "b8ab055b33329ac58624396eb3814410bf71a912d93908dc410b3d6a84617854"
     },
     "ref_set_dance": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_dance.png",
       "seed": 0,
-      "sha256": "51428d51c445cd92bd972b5dc1b5b1f8d0ae8668a038f9e3b229daf0e7e34eaa"
+      "sha256": "c92ff37a031e3935980e249cd4152687dcae020184958dba8936c88862ba0f94"
     },
     "ref_set_home": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_home.png",
       "seed": 0,
-      "sha256": "23e0fc97664646f9d039a2823960afd26a24177422082a9691ad840fd6a9d287"
+      "sha256": "e1451e3bb908701382dce477bf0093a38af717fe3ba7b3ffc5d257ca57bf2134"
     },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_lake.png",
       "seed": 0,
-      "sha256": "245afdd20e0ed9a3a4ceb1ed839da6d3519d5bff3444350eaed2d10f6aaa7164"
+      "sha256": "f7f23e5b8f331f83f9cdd5ed722dad269a02ce983c3840d9893d93e3f1e1e8f4"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
       "generator_version": 1,
       "output": "res://generated/references/ref_set_market.png",
       "seed": 0,
-      "sha256": "5aef299d64c10aefa6ba76b4eaa3d5d02c91cbe75cec480cea2d4d349943f5dc"
+      "sha256": "59516d6285bea6fbd8fb2a6f7a05ae13eb8260d51bf6d455b2e094d84a9f4b27"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
@@ -453,7 +460,7 @@
       "generator_version": 1,
       "output": "res://generated/references/ref_set_suwit.png",
       "seed": 0,
-      "sha256": "9e94e7190a6f8fd9612977686a38fea414f61df3b3f6d1ac815352f778109924"
+      "sha256": "093958c6c5f20d0e811c9198d904b1f1940ca02ad5911a0cfdf54924c5860248"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",
@@ -513,5 +520,5 @@
     }
   },
   "generator_schema": 1,
-  "project_version": "0.8.0"
+  "project_version": "0.9.0"
 }

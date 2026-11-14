@@ -1154,9 +1154,6 @@ func build_nisa() -> Node3D:
 func _build_family_member(node_name: String, palette: Dictionary, scale: float, child: bool) -> Node3D:
 	var root := Node3D.new()
 	root.name = node_name
-	var bones: Array = []
-	for row: Array in BU_YATI_BONES:
-		bones.append([row[0], row[1], (row[2] as Vector3) * scale])
 	var skeleton := RigBuilder.make_skeleton(BU_YATI_BONES)
 	root.add_child(skeleton)
 	var material: Material = load(MaterialBuilder.VERTEX_COLOR)
@@ -1169,9 +1166,9 @@ func _build_family_member(node_name: String, palette: Dictionary, scale: float, 
 	root.add_child(accessories)
 	accessories.add_child(_mesh_instance("Accessories", _build_family_hair(skeleton, palette, child), material))
 	root.add_child(RigBuilder.make_player(_build_family_clips(skeleton)))
-	# The child is the same rig at a smaller scale.
-	skeleton.scale = Vector3.ONE * scale
-	body_meshes.scale = Vector3.ONE
+	# The child is the same rig at a smaller scale. Skinned meshes follow the
+	# root's scale, not the skeleton node's, so the whole character scales.
+	root.scale = Vector3.ONE * scale
 	return root
 
 
@@ -1181,9 +1178,11 @@ func _build_family_hair(skeleton: Skeleton3D, palette: Dictionary, child: bool) 
 	builder.enable_skinning()
 	builder.set_bone(skeleton.find_bone("head"))
 	builder.color = palette["hair"]
+	# The lowest ring sits behind the face, so the hair frames it instead of
+	# covering the eyes; the front edge starts at the forehead.
 	builder.loft([
-		_ring(builder, 1.475, 0.112, 0.100, 0.026, 2.8), _ring(builder, 1.535, 0.108, 0.110, 0.012, 2.8),
-		_ring(builder, 1.578, 0.078, 0.086, 0.006, 2.8), _ring(builder, 1.592, 0.03, 0.034, 0.004, 2.8)])
+		_ring(builder, 1.465, 0.112, 0.078, 0.052, 2.8), _ring(builder, 1.535, 0.110, 0.108, 0.016, 2.8),
+		_ring(builder, 1.578, 0.080, 0.088, 0.006, 2.8), _ring(builder, 1.592, 0.03, 0.034, 0.004, 2.8)])
 	if child:
 		for side: float in [-1.0, 1.0]:
 			builder.blob(Vector3(0.11 * side, 1.49, 0.05), Vector3(0.04, 0.06, 0.04), 6, 4)
@@ -1278,10 +1277,11 @@ func _build_darto_story_clips(skeleton: Skeleton3D) -> Array:
 	clips.append(sit)
 
 	var phone := RigBuilder.Clip.new(skeleton, &"phone_look", 3.0, true)
-	var holding := {"upper_arm_r": Vector3(40, 0, 14), "forearm_r": Vector3(96, 0, 0), "head": Vector3(14, 0, 0),
+	# Phone in the right hand in front of the chest, head down to read it.
+	var holding := {"upper_arm_r": Vector3(40, 0, 0), "forearm_r": Vector3(100, 0, -60), "head": Vector3(-15, 0, 0),
 		"upper_arm_l": Vector3(8, 0, -8), "forearm_l": Vector3(14, 0, 0)}
 	_dance_pose(phone, 0.0, holding)
-	_dance_pose(phone, 1.5, holding.merged({"head": Vector3(16, 3, 0)}, true))
+	_dance_pose(phone, 1.5, holding.merged({"head": Vector3(-17, 3, 0)}, true))
 	_dance_pose(phone, 3.0, holding)
 	clips.append(phone)
 
