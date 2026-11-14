@@ -1,0 +1,129 @@
+extends "res://tests/test_suite.gd"
+## Release contract checks (GDD 135, 186, 187, 191): privacy screen,
+## no network code, export presets, versioning and repository hygiene.
+
+const RUNTIME_DIRS: Array[String] = ["res://scripts", "res://autoload", "res://scenes"]
+const NETWORK_CLASSES: Array[String] = [
+	"HTTPRequest", "HTTPClient", "StreamPeerTCP", "StreamPeerTLS", "WebSocketPeer", "PacketPeerUDP",
+	"ENetMultiplayerPeer", "WebRTCPeerConnection", "JavaScriptBridge", "OS.shell_open",
+]
+
+
+func get_suite_name() -> String:
+	return "release"
+
+
+# GDD 187.1, 187.3, 187.9: no endpoint, SDK or network class in runtime code.
+func test_runtime_code_has_no_network_access() -> bool:
+	var found := PackedStringArray()
+	for path: String in _files(RUNTIME_DIRS, ["gd", "tscn"]):
+		var text := FileAccess.get_file_as_string(path)
+		for name: String in NETWORK_CLASSES:
+			if text.contains(name):
+				found.append("%s uses %s" % [path, name])
+		if text.contains("http://") or text.contains("https://"):
+			found.append("%s contains a URL" % path)
+	check_empty(found, "runtime code never opens a network connection")
+	return true
+
+
+# GDD 187.7: the summary, the full policy and the licences are in the game.
+func test_privacy_screen_is_in_settings() -> bool:
+	var settings := SettingsOverlay.new()
+	tree.root.add_child(settings)
+	await wait_frames(1)
+	check(settings.find_child("PrivacyButton", true, false) != null, "Settings has PRIVACY")
+	var web_note := settings.find_child("WebStorageNote", true, false) as Label
+	check(web_note != null and web_note.text.contains("browser storage"), "the Web build warns that clearing browser storage deletes the save")
+	check_eq(web_note.visible, PlatformService.is_web(), "the note shows only on the Web")
+	var privacy := settings.find_child("Privacy", true, false) as PrivacyOverlay
+	privacy.open()
+	await wait_frames(2)
+	for line: String in ["NO ACCOUNT REQUIRED", "NO ADS", "NO ANALYTICS", "NO PERSONAL DATA COLLECTION BY THE GAME", "SAVE DATA STAYS ON THIS DEVICE/BROWSER"]:
+		check(privacy.get_page_text().contains(line), "summary: %s" % line)
+	(privacy.find_child("ReadFullPolicy", true, false) as BaseButton).pressed.emit()
+	await wait_frames(2)
+	check_eq(privacy.get_page(), &"policy", "READ FULL PRIVACY POLICY opens the policy")
+	check(privacy.get_page_text().contains("does not collect, sell, or share personal information"), "the full policy text is shown offline")
+	privacy.on_cancel()
+	(privacy.find_child("EngineLicenses", true, false) as BaseButton).pressed.emit()
+	await wait_frames(2)
+	check(privacy.get_page_text().contains("MIT"), "the engine licence is shown")
+	settings.queue_free()
+	await wait_frames(1)
+	return true
+
+
+# GDD 135, 186: presets, identity, permissions, what goes into the package.
+func test_export_presets_follow_the_release_contract() -> bool:
+	var presets := ConfigFile.new()
+	if not check_eq(presets.load("res://export_presets.cfg"), OK, "export_presets.cfg exists"):
+		return true
+	var by_name := {}
+	for section: String in presets.get_sections():
+		if section.begins_with("preset.") and not section.ends_with(".options"):
+			by_name[presets.get_value(section, "name")] = section
+	check(by_name.has("Web") and by_name.has("Android"), "Web and Android presets")
+	var web: String = by_name.get("Web", "")
+	var android: String = by_name.get("Android", "")
+	check_eq(presets.get_value(web, "export_path"), "build/web/index.html", "Web exports to build/web/index.html")
+	check_eq(presets.get_value(web + ".options", "variant/thread_support"), false, "Web does not depend on threads (GDD 135)")
+	check_eq(presets.get_value(android, "export_path"), "build/android/MancingManiaGelut.aab", "Android exports the App Bundle")
+	check_eq(presets.get_value(android + ".options", "package/unique_name"), "com.mancingmania.gelutedition", "application ID")
+	check_eq(presets.get_value(android + ".options", "gradle_build/export_format"), 1, "AAB format")
+	check(int(presets.get_value(android + ".options", "gradle_build/target_sdk")) >= 36, "target SDK 36 or newer")
+	check_eq(int(presets.get_value(android + ".options", "gradle_build/min_sdk")), 24, "minimum SDK 24")
+	check(presets.get_value(android + ".options", "architectures/arm64-v8a"), "arm64-v8a")
+	for key: String in presets.get_section_keys(android + ".options"):
+		if key.begins_with("permissions/") and key != "permissions/custom_permissions":
+			check(not bool(presets.get_value(android + ".options", key)), "no %s" % key)
+	check((presets.get_value(android + ".options", "permissions/custom_permissions") as PackedStringArray).is_empty(), "no custom permission")
+	for section: String in [web, android]:
+		check(str(presets.get_value(section, "include_filter")).contains("data/story/*.json"), "%s packs the story timelines" % presets.get_value(section, "name"))
+		var excluded := str(presets.get_value(section, "exclude_filter"))
+		for folder: String in ["tests/*", "tools/*", "docs/*", "generated/references/*"]:
+			check(excluded.contains(folder), "%s leaves out %s" % [presets.get_value(section, "name"), folder])
+	return true
+
+
+# GDD 186.2: Semantic Versioning, and the Android version follows it.
+func test_version_is_semantic() -> bool:
+	var version := str(ProjectSettings.get_setting("application/config/version"))
+	var pattern := RegEx.create_from_string("^\\d+\\.\\d+\\.\\d+(-rc\\.\\d+)?$")
+	check(pattern.search(version) != null, "project version %s is MAJOR.MINOR.PATCH[-rc.N]" % version)
+	var presets := ConfigFile.new()
+	presets.load("res://export_presets.cfg")
+	for section: String in presets.get_sections():
+		if section.ends_with(".options") and presets.has_section_key(section, "version/name"):
+			check_eq(presets.get_value(section, "version/name"), version, "Android versionName matches the project")
+	return true
+
+
+# GDD 191.6, 191.7: secrets and build output stay out of the repository.
+func test_repository_ignores_build_output_and_secrets() -> bool:
+	var ignore := FileAccess.get_file_as_string("res://.gitignore")
+	for entry: String in [".godot/", "build/web/", "build/android/", "build/itch/", "*.keystore", "*.jks", ".env"]:
+		check(ignore.contains(entry), ".gitignore covers %s" % entry)
+	var keystores := PackedStringArray()
+	for path: String in _files(["res://"], ["keystore", "jks"]):
+		keystores.append(path)
+	check_empty(keystores, "no keystore inside the project")
+	return true
+
+
+func _files(roots: Array[String], extensions: Array) -> PackedStringArray:
+	var found := PackedStringArray()
+	var pending: Array[String] = roots.duplicate()
+	while not pending.is_empty():
+		var dir_path: String = pending.pop_back()
+		var dir := DirAccess.open(dir_path)
+		if dir == null:
+			continue
+		for sub: String in dir.get_directories():
+			if sub.begins_with(".") or sub == "build" or sub == "android":
+				continue
+			pending.append(dir_path.path_join(sub))
+		for file: String in dir.get_files():
+			if extensions.has(file.get_extension()):
+				found.append(dir_path.path_join(file))
+	return found

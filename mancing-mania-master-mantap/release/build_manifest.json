@@ -1,0 +1,70 @@
+{
+  "artifacts": {
+    "build/android/MancingManiaGelut.aab": {
+      "missing": true
+    },
+    "build/itch/mancing-mania-gelut-edition-web-1.0.0-rc.1.zip": {
+      "bytes": 11754949,
+      "sha256": "291b2f348c5bc58201d390bebbfb73c4ec9509c96e34625e1c79612ebbd87f36"
+    },
+    "build/store/google_play/adaptive_background_432.png": {
+      "bytes": 1347,
+      "sha256": "3a08b3373f493af4af877c90b319e82e369ee097f7f1c30ed487debe76ffddb9"
+    },
+    "build/store/google_play/adaptive_foreground_432.png": {
+      "bytes": 27201,
+      "sha256": "72d8e991f19e4a00c345ddae57d9b13aa67e96fde1332c5d34dce3da0a81b103"
+    },
+    "build/store/google_play/feature_1024x500.png": {
+      "bytes": 233421,
+      "sha256": "44f4c1eb9776fa4bf937939a0ac5bf8f4eca55d27ae125e246c6459285e102e6"
+    },
+    "build/store/google_play/icon_512.png": {
+      "bytes": 36386,
+      "sha256": "004881a1d6ee346375daa051c3b199675c838629a5b2127986dd5895813e9e20"
+    },
+    "build/store/google_play/screenshot_01_fishing_1080x1920.png": {
+      "bytes": 817860,
+      "sha256": "2cbbe611e6c046f9e434382001fec2e64f1a792cf1acbdce6ed72ba6730ce34f"
+    },
+    "build/store/google_play/screenshot_02_fish_duel_1080x1920.png": {
+      "bytes": 755559,
+      "sha256": "5948abe8314b4a2253e872dcb1773c9293bba869bb4a4c4ad4f37887f70170ba"
+    },
+    "build/store/google_play/screenshot_03_market_1080x1920.png": {
+      "bytes": 489106,
+      "sha256": "0e40041122c7fb69ae813f4cd0cc6b02f167d04d9a8788d99c26ddbf5012be01"
+    },
+    "build/store/google_play/screenshot_04_dance_1080x1920.png": {
+      "bytes": 626403,
+      "sha256": "ed46a6e97fbe35c855d690d51774b7d93ffca2b1485cb0008754b3ff2a45ee6f"
+    },
+    "build/store/google_play/screenshot_05_fishbook_1080x1920.png": {
+      "bytes": 750269,
+      "sha256": "9532c3245f5715c6e39648ed0d579a9113d105e3b0a409b3a80219d47feb08b3"
+    },
+    "build/web/index.html": {
+      "bytes": 5460,
+      "sha256": "dd55ab51799b055bdd2cdafdac94f8826352c9008ad200d66d0d0899a4778826"
+    },
+    "build/web/index.js": {
+      "bytes": 279815,
+      "sha256": "33c94cb3175f3333b82e2a3be5e8e86f77986f0aa2042b1631f6367a4e5bb6ba"
+    },
+    "build/web/index.pck": {
+      "bytes": 5821932,
+      "sha256": "2b70e854cb7d5e247cd5354cc56bb29368989e03c8fb7f124a989d2203449ee0"
+    },
+    "build/web/index.wasm": {
+      "bytes": 39514754,
+      "sha256": "fc74679e3b97f76878947fcd4fbe1268cbfa6188182a2e33bbc3f5dc9bfa57d0"
+    }
+  },
+  "engine": "4.7.2-stable (official)",
+  "export_presets_sha256": "039650429432141981bd33e87a18d649eb93828a569ab024cb49d68777a8c0fc",
+  "generator_manifest_sha256": "d005e913a564bbaa62d0416df1fb4f2206585167918004c84d390ff31f0d5aca",
+  "product": "Mancing Mania: Gelut Edition",
+  "renderer": "gl_compatibility",
+  "source_commit": "15230ce40986ee4eb4dc249cf86c3739863087aa",
+  "version": "1.0.0-rc.1"
+}

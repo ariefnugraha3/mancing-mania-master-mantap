@@ -2,6 +2,31 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 1.0.0-rc.1 — Milestone 10: Balance, Full QA, Release Candidate
+
+Status rilis: **V1.0 RELEASE CANDIDATE — HUMAN PLAYTEST PENDING** (GDD Section 192.1).
+
+### Ditambahkan
+
+- Simulasi balance Section 179 (`tools/sim/`): 100.000 lemparan encounter, sampah, dan Wheel dengan kode game; model ekonomi 25.000 sesi per profil dan 10.000 progresi per strategi upgrade; opsi `--value-scale` untuk menguji usulan tuning. Hasil di `docs/balance_report.md`.
+- Export preset Web (single-threaded, itch.io) dan Android (AAB, `com.mancingmania.gelutedition`, API 24–36, arm64-v8a, tanpa permission).
+- Build Web dan ZIP itch.io; smoke test Chromium.
+- Layar Settings → PRIVACY AND LICENSES: ringkasan privasi, kebijakan lengkap, dan lisensi engine, semuanya offline.
+- Peringatan di Web bahwa menghapus storage browser menghapus save.
+- Store art dari game asli (`tools/generators/store_art_generator.gd`): ikon 512, layer ikon adaptive, feature graphic, lima screenshot ponsel.
+- Validator rilis dan manifest checksum (`tools/release/release_tool.gd`).
+- `README_BUILD.md`, `PRIVACY_POLICY.md`, `release/privacy_policy.html`, `LICENSES.md`, `release/publisher_metadata.example.json`, `docs/store_compliance_report.md`, `docs/known_issues.md`, `docs/playtest_report.md`, `docs/release_checklist_v1.0.md`.
+- Suite test `release` (5 test).
+
+### Diubah
+
+- Versi `1.0.0-rc.1` (Android versionCode 9901).
+- Scene joget menyiapkan audio sendiri bila dibuka tanpa Boot.
+
+### Belum diubah (menunggu keputusan pemilik)
+
+- Harga jual ikan (ekonomi ~3× lebih cepat dari target), tinju JAB terus-menerus, istirahat panco. Lihat `docs/balance_report.md` dan `docs/known_issues.md`.
+
 ## 0.9.0 — Milestone 9: Final Art, UI/UX, Animation, Audio, Accessibility, Performance
 
 ### Ditambahkan

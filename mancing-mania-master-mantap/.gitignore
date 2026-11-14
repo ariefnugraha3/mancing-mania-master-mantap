@@ -7,6 +7,8 @@
 export/
 build/web/
 build/android/
+build/itch/
+build/store/
 build/tmp/
 *.apk
 *.aab
@@ -16,6 +18,8 @@ build/tmp/
 *.jks
 .env
 .env.*
+# Publisher contact data stays with the owner (GDD 186.10)
+release/publisher_metadata.json
 
 # OS noise
 .DS_Store
