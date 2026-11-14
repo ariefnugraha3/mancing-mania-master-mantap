@@ -2,6 +2,30 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.8.0 — Milestone 8: Narrative, Cutscenes, Event Arbitration, Ending
+
+### Ditambahkan
+
+- Scene Story dengan pemutar timeline: set rumah, danau, atau warung; aktor, prop, kamera statis per shot; baris dialog, layar ponsel (saldo, notifikasi, pesan, panggilan), jeda komedi, kartu judul, panel unlock, fade.
+- 13 event cerita dengan teks final Section 183: prolog di rumah, ikan pertama, Market pertama, enam milestone hutang, kemenangan pertama Don Arowana, hutang lunas, final keluarga, unlock postgame.
+- Tahan 0,8 detik (setting `skip_hold_sec`) untuk melewati; melewati tetap menerapkan unlock, chapter, seen, dan rute.
+- Rini dan Nisa (model, rambut, 9 clip), clip cerita Darto, set rumah, motor Darto, helm, gelas minum, tikar, rice cooker.
+- Rantai ending: hutang lunas → final keluarga → credits → FREE FISHING MODE UNLOCKED → danau.
+- Credits bergulir di atas danau; bisa dibuka dari Main Menu.
+- Postgame: tab Debt menjadi FAMILY SAVINGS dengan setoran SAVE 25.000/50.000/100.000 dan SAVE ALL.
+- Main Menu setelah ending: tikar dan tiga gelas di samping tempat Darto.
+- Notifikasi CePatCash di danau, paling sering satu tiap 18–35 menit permainan, berhenti setelah hutang lunas.
+- Obrolan singkat Bu Yati sesekali di Market.
+- Langkah debug `--mm-event`, `--mm-seen`, `--mm-credits`.
+- Suite test `story` (13 test); total 245.
+
+### Diubah
+
+- New Game dan Continue pada save yang belum melihat prolog membuka prolog dulu.
+- Ikan pertama memakai percakapan cerita lengkap; Market pertama memutar sambutan, baris setelah jualan pertama, dan baris setelah bayar pertama.
+- Kemenangan pertama atas Don Arowana menyelesaikan event ceritanya di layar Result, lalu Darto menjawab "That's not a no."
+- Keluar Market dengan event menunggu sekarang memutar scene Story, bukan notice.
+
 ## 0.7.0 — Milestone 7: Suwit, Wheel, Full Fish Personality Content
 
 ### Ditambahkan

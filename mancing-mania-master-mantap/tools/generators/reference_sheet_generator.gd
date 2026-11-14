@@ -121,6 +121,15 @@ const SUBJECTS: Array = [
 		"lineup": true,
 	},
 	{
+		"id": "ref_set_home", "kind": "set",
+		"scene": "res://generated/scenes/environment/env_home_set.tscn",
+		"camera_marker": "Markers/CameraWide", "fov": 48.0,
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "market_idle"},
+			{"scene": "res://generated/scenes/characters/chr_rini.tscn", "marker": "Markers/RiniSpot", "clip": "put_on_shoes", "time": 1.0},
+		],
+	},
+	{
 		"id": "ref_set_market_portrait", "kind": "set", "size": Vector2i(720, 1280),
 		"scene": "res://generated/scenes/environment/env_market_set.tscn",
 		"camera_marker": "Markers/CameraPortrait", "fov": 50.0,

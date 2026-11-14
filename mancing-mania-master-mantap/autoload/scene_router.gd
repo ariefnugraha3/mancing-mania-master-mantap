@@ -15,6 +15,7 @@ const SCENE_MARKET := &"market"
 const SCENE_WHEEL := &"wheel"
 const SCENE_RESULT := &"result"
 const SCENE_STORY := &"story"
+const SCENE_CREDITS := &"credits"
 
 ## Scene files follow GDD Section 168. A scene that a later milestone has not
 ## built yet is simply absent on disk; has_scene() reports that.
@@ -30,6 +31,7 @@ const SCENE_PATHS: Dictionary[StringName, String] = {
 	&"suwit": "res://scenes/suwit/suwit.tscn",
 	SCENE_RESULT: "res://scenes/result/result.tscn",
 	SCENE_STORY: "res://scenes/story/story.tscn",
+	SCENE_CREDITS: "res://scenes/credits/credits.tscn",
 }
 
 const FADE_OUT_SEC := 0.18
@@ -81,6 +83,12 @@ func goto_result(result: Dictionary) -> void:
 
 func goto_story(event_id: StringName) -> void:
 	_route(SCENE_STORY, {"event_id": event_id})
+
+
+## The credits roll. From the Main Menu they return there; after the ending
+## they lead on to the post-game unlock (GDD 183.14, 183.15).
+func goto_credits(from_menu: bool = false) -> void:
+	_route(SCENE_CREDITS, {"from_menu": from_menu})
 
 
 func reload_current_scene() -> void:

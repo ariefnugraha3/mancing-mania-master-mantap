@@ -5,6 +5,14 @@ extends Node
 
 const BUTTON_WIDTH_LANDSCAPE := 300.0
 const BUTTON_WIDTH_PORTRAIT := 380.0
+const PROLOGUE_EVENT := &"story_prologue_zero"
+const PROP_PATH := "res://generated/scenes/props/%s.tscn"
+const ENDING_PROPS: Array[Array] = [
+	[&"prop_picnic_mat", Vector3(1.5, 0.0, 0.4), 12.0],
+	[&"prop_drink_glass", Vector3(1.25, 0.02, 0.25), 0.0],
+	[&"prop_drink_glass", Vector3(1.55, 0.02, 0.6), 0.0],
+	[&"prop_drink_glass", Vector3(1.85, 0.02, 0.3), 0.0],
+]
 
 @onready var _title_block: VBoxContainer = $MenuCanvas/SafeRoot/TitleBlock
 @onready var _title_line_1: Label = $MenuCanvas/SafeRoot/TitleBlock/TitleLine1
@@ -35,9 +43,7 @@ func _ready() -> void:
 	_how_to_button.text = TextDb.t(&"menu.how_to_play")
 	_settings_button.text = TextDb.t(&"menu.settings")
 	_credits_button.text = TextDb.t(&"menu.credits")
-	# Credits are written in the narrative milestone; until then the entry is
-	# visibly unavailable instead of opening an empty screen.
-	_credits_button.disabled = true
+	_credits_button.pressed.connect(_on_credits_pressed)
 
 	_version_label.text = TextDb.tf(&"menu.version", {"version": SaveSchema.build_version()})
 	_version_label.visible = DebugService.is_debug_tools_allowed()
@@ -58,6 +64,7 @@ func _ready() -> void:
 	add_child(_how_to)
 
 	_darto_pose.position = (_lake_set.get_node("Markers/DartoSpot") as Node3D).position
+	_dress_for_ending()
 	PlatformService.viewport_class_changed.connect(_apply_layout)
 	_apply_layout(PlatformService.get_viewport_class())
 	_refresh()
@@ -159,6 +166,12 @@ func _on_settings_pressed() -> void:
 		_settings.open()
 
 
+func _on_credits_pressed() -> void:
+	if not _busy:
+		_busy = true
+		SceneRouter.goto_credits(true)
+
+
 func _on_version_label_input(event: InputEvent) -> void:
 	if InputActions.is_primary_press(event):
 		DebugService.notify_version_label_tapped()
@@ -199,8 +212,32 @@ func _start_new_game() -> void:
 	await _enter_game()
 
 
+## A game that has not seen its prologue starts there (GDD 183.2).
 func _enter_game() -> void:
-	SceneRouter.goto_fishing()
+	if not StoryDirector.is_event_seen(PROLOGUE_EVENT) and SceneRouter.has_scene(SceneRouter.SCENE_STORY):
+		StoryDirector.play_event(PROLOGUE_EVENT)
+	else:
+		SceneRouter.goto_fishing()
+
+
+## After the ending the bench has company: a mat and three glasses
+## (GDD 9327: post-ending Main Menu variation).
+func _dress_for_ending() -> void:
+	if not SaveManager.has_save() or not bool(GameState.get_story_value(&"ending_completed")):
+		return
+	var spot := (_lake_set.get_node("Markers/DartoSpot") as Node3D).position
+	var dressing := Node3D.new()
+	dressing.name = "EndingDressing"
+	_lake_set.get_parent().add_child(dressing)
+	for entry: Array in ENDING_PROPS:
+		var prop: Node3D = (load(PROP_PATH % entry[0]) as PackedScene).instantiate()
+		dressing.add_child(prop)
+		prop.position = spot + (entry[1] as Vector3)
+		prop.rotation.y = deg_to_rad(float(entry[2]))
+
+
+func is_ending_dressed() -> bool:
+	return has_node("World/EndingDressing")
 
 
 ## Offers TRY AGAIN / START NEW GAME until the save loads or is replaced

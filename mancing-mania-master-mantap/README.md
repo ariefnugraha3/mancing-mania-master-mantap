@@ -15,8 +15,9 @@ Spesifikasi lengkap ada di `../mancing-mania-gelut-edition-gdd-v6-final-authorit
 | 5 | Panco lengkap | selesai (`0.5.0`) |
 | 6 | Joget koplo dan mesin musik prosedural | selesai (`0.6.0`) |
 | 7 | Suwit, Wheel, Result, kepribadian ikan | selesai (`0.7.0`) |
-| 8 | Cerita, cutscene, ending | berikutnya |
-| 9–10 | Art/audio final, aksesibilitas, QA dan rilis | belum |
+| 8 | Cerita, cutscene, ending | selesai (`0.8.0`) |
+| 9 | Art/UI/audio final, aksesibilitas, performa | berikutnya |
+| 10 | Balance, QA penuh, export, rilis | belum |
 
 Laporan tiap milestone ada di `docs/milestone_reports/`.
 

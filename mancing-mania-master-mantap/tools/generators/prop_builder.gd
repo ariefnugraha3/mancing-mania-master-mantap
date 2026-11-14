@@ -49,6 +49,11 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		DANCE_PLATFORM: _build_dance_platform,
 		DANCE_STRING_LIGHT: _build_string_light,
 		SUWIT_TABLE: _build_suwit_table,
+		MOTORCYCLE: _build_motorcycle,
+		HELMET: _build_helmet,
+		DRINK_GLASS: _build_drink_glass,
+		PICNIC_MAT: _build_picnic_mat,
+		RICE_COOKER: _build_rice_cooker,
 	}
 	for prop_id: String in props:
 		var root: Node3D = props[prop_id].call()
@@ -618,3 +623,79 @@ func _build_suwit_table() -> Node3D:
 	builder.color = FADED_RED.lerp(CREAM, 0.3)
 	builder.tube(Vector3(0, SUWIT_TABLE_HEIGHT + 0.006, 0), Vector3(0, SUWIT_TABLE_HEIGHT + 0.01, 0), 0.2, 0.2, 16, true)
 	return _wrap(builder)
+
+
+# --- Story props (GDD 72, 156, 157, 174.5) ----------------------------------
+
+const MOTORCYCLE := "prop_motorcycle_darto"
+const HELMET := "prop_helmet"
+const DRINK_GLASS := "prop_drink_glass"
+const PICNIC_MAT := "prop_picnic_mat"
+const RICE_COOKER := "prop_rice_cooker"
+const HOME_FAN := "prop_home_fan"
+
+
+## Darto's old step-through motorcycle: two wheels, a faded body, a seat.
+func _build_motorcycle() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = Color("2a2622")
+	for x: float in [-0.62, 0.6]:
+		builder.tube(Vector3(x, 0.3, -0.05), Vector3(x, 0.3, 0.05), 0.3, 0.3, 14, true)
+	builder.color = Color("9aa39e")
+	for x: float in [-0.62, 0.6]:
+		builder.tube(Vector3(x, 0.3, -0.055), Vector3(x, 0.3, 0.055), 0.1, 0.1, 10, true)
+	builder.color = Color("6f7a5e")
+	builder.box(Vector3(0.8, 0.22, 0.26), Vector3(-0.1, 0.55, 0))
+	builder.box(Vector3(0.24, 0.5, 0.2), Vector3(0.38, 0.62, 0))
+	builder.color = Color("3a3631")
+	builder.box(Vector3(0.62, 0.08, 0.28), Vector3(-0.22, 0.72, 0))
+	builder.color = Color("9aa39e")
+	builder.tube(Vector3(0.5, 0.36, 0), Vector3(0.48, 0.95, 0), 0.025, 0.025, 6)
+	builder.tube(Vector3(0.48, 0.95, -0.3), Vector3(0.48, 0.95, 0.3), 0.018, 0.018, 6)
+	builder.color = Color("fff0c2")
+	builder.blob(Vector3(0.55, 0.88, 0), Vector3(0.05, 0.05, 0.06), 6, 4)
+	return _wrap(builder)
+
+
+func _build_helmet() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = Color("e9dcc0")
+	builder.blob(Vector3(0, 0.1, 0), Vector3(0.13, 0.11, 0.15), 10, 5)
+	builder.color = Color("3a3631")
+	builder.box(Vector3(0.2, 0.04, 0.02), Vector3(0, 0.08, -0.15))
+	return _wrap(builder)
+
+
+## A plain glass of sweet tea for the after-ending menu (GDD 157).
+func _build_drink_glass() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = Color("c98f5c")
+	builder.tube(Vector3(0, 0, 0), Vector3(0, 0.1, 0), 0.032, 0.036, 10, true)
+	builder.color = Color("e9dcc0")
+	builder.tube(Vector3(0, 0.1, 0), Vector3(0, 0.12, 0), 0.036, 0.037, 10, false)
+	return _wrap(builder)
+
+
+func _build_picnic_mat() -> Node3D:
+	var builder := MeshBuilder.new()
+	for row: int in 6:
+		for column: int in 6:
+			builder.color = FADED_RED.lightened(0.15) if (row + column) % 2 == 0 else CREAM
+			builder.box(Vector3(0.27, 0.01, 0.27), Vector3(-0.675 + 0.27 * float(column), 0.005, -0.675 + 0.27 * float(row)))
+	builder.color = Color("e9dcc0")
+	builder.tube(Vector3(0.2, 0.01, 0.1), Vector3(0.2, 0.06, 0.1), 0.12, 0.13, 10, true)
+	builder.color = Color("f4efe2")
+	builder.blob(Vector3(0.2, 0.07, 0.1), Vector3(0.1, 0.03, 0.1), 8, 3)
+	return _wrap(builder)
+
+
+func _build_rice_cooker() -> Node3D:
+	var builder := MeshBuilder.new()
+	builder.color = Color("dfe6e0")
+	builder.tube(Vector3(0, 0, 0), Vector3(0, 0.2, 0), 0.13, 0.13, 12, true)
+	builder.color = Color("b8654e")
+	builder.tube(Vector3(0, 0.2, 0), Vector3(0, 0.25, 0), 0.13, 0.1, 12, true)
+	builder.color = Color("3a3631")
+	builder.box(Vector3(0.06, 0.03, 0.02), Vector3(0, 0.08, 0.13))
+	return _wrap(builder)
+

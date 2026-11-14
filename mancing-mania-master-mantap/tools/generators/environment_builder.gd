@@ -50,6 +50,7 @@ const CREAM := Color("e9dcc0")
 const TERRACOTTA := Color("b8654e")
 const FADED_RED := Color("a9534d")
 const WOOD := Color("8a6a4a")
+const WOOD_DARK := Color("6b513a")
 
 ## Direction pointing from the scene toward the sun: low, from the left.
 const TO_SUN := Vector3(-0.75, 0.44, -0.2)
@@ -64,6 +65,7 @@ func build(manifest: RefCounted) -> PackedStringArray:
 		"env_arm_set": [build_arm_set, ARM_SET_PATH],
 		"env_dance_set": [build_dance_set, DANCE_SET_PATH],
 		"env_suwit_set": [build_suwit_set, SUWIT_SET_PATH],
+		"env_home_set": [build_home_set, HOME_SET_PATH],
 	}
 	for set_id: String in sets:
 		var root: Node3D = sets[set_id][0].call()
@@ -1179,6 +1181,100 @@ func build_suwit_set() -> Node3D:
 		"FishSpot": Transform3D(Basis(Vector3.UP, PI), Vector3(0.62, 0.66, 0.0)),
 		"CameraLandscape": _look(Vector3(0.0, 1.55, 2.9), Vector3(0.0, 1.05, 0.0)),
 		"CameraPortrait": _look(Vector3(0.0, 1.7, 3.7), Vector3(0.0, 0.75, 0.0)),
+	}
+	for marker_name: String in spots:
+		var marker := Marker3D.new()
+		marker.name = marker_name
+		marker.transform = spots[marker_name]
+		markers.add_child(marker)
+	return root
+
+
+# --- Home set (GDD 183.3) ---------------------------------------------------
+# Darto and Rini's small front room: cream walls, a door, a table with the
+# rice cooker, an old fan, and by the door the rod, the blue bucket, a helmet
+# and the motorcycle key. Open toward +Z for the camera.
+
+const HOME_SET_PATH := "res://generated/scenes/environment/env_home_set.tscn"
+
+
+func build_home_set() -> Node3D:
+	var solid: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var root := Node3D.new()
+	root.name = "EnvHomeSet"
+	var lighting := _build_lighting()
+	var sun := lighting.get_node("Sun") as DirectionalLight3D
+	sun.transform = Transform3D(Basis.looking_at(-Vector3(-0.5, 0.6, 0.6).normalized(), Vector3.UP), Vector3(0, 12, 0))
+	sun.light_energy = 0.5
+	var environment := (lighting.get_node("WorldEnvironment") as WorldEnvironment).environment
+	environment.ambient_light_energy = 0.45
+	root.add_child(lighting)
+
+	var builder := MeshBuilder.new()
+	builder.color = Color("a39683")
+	builder.box(Vector3(5.0, 0.1, 4.0), Vector3(0, -0.05, -1.0))
+	for board: int in 10:
+		var x := -2.5 + (float(board) + 0.5) * 0.5
+		builder.color = CREAM.darkened(0.12 if board % 2 == 0 else 0.18)
+		builder.box(Vector3(0.49, 2.6, 0.06), Vector3(x, 1.3, -3.0))
+	builder.color = CREAM.darkened(0.2)
+	builder.box(Vector3(0.06, 2.6, 4.0), Vector3(-2.5, 1.3, -1.0))
+	builder.box(Vector3(0.06, 2.6, 4.0), Vector3(2.5, 1.3, -1.0))
+	# The door, on the right wall's back corner.
+	builder.color = WOOD
+	builder.box(Vector3(0.9, 2.0, 0.08), Vector3(1.6, 1.0, -2.95))
+	builder.color = WOOD_DARK
+	builder.box(Vector3(0.06, 0.06, 0.06), Vector3(1.25, 1.0, -2.89))
+	# A small window with afternoon light.
+	builder.color = Color("cfe3e0")
+	builder.box(Vector3(0.9, 0.7, 0.04), Vector3(-1.3, 1.5, -2.95))
+	builder.color = WOOD_DARK
+	builder.box(Vector3(0.96, 0.06, 0.06), Vector3(-1.3, 1.85, -2.93))
+	builder.box(Vector3(0.96, 0.06, 0.06), Vector3(-1.3, 1.15, -2.93))
+	# Table.
+	builder.color = WOOD
+	builder.box(Vector3(1.2, 0.05, 0.7), Vector3(-1.2, 0.74, -1.9))
+	builder.color = WOOD_DARK
+	for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		builder.box(Vector3(0.05, 0.72, 0.05), Vector3(-1.2 + corner.x * 0.54, 0.36, -1.9 + corner.y * 0.3))
+	root.add_child(_instance("Room", builder.commit(), solid, true))
+
+	var props := Node3D.new()
+	props.name = "Props"
+	root.add_child(props)
+	for placement: Array in [
+		["prop_rice_cooker", "RiceCooker", Vector3(-1.4, 0.765, -1.95), 0.3],
+		["prop_market_fan", "Fan", Vector3(-0.85, 0.765, -2.0), 0.4],
+		["prop_fishing_rod_basic", "Rod", Vector3(2.2, 0.0, -2.8), 0.0],
+		["prop_bucket_blue", "Bucket", Vector3(2.0, 0.0, -2.2), 0.0],
+		["prop_helmet", "Helmet", Vector3(1.0, 0.0, -2.6), 0.4],
+		["prop_plastic_chair", "Chair", Vector3(-0.4, 0.0, -1.5), 0.6],
+	]:
+		var prop: Node3D = (load(PROP_PATH % placement[0]) as PackedScene).instantiate()
+		prop.name = placement[1]
+		prop.transform = Transform3D(Basis(Vector3.UP, placement[3]), placement[2])
+		props.add_child(prop)
+	# The rod leans against the wall.
+	(props.get_node("Rod") as Node3D).transform = Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-12.0)) * Basis(Vector3.FORWARD, deg_to_rad(-90.0)), Vector3(2.3, 1.2, -2.85))
+
+	var lamp := OmniLight3D.new()
+	lamp.name = "RoomLight"
+	lamp.position = Vector3(0, 2.3, -1.2)
+	lamp.light_color = Color(1.0, 0.86, 0.66)
+	lamp.light_energy = 0.9
+	lamp.omni_range = 5.0
+	root.add_child(lamp)
+
+	var markers := Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	var spots: Dictionary[String, Transform3D] = {
+		"DartoSpot": Transform3D(Basis(Vector3.UP, PI * 0.75), Vector3(-0.3, 0.0, -0.9)),
+		"RiniSpot": Transform3D(Basis(Vector3.UP, -PI * 0.75), Vector3(1.0, 0.0, -1.9)),
+		"CameraWide": _look(Vector3(0.4, 1.6, 2.6), Vector3(0.2, 1.0, -1.6)),
+		"CameraDarto": _look(Vector3(-1.0, 1.45, 0.9), Vector3(-0.2, 1.3, -1.0)),
+		"CameraRini": _look(Vector3(0.0, 1.45, 0.4), Vector3(1.0, 1.25, -1.9)),
+		"CameraDoor": _look(Vector3(0.2, 1.3, 0.8), Vector3(2.0, 0.6, -2.6)),
 	}
 	for marker_name: String in spots:
 		var marker := Marker3D.new()

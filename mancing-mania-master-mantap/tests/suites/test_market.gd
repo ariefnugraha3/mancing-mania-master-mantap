@@ -381,6 +381,10 @@ func test_leaving_the_market_resolves_and_saves() -> bool:
 	_pay(600000)
 	_market.leave_market()
 	check_eq(_events[_events.size() - 1], "left:story_debt_600k", "leaving reports the resolved event")
+	check(not StoryDirector.is_event_seen(&"story_debt_600k"), "the Story scene has not played it yet")
+	# What the Story scene does when the call ends (watched or skipped).
+	StoryDirector.complete_event(&"story_debt_600k", true)
+	check(SaveManager.save_game(&"story"), "saved after the scene")
 	check_eq(GameState.get_story_value(&"fish_book_unlocked"), true, "its unlock applied")
 	check_eq(_saved()["story"]["fish_book_unlocked"], true, "and was saved")
 	check_eq(_saved()["story"]["pending_events"].size(), 2, "the two lower milestones are saved as pending")
@@ -456,6 +460,9 @@ func test_market_session_round_trips_through_the_save() -> bool:
 	_market.purchase_upgrade(&"bait")
 	_market.pay_debt(120000)
 	_market.leave_market()
+	# The Story scene finishes the visit's event and saves.
+	StoryDirector.complete_event(&"story_debt_100k", true)
+	check(SaveManager.save_game(&"story"), "saved after the scene")
 	var before := GameState.export_save_state()
 	before.erase("last_played_at_utc")
 	before.erase("system")
@@ -470,7 +477,8 @@ func test_market_session_round_trips_through_the_save() -> bool:
 	check_eq(GameState.get_bucket_quantity(&"trash_sandal"), 2, "unsold trash is still in the bucket")
 	check_eq(GameState.get_upgrade_level(&"rod"), 1, "rod level")
 	check_eq(GameState.get_debt_paid(), 120000, "debt paid")
-	check(StoryDirector.is_event_seen(&"story_debt_100k"), "the milestone event was resolved on leaving")
+	check(_events.has("left:story_debt_100k"), "the milestone event was resolved on leaving")
+	check(StoryDirector.is_event_seen(&"story_debt_100k"), "and seen once its scene ended")
 	return true
 
 

@@ -82,6 +82,8 @@ func build(manifest: RefCounted) -> PackedStringArray:
 	var characters: Dictionary[String, Array] = {
 		"chr_darto": [build_darto, DARTO_PATH],
 		"chr_bu_yati": [build_bu_yati, BU_YATI_PATH],
+		"chr_rini": [build_rini, RINI_PATH],
+		"chr_nisa": [build_nisa, NISA_PATH],
 	}
 	for character_id: String in characters:
 		var root: Node3D = characters[character_id][0].call()
@@ -129,6 +131,7 @@ func build_darto() -> Node3D:
 		face.add_child(node)
 
 	var clips := _build_darto_clips(skeleton)
+	clips.append_array(_build_darto_story_clips(skeleton))
 	clips.append_array(_build_darto_boxing_clips(skeleton))
 	clips.append_array(_build_darto_arm_clips(skeleton))
 	clips.append_array(_build_darto_dance_clips(skeleton))
@@ -563,6 +566,76 @@ func _build_bu_yati_body(skeleton: Skeleton3D) -> ArrayMesh:
 		var ankle := Vector3(0.095 * side, 0.085, 0)
 		builder.set_bone(skeleton.find_bone("shin" + suffix))
 		builder.color = YATI_SKIN
+		builder.tube(knee - Vector3(0, 0.1, 0), ankle, 0.05, 0.038, 8)
+		builder.set_bone(skeleton.find_bone("foot" + suffix))
+		builder.box(Vector3(0.082, 0.05, 0.2), Vector3(0.095 * side, 0.05, -0.04))
+	return builder.commit()
+
+
+## The same build as Bu Yati's, in another person's colours.
+func _build_lady_body(skeleton: Skeleton3D, palette: Dictionary) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+
+	# A practical skirt to mid-shin hides the upper legs entirely.
+	builder.set_bone(skeleton.find_bone("pelvis"))
+	builder.color = palette["lower"]
+	builder.loft([
+		_ring(builder, 0.30, 0.185, 0.150), _ring(builder, 0.55, 0.195, 0.158),
+		_ring(builder, 0.80, 0.190, 0.150), _ring(builder, 0.90, 0.185, 0.140)])
+
+	builder.set_bone(skeleton.find_bone("spine_lower"))
+	builder.color = palette["top"]
+	builder.loft([
+		_ring(builder, 0.86, 0.196, 0.150), _ring(builder, 0.95, 0.200, 0.158, -0.008),
+		_ring(builder, 1.04, 0.200, 0.152, -0.006), _ring(builder, 1.11, 0.198, 0.140)])
+	builder.set_bone(skeleton.find_bone("spine_upper"))
+	builder.loft([
+		_ring(builder, 1.095, 0.198, 0.140), _ring(builder, 1.19, 0.208, 0.130),
+		_ring(builder, 1.255, 0.196, 0.112), _ring(builder, 1.30, 0.088, 0.074)])
+
+	builder.set_bone(skeleton.find_bone("neck"))
+	builder.color = palette["shade"]
+	builder.tube(Vector3(0, 1.285, 0), Vector3(0, 1.37, 0), 0.052, 0.049, 8)
+
+	# Rounder head than Darto's, with a flat, unimpressed face.
+	builder.set_bone(skeleton.find_bone("head"))
+	builder.color = palette["skin"]
+	builder.loft([
+		_ring(builder, 1.345, 0.072, 0.078, 0.0, 2.8), _ring(builder, 1.385, 0.096, 0.102, 0.0, 2.8),
+		_ring(builder, 1.455, 0.105, 0.112, 0.0, 2.8), _ring(builder, 1.525, 0.100, 0.106, 0.0, 2.8),
+		_ring(builder, 1.57, 0.070, 0.076, 0.0, 2.8)])
+	builder.color = palette["shade"]
+	for side: float in [-1.0, 1.0]:
+		builder.box(Vector3(0.02, 0.048, 0.028), Vector3(0.108 * side, 1.43, 0.004))
+	builder.color = FACE_DARK
+	for side: float in [-1.0, 1.0]:
+		builder.box(Vector3(0.028, 0.010, 0.012), Vector3(0.042 * side, 1.442, -0.109))
+		builder.box(Vector3(0.042, 0.008, 0.012), Vector3(0.043 * side, 1.463, -0.111))
+	builder.color = palette["shade"]
+	builder.tube(Vector3(0, 1.448, -0.106), Vector3(0, 1.412, -0.13), 0.008, 0.017, 4)
+	builder.color = Color("6e4a3a")
+	builder.box(Vector3(0.05, 0.006, 0.01), Vector3(0, 1.386, -0.102))
+
+	for side: float in [-1.0, 1.0]:
+		var suffix := "_l" if side < 0.0 else "_r"
+		var shoulder := Vector3(0.205 * side, 1.262, 0)
+		var elbow := Vector3(0.215 * side, 1.01, 0)
+		var wrist := Vector3(0.22 * side, 0.80, 0)
+		builder.set_bone(skeleton.find_bone("upper_arm" + suffix))
+		builder.color = palette["top"]
+		builder.blob(shoulder - Vector3(0.014 * side, 0.028, 0), Vector3(0.064, 0.046, 0.066), 8, 4)
+		builder.tube(shoulder - Vector3(0, 0.02, 0), elbow + Vector3(0, 0.03, 0), 0.062, 0.054, 8, true)
+		builder.set_bone(skeleton.find_bone("forearm" + suffix))
+		builder.color = palette["skin"]
+		builder.tube(elbow + Vector3(0, 0.02, 0), wrist, 0.044, 0.035, 8)
+		builder.set_bone(skeleton.find_bone("hand" + suffix))
+		builder.box(Vector3(0.062, 0.09, 0.04), Vector3(0.22 * side, 0.755, 0))
+
+		var knee := Vector3(0.095 * side, 0.455, 0)
+		var ankle := Vector3(0.095 * side, 0.085, 0)
+		builder.set_bone(skeleton.find_bone("shin" + suffix))
+		builder.color = palette["skin"]
 		builder.tube(knee - Vector3(0, 0.1, 0), ankle, 0.05, 0.038, 8)
 		builder.set_bone(skeleton.find_bone("foot" + suffix))
 		builder.box(Vector3(0.082, 0.05, 0.2), Vector3(0.095 * side, 0.05, -0.04))
@@ -1050,4 +1123,177 @@ func _build_darto_suwit_clips(skeleton: Skeleton3D) -> Array:
 	_dance_pose(draw, 0.3, {"upper_arm_r": Vector3(30, 0, 40), "upper_arm_l": Vector3(30, 0, -40), "forearm_r": Vector3(60, 0, 0), "forearm_l": Vector3(60, 0, 0), "head": Vector3(0, 0, 10)})
 	_dance_pose(draw, 0.7, ready_pose)
 	clips.append(draw)
+	return clips
+
+
+# --- Rini and Nisa (GDD 151, 152, 172.8) ------------------------------------
+# Both use Bu Yati's proportions and rig in their own colours. Nisa is the
+# same build scaled to a twelve-year-old's height.
+
+const RINI_PATH := "res://generated/scenes/characters/chr_rini.tscn"
+const NISA_PATH := "res://generated/scenes/characters/chr_nisa.tscn"
+const RINI_PALETTE: Dictionary = {
+	"skin": Color("b4865f"), "shade": Color("9c7150"), "top": Color("4b5d73"), "lower": Color("3e3f45"),
+	"hair": Color("2a2622"), "shoes": Color("3a3631"),
+}
+const NISA_PALETTE: Dictionary = {
+	"skin": Color("bd8f66"), "shade": Color("a47a55"), "top": Color("e4ae55"), "lower": Color("557f7a"),
+	"hair": Color("221e1b"), "shoes": Color("e9dcc0"),
+}
+const NISA_SCALE := 0.76
+
+
+func build_rini() -> Node3D:
+	return _build_family_member("ChrRini", RINI_PALETTE, 1.0, false)
+
+
+func build_nisa() -> Node3D:
+	return _build_family_member("ChrNisa", NISA_PALETTE, NISA_SCALE, true)
+
+
+func _build_family_member(node_name: String, palette: Dictionary, scale: float, child: bool) -> Node3D:
+	var root := Node3D.new()
+	root.name = node_name
+	var bones: Array = []
+	for row: Array in BU_YATI_BONES:
+		bones.append([row[0], row[1], (row[2] as Vector3) * scale])
+	var skeleton := RigBuilder.make_skeleton(BU_YATI_BONES)
+	root.add_child(skeleton)
+	var material: Material = load(MaterialBuilder.VERTEX_COLOR)
+	var body_meshes := Node3D.new()
+	body_meshes.name = "BodyMeshes"
+	root.add_child(body_meshes)
+	body_meshes.add_child(_mesh_instance("Body", _build_lady_body(skeleton, palette), material))
+	var accessories := Node3D.new()
+	accessories.name = "AccessoryMeshes"
+	root.add_child(accessories)
+	accessories.add_child(_mesh_instance("Accessories", _build_family_hair(skeleton, palette, child), material))
+	root.add_child(RigBuilder.make_player(_build_family_clips(skeleton)))
+	# The child is the same rig at a smaller scale.
+	skeleton.scale = Vector3.ONE * scale
+	body_meshes.scale = Vector3.ONE
+	return root
+
+
+## Rini: hair tied back low. Nisa: two short pigtails.
+func _build_family_hair(skeleton: Skeleton3D, palette: Dictionary, child: bool) -> ArrayMesh:
+	var builder := MeshBuilder.new()
+	builder.enable_skinning()
+	builder.set_bone(skeleton.find_bone("head"))
+	builder.color = palette["hair"]
+	builder.loft([
+		_ring(builder, 1.475, 0.112, 0.100, 0.026, 2.8), _ring(builder, 1.535, 0.108, 0.110, 0.012, 2.8),
+		_ring(builder, 1.578, 0.078, 0.086, 0.006, 2.8), _ring(builder, 1.592, 0.03, 0.034, 0.004, 2.8)])
+	if child:
+		for side: float in [-1.0, 1.0]:
+			builder.blob(Vector3(0.11 * side, 1.49, 0.05), Vector3(0.04, 0.06, 0.04), 6, 4)
+	else:
+		builder.tube(Vector3(0, 1.47, 0.11), Vector3(0, 1.33, 0.14), 0.038, 0.022, 6)
+	for side: float in [-1.0, 1.0]:
+		builder.set_bone(skeleton.find_bone("foot_l" if side < 0.0 else "foot_r"))
+		builder.color = palette["shoes"]
+		builder.box(Vector3(0.096, 0.05, 0.22), Vector3(0.095 * side, 0.025, -0.04))
+	return builder.commit()
+
+
+## GDD 172.8 clips for both: standing, sitting by the lake, looking at Darto,
+## a deadpan pause, a small smile, putting on shoes, a phone call, a laugh.
+func _build_family_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+	var idle := RigBuilder.Clip.new(skeleton, &"idle_home", 4.0, true)
+	_pose_from(idle, COUNTER_POSE, 0.0, {"upper_arm_r": Vector3(6, 0, 6), "forearm_r": Vector3(10, 0, 0), "upper_arm_l": Vector3(6, 0, -6), "forearm_l": Vector3(10, 0, 0)})
+	_pose_from(idle, COUNTER_POSE, 2.0, {"upper_arm_r": Vector3(6, 0, 6), "forearm_r": Vector3(12, 0, 0), "upper_arm_l": Vector3(6, 0, -6), "forearm_l": Vector3(12, 0, 0), "head": Vector3(-3, 4, 0)})
+	_pose_from(idle, COUNTER_POSE, 4.0, {"upper_arm_r": Vector3(6, 0, 6), "forearm_r": Vector3(10, 0, 0), "upper_arm_l": Vector3(6, 0, -6), "forearm_l": Vector3(10, 0, 0)})
+	clips.append(idle)
+
+	var sitting := {"thigh_l": Vector3(84, 0, -6), "thigh_r": Vector3(84, 0, 6), "shin_l": Vector3(-80, 0, 0), "shin_r": Vector3(-80, 0, 0),
+		"upper_arm_r": Vector3(30, 0, 10), "forearm_r": Vector3(40, 0, 0), "upper_arm_l": Vector3(30, 0, -10), "forearm_l": Vector3(40, 0, 0)}
+	var sit := RigBuilder.Clip.new(skeleton, &"sit_lake", 4.0, true)
+	for time: float in [0.0, 2.0, 4.0]:
+		_pose_from(sit, COUNTER_POSE, time, sitting.merged({"head": Vector3(-4, 3.0 * sin(time), 0)}, true))
+		sit.move("root", time, Vector3(0, -0.38, 0))
+	clips.append(sit)
+
+	var look := RigBuilder.Clip.new(skeleton, &"look_darto", 1.2)
+	_pose_from(look, COUNTER_POSE, 0.0)
+	_pose_from(look, COUNTER_POSE, 0.4, {"head": Vector3(-4, 18, 0), "neck": Vector3(0, 8, 0)})
+	_pose_from(look, COUNTER_POSE, 1.2, {"head": Vector3(-4, 18, 0), "neck": Vector3(0, 8, 0)})
+	clips.append(look)
+
+	var pause := RigBuilder.Clip.new(skeleton, &"deadpan_pause", 1.0)
+	_pose_from(pause, COUNTER_POSE, 0.0)
+	_pose_from(pause, COUNTER_POSE, 0.5, {"head": Vector3(-8, 0, 0)})
+	_pose_from(pause, COUNTER_POSE, 1.0)
+	clips.append(pause)
+
+	var smile := RigBuilder.Clip.new(skeleton, &"small_smile", 1.0)
+	_pose_from(smile, COUNTER_POSE, 0.0)
+	_pose_from(smile, COUNTER_POSE, 0.4, {"head": Vector3(4, 0, 6)})
+	_pose_from(smile, COUNTER_POSE, 1.0, {"head": Vector3(2, 0, 3)})
+	clips.append(smile)
+
+	var shoes := RigBuilder.Clip.new(skeleton, &"put_on_shoes", 2.0)
+	var bent := {"spine_lower": Vector3(-40, 0, 0), "spine_upper": Vector3(-30, 0, 0), "head": Vector3(10, 0, 0),
+		"upper_arm_r": Vector3(60, 0, 10), "forearm_r": Vector3(20, 0, 0), "upper_arm_l": Vector3(60, 0, -10), "forearm_l": Vector3(20, 0, 0),
+		"thigh_r": Vector3(40, 0, 4), "shin_r": Vector3(-50, 0, 0)}
+	_pose_from(shoes, COUNTER_POSE, 0.0)
+	_pose_from(shoes, COUNTER_POSE, 0.6, bent)
+	_pose_from(shoes, COUNTER_POSE, 1.4, bent)
+	_pose_from(shoes, COUNTER_POSE, 2.0)
+	clips.append(shoes)
+
+	var phone := RigBuilder.Clip.new(skeleton, &"phone_call_idle", 3.0, true)
+	var holding := {"upper_arm_r": Vector3(20, 0, 30), "forearm_r": Vector3(140, 0, 0), "head": Vector3(-4, 6, 0)}
+	_pose_from(phone, COUNTER_POSE, 0.0, holding)
+	_pose_from(phone, COUNTER_POSE, 1.5, holding.merged({"head": Vector3(-6, -4, 0)}, true))
+	_pose_from(phone, COUNTER_POSE, 3.0, holding)
+	clips.append(phone)
+
+	var lean := RigBuilder.Clip.new(skeleton, &"lean_forward", 0.8)
+	_pose_from(lean, COUNTER_POSE, 0.0, sitting)
+	_pose_from(lean, COUNTER_POSE, 0.4, sitting.merged({"spine_upper": Vector3(-16, 0, 0), "head": Vector3(6, 0, 0)}, true))
+	_pose_from(lean, COUNTER_POSE, 0.8, sitting.merged({"spine_upper": Vector3(-14, 0, 0)}, true))
+	lean.move("root", 0.0, Vector3(0, -0.38, 0)).move("root", 0.8, Vector3(0, -0.38, 0))
+	clips.append(lean)
+
+	var laugh := RigBuilder.Clip.new(skeleton, &"laugh_small", 0.8)
+	_pose_from(laugh, COUNTER_POSE, 0.0, sitting)
+	for step: int in range(1, 4):
+		_pose_from(laugh, COUNTER_POSE, 0.2 * float(step), sitting.merged({"spine_upper": Vector3(-6 if step % 2 == 1 else 2, 0, 0), "head": Vector3(-8 if step % 2 == 1 else 0, 0, 0)}, true))
+	laugh.move("root", 0.0, Vector3(0, -0.38, 0)).move("root", 0.8, Vector3(0, -0.38, 0))
+	clips.append(laugh)
+	return clips
+
+
+# --- Darto: story clips -----------------------------------------------------
+
+func _build_darto_story_clips(skeleton: Skeleton3D) -> Array:
+	var clips: Array = []
+	var sitting := {"thigh_l": Vector3(84, 0, -8), "thigh_r": Vector3(84, 0, 8), "shin_l": Vector3(-82, 0, 0), "shin_r": Vector3(-82, 0, 0),
+		"upper_arm_r": Vector3(30, 0, 12), "forearm_r": Vector3(40, 0, 0), "upper_arm_l": Vector3(30, 0, -12), "forearm_l": Vector3(40, 0, 0),
+		"spine_lower": Vector3(-6, 0, 0), "spine_upper": Vector3(-4, 0, 0), "head": Vector3(-2, 0, 0)}
+	var sit := RigBuilder.Clip.new(skeleton, &"sit_lake", 4.0, true)
+	for time: float in [0.0, 2.0, 4.0]:
+		_dance_pose(sit, time, sitting.merged({"head": Vector3(-2, 3.0 * sin(time), 0)}, true), Vector3(0, -0.42, 0))
+	clips.append(sit)
+
+	var phone := RigBuilder.Clip.new(skeleton, &"phone_look", 3.0, true)
+	var holding := {"upper_arm_r": Vector3(40, 0, 14), "forearm_r": Vector3(96, 0, 0), "head": Vector3(14, 0, 0),
+		"upper_arm_l": Vector3(8, 0, -8), "forearm_l": Vector3(14, 0, 0)}
+	_dance_pose(phone, 0.0, holding)
+	_dance_pose(phone, 1.5, holding.merged({"head": Vector3(16, 3, 0)}, true))
+	_dance_pose(phone, 3.0, holding)
+	clips.append(phone)
+
+	var phone_sit := RigBuilder.Clip.new(skeleton, &"phone_sit", 3.0, true)
+	_dance_pose(phone_sit, 0.0, sitting.merged(holding, true), Vector3(0, -0.42, 0))
+	_dance_pose(phone_sit, 3.0, sitting.merged(holding, true), Vector3(0, -0.42, 0))
+	clips.append(phone_sit)
+
+	var laugh := RigBuilder.Clip.new(skeleton, &"small_laugh", 1.0)
+	_dance_pose(laugh, 0.0)
+	_dance_pose(laugh, 0.25, {"spine_upper": Vector3(-6, 0, 0), "head": Vector3(-8, 0, 0)})
+	_dance_pose(laugh, 0.5, {"spine_upper": Vector3(2, 0, 0), "head": Vector3(2, 0, 0)})
+	_dance_pose(laugh, 1.0)
+	clips.append(laugh)
 	return clips

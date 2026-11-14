@@ -266,6 +266,9 @@ func _mark_dirty() -> void:
 ##   --mm-bucket=<item id>:<count>                   put a catch in the Bucket
 ##   --mm-win=<fish id>                              record a duel win against a fish
 ##   --mm-story=<story value>                        switch a story flag on
+##   --mm-event=<story event id>                     start a game if needed and play that story event
+##   --mm-seen=<story event id>                      mark a story event as seen
+##   --mm-credits                                    roll the credits (as after the ending)
 ##   --mm-shot=<absolute png path>                   save a screenshot
 ## The run quits after the last step when it took at least one screenshot.
 func _run_command_line_tools() -> void:
@@ -360,6 +363,21 @@ func _run_command_line_tools() -> void:
 			"story":
 				GameState.set_story_value(StringName(value), true)
 				_mark_dirty()
+			"event":
+				if not GameState.has_active_game():
+					GameState.new_game()
+				_mark_dirty()
+				StoryDirector.play_event(StringName(value))
+				await SceneRouter.transition_finished
+			"seen":
+				StoryDirector.mark_event_seen(StringName(value))
+				_mark_dirty()
+			"credits":
+				if not GameState.has_active_game():
+					GameState.new_game()
+				_mark_dirty()
+				SceneRouter.goto_credits()
+				await SceneRouter.transition_finished
 			"shot":
 				await RenderingServer.frame_post_draw
 				var save_error := get_viewport().get_texture().get_image().save_png(value)

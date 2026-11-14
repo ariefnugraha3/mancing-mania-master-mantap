@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="DialogueSequence" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_sequence.gd" id="1_seq"]
 [ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_entry.gd" id="2_entry"]
@@ -39,7 +39,13 @@ speaker_id = &"arowana_don"
 text = "You disgust me."
 post_pause_sec = 0.8
 
+[sub_resource type="Resource" id="Entry_7"]
+script = ExtResource("2_entry")
+speaker_id = &"darto"
+text = "That's not a no."
+post_pause_sec = 0.4
+
 [resource]
 script = ExtResource("1_seq")
 id = &"fish_arowana_don_first_win"
-entries = Array[ExtResource("2_entry")]([SubResource("Entry_1"), SubResource("Entry_2"), SubResource("Entry_3"), SubResource("Entry_4"), SubResource("Entry_5"), SubResource("Entry_6")])
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_1"), SubResource("Entry_2"), SubResource("Entry_3"), SubResource("Entry_4"), SubResource("Entry_5"), SubResource("Entry_6"), SubResource("Entry_7")])

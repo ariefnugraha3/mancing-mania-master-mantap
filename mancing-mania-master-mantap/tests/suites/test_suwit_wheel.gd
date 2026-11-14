@@ -307,7 +307,8 @@ func test_every_fish_line_exists() -> bool:
 		check(darto_lines >= 1, "%s: Darto answers" % fish.id)
 	check_eq(FishDialogue.first_meeting(&"catfish_bruiser")[-1]["text"], "Square up.", "the catfish ends with Square up.")
 	var boss := FishDialogue.after_duel(&"arowana_don", true, 1, true)
-	check_eq(boss[-1]["text"], "You disgust me.", "Don Arowana's first defeat has its own exchange")
+	check_eq(boss[-2]["text"], "You disgust me.", "Don Arowana's first defeat has its own exchange")
+	check_eq(boss[-1]["text"], "That's not a no.", "and Darto has the last word")
 	return true
 
 

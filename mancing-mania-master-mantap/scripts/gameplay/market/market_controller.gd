@@ -23,6 +23,7 @@ const CATEGORY_TRASH := &"trash"
 const KIND_SELL := &"sell"
 const KIND_UPGRADE := &"upgrade"
 const KIND_DEBT := &"debt"
+const KIND_SAVINGS := &"savings"
 const TRANSACTION_LOCK_MSEC := 250
 
 ## Turn off to route somewhere else after leaving (the Market scene shows an
@@ -88,9 +89,22 @@ func pay_debt(amount: int) -> int:
 	return paid
 
 
+## Post-game FAMILY SAVINGS (GDD 19): cash goes in and only the number
+## grows. There is no reward attached. Returns what was saved.
+func deposit_savings(amount: int) -> int:
+	if _is_locked() or amount <= 0 or not bool(GameState.get_story_value(&"postgame_unlocked")):
+		return 0
+	var saved := mini(amount, GameState.get_cash())
+	if saved <= 0 or not GameState.spend_cash(saved):
+		return 0
+	GameState.increment_stat(&"family_savings", saved)
+	_finish_transaction(KIND_SAVINGS, {"saved": saved, "total": int(GameState.get_stat(&"family_savings"))}, &"savings")
+	return saved
+
+
 ## Ends the visit: saves, then lets at most one queued story event through
-## (GDD 177.3). Until the Story scene exists the event completes at once, so
-## its unlock still applies.
+## (GDD 177.3) to the Story scene, which applies its unlock. A build without
+## the Story scene completes the event at once instead.
 func leave_market() -> void:
 	if _leaving:
 		return
@@ -101,8 +115,11 @@ func leave_market() -> void:
 	var event_id := StoryDirector.resolve_market_exit_event()
 	if event_id != &"":
 		if SceneRouter.has_scene(SceneRouter.SCENE_STORY):
+			# The Story scene plays it and applies its unlock. Without
+			# auto_route the caller decides when (the Market scene, tests).
 			market_left.emit(event_id)
-			StoryDirector.play_event(event_id)
+			if auto_route:
+				StoryDirector.play_event(event_id)
 			return
 		StoryDirector.complete_event(event_id, true)
 		SaveManager.save_game(&"story_event")

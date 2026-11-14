@@ -119,7 +119,8 @@ func test_new_game_creates_a_valid_save() -> bool:
 	check_eq(GameState.get_cash(), 8430, "starting cash")
 	check_eq(GameState.get_debt_remaining(), 1800000, "starting debt")
 	await wait_frames(3)
-	check(await wait_until(func() -> bool: return _finished_transitions.has(&"fishing"), BOOT_TIMEOUT_SEC), "New Game continues to the lake")
+	check(await _skip_prologue(), "New Game opens with the prologue")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"fishing"), BOOT_TIMEOUT_SEC), "which continues to the lake")
 	return true
 
 
@@ -143,6 +144,8 @@ func test_continue_reloads_the_saved_state() -> bool:
 	check_eq(GameState.get_cash(), 20000, "cash restored")
 	check_eq(GameState.get_debt_paid(), 30000, "debt paid restored")
 	check_eq(GameState.get_bucket_quantity(&"snakehead_sergeant"), 2, "bucket restored")
+	# This save never saw the prologue, so Continue plays it first.
+	check(await _skip_prologue(), "a save that missed the prologue plays it first")
 	check(await wait_until(func() -> bool: return _finished_transitions.has(&"fishing"), BOOT_TIMEOUT_SEC), "Continue goes on to the lake")
 	return true
 
@@ -199,9 +202,20 @@ func _enter_lake() -> bool:
 	if not await _boot_to_menu():
 		return false
 	_button("NewGameButton").pressed.emit()
+	await _skip_prologue()
 	var reached := await wait_until(func() -> bool: return _finished_transitions.has(&"fishing"), BOOT_TIMEOUT_SEC)
 	await wait_frames(3)
 	return reached and tree.current_scene != null and tree.current_scene.name == &"Fishing"
+
+
+## A new game opens with the prologue (GDD 183.2); these tests are about
+## what follows it, so they hold skip.
+func _skip_prologue() -> bool:
+	if not await wait_until(func() -> bool: return _finished_transitions.has(&"story"), BOOT_TIMEOUT_SEC):
+		return false
+	await wait_frames(2)
+	(tree.current_scene.get_node("StoryController") as StoryController).skip()
+	return true
 
 
 func test_fishing_scene_follows_the_scene_blueprint() -> bool:
@@ -450,7 +464,7 @@ func test_market_visit_in_the_real_scene() -> bool:
 
 
 # STORY-004 / BOOK-001 in the real scene: the event resolves on the way out.
-func test_leaving_the_market_announces_the_fish_book() -> bool:
+func test_leaving_the_market_plays_the_fish_book_call() -> bool:
 	if not check(await _enter_market(), "reach the Market"):
 		return true
 	var scene := tree.current_scene
@@ -465,12 +479,14 @@ func test_leaving_the_market_announces_the_fish_book() -> bool:
 	check_eq(controller.pay_debt(600000), 600000, "pay Rp 600,000")
 	check(not notice.is_open(), "no story interrupts the visit itself")
 	(scene.get_node(LEDGER + "LeaveMarketButton") as BaseButton).pressed.emit()
-	check(await wait_until(notice.is_open, 3.0), "leaving shows the Fish Book notice")
-	check(bool(GameState.get_story_value(&"fish_book_unlocked")), "the Fish Book is unlocked")
-	check(StoryDirector.is_event_seen(&"story_debt_600k"), "the 600k event was this visit's event")
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"story") >= 2, BOOT_TIMEOUT_SEC), "leaving plays the story")
+	await wait_frames(3)
+	var story := tree.current_scene.get_node("StoryController") as StoryController
+	check_eq(story.event_id, &"story_debt_600k", "the 600k call is this visit's event")
 	check(StoryDirector.get_pending_events().has(&"story_debt_300k"), "the smaller milestones wait for another visit")
-	check(_finished_transitions.count(&"fishing") < 2, "the lake waits for the notice")
-	notice.footer.get_child(0).pressed.emit()
+	check(_finished_transitions.count(&"fishing") < 2, "the lake waits for the call")
+	story.skip()
+	check(bool(GameState.get_story_value(&"fish_book_unlocked")), "the Fish Book is unlocked")
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "then the visit ends at the lake")
 	return true
 
