@@ -2,6 +2,30 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## 0.9.0 — Milestone 9: Final Art, UI/UX, Animation, Audio, Accessibility, Performance
+
+### Ditambahkan
+
+- Settings: bagian VISUAL (grafis LOW/MEDIUM/HIGH, fullscreen di Web/desktop), ACCESSIBILITY (UI scale, text scale, High Contrast HUD, HUD shake, reduced motion, reduced flash, mode input panco, tangan dominan, kecepatan dialog, durasi tahan-untuk-skip), dan CONTROLS.
+- Layar KEYBOARD CONTROLS: remap semua aksi Section 189.15 dengan peringatan konflik (SWAP/CANCEL) dan RESET TO DEFAULTS.
+- UI scale dan text scale yang berlaku seketika; preset grafis yang mengatur resolusi 3D, bayangan, kepadatan vegetasi, dan anti-aliasing.
+- High Contrast HUD untuk chip HUD, marker tegangan, lajur joget, bar strike, titik skor Suwit, dan teks HUD.
+- Hold Assist panco: tahan untuk 8 dorongan per detik dengan biaya stamina yang sama.
+- Mode kidal untuk danau dan tinju.
+- Model ponsel di tangan Darto saat adegan ponsel; pose membaca ponsel baru.
+- Probe performa `tools/perf/perf_probe.gd` dan `docs/performance_report.md`.
+- Suite test `a11y` (15 test).
+
+### Diubah
+
+- Motor Darto dibangun ulang sebagai motor bebek; rambut Rini dan Nisa tidak lagi menutupi mata; Nisa benar-benar lebih kecil; kursi plastik di adegan duduk.
+- Titik skor Suwit menjadi lingkaran berbingkai.
+- Kecepatan dialog RELAXED (sebelumnya nilai "slow" yang tidak cocok dengan save).
+
+### Diperbaiki
+
+- Error "p_size <= 0" saat Wheel digambar sebelum layout.
+
 ## 0.8.0 — Milestone 8: Narrative, Cutscenes, Event Arbitration, Ending
 
 ### Ditambahkan

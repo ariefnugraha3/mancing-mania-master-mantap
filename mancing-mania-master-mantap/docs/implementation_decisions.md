@@ -582,3 +582,55 @@ Free Fishing adalah permainan biasa tanpa hutang: semua sistem tetap jalan. Sete
 ### D-094 — Credits
 
 Struktur mengikuti Section 183.22: judul, subjudul, tujuh kategori, kartu penutup dua baris. Satu pembuat mengisi semua peran, jadi namanya diulang (diizinkan 183.22); nama yang dipakai adalah nama pemilik project dan perlu dikonfirmasi. Isi SPECIAL THANKS tidak ditetapkan GDD dan ditulis untuk game ini.
+
+## Milestone 9 — Art, UI/UX, aksesibilitas, performa
+
+### D-095 — UI scale dan text scale
+
+- UI SCALE (90/100/115/130%) memakai `content_scale_factor` jendela: semua control ikut membesar, dunia 3D dan FOV tidak berubah (Section 189.2). Layout yang memakai anchor dan safe area menyesuaikan diri dengan ruang kanvas yang mengecil.
+- TEXT SCALE (100/115/130/150%) mengalikan semua ukuran font di theme project. Ukuran yang diset di kode lewat `UiTokens.outline_text` dan prompt danau memakai `DisplaySettings.text_size()`. Teks yang digambar langsung (lajur joget, Wheel) tidak ikut membesar; ukurannya mengikuti ukuran elemennya.
+- Keduanya berlaku seketika saat diubah dan saat save dimuat.
+
+### D-096 — Preset grafis
+
+| | LOW | MEDIUM (bawaan) | HIGH |
+|---|---|---|---|
+| Resolusi 3D | 75% | 100% | 100% |
+| Bayangan matahari | mati | hidup | hidup |
+| Kepadatan rumput/alang-alang | 50% | 100% | 100% |
+| MSAA 3D | mati | mati | 2× |
+
+Arah seni tidak berubah di preset mana pun. Preset berlaku saat diubah dan setiap kali scene baru dibuka.
+
+### D-097 — High Contrast HUD
+
+Panel chip HUD menjadi tidak transparan dengan border lebih tebal dan gelap; outline teks HUD +4 px; marker tegangan dan border HUD +2 px; lajur joget mendapat tepi krem tebal dan bentuk not bergaris lebih tebal; bar strike diberi bingkai tegas; titik skor Suwit ikut menebal. Dunia 3D tidak berubah (Section 189.4).
+
+### D-098 — Hold Assist panco
+
+Menahan tombol menghasilkan 8 dorongan per detik; dorongan pertama tepat saat ditekan. Setiap dorongan lewat `request_mash()` yang sama, jadi stamina, batas 10 per detik, dan power band tidak berubah (Section 189.11). Teks tombol dan tutorial berganti menjadi HOLD.
+
+### D-099 — Mode kidal
+
+Danau: tombol Market pindah ke kanan bawah. Tinju: kelompok tombol menghindar dan memukul bertukar sisi; urutan di dalam kelompok tetap, jadi DODGE LEFT selalu yang kiri. Suwit dan joget tidak diubah (Section 189.12).
+
+### D-100 — Remap keyboard
+
+- Remap mengganti tombol keyboard sebuah aksi dan mempertahankan tombol mouse-nya, jadi klik tetap bisa melempar kail setelah tombol cast dipindah.
+- F5, F11, F12, Tab, modifier, dan kombinasi Ctrl/Alt/Meta ditolak (dipakai browser atau OS).
+- Tombol yang sudah dipakai aksi lain memunculkan pilihan SWAP atau CANCEL; SWAP memberikan tombol lama ke aksi lain sehingga tidak ada aksi tanpa tombol.
+- Esc membatalkan penangkapan, kecuali saat sedang memetakan Back atau Pause.
+- Hanya di Web dan desktop; Android tidak menampilkan bagian CONTROLS.
+
+### D-101 — Polesan art
+
+- Pose "melihat ponsel" Darto: tangan kanan di depan dada, kepala menunduk; model ponsel (`prop_phone`) dipasang ke tulang tangan saat clip ponsel diputar dan disembunyikan saat clip lain.
+- Motor Darto dibangun ulang sebagai motor bebek: ban tipis, garpu depan, setang dengan grip, pelindung kaki, knalpot, lampu depan dan belakang.
+- Rambut Rini dan Nisa: cincin bawah dipindah ke belakang wajah sehingga mata tidak tertutup.
+- Nisa diskalakan pada root (skala Skeleton3D tidak berlaku untuk mesh ter-skin); scene Story mempertahankan skala bawaan aktor.
+- Final keluarga dan event 1,65 juta: kursi plastik di bawah tokoh yang duduk.
+- Titik skor Suwit: lingkaran penuh berbingkai untuk poin yang didapat, cincin kosong untuk yang belum; label "FISH" pindah ke tabel teks.
+
+### D-102 — Pengukuran performa
+
+`tools/perf/perf_probe.gd` membuka setiap scene lewat router di jendela nyata, menunggu 2,5 detik, lalu mengambil sampel 4 detik: FPS rata-rata, frame terburuk, draw call dan primitif maksimum, memori statis, memori video. Diakhiri 20 kali bolak-balik Danau ↔ Market untuk cek kebocoran (Section 190.4). Hasilnya di `docs/performance_report.md`. Ini baseline di mesin pengembang, bukan perangkat referensi Section 190.1.
