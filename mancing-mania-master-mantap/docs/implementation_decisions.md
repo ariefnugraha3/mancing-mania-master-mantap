@@ -547,3 +547,38 @@ Sesuai Section 69: headband merah-putih (nila), kacamata hitam (gurami), kalung 
 ### D-087 — Tool QA
 
 `--mm-auto-dialogue` membuat dialog maju sendiri setiap 0,25 detik (debug build saja), supaya alur penuh bisa diuji tanpa tangan.
+
+## Milestone 8 — Cerita, cutscene, ending
+
+### D-088 — Timeline cerita sebagai data
+
+Seluruh staging cerita ada di `data/story/story_timelines.json`: set, aktor (penanda set atau posisi relatif), prop, kamera, dan daftar langkah. Setiap teks yang terlihat adalah kunci di `ui_text.tres`, jadi semua teks Inggris tetap di satu tabel. `StoryController` membaca timeline itu dan menjalankan langkah satu per satu. Kamera hanya cut statis, tanpa orbit (Section 173).
+
+### D-089 — Skip
+
+Menahan konfirmasi, sentuhan, atau tombol cast selama `skip_hold_sec` (bawaan 0,8 detik) mengakhiri event. Event yang dilewati tetap dicatat seen, unlock dan chapter tetap berlaku, event yang di-supersede tetap pensiun, dan rute berikutnya sama dengan menonton sampai habis.
+
+### D-090 — Event di dalam scene lain
+
+Tiga event diputar di tempat kejadiannya, bukan di scene Story, supaya alur tidak terputus:
+
+- `story_first_fish`: percakapan lele di danau sebelum Wheel pertama.
+- `story_first_market`: sambutan saat warung dibuka, dua baris setelah jualan pertama, empat baris setelah bayar pertama (tutorial Market tetap jalan).
+- `story_arowana_first_win`: percakapan di layar Result (D-084) ditambah baris terakhir Darto; event selesai di sana sehingga Market tidak memutarnya lagi. Jika pemain keluar sebelum dialog selesai, event tetap antre dan diputar di scene Story pada kunjungan Market berikutnya.
+
+### D-091 — Rantai ending
+
+`story_debt_paid` (prioritas 1000) diputar saat keluar Market. Setelahnya `story_final_family` langsung, lalu credits, lalu `story_postgame_unlock`, lalu danau. Unlock postgame menyetel `postgame_unlocked`, `ending_completed`, dan chapter `postgame`. Credits yang dibuka dari Main Menu kembali ke menu tanpa mengubah apa pun.
+
+### D-092 — Free Fishing dan Family Savings
+
+Free Fishing adalah permainan biasa tanpa hutang: semua sistem tetap jalan. Setelah postgame, tab Debt berganti nama SAVINGS dan menjadi FAMILY SAVINGS: uang tunai bisa disetor ke statistik `family_savings`. Tidak ada hadiah gameplay (Section 19).
+
+### D-093 — CePatCash dan obrolan Market
+
+- CePatCash: pengingat pertama paling cepat 18 menit setelah sesi dimulai, sesudahnya jeda acak 18–35 menit (seed dari waktu main). Hanya muncul saat Darto diam atau menunggu di danau, tidak saat dialog, duel, atau cutscene, dan berhenti setelah hutang lunas. Darto menjawab setiap notifikasi kedua.
+- Obrolan Bu Yati: tidak di kunjungan pertama, satu kali tiap tiga kunjungan, tidak pernah saat ada event yang menunggu, tiga percakapan bergiliran.
+
+### D-094 — Credits
+
+Struktur mengikuti Section 183.22: judul, subjudul, tujuh kategori, kartu penutup dua baris. Satu pembuat mengisi semua peran, jadi namanya diulang (diizinkan 183.22); nama yang dipakai adalah nama pemilik project dan perlu dikonfirmasi. Isi SPECIAL THANKS tidak ditetapkan GDD dan ditulis untuk game ini.
