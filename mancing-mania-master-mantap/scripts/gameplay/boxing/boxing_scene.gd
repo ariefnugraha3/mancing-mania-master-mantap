@@ -115,7 +115,7 @@ func _open_pause() -> void:
 
 func _on_duel_started(snapshot: Dictionary) -> void:
 	_hud.setup(_fish, snapshot)
-	_hud.show_banner(_fish.display_name.to_upper(), TextDb.t(&"boxing.intro.subtitle"), INTRO_BANNER_SEC)
+	_hud.show_banner(_fish.get_display_name().to_upper(), TextDb.t(&"boxing.intro.subtitle"), INTRO_BANNER_SEC)
 	if _tutorial:
 		_hud.show_hint(TextDb.t(&"boxing.tutorial.read"))
 

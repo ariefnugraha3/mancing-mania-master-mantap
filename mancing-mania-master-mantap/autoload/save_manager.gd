@@ -24,14 +24,20 @@ const STATUS_MISSING := &"missing"
 const STATUS_CORRUPT := &"corrupt"
 const STATUS_UNSUPPORTED := &"unsupported_version"
 
+## The game's name until revision 6.8. On desktop (and wherever user:// is
+## named after the project) the rename to "Catch and Brawl" moved the save
+## folder; a save from before the rename is copied over once.
+const LEGACY_USER_DIR_NAME := "Mancing Mania Gelut Edition"
+
 ## Explicit save from the debug overlay; the only reason allowed to write while
 ## the state carries debug mutations (GDD 178.3).
 const REASON_DEBUG_STATE := &"debug_state"
 
 ## Schema migrations keyed by the version they upgrade *from*. Schema 5 is the
-## first version this codebase ever wrote, so there is nothing to migrate yet;
-## versions 1-4 belonged to pre-production documents and are not supported.
-var _migrations: Dictionary[int, Callable] = {}
+## first version this codebase ever wrote; versions 1-4 belonged to
+## pre-production documents and are not supported. The file keeps its
+## save_v5.json name across versions so an update always finds the save.
+var _migrations: Dictionary[int, Callable] = {5: migrate_5_to_6}
 
 var _storage_dir: String = DEFAULT_STORAGE_DIR
 var _last_load_status: StringName = STATUS_MISSING
@@ -52,6 +58,7 @@ func _ready() -> void:
 	_settings_timer.timeout.connect(_on_settings_timer_timeout)
 	add_child(_settings_timer)
 	GameState.settings_changed.connect(_on_settings_changed)
+	import_legacy_save()
 
 
 # --- Public API (GDD 169.3) -------------------------------------------------
@@ -95,9 +102,11 @@ func load_game() -> bool:
 	var repairs := SaveSchema.last_repairs.duplicate()
 	GameState.apply_loaded_save(normalized)
 	if not repairs.is_empty() or version != SaveSchema.VERSION:
-		# Rewriting is destructive for the fields that were repaired: back up first.
+		# Rewriting is destructive for the fields that were repaired: back up
+		# first. A plain migration already left its pre_migration copy.
 		GameLog.warn(&"SAVE", "save was repaired on load", {"repairs": repairs.size(), "first": repairs[0] if not repairs.is_empty() else "migration"})
-		create_backup(&"pre_repair")
+		if not repairs.is_empty():
+			create_backup(&"pre_repair")
 		save_game(&"repair")
 	return _finish_load(STATUS_OK)
 
@@ -171,6 +180,53 @@ func migrate_save(data: Dictionary) -> Dictionary:
 	return current
 
 
+## Schema 5 -> 6 (revision 6.7): the new spots, fish, duels, stats and
+## tutorials join with their defaults, and Darto is at Cempaka Lake with only
+## that spot open. Everything the player already had stays as it was.
+##
+## Only blocks that exist are extended. A block that is missing or broken is
+## left as it is, so validation still rejects a damaged save instead of the
+## migration quietly turning it into a fresh one.
+static func migrate_5_to_6(data: Dictionary) -> Dictionary:
+	var out := data.duplicate(true)
+	if typeof(out.get("bucket")) == TYPE_DICTIONARY:
+		var bucket: Dictionary = out["bucket"]
+		for item_id: StringName in ContentIds.get_bucket_item_ids():
+			if not bucket.has(String(item_id)):
+				bucket[String(item_id)] = 0
+	if typeof(out.get("fish_book")) == TYPE_DICTIONARY:
+		var book: Dictionary = out["fish_book"]
+		for fish_id: StringName in ContentIds.FISH_IDS:
+			if not book.has(String(fish_id)):
+				book[String(fish_id)] = SaveSchema.default_fish_book_entry()
+				continue
+			var entry: Variant = book[String(fish_id)]
+			if typeof(entry) == TYPE_DICTIONARY and typeof((entry as Dictionary).get("duel_wins")) == TYPE_DICTIONARY:
+				var wins: Dictionary = (entry as Dictionary)["duel_wins"]
+				for duel_id: StringName in ContentIds.DUEL_IDS:
+					if not wins.has(String(duel_id)):
+						wins[String(duel_id)] = 0
+	if typeof(out.get("stats")) == TYPE_DICTIONARY:
+		var stats: Dictionary = out["stats"]
+		var had_legends := stats.has("legends_defeated")
+		for key: String in SaveSchema.INT_STAT_KEYS:
+			if not stats.has(key):
+				stats[key] = 0
+		# Don Arowana was the only legend of schema 5.
+		if not had_legends:
+			stats["legends_defeated"] = int(stats.get("don_arowana_defeated", 0))
+	if typeof(out.get("tutorials")) == TYPE_DICTIONARY:
+		var tutorials: Dictionary = out["tutorials"]
+		for tutorial_id: StringName in ContentIds.TUTORIAL_IDS:
+			if not tutorials.has(String(tutorial_id)):
+				tutorials[String(tutorial_id)] = false
+	if typeof(out.get("settings")) == TYPE_DICTIONARY and not (out["settings"] as Dictionary).has("language"):
+		out["settings"]["language"] = SaveSchema.default_settings()["language"]
+	out["locations"] = SaveSchema.default_locations()
+	out["version"] = 6
+	return out
+
+
 func export_save_json() -> String:
 	var data := GameState.export_save_state()
 	data["last_played_at_utc"] = SaveSchema.utc_timestamp()
@@ -215,6 +271,32 @@ func get_corrupt_backup_path() -> String:
 
 ## Points the manager at another folder. Tests use this to work on an isolated
 ## temp save; passing nothing restores user://.
+## Copies the save files from the folder the game used under its old name
+## into the current user folder, once: only when the current folder has no
+## save yet and the old one has. The old folder is left as it was. Returns
+## the number of files copied. `legacy_dir` and `target_dir` are for tests.
+func import_legacy_save(legacy_dir: String = "", target_dir: String = DEFAULT_STORAGE_DIR) -> int:
+	var target := ProjectSettings.globalize_path(target_dir).trim_suffix("/")
+	var source := legacy_dir
+	if source == "":
+		source = target.get_base_dir().path_join(LEGACY_USER_DIR_NAME)
+	if source == target or not DirAccess.dir_exists_absolute(source):
+		return 0
+	if FileAccess.file_exists(target.path_join(SAVE_FILE)) or FileAccess.file_exists(target.path_join(TEMP_FILE)):
+		return 0
+	if not FileAccess.file_exists(source.path_join(SAVE_FILE)) and not FileAccess.file_exists(source.path_join(TEMP_FILE)):
+		return 0
+	DirAccess.make_dir_recursive_absolute(target)
+	var copied := 0
+	for file_name: String in DirAccess.get_files_at(source):
+		if not file_name.begins_with("save_v5"):
+			continue
+		if DirAccess.copy_absolute(source.path_join(file_name), target.path_join(file_name)) == OK:
+			copied += 1
+	GameLog.info(&"SAVE", "imported the save from before the rename", {"from": source, "files": copied})
+	return copied
+
+
 func configure_storage(directory: String = DEFAULT_STORAGE_DIR) -> void:
 	_settings_timer.stop()
 	_storage_dir = directory

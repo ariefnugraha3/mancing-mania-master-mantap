@@ -15,8 +15,8 @@ const REQUIRED_PUBLISHER_FIELDS: Array[String] = ["publisher_display_name", "pub
 const PLACEHOLDER_MARK := "["
 const ARTIFACTS: Array[String] = [
 	"build/web/index.html", "build/web/index.js", "build/web/index.wasm", "build/web/index.pck",
-	"build/itch/mancing-mania-gelut-edition-web-%s.zip",
-	"build/android/MancingManiaGelut.aab",
+	"build/itch/catch-and-brawl-web-%s.zip",
+	"build/android/CatchAndBrawl.aab",
 	"build/store/google_play/icon_512.png", "build/store/google_play/feature_1024x500.png",
 	"build/store/google_play/adaptive_foreground_432.png", "build/store/google_play/adaptive_background_432.png",
 	"build/store/google_play/screenshot_01_fishing_1080x1920.png", "build/store/google_play/screenshot_02_fish_duel_1080x1920.png",
@@ -81,7 +81,7 @@ static func write_manifest(path: String) -> String:
 	if OS.execute("git", ["rev-parse", "HEAD"], output) == 0 and not output.is_empty():
 		commit = str(output[0]).strip_edges()
 	var manifest := {
-		"product": "Mancing Mania: Gelut Edition",
+		"product": "Catch and Brawl",
 		"version": version(),
 		"engine": Engine.get_version_info()["string"],
 		"renderer": "gl_compatibility",

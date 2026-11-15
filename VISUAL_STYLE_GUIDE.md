@@ -177,7 +177,7 @@ Engine lain: pakai kamera ortografis yang sama, posisikan dengan rumus 2.2, dan 
 2. Tepi dipangkas atau dibulatkan; hindari lembaran setipis kertas kecuali kaca atau kain.
 3. Detail kecil (kenop, paku, pegangan) boleh ada, tetapi siluet utama HARUS terbaca dari jarak kamera bawaan.
 4. Pola dibuat dari geometri: tirai dan kanopi kotak-kotak memakai bidang papan catur dengan dua warna verteks, ubin lantai memakai kotak-kotak berwarna.
-5. Tulisan di dunia (papan nama) memakai Label3D dengan font bawaan dan garis tepi, bukan tekstur.
+5. Tulisan di dunia (papan nama) memakai Label3D dengan font project dan garis tepi, bukan tekstur. Label3D otomatis memakai Fredoka (default font Theme); tulisan bernada lucu seperti tanda gigitan "!" memakai Chewy lewat `UiSkin.heavy_font()` (GDD 167.3, revisi 6.3).
 6. Setiap model punya satu sisi depan yang tetap. Di Crumbtown karakter menghadap -Z lokal, dan perabot dirakit menghadap +Z lokal lalu diputar ke arah hadapnya saat dipasang (`rotation.y = atan2(arah.x, arah.y)`).
 7. Perabot diskalakan seragam supaya muat di footprint-nya dikurangi 0,06 m (0,03 m tiap sisi), dan tingginya paling banyak 1,2 × tinggi nominalnya.
 

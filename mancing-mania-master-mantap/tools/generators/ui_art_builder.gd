@@ -2,12 +2,13 @@
 extends RefCounted
 ## Generates the UI art from code (GDD 184.11): the project Theme built from
 ## StyleBoxFlat and the design tokens, and the application icon drawn from
-## polygons and circles. Nothing here reads an external image or font.
+## polygons and circles. Nothing here reads an external image; the Theme's
+## fonts point at the two licensed font files (GDD 184.12, revision 6.3).
 
 const GeneratorIo := preload("res://tools/generators/generator_io.gd")
 
 const GENERATOR_ID := "ui_art_builder"
-const GENERATOR_VERSION := 2
+const GENERATOR_VERSION := 4
 
 const THEME_PATH := "res://generated/ui/ui_theme.tres"
 const ICON_PATH := "res://generated/ui/app_icon.png"
@@ -42,9 +43,12 @@ func build_theme() -> Theme:
 	var theme := Theme.new()
 	theme.default_font_size = UiTokens.FONT_BODY
 
-	var bold := UiSkin.make_bold(0.55, 0)
+	var regular := UiSkin.make_body_font(UiTokens.FONT_WEIGHT_REGULAR)
+	_set_id(regular, "font_regular")
+	theme.default_font = regular
+	var bold := UiSkin.make_body_font(UiTokens.FONT_WEIGHT_BOLD)
 	_set_id(bold, "font_bold")
-	var heavy := UiSkin.make_bold(0.9, 1)
+	var heavy := UiSkin.make_display_font(bold)
 	_set_id(heavy, "font_heavy")
 
 	_style_labels(theme, bold, heavy)
@@ -133,10 +137,12 @@ func _button_family(theme: Theme, type_name: StringName, id_prefix: String, fill
 	var light_text := text.get_luminance() > 0.6
 	for color_name: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color", &"font_hover_pressed_color"]:
 		theme.set_color(color_name, type_name, text)
+	# Sticker icons keep their own colours (IconPainter, revision 6.4): white
+	# leaves them as drawn, and a faded white draws the muted disabled look.
 	for color_name: StringName in [&"icon_normal_color", &"icon_hover_color", &"icon_pressed_color", &"icon_focus_color", &"icon_hover_pressed_color"]:
-		theme.set_color(color_name, type_name, text)
+		theme.set_color(color_name, type_name, Color.WHITE)
 	theme.set_color(&"font_disabled_color", type_name, Color(UiTokens.INK_700, 0.55))
-	theme.set_color(&"icon_disabled_color", type_name, Color(UiTokens.INK_700, 0.45))
+	theme.set_color(&"icon_disabled_color", type_name, Color(1.0, 1.0, 1.0, 0.45))
 	# Cream letters on a coloured face get a rim of the face colour, like the
 	# painted lettering on a cart.
 	theme.set_color(&"font_outline_color", type_name, UiSkin.edge_of(fill) if light_text else Color(0, 0, 0, 0))

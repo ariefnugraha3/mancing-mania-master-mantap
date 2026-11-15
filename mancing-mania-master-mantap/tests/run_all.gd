@@ -21,6 +21,7 @@ const SUITES: Array[String] = [
 	"res://tests/suites/test_arm_wrestle.gd",
 	"res://tests/suites/test_dance.gd",
 	"res://tests/suites/test_suwit_wheel.gd",
+	"res://tests/suites/test_spots.gd",
 	"res://tests/suites/test_story.gd",
 	"res://tests/suites/test_accessibility.gd",
 	"res://tests/suites/test_release.gd",
@@ -56,6 +57,12 @@ func _run_all() -> void:
 	for argument: String in OS.get_cmdline_user_args():
 		if argument.begins_with("--suite="):
 			filter = argument.trim_prefix("--suite=")
+
+	# LANGUAGE "auto" follows the device; tests read English no matter where
+	# they run. Suites that test Indonesian switch to it themselves.
+	var display: GDScript = load("res://scripts/ui/display_settings.gd")
+	display.set("system_language_override", "en")
+	display.call("apply_language")
 
 	# Tests feed deliberately broken data; keep the expected complaints quiet.
 	GameLog.muted = true

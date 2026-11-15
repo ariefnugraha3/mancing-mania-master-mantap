@@ -8,7 +8,7 @@
 script = ExtResource("1_fish")
 id = &"tilapia_gym_rat"
 display_name = "Gym-Rat Tilapia"
-species_label = "TILAPIA / NILA"
+species_label = "TILAPIA"
 tier = 2
 sale_base = 26000
 sale_multiplier = 1.0
@@ -23,6 +23,7 @@ boxing_telegraph_sec = 0.75
 arm_strength = 50.0
 rhythm_skill = 68.0
 tell_truth_probability = 0.72
+duel_skill = 42.0
 weight_min_kg = 0.6
 weight_max_kg = 2.4
 dialogue_sequence_id = &"fish_tilapia_gym_rat"

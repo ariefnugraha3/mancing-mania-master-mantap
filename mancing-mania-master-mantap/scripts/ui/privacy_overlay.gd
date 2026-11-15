@@ -1,8 +1,8 @@
 class_name PrivacyOverlay
 extends OverlayPanel
 ## Settings -> PRIVACY (GDD 187.7): the summary first, then the full policy
-## and the engine's licence notices. Everything is in the game, so it works
-## offline; nothing here opens a network connection.
+## and the licence notices of the engine and the two fonts. Everything is in
+## the game, so it works offline; nothing here opens a network connection.
 
 const SUMMARY_KEYS: Array[StringName] = [
 	&"privacy.summary.1", &"privacy.summary.2", &"privacy.summary.3", &"privacy.summary.4", &"privacy.summary.5",
@@ -38,7 +38,7 @@ func build_content() -> void:
 	_full_button.pressed.connect(func() -> void: show_page(&"policy"))
 	footer.add_child(_full_button)
 	_licenses_button = make_button(TextDb.t(&"privacy.licenses"))
-	_licenses_button.name = "EngineLicenses"
+	_licenses_button.name = "Licenses"
 	_licenses_button.pressed.connect(func() -> void: show_page(&"licenses"))
 	footer.add_child(_licenses_button)
 	_close_button = make_button(TextDb.t(&"common.close"), UiTokens.TYPE_CTA_BUTTON)
@@ -95,6 +95,25 @@ func show_page(page: StringName) -> void:
 			for component: Dictionary in Engine.get_copyright_info():
 				parts.append(str(component.get("name", "")))
 			_body.add_child(make_label(TextDb.tf(&"privacy.licenses.components", {"list": ", ".join(parts)}), UiTokens.TYPE_SMALL))
+			# The fonts' own licences must travel with them (OFL 1.1, Apache 2.0).
+			_body.add_child(make_label(TextDb.t(&"privacy.licenses.fonts")))
+			for license_path: String in [UiTokens.FONT_BODY_LICENSE_FILE, UiTokens.FONT_DISPLAY_LICENSE_FILE]:
+				_body.add_child(make_label(_reflow(FileAccess.get_file_as_string(license_path)), UiTokens.TYPE_SMALL))
 	_full_button.visible = page == &"summary"
 	_licenses_button.visible = page == &"summary"
 	fit_to_screen.call_deferred()
+
+
+## Licence files are hard-wrapped at about 75 columns, which turns into ragged
+## half lines on a phone. Joins the lines of each paragraph so the label can
+## wrap them to the screen; blank lines still separate paragraphs.
+static func _reflow(text: String) -> String:
+	var paragraphs := PackedStringArray()
+	for block: String in text.replace("\r\n", "\n").split("\n\n"):
+		var words := PackedStringArray()
+		for line: String in block.split("\n"):
+			if not line.strip_edges().is_empty():
+				words.append(line.strip_edges())
+		if not words.is_empty():
+			paragraphs.append(" ".join(words))
+	return "\n\n".join(paragraphs)

@@ -16,6 +16,11 @@ extends Node
 const STATE_SILENCE := &"silence"
 const STATE_LAKE := &"lake"
 const STATE_MARKET := &"market"
+## The four new spots (revision 6.7).
+const STATE_RIVER := &"river"
+const STATE_RESERVOIR := &"reservoir"
+const STATE_ESTUARY := &"estuary"
+const STATE_SEA := &"sea"
 
 ## Loops are rendered below the output rate: ambience has no fine detail, and
 ## it keeps the render cost and memory small.
@@ -38,19 +43,52 @@ const MARKET_LAYERS: Dictionary = {
 	&"hum": [4.0, -31.0],
 	&"wind": [8.0, -27.0],
 }
+## Kenanga River: fast water over stones under the same wind.
+const RIVER_LAYERS: Dictionary = {
+	&"rush": [5.0, -18.0],
+	&"wind": [8.0, -23.0],
+}
+## Melati Reservoir: wide open water, so more wind and quieter lapping.
+const RESERVOIR_LAYERS: Dictionary = {
+	&"water": [6.0, -21.0],
+	&"wind": [8.0, -18.0],
+}
+## Anggrek Estuary: lapping water and the sea breathing far away.
+const ESTUARY_LAYERS: Dictionary = {
+	&"water": [6.0, -19.0],
+	&"surf": [12.0, -27.0],
+	&"wind": [8.0, -22.0],
+}
+## Mawar Pier: the waves themselves.
+const SEA_LAYERS: Dictionary = {
+	&"surf": [12.0, -17.0],
+	&"wind": [8.0, -19.0],
+}
 const STATE_LAYERS: Dictionary = {
 	STATE_LAKE: LAKE_LAYERS,
 	STATE_MARKET: MARKET_LAYERS,
+	STATE_RIVER: RIVER_LAYERS,
+	STATE_RESERVOIR: RESERVOIR_LAYERS,
+	STATE_ESTUARY: ESTUARY_LAYERS,
+	STATE_SEA: SEA_LAYERS,
 }
 ## Birds are heard outdoors everywhere, only fainter from under the warung roof.
 const BIRD_GAIN_DB: Dictionary = {
 	STATE_LAKE: 0.0,
 	STATE_MARKET: -6.0,
+	STATE_RIVER: -2.0,
+	STATE_RESERVOIR: -3.0,
+	STATE_ESTUARY: -2.0,
+	STATE_SEA: -5.0,
 }
 ## The place the player usually goes next; its loops are rendered in advance
 ## so they are ready on arrival.
 const PREPARE_AFTER: Dictionary = {
 	STATE_LAKE: STATE_MARKET,
+	STATE_RIVER: STATE_MARKET,
+	STATE_RESERVOIR: STATE_MARKET,
+	STATE_ESTUARY: STATE_MARKET,
+	STATE_SEA: STATE_MARKET,
 }
 ## How far each layer's volume drifts by itself: wind comes in gusts.
 const SWELL_DB: Dictionary = {
@@ -68,13 +106,18 @@ const RADIO_FLUTTER_FAST_HZ := 7.0 / 9.6
 const RADIO_FLUTTER_SLOW_HZ := 1.0 / 9.6
 const HUM_HZ := 50.0
 
-enum LayerKind { WATER, WIND, RADIO, HUM }
+## One wave every this many seconds; the surf loop holds a whole number of them.
+const SURF_PERIOD_SEC := 6.0
+
+enum LayerKind { WATER, WIND, RADIO, HUM, RUSH, SURF }
 
 const LAYER_KINDS: Dictionary = {
 	&"water": LayerKind.WATER,
 	&"wind": LayerKind.WIND,
 	&"radio": LayerKind.RADIO,
 	&"hum": LayerKind.HUM,
+	&"rush": LayerKind.RUSH,
+	&"surf": LayerKind.SURF,
 }
 
 var _state: StringName = STATE_SILENCE
@@ -268,6 +311,19 @@ func _render_some() -> void:
 			high += 0.03 * (low - high)
 			var lap := 0.55 + 0.25 * sin(time_sec * 2.1) + 0.2 * sin(time_sec * 5.3 + 1.0)
 			samples[index] = (low - high) * lap * 1.5
+		elif kind == LayerKind.RUSH:
+			# A river over stones: brighter, busier noise with a quick shimmer.
+			low += 0.45 * (white - low)
+			high += 0.06 * (low - high)
+			var shimmer := 0.8 + 0.12 * sin(time_sec * 7.1) + 0.08 * sin(time_sec * 11.3 + 0.5)
+			samples[index] = (low - high) * shimmer * 1.2
+		elif kind == LayerKind.SURF:
+			# A wave: noise that swells, brightens as it breaks, then hisses away.
+			var phase := fposmod(time_sec / SURF_PERIOD_SEC, 1.0)
+			var swell := pow(0.5 - 0.5 * cos(TAU * phase), 2.5)
+			low += (0.04 + 0.22 * swell) * (white - low)
+			high += 0.01 * (low - high)
+			samples[index] = (low - high) * (0.2 + swell) * 1.7
 		elif kind == LayerKind.RADIO:
 			var step_position := time_sec / RADIO_STEP_SEC
 			var step := int(step_position) % RADIO_STEPS

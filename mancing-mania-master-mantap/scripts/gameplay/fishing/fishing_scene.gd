@@ -20,6 +20,10 @@ var _reel_tick_left: float = 0.0
 var _stress_sound_left: float = 0.0
 var _leaving: bool = false
 var _dialogue: DialogueBox
+var _travel: TravelOverlay
+## Seconds after arriving at a new spot before Darto says his lines.
+const ARRIVAL_DELAY_SEC := 0.8
+const ARRIVAL_LINES := 3
 ## Seconds of the catch reveal before the fish starts talking.
 const DIALOGUE_DELAY_SEC := 1.4
 const FIRST_FISH_EVENT := &"story_first_fish"
@@ -44,11 +48,19 @@ func _ready() -> void:
 	_hud.pause_pressed.connect(_pause.open)
 	_hud.bucket_pressed.connect(_open_bucket)
 	_hud.market_pressed.connect(_go_to_market)
+	_hud.map_pressed.connect(_open_travel)
 	_hud.set_market_available(SceneRouter.has_scene(SceneRouter.SCENE_MARKET))
 	_pause.quit_requested.connect(_quit_to_menu)
+	_travel = TravelOverlay.new()
+	_travel.name = "TravelOverlay"
+	add_child(_travel)
+	_travel.travel_requested.connect(_travel_to)
 
-	AudioManager.set_ambience_state(&"lake")
+	var location := GameData.get_location(GameState.get_current_location())
+	AudioManager.set_ambience_state(location.ambience if location != null else &"lake")
 	AudioManager.set_music_state(&"fishing")
+	_refresh_spot()
+	_greet_spot()
 
 
 func _process(delta: float) -> void:
@@ -119,6 +131,65 @@ func _go_to_market() -> void:
 	SceneRouter.goto_market()
 
 
+# --- Spots (revision 6.7) -----------------------------------------------------
+
+## True once any spot besides Cempaka Lake has opened.
+static func has_other_spot() -> bool:
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		if location_id != ContentIds.START_LOCATION and GameState.is_location_unlocked(location_id):
+			return true
+	return false
+
+
+func _refresh_spot() -> void:
+	var map_available := has_other_spot()
+	_hud.set_location(GameState.get_current_location(), map_available)
+	_refresh_tide()
+	if map_available and not GameState.is_tutorial_seen(&"travel_seen"):
+		_hud.show_hint(TextDb.t(&"fishing.hint.travel"), 4.0)
+
+
+func _refresh_tide() -> void:
+	var location := GameData.get_location(GameState.get_current_location())
+	var tidal := location != null and location.tide_period_casts > 0
+	_hud.set_tide(tidal, _controller.is_high_tide())
+
+
+## The first arrival at a spot: Darto looks around and says a few lines.
+func _greet_spot() -> void:
+	var location_id := GameState.get_current_location()
+	if not GameState.mark_location_visited(location_id):
+		return
+	SaveManager.save_game(&"travel")
+	await get_tree().create_timer(ARRIVAL_DELAY_SEC).timeout
+	if _leaving or not is_inside_tree():
+		return
+	var lines: Array[Dictionary] = []
+	for index: int in ARRIVAL_LINES:
+		var key := StringName("arrival.%s.%d" % [location_id, index + 1])
+		if TextDb.has_key(key):
+			lines.append({"speaker": FishDialogue.speaker_name(&"darto"), "text": TextDb.t(key)})
+	if not lines.is_empty():
+		_dialogue.play(lines)
+
+
+func _open_travel() -> void:
+	if _leaving or _controller.get_state() != FishingController.STATE_IDLE or _travel.is_open():
+		return
+	GameState.set_tutorial_seen(&"travel_seen")
+	AudioManager.play_ui(&"ui_click")
+	_travel.open()
+
+
+## GO on the map: Darto rides to the spot and the lake scene reloads there.
+func _travel_to(location_id: StringName) -> void:
+	if _leaving or not GameState.set_current_location(location_id):
+		return
+	SaveManager.save_game(&"travel")
+	_leaving = true
+	SceneRouter.goto_fishing()
+
+
 func _quit_to_menu() -> void:
 	_leaving = true
 	_controller.cancel_to_idle()
@@ -133,6 +204,7 @@ func _on_state_changed(state: StringName) -> void:
 	match state:
 		FishingController.STATE_IDLE:
 			_world.show_idle()
+			_refresh_tide()
 		FishingController.STATE_CASTING:
 			_world.show_cast()
 		FishingController.STATE_BITE_WARNING:
@@ -181,7 +253,7 @@ func _on_fish_landed(fish_id: StringName, weight_kg: float) -> void:
 	AudioManager.play_sfx(&"sfx_large_splash")
 	var encounter := _controller.get_encounter()
 	var subtitle := TextDb.t(StringName("fish.%s.subtitle" % fish_id))
-	subtitle += "   " + TextDb.tf(&"fishing.result.weight", {"weight": "%.2f" % weight_kg})
+	subtitle += "   " + TextDb.tf(&"fishing.result.weight", {"weight": Money.decimal(weight_kg)})
 	if encounter.get("is_big_one", false):
 		subtitle += "   " + TextDb.t(&"fishing.result.big_one")
 	# Fish introduction sting (GDD Section 37).

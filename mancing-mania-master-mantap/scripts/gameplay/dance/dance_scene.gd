@@ -118,7 +118,7 @@ func _start_song() -> void:
 	_phase = PHASE_PLAYING
 	_clock.reset()
 	_music.play_song(0.0)
-	_hud.show_banner(_fish.display_name.to_upper(), TextDb.t(&"dance.intro.subtitle"), 1.8)
+	_hud.show_banner(_fish.get_display_name().to_upper(), TextDb.t(&"dance.intro.subtitle"), 1.8)
 	if not GameState.is_tutorial_seen(TUTORIAL_ID):
 		_hud.show_hint(TextDb.t(&"dance.tutorial.hit"))
 

@@ -12,12 +12,36 @@ const BOXING_CONFIG_PATH := "res://data/balance/boxing_config.tres"
 const ARM_WRESTLE_CONFIG_PATH := "res://data/balance/arm_wrestle_config.tres"
 const DANCE_CONFIG_PATH := "res://data/balance/dance_config.tres"
 const SUWIT_CONFIG_PATH := "res://data/balance/suwit_config.tres"
+const LOCATION_PATH := "res://data/locations/%s.tres"
 
 static var _cache: Dictionary[String, Resource] = {}
 
 
 static func get_fish(fish_id: StringName) -> FishData:
 	return _load(FISH_PATH % fish_id) as FishData
+
+
+static func get_location(location_id: StringName) -> LocationData:
+	return _load(LOCATION_PATH % location_id) as LocationData
+
+
+static func get_all_locations() -> Array[LocationData]:
+	var all: Array[LocationData] = []
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		var location := get_location(location_id)
+		if location != null:
+			all.append(location)
+	return all
+
+
+## The fish of one spot, common to rare (their chances add up to 1).
+static func get_location_fish(location_id: StringName) -> Array[FishData]:
+	var all: Array[FishData] = []
+	for fish_id: StringName in ContentIds.fish_of_location(location_id):
+		var fish := get_fish(fish_id)
+		if fish != null:
+			all.append(fish)
+	return all
 
 
 static func get_all_fish() -> Array[FishData]:
@@ -101,10 +125,10 @@ static func get_item_sale_value(item_id: StringName) -> int:
 static func get_item_display_name(item_id: StringName) -> String:
 	if is_fish(item_id):
 		var fish := get_fish(item_id)
-		return fish.display_name if fish != null else ""
+		return fish.get_display_name() if fish != null else ""
 	if is_trash(item_id):
 		var trash := get_trash(item_id)
-		return trash.display_name if trash != null else ""
+		return trash.get_display_name() if trash != null else ""
 	return ""
 
 
@@ -131,6 +155,7 @@ static func validate_all() -> PackedStringArray:
 	var errors := PackedStringArray()
 
 	errors.append_array(DataValidator.validate_fish_set(get_all_fish(), true, true))
+	errors.append_array(DataValidator.validate_location_set(get_all_locations()))
 	errors.append_array(DataValidator.validate_trash_set(get_all_trash(), true))
 	errors.append_array(DataValidator.validate_upgrade_set(get_all_upgrades()))
 	errors.append_array(DataValidator.validate_balance(

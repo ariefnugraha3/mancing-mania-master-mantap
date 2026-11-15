@@ -83,7 +83,10 @@ func test_generated_theme_covers_the_ui_states() -> bool:
 		return true
 	check_eq(ProjectSettings.get_setting("gui/theme/custom"), UiArtBuilder.THEME_PATH, "project uses the generated theme")
 	check_eq(theme.default_font_size, UiTokens.FONT_BODY, "body font size")
-	check(theme.default_font == null, "no custom font: the built-in font is the baseline")
+	var body := theme.default_font as FontVariation
+	if check(body != null and body.base_font != null, "the default font is a Fredoka cut (GDD 167.3)"):
+		check_eq(body.base_font.resource_path, UiTokens.FONT_BODY_FILE, "running text is Fredoka")
+		check_eq(body.variation_opentype.values(), [UiTokens.FONT_WEIGHT_REGULAR], "at the regular weight")
 	for button_type: StringName in [&"Button", UiTokens.TYPE_CTA_BUTTON, UiTokens.TYPE_DANGER_BUTTON]:
 		for state: StringName in [&"normal", &"hover", &"pressed", &"disabled", &"focus"]:
 			check(theme.has_stylebox(state, button_type), "%s has a %s style" % [button_type, state])
@@ -94,9 +97,9 @@ func test_generated_theme_covers_the_ui_states() -> bool:
 	return true
 
 
-## The cozy card look (GDD 167, revision 6.1): pressable things have a lip
-## and sink when pressed, the extra variations exist, bold text is the
-## built-in font made bolder, and icons are drawn, not loaded.
+## The cozy card look (GDD 167, revisions 6.1 and 6.3): pressable things have
+## a lip and sink when pressed, the extra variations exist, bold text is
+## Fredoka SemiBold, titles are Chewy, and icons are drawn, not loaded.
 func test_ui_skin_follows_the_cozy_card_look() -> bool:
 	var normal := UiSkin.button_box(UiTokens.TERRACOTTA_500)
 	var pressed := UiSkin.button_box(UiTokens.TERRACOTTA_500, UiSkin.STATE_PRESSED)
@@ -110,12 +113,85 @@ func test_ui_skin_follows_the_cozy_card_look() -> bool:
 			check(theme.has_stylebox(&"pressed", type_name), "%s has a pressed style" % type_name)
 		for type_name: StringName in [UiTokens.TYPE_SECTION, UiTokens.TYPE_NAME_TAG, UiTokens.TYPE_RIBBON_LABEL]:
 			check_eq(theme.get_type_variation_base(type_name), &"Label", "%s is a Label variation" % type_name)
-	check(UiSkin.bold_font().base_font == null, "bold text is the built-in font, made bolder")
-	check(UiSkin.heavy_font().variation_embolden > UiSkin.bold_font().variation_embolden, "titles are heavier than buttons")
+	check_eq(UiSkin.bold_font().base_font.resource_path, UiTokens.FONT_BODY_FILE, "bold text is Fredoka")
+	check_eq(UiSkin.bold_font().variation_opentype.values(), [UiTokens.FONT_WEIGHT_BOLD], "at the bold weight")
+	check(UiTokens.FONT_WEIGHT_BOLD > UiTokens.FONT_WEIGHT_REGULAR, "bold is heavier than running text")
+	check_eq(UiSkin.heavy_font().base_font.resource_path, UiTokens.FONT_DISPLAY_FILE, "titles use the Chewy display face")
+	check(UiSkin.heavy_font().fallbacks.has(UiSkin.bold_font()), "Fredoka fills in glyphs Chewy lacks")
 	for icon_id: StringName in [IconPainter.PLAY, IconPainter.GEAR, IconPainter.CHECK, IconPainter.DOOR]:
 		var icon := IconTexture.make(icon_id, 24)
 		check(icon != null and icon.get_width() == 24, "%s is a drawn 24 px icon" % icon_id)
 	return true
+
+
+## Sticker icons (GDD 174.10, revision 6.4): every icon is a full-colour
+## drawing with a cocoa outline, buttons show it in its own colours, and no
+## gap in any icon closes into a solid blob.
+func test_icons_are_full_colour_stickers() -> bool:
+	var plain := PackedStringArray()
+	var unoutlined := PackedStringArray()
+	for icon_id: StringName in IconPainter.ALL:
+		var commands := IconPainter.commands_for(icon_id)
+		var colours := {}
+		var outlined := false
+		for command: Array in commands:
+			colours[command[2]] = true
+			if command[0] == IconPainter.CMD_POLYGON and command[2] == IconPainter.INK:
+				outlined = true
+		# Outline, fill, lip and light at least.
+		if colours.size() < 4:
+			plain.append(icon_id)
+		if not outlined:
+			unoutlined.append(icon_id)
+	check_empty(plain, "every icon has several colours")
+	check_empty(unoutlined, "every icon has a cocoa outline")
+	check_empty(IconPainter.icons_with_holes(), "no icon closes a gap into a solid blob")
+	for icon_id: StringName in [IconPainter.CASH, IconPainter.BUCKET, IconPainter.MARKET, IconPainter.ROD, IconPainter.FISH]:
+		check(IconPainter.ALL.has(icon_id), "%s chip icon exists" % icon_id)
+	for move: StringName in [SuwitController.ROCK, SuwitController.SCISSORS, SuwitController.PAPER]:
+		check(MoveIcon.ICONS.has(move), "Suwit %s has a hand icon" % move)
+	var theme := load(UiArtBuilder.THEME_PATH) as Theme
+	if check(theme != null, "generated theme loads"):
+		for type_name: StringName in [&"Button", UiTokens.TYPE_CTA_BUTTON, UiTokens.TYPE_DANGER_BUTTON, UiTokens.TYPE_ROUND_BUTTON]:
+			check_eq(theme.get_color(&"icon_normal_color", type_name), Color.WHITE, "%s shows icons in their own colours" % type_name)
+			check(theme.get_color(&"icon_disabled_color", type_name).a < 1.0, "%s mutes the icon when disabled" % type_name)
+	return true
+
+
+## Every character the game can print is in Fredoka, and in Chewy or its
+## Fredoka fallback (GDD 167.3). The Web build has no system fonts to fall
+## back on, so a missing glyph would show as an empty box.
+func test_fonts_cover_every_game_character() -> bool:
+	var sources := PackedStringArray()
+	for key: String in TextDb.get_all_keys():
+		sources.append(TextDb.t(StringName(key)))
+	_collect_text_files("res://data", sources)
+	var codes := {}
+	for source: String in sources:
+		for index: int in source.length():
+			var code := source.unicode_at(index)
+			if code >= 32:
+				codes[code] = true
+	# The text uses about 86 distinct characters, the em dash among them.
+	check(codes.size() > 60 and codes.has("—".unicode_at(0)), "the game text was collected")
+	var missing_body := PackedStringArray()
+	var missing_display := PackedStringArray()
+	for code: int in codes:
+		if not UiSkin.regular_font().has_char(code):
+			missing_body.append("U+%04X" % code)
+		if not UiSkin.heavy_font().has_char(code):
+			missing_display.append("U+%04X" % code)
+	check_empty(missing_body, "Fredoka has every character of the game text")
+	check_empty(missing_display, "Chewy, with its fallback, has every character of the game text")
+	return true
+
+
+func _collect_text_files(folder: String, into: PackedStringArray) -> void:
+	for file_name: String in DirAccess.get_files_at(folder):
+		if file_name.get_extension() in ["tres", "json"]:
+			into.append(FileAccess.get_file_as_string(folder.path_join(file_name)))
+	for child: String in DirAccess.get_directories_at(folder):
+		_collect_text_files(folder.path_join(child), into)
 
 
 func test_theme_generation_is_repeatable() -> bool:

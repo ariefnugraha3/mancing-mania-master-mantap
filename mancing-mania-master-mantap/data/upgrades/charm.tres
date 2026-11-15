@@ -11,4 +11,4 @@ prices = Array[int]([20000, 50000, 110000])
 stat_key = &"charm_charge_per_level"
 effect_per_level = 1.0
 effect_unit = "reveal charge"
-description = "Suwit: +1 reveal charge per duel, per level. Shows the fish's real move for a moment."
+description = "Rock Paper Scissors: +1 reveal charge per duel, per level. Shows the fish's real move for a moment."

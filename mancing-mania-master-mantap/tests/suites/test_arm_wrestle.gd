@@ -248,7 +248,9 @@ func test_the_fish_pushes_and_bursts_after_a_warning() -> bool:
 func test_higher_tiers_burst_harder() -> bool:
 	var config := GameData.get_arm_wrestle_config()
 	var previous := 0.0
-	for fish: FishData in GameData.get_all_fish():
+	# The tier ladder of Cempaka Lake (each spot has its own ladder, and its
+	# fish still burst: test_every_fish_falls_to_a_comfortable_rate).
+	for fish: FishData in GameData.get_location_fish(ContentIds.START_LOCATION):
 		_start(fish.id)
 		check(await_burst(), "%s bursts" % fish.id)
 		var steady := fish.arm_strength * config.fish_pressure_per_strength

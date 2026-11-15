@@ -2,7 +2,9 @@ class_name UiIcon
 extends Control
 ## A procedural UI icon as a Control (GDD 174.10, 184.11). The drawing lives
 ## in IconPainter, shared with IconTexture, so the same icon can sit in a chip
-## or on a button. No icon image exists anywhere in the project.
+## or on a button. No icon image exists anywhere in the project. Icons are
+## full-colour stickers: `tint` multiplies their colours, so white shows them
+## as drawn.
 
 const ICON_CASH := &"ui_icon_cash"
 const ICON_BUCKET := &"ui_icon_bucket"
@@ -16,7 +18,7 @@ const ICON_FISH := &"ui_icon_fish"
 	set(value):
 		icon_id = value
 		queue_redraw()
-@export var tint: Color = UiTokens.INK_900:
+@export var tint: Color = Color.WHITE:
 	set(value):
 		tint = value
 		queue_redraw()

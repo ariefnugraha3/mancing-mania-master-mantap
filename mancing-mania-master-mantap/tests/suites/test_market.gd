@@ -63,7 +63,8 @@ func _pay(amount: int) -> int:
 
 # MKT-001, MKT-002, MKT-003
 func test_sale_values_are_exact() -> bool:
-	for item_id: StringName in ContentIds.get_bucket_item_ids():
+	# Cempaka Lake's six fish and the trash (the spot fish follow below).
+	for item_id: StringName in ContentIds.fish_of_location(ContentIds.START_LOCATION) + ContentIds.TRASH_IDS:
 		GameState.add_bucket_item(item_id)
 	var preview := _market.get_sell_preview()
 	var expected: Dictionary = {
@@ -82,6 +83,31 @@ func test_sale_values_are_exact() -> bool:
 	check_eq(preview["fish_total"], 508000, "fish total")
 	check_eq(preview["trash_total"], 1800, "trash total")
 	check_eq(preview["total"], 509800, "grand total")
+	return true
+
+
+# Revision 6.7: fish from every spot sell at Bu Yati's for their own price,
+# legends with the 1.25 premium.
+func test_spot_fish_sell_at_the_market() -> bool:
+	var expected_total := 0
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		if location_id == ContentIds.START_LOCATION:
+			continue
+		for fish: FishData in GameData.get_location_fish(location_id):
+			GameState.add_bucket_item(fish.id)
+			expected_total += roundi(float(fish.sale_base) * fish.sale_multiplier)
+	var preview := _market.get_sell_preview()
+	check_eq(preview["lines"].size(), 20, "one line per spot fish")
+	for line: Dictionary in preview["lines"]:
+		var fish := GameData.get_fish(line["item_id"])
+		check_eq(line["unit_value"], fish.get_sale_value(), "%s unit value" % fish.id)
+		if fish.is_legend():
+			check_eq(line["multiplier"], 1.25, "%s legend premium" % fish.id)
+	check_eq(preview["fish_total"], expected_total, "spot fish total")
+	var cash := GameState.get_cash()
+	_market.sell_all()
+	check_eq(GameState.get_cash(), cash + expected_total, "sold for exactly that")
+	check_eq(GameState.get_bucket_total_count(), 0, "the bucket is empty")
 	return true
 
 
@@ -309,15 +335,22 @@ func test_one_event_per_market_visit() -> bool:
 	return true
 
 
+## The debt milestones among `events`, without the spot openings of
+## revision 6.7 (those queue on the same thresholds and rank below them).
+static func _milestones(events: Array) -> Array:
+	return events.filter(func(event_id: StringName) -> bool: return not String(event_id).begins_with("story_unlock_"))
+
+
 # STORY-004
 func test_higher_priority_goes_first_and_the_other_waits() -> bool:
 	StoryDirector.begin_market_visit()
 	_pay(300000)
-	check_eq(StoryDirector.get_pending_events().size(), 2, "two thresholds crossed by one payment")
+	check_eq(_milestones(StoryDirector.get_pending_events()).size(), 2, "two thresholds crossed by one payment")
+	check(StoryDirector.get_pending_events().has(&"story_unlock_kenanga"), "the river's opening waits in the queue too")
 	var first := StoryDirector.resolve_market_exit_event()
 	check_eq(first, &"story_debt_300k", "the higher-priority milestone is shown")
 	StoryDirector.complete_event(first, false)
-	check_eq(StoryDirector.get_pending_events(), [&"story_debt_100k"], "the other stays pending")
+	check_eq(_milestones(StoryDirector.get_pending_events()), [&"story_debt_100k"], "the other stays pending")
 
 	StoryDirector.begin_market_visit()
 	check_eq(StoryDirector.resolve_market_exit_event(), &"story_debt_100k", "and plays on the next visit")
@@ -331,15 +364,24 @@ func test_paying_everything_reaches_the_finale_without_arowana() -> bool:
 	check_eq(GameState.get_fish_book_entry(&"arowana_don")["wins"], 0, "Don Arowana was never beaten")
 	var pending := StoryDirector.get_pending_events()
 	check(pending.has(&"story_debt_paid"), "the finale event is queued")
-	check_eq(pending.size(), 7, "all six milestones and the finale were crossed at once")
+	check_eq(_milestones(pending).size(), 7, "all six milestones and the finale were crossed at once")
 
 	check_eq(StoryDirector.resolve_market_exit_event(), &"story_debt_paid", "the finale outranks every milestone")
 	StoryDirector.complete_event(&"story_debt_paid", false)
-	check(StoryDirector.get_pending_events().is_empty(), "obsolete milestones are retired")
+	check(_milestones(StoryDirector.get_pending_events()).is_empty(), "obsolete milestones are retired")
 	for event_id: StringName in ALL_DEBT_MILESTONES:
 		check(StoryDirector.is_event_seen(event_id), "%s will never play after the ending" % event_id)
 	check_eq(GameState.get_story_value(&"chapter"), "finale", "the story is in its finale")
 
+	# Revision 6.7: the four spots still open after the ending, one a visit,
+	# in the order they would have opened.
+	for spot: StringName in [&"story_unlock_kenanga", &"story_unlock_melati", &"story_unlock_anggrek", &"story_unlock_mawar"]:
+		StoryDirector.begin_market_visit()
+		StoryDirector.evaluate_story_triggers()
+		var opening := StoryDirector.resolve_market_exit_event()
+		check_eq(opening, spot, "%s plays after the ending" % spot)
+		StoryDirector.complete_event(opening, true)
+	check(GameState.is_location_unlocked(&"mawar"), "every spot is open")
 	StoryDirector.begin_market_visit()
 	StoryDirector.evaluate_story_triggers()
 	check_eq(StoryDirector.resolve_market_exit_event(), &"", "nothing is left to play")
@@ -387,7 +429,7 @@ func test_leaving_the_market_resolves_and_saves() -> bool:
 	check(SaveManager.save_game(&"story"), "saved after the scene")
 	check_eq(GameState.get_story_value(&"fish_book_unlocked"), true, "its unlock applied")
 	check_eq(_saved()["story"]["fish_book_unlocked"], true, "and was saved")
-	check_eq(_saved()["story"]["pending_events"].size(), 2, "the two lower milestones are saved as pending")
+	check_eq(_milestones(_saved()["story"]["pending_events"]).size(), 2, "the two lower milestones are saved as pending")
 	check(_market.is_leaving(), "the visit is over")
 	check_eq(_market.pay_debt(1000), 0, "no transactions after leaving")
 	_market.leave_market()
@@ -411,7 +453,7 @@ func test_story_queue_survives_save_and_load() -> bool:
 
 func test_story_data_is_valid() -> bool:
 	var events: Array = StoryDirector.get_all_events()
-	check_eq(events.size(), 13, "thirteen narrative events")
+	check_eq(events.size(), 17, "seventeen narrative events (revision 6.7 added four spot openings)")
 	check_empty(DataValidator.validate_story_events(events, StoryDirector.TRIGGER_TYPES), "story data validation")
 
 	var wrong_priority: StoryEvent = StoryDirector.get_event(&"story_debt_300k").duplicate()

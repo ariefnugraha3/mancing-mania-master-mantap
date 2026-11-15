@@ -16,7 +16,7 @@ static func describe(upgrade_id: StringName, level: int) -> String:
 		&"bait":
 			return TextDb.tf(&"upgrade.effect.bait", {"percent": roundi(bait_wait_multiplier(level) * 100.0)})
 		&"rod":
-			return TextDb.tf(&"upgrade.effect.rod", {"width": "%.3f" % rod_half_width_bonus(level)})
+			return TextDb.tf(&"upgrade.effect.rod", {"width": Money.decimal(rod_half_width_bonus(level), 3)})
 		&"tonic":
 			return TextDb.tf(&"upgrade.effect.tonic", {
 				"hp": roundi(tonic_max_hp(level)), "stamina": roundi(tonic_stamina_multiplier(level) * 100.0)})

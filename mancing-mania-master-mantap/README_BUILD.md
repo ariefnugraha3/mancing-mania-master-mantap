@@ -24,13 +24,13 @@ Membuat ZIP untuk itch.io (`index.html` harus di root ZIP):
 
 ```text
 cd build/web
-zip -9 ../itch/mancing-mania-gelut-edition-web-<versi>.zip *
+zip -9 ../itch/catch-and-brawl-web-<versi>.zip *
 ```
 
 Atau dengan Python (Windows tanpa `zip`):
 
 ```text
-python -c "import zipfile,os; z=zipfile.ZipFile('build/itch/mancing-mania-gelut-edition-web-<versi>.zip','w',zipfile.ZIP_DEFLATED); [z.write(os.path.join('build/web',f),f) for f in os.listdir('build/web')]; z.close()"
+python -c "import zipfile,os; z=zipfile.ZipFile('build/itch/catch-and-brawl-web-<versi>.zip','w',zipfile.ZIP_DEFLATED); [z.write(os.path.join('build/web',f),f) for f in os.listdir('build/web')]; z.close()"
 ```
 
 Pengaturan halaman itch.io (Section 135, 186.8): Kind of project **HTML**, centang *This file will be played in the browser*, viewport **540×960** (portrait), centang *Fullscreen button*, boleh *Automatically start on page load* dimatikan. Judul, ringkasan, deskripsi, dan tag ada di `docs/store_compliance_report.md`.
@@ -46,7 +46,7 @@ lalu buka `http://localhost:8000`. Membuka `index.html` langsung dari disk tidak
 
 ## Android / Google Play
 
-Preset `Android` sudah ada: App Bundle (`build/android/MancingManiaGelut.aab`), application ID `com.mancingmania.gelutedition`, min SDK 24, target SDK 36, hanya `arm64-v8a`, portrait, tanpa permission.
+Preset `Android` sudah ada: App Bundle (`build/android/CatchAndBrawl.aab`), application ID `com.catchandbrawl.game`, min SDK 24, target SDK 36, hanya `arm64-v8a`, portrait, tanpa permission.
 
 Yang harus disiapkan pemilik di mesin build (sekali saja):
 
@@ -56,14 +56,14 @@ Yang harus disiapkan pemilik di mesin build (sekali saja):
 4. **Keystore rilis** milik pemilik, disimpan di luar repository (Section 191.7). Buat sekali:
 
    ```text
-   keytool -genkeypair -v -keystore mancing-mania-release.keystore -alias mancingmania -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkeypair -v -keystore catch-and-brawl-release.keystore -alias catchandbrawl -keyalg RSA -keysize 2048 -validity 10000
    ```
 
    Jangan pernah commit keystore atau password. Berikan ke Godot lewat environment variable saat export:
 
    ```text
    GODOT_ANDROID_KEYSTORE_RELEASE_PATH=<path ke keystore>
-   GODOT_ANDROID_KEYSTORE_RELEASE_USER=mancingmania
+   GODOT_ANDROID_KEYSTORE_RELEASE_USER=catchandbrawl
    GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=<password>
    ```
 
@@ -72,14 +72,14 @@ Yang harus disiapkan pemilik di mesin build (sekali saja):
 Lalu:
 
 ```text
-godot --headless --path . --export-release "Android" build/android/MancingManiaGelut.aab
+godot --headless --path . --export-release "Android" build/android/CatchAndBrawl.aab
 ```
 
 Sebelum submit, periksa ulang target API yang diwajibkan Google Play pada tanggal submission (Section 186.3, 186.11) dan naikkan `gradle_build/target_sdk` bila perlu.
 
 ## iOS / iPadOS / App Store
 
-Preset `iOS` sudah ada: iPhone + iPad (`application/targeted_device_family = 2`), bundle ID `com.mancingmania.gelutedition`, iOS 14.0+, `arm64`, portrait, tanpa usage description, ikon dari `generated/ui/app_icon.png`, latar launch screen cream.
+Preset `iOS` sudah ada: iPhone + iPad (`application/targeted_device_family = 2`), bundle ID `com.catchandbrawl.game`, iOS 14.0+, `arm64`, portrait, tanpa usage description, ikon dari `generated/ui/app_icon.png`, latar launch screen cream.
 
 Ekspor iOS hanya bisa di **macOS** dengan **Xcode** dan akun **Apple Developer**:
 
@@ -88,7 +88,7 @@ Ekspor iOS hanya bisa di **macOS** dengan **Xcode** dan akun **Apple Developer**
 3. Ekspor:
 
 ```text
-godot --headless --path . --export-release "iOS" build/ios/MancingManiaGelut.ipa
+godot --headless --path . --export-release "iOS" build/ios/CatchAndBrawl.ipa
 ```
 
 atau centang `application/export_project_only`, buka proyek Xcode hasil ekspor, lalu *Archive → Distribute App*.

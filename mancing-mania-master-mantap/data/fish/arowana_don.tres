@@ -8,7 +8,7 @@
 script = ExtResource("1_fish")
 id = &"arowana_don"
 display_name = "Don Arowana"
-species_label = "ASIAN AROWANA / ARWANA"
+species_label = "ASIAN AROWANA"
 tier = 5
 sale_base = 240000
 sale_multiplier = 1.25
@@ -23,6 +23,7 @@ boxing_telegraph_sec = 0.51
 arm_strength = 84.0
 rhythm_skill = 90.0
 tell_truth_probability = 0.34
+duel_skill = 82.0
 weight_min_kg = 4.5
 weight_max_kg = 8.0
 dialogue_sequence_id = &"fish_arowana_don"

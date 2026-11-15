@@ -1,7 +1,7 @@
 class_name UiSkin
 extends RefCounted
-## The "cozy warung card" look of the UI (GDD 167, revision 6.1), as style
-## boxes and fonts built from UiTokens. The generated Theme and every HUD that
+## The "cozy warung card" look of the UI (GDD 167, revisions 6.1 and 6.3), as
+## style boxes and fonts built from UiTokens. The generated Theme and every HUD that
 ## styles a control in code use these, so a chip, a tab and a button always
 ## share the same rim, lip, corners and shadow.
 ##
@@ -15,6 +15,7 @@ const STATE_HOVER := "hover"
 const STATE_PRESSED := "pressed"
 const STATE_DISABLED := "disabled"
 
+static var _regular: FontVariation
 static var _bold: FontVariation
 static var _heavy: FontVariation
 
@@ -202,25 +203,43 @@ static func rounded(fill: Color, radius: int, rim: int = 0, rim_color: Color = U
 	return box
 
 
-## The default font, made bolder for buttons, headers and titles. Built on
-## the engine's own font (no font file, GDD 184.12).
+## Running text: Fredoka at its regular weight. The Theme's default font.
+static func regular_font() -> FontVariation:
+	if _regular == null:
+		_regular = make_body_font(UiTokens.FONT_WEIGHT_REGULAR)
+	return _regular
+
+
+## Buttons, tabs, headers, name tags and chip values: Fredoka SemiBold.
 static func bold_font() -> FontVariation:
 	if _bold == null:
-		_bold = make_bold(0.55, 0)
+		_bold = make_body_font(UiTokens.FONT_WEIGHT_BOLD)
 	return _bold
 
 
-## An even heavier cut for the logo and big titles.
+## The logo, big titles and painted-sign text: Chewy, the comic display face.
 static func heavy_font() -> FontVariation:
 	if _heavy == null:
-		_heavy = make_bold(0.9, 1)
+		_heavy = make_display_font(bold_font())
 	return _heavy
 
 
-static func make_bold(embolden: float, spacing: int) -> FontVariation:
+## Fredoka at `weight` on its variable weight axis.
+static func make_body_font(weight: int) -> FontVariation:
 	var font := FontVariation.new()
-	font.variation_embolden = embolden
-	font.spacing_glyph = spacing
+	font.base_font = load(UiTokens.FONT_BODY_FILE) as FontFile
+	font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
+	return font
+
+
+## Chewy with a hair of extra letter spacing, so thick sign outlines do not
+## fuse the letters. `fallback` draws any glyph Chewy does not have.
+static func make_display_font(fallback: Font) -> FontVariation:
+	var font := FontVariation.new()
+	font.base_font = load(UiTokens.FONT_DISPLAY_FILE) as FontFile
+	font.spacing_glyph = 1
+	var fallbacks: Array[Font] = [fallback]
+	font.fallbacks = fallbacks
 	return font
 
 

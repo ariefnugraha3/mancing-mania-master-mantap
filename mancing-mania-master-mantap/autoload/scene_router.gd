@@ -29,6 +29,10 @@ const SCENE_PATHS: Dictionary[StringName, String] = {
 	&"arm_wrestle": "res://scenes/arm_wrestle/arm_wrestle.tscn",
 	&"dance": "res://scenes/dance/dance.tscn",
 	&"suwit": "res://scenes/suwit/suwit.tscn",
+	&"silat": "res://scenes/silat/silat.tscn",
+	&"tambang": "res://scenes/tambang/tambang.tscn",
+	&"gasing": "res://scenes/gasing/gasing.tscn",
+	&"pinang": "res://scenes/pinang/pinang.tscn",
 	SCENE_RESULT: "res://scenes/result/result.tscn",
 	SCENE_STORY: "res://scenes/story/story.tscn",
 	SCENE_CREDITS: "res://scenes/credits/credits.tscn",
@@ -53,6 +57,8 @@ func _ready() -> void:
 	# Display settings follow the save: UI and text scale, graphics quality.
 	GameState.settings_changed.connect(func(key: StringName) -> void: DisplaySettings.apply_setting(get_tree(), key))
 	GameState.state_replaced.connect(func() -> void: DisplaySettings.apply_all(get_tree()))
+	# The language right away, so the boot screen's first words are in it.
+	DisplaySettings.apply_language()
 	DisplaySettings.apply_all.call_deferred(get_tree())
 
 

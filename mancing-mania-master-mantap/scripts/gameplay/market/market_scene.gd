@@ -52,6 +52,7 @@ func _ready() -> void:
 	_hud.sell_panel.sell_all_requested.connect(_controller.sell_all)
 	_hud.sell_panel.sell_category_requested.connect(_controller.sell_category)
 	_hud.upgrade_panel.upgrade_requested.connect(_controller.purchase_upgrade)
+	_hud.upgrade_panel.gear_requested.connect(_controller.purchase_gear)
 	_hud.debt_panel.payment_requested.connect(_controller.pay_debt)
 	_hud.debt_panel.savings_requested.connect(_controller.deposit_savings)
 	_pause.quit_requested.connect(_quit_to_menu)
@@ -61,6 +62,7 @@ func _ready() -> void:
 	GameState.debt_changed.connect(_queue_refresh)
 	GameState.bucket_changed.connect(_queue_refresh)
 	GameState.upgrade_changed.connect(_queue_refresh)
+	GameState.locations_changed.connect(_queue_refresh)
 
 	StoryDirector.begin_market_visit()
 	AudioManager.set_ambience_state(&"market")
@@ -155,7 +157,7 @@ func _on_transaction_completed(kind: StringName, result: Dictionary) -> void:
 			AudioManager.play_ui(&"ui_sell")
 			_world.react_sale()
 			_receipt.open(result)
-		MarketController.KIND_UPGRADE:
+		MarketController.KIND_UPGRADE, MarketController.KIND_GEAR:
 			AudioManager.play_ui(&"ui_purchase")
 			_world.react_purchase()
 		MarketController.KIND_DEBT:

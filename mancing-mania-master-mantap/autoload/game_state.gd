@@ -13,6 +13,8 @@ signal fish_book_changed(fish_id: StringName)
 signal stats_changed()
 signal story_state_changed()
 signal settings_changed(key: StringName)
+## The spot changed, a spot opened, gear was bought or a spot was visited.
+signal locations_changed()
 ## Emitted after the whole state was swapped (new game, load, reset).
 ## Settings listeners re-read everything on this instead of per-key signals.
 signal state_replaced()
@@ -210,6 +212,80 @@ func buy_next_upgrade(upgrade_id: StringName) -> bool:
 	return true
 
 
+# --- Fishing spots (revision 6.7) ---------------------------------------------
+
+func get_current_location() -> StringName:
+	return StringName(_data["locations"]["current"])
+
+
+## Moves Darto to `location_id`. Refused unless the spot is open and its gear
+## is owned.
+func set_current_location(location_id: StringName) -> bool:
+	if not can_fish_at(location_id):
+		return false
+	if get_current_location() == location_id:
+		return true
+	_data["locations"]["current"] = String(location_id)
+	locations_changed.emit()
+	return true
+
+
+func is_location_unlocked(location_id: StringName) -> bool:
+	return (_data["locations"]["unlocked"] as Array).has(String(location_id))
+
+
+## Opens a spot (its story event finished). Returns true the first time.
+func unlock_location(location_id: StringName) -> bool:
+	if not ContentIds.LOCATION_IDS.has(location_id) or is_location_unlocked(location_id):
+		return false
+	(_data["locations"]["unlocked"] as Array).append(String(location_id))
+	locations_changed.emit()
+	return true
+
+
+func has_location_gear(location_id: StringName) -> bool:
+	return location_id == ContentIds.START_LOCATION or (_data["locations"]["gear"] as Array).has(String(location_id))
+
+
+## True when the gear for an open spot can be bought right now.
+func can_buy_location_gear(location_id: StringName) -> bool:
+	var location := GameData.get_location(location_id)
+	return location != null and is_location_unlocked(location_id) and not has_location_gear(location_id) and can_spend(location.access_price)
+
+
+## Buys the access gear at the warung. Refused for a closed spot, gear that is
+## already owned, or without the cash.
+func buy_location_gear(location_id: StringName) -> bool:
+	if not can_buy_location_gear(location_id):
+		return false
+	if not spend_cash(GameData.get_location(location_id).access_price):
+		return false
+	(_data["locations"]["gear"] as Array).append(String(location_id))
+	locations_changed.emit()
+	return true
+
+
+func can_fish_at(location_id: StringName) -> bool:
+	return SaveSchema.can_fish_at(_data["locations"], location_id)
+
+
+func is_location_visited(location_id: StringName) -> bool:
+	return (_data["locations"]["visited"] as Array).has(String(location_id))
+
+
+## Records a first arrival. Returns true the first time.
+func mark_location_visited(location_id: StringName) -> bool:
+	if not ContentIds.LOCATION_IDS.has(location_id) or is_location_visited(location_id):
+		return false
+	(_data["locations"]["visited"] as Array).append(String(location_id))
+	locations_changed.emit()
+	return true
+
+
+func get_visited_location_count() -> int:
+	return (_data["locations"]["visited"] as Array).size()
+
+
 # --- Fish Book --------------------------------------------------------------
 
 func record_encounter(fish_id: StringName) -> void:
@@ -377,6 +453,18 @@ func debug_set_debt_remaining(value: int) -> void:
 	stats_changed.emit()
 
 
+## Opens a spot with its gear and moves Darto there (debug tools, tests).
+func debug_open_location(location_id: StringName) -> void:
+	if not OS.is_debug_build() or not ContentIds.LOCATION_IDS.has(location_id):
+		return
+	var locations: Dictionary = _data["locations"]
+	for key: String in ["unlocked", "gear"]:
+		if not (locations[key] as Array).has(String(location_id)):
+			(locations[key] as Array).append(String(location_id))
+	locations["current"] = String(location_id)
+	locations_changed.emit()
+
+
 func debug_set_upgrade_level(upgrade_id: StringName, level: int) -> void:
 	if not OS.is_debug_build() or not ContentIds.UPGRADE_IDS.has(upgrade_id):
 		return
@@ -417,3 +505,4 @@ func _emit_all() -> void:
 		upgrade_changed.emit(upgrade_id, get_upgrade_level(upgrade_id))
 	stats_changed.emit()
 	story_state_changed.emit()
+	locations_changed.emit()

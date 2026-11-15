@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_kerapu_juragan.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_kerapu_juragan.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"kerapu_juragan"
+display_name = "Tycoon Grouper"
+species_label = "GROUPER"
+tier = 4
+sale_base = 140000
+sale_multiplier = 1.0
+conditional_chance = 0.18
+strike_window_sec = 0.58
+reel_half_width = 0.13
+reel_move_speed = 0.62
+line_stress_per_sec = 53.0
+boxing_hp = 170.0
+boxing_attack = 24.0
+boxing_telegraph_sec = 0.56
+arm_strength = 80.0
+rhythm_skill = 80.0
+tell_truth_probability = 0.66
+duel_skill = 80.0
+weight_min_kg = 3.0
+weight_max_kg = 12.0
+dialogue_sequence_id = &"fish_kerapu_juragan"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

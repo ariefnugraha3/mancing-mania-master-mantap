@@ -263,13 +263,18 @@ func test_fish_dances_note_by_note_from_the_seed() -> bool:
 
 	# Higher tiers dance better.
 	var previous := -1.0
-	for fish_data: FishData in GameData.get_all_fish():
+	# Cempaka Lake's tier ladder; the spot fish are checked for their odds too.
+	for fish_data: FishData in GameData.get_location_fish(ContentIds.START_LOCATION):
 		var plan := DanceController.plan_fish(fish_data, 5, 4000)
 		var perfect := float(plan.count(DanceController.PERFECT)) / 4000.0
 		var odds := DanceController.fish_odds(fish_data)
 		check_near(perfect, odds[DanceController.PERFECT], 0.025, "%s PERFECT share follows its odds" % fish_data.id)
 		check(perfect >= previous - 0.02, "%s dances at least as well as the tier below" % fish_data.id)
 		previous = perfect
+	for fish_data: FishData in GameData.get_all_fish():
+		var plan := DanceController.plan_fish(fish_data, 5, 4000)
+		var odds := DanceController.fish_odds(fish_data)
+		check_near(float(plan.count(DanceController.PERFECT)) / 4000.0, odds[DanceController.PERFECT], 0.025, "%s PERFECT share follows its odds" % fish_data.id)
 	return true
 
 

@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 # --- Called by the boxing scene ---------------------------------------------
 
 func setup(fish: FishData, snapshot: Dictionary) -> void:
-	_fish_name.text = fish.display_name.to_upper()
+	_fish_name.text = fish.get_display_name().to_upper()
 	_player_bar.max_value = float(snapshot["player_max_hp"])
 	_player_bar.value = float(snapshot["player_hp"])
 	_fish_bar.max_value = float(snapshot["fish_max_hp"])

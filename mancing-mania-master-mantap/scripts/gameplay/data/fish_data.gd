@@ -27,6 +27,9 @@ extends Resource
 @export_range(0.0, 100.0) var arm_strength: float = 0.0
 @export_range(0.0, 100.0) var rhythm_skill: float = 0.0
 @export_range(0.0, 1.0, 0.0001) var tell_truth_probability: float = 0.0
+## Skill in the signature duels of the new spots (Silat, Tug of War,
+## Spinning Tops, Greased Pole), 0-100 (revision 6.7).
+@export_range(0.0, 100.0) var duel_skill: float = 50.0
 
 @export_group("Flavor")
 @export var weight_min_kg: float = 0.0
@@ -38,6 +41,17 @@ extends Resource
 @export var portrait_texture: Texture2D
 
 
+## The name the player reads, in the current language (GDD 133). The
+## fields above are the English text; translations live in the text tables
+## under fish.<id>.name and fish.<id>.species.
+func get_display_name() -> String:
+	return TextDb.text_or(StringName("fish.%s.name" % id), display_name)
+
+
+func get_species_label() -> String:
+	return TextDb.text_or(StringName("fish.%s.species" % id), species_label)
+
+
 ## Effective Market price. Don Arowana: Rp 240,000 x 1.25 = Rp 300,000.
 func get_sale_value() -> int:
 	return roundi(float(sale_base) * sale_multiplier)
@@ -45,3 +59,13 @@ func get_sale_value() -> int:
 
 func has_sale_multiplier() -> bool:
 	return not is_equal_approx(sale_multiplier, 1.0)
+
+
+## The spot this fish lives in (revision 6.7).
+func get_location() -> StringName:
+	return ContentIds.location_of_fish(id)
+
+
+## True for the legend of a spot (Don Arowana and the four new legends).
+func is_legend() -> bool:
+	return ContentIds.LEGEND_FISH_IDS.has(id)

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Entry_1"]
+script = ExtResource("2_entry")
+speaker_id = &"red_devil_palak"
+text = "Whoa, whoa. Ten thousand for the spot."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_2"]
+script = ExtResource("2_entry")
+speaker_id = &"darto"
+text = "It's a public reservoir."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_3"]
+script = ExtResource("2_entry")
+speaker_id = &"red_devil_palak"
+text = "Public, sure. Safe? That costs extra."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_4"]
+script = ExtResource("2_entry")
+speaker_id = &"darto"
+text = "I already have a debt collector."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_5"]
+script = ExtResource("2_entry")
+speaker_id = &"red_devil_palak"
+text = "Then you know how this goes."
+post_pause_sec = 0.4
+
+[resource]
+script = ExtResource("1_seq")
+id = &"fish_red_devil_palak"
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_1"), SubResource("Entry_2"), SubResource("Entry_3"), SubResource("Entry_4"), SubResource("Entry_5")])

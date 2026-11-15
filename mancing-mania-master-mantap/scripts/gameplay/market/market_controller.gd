@@ -24,6 +24,8 @@ const KIND_SELL := &"sell"
 const KIND_UPGRADE := &"upgrade"
 const KIND_DEBT := &"debt"
 const KIND_SAVINGS := &"savings"
+## Travel gear for a new fishing spot (revision 6.7).
+const KIND_GEAR := &"gear"
 const TRANSACTION_LOCK_MSEC := 250
 
 ## Turn off to route somewhere else after leaving (the Market scene shows an
@@ -70,6 +72,18 @@ func purchase_upgrade(upgrade_id: StringName) -> bool:
 		"level": GameState.get_upgrade_level(upgrade_id),
 		"price": price,
 	}, &"upgrade")
+	return true
+
+
+## Buys the travel gear that opens a fishing spot (revision 6.7). Refused for
+## a spot that is not open, gear already owned, or without the cash.
+func purchase_gear(location_id: StringName) -> bool:
+	if _is_locked() or not GameState.can_buy_location_gear(location_id):
+		return false
+	var price := GameData.get_location(location_id).access_price
+	if not GameState.buy_location_gear(location_id):
+		return false
+	_finish_transaction(KIND_GEAR, {"location_id": location_id, "price": price}, &"gear")
 	return true
 
 

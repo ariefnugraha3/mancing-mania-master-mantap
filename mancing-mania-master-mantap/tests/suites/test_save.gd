@@ -7,6 +7,7 @@ const STORAGE_DIR := "user://test_tmp/save"
 const TOP_LEVEL_KEYS: Array[String] = [
 	"version", "created_at_utc", "last_played_at_utc", "cash", "debt", "upgrades",
 	"bucket", "fish_book", "stats", "story", "tutorials", "settings", "rng", "system",
+	"locations",
 ]
 
 
@@ -69,7 +70,7 @@ func _comparable(state: Dictionary) -> String:
 
 # --- SAVE-001 ---------------------------------------------------------------
 
-func test_new_game_creates_schema_v5_file() -> bool:
+func test_new_game_creates_schema_v6_file() -> bool:
 	check(not SaveManager.has_save(), "no save before New Game")
 	GameState.new_game()
 	check(SaveManager.save_game(&"new_game"), "save succeeds")
@@ -79,18 +80,20 @@ func test_new_game_creates_schema_v5_file() -> bool:
 	var expected_keys: Array = TOP_LEVEL_KEYS.duplicate()
 	expected_keys.sort()
 	check_eq(_sorted_keys(file), expected_keys, "top-level keys")
-	check_eq(file.get("version"), 5, "version")
+	check_eq(file.get("version"), 6, "version (revision 6.7)")
 	check_eq(file.get("cash"), 8430, "starting cash")
 	check_eq(file["debt"], {"original": 1800000.0, "paid": 0.0, "remaining": 1800000.0}, "debt block")
 	check_eq(file["upgrades"].size(), 5, "upgrade entries")
-	check_eq(file["bucket"].size(), 9, "bucket entries")
-	check_eq(file["fish_book"].size(), 6, "fish book entries")
-	check_eq(file["stats"].size(), 19, "stat entries")
+	check_eq(file["bucket"].size(), 29, "bucket entries (26 fish and 3 trash)")
+	check_eq(file["fish_book"].size(), 26, "fish book entries")
+	check_eq(file["stats"].size(), 24, "stat entries (revision 6.7 added five)")
 	check_eq(file["story"].size(), 9, "story entries")
-	check_eq(file["tutorials"].size(), 9, "tutorial entries")
-	check_eq(file["settings"].size(), 21, "setting entries")
+	check_eq(file["tutorials"].size(), 14, "tutorial entries (revision 6.7 added five)")
+	check_eq(file["locations"], {"current": "cempaka", "unlocked": ["cempaka"], "gear": [], "visited": ["cempaka"]}, "locations block")
+	check_eq(file["settings"].size(), 22, "setting entries (revision 6.6 added language)")
+	check_eq(file["settings"]["language"], "auto", "the language follows the device by default")
 	check_eq(_sorted_keys(file["rng"]), ["duel_counter", "encounter_counter", "save_seed"], "rng keys")
-	check_eq(file["system"]["schema_version"], 5, "system schema version")
+	check_eq(file["system"]["schema_version"], 6, "system schema version")
 	check_eq(file["system"]["build_version"], SaveSchema.build_version(), "build version")
 	check(file["rng"]["save_seed"] > 0, "save seed was generated")
 	check(str(file["created_at_utc"]).ends_with("Z") and str(file["created_at_utc"]).contains("T"), "ISO-8601 UTC timestamp")
@@ -173,7 +176,7 @@ func test_non_object_root_and_bad_version_are_rejected() -> bool:
 
 
 func test_unsupported_versions_are_left_untouched() -> bool:
-	for version: int in [6, 3]:
+	for version: int in [7, 3]:
 		var data := _valid_save()
 		data["version"] = version
 		_write_save(data)
@@ -305,6 +308,21 @@ func test_settings_block_is_normalized() -> bool:
 	return true
 
 
+## Revision 6.6 added LANGUAGE. A save from before has no such setting: it
+## gets the default quietly, because an update is not damage (no repair
+## note, so no pre-repair backup and no rewrite on the first launch).
+func test_saves_from_before_the_language_setting_load_cleanly() -> bool:
+	var data := _valid_save()
+	data["settings"].erase("language")
+	var fixed := SaveManager.validate_save(data)
+	check_eq(fixed["settings"]["language"], "auto", "the missing language follows the device")
+	check(SaveSchema.last_repairs.is_empty(), "and it is not reported as a repair")
+	data["settings"].erase("hud_shake")
+	SaveManager.validate_save(data)
+	check(not SaveSchema.last_repairs.is_empty(), "an older setting that is missing still is")
+	return true
+
+
 # --- SAVE-008 ---------------------------------------------------------------
 
 func test_interrupted_write_keeps_previous_save() -> bool:
@@ -399,11 +417,85 @@ func test_settings_do_not_create_a_save_before_new_game() -> bool:
 
 func test_migrate_save_contract() -> bool:
 	var current := _valid_save()
-	check_eq(SaveManager.migrate_save(current).get("version"), 5, "schema 5 passes through")
+	check_eq(SaveManager.migrate_save(current).get("version"), 6, "schema 6 passes through")
+	check_eq(SaveManager.migrate_save(_schema_5_save()).get("version"), 6, "schema 5 is migrated")
 	check(SaveManager.migrate_save({}).is_empty(), "no version is rejected")
 	check(SaveManager.migrate_save({"version": 0}).is_empty(), "version 0 is rejected")
 	check(SaveManager.migrate_save({"version": 4}).is_empty(), "unsupported old version is rejected")
 	check(SaveManager.migrate_save({"version": 9}).is_empty(), "newer version is rejected")
+	return true
+
+
+## A save exactly as the build before revision 6.7 wrote it: six fish, four
+## duels, no spots, and a player who already beat Don Arowana twice.
+func _schema_5_save() -> Dictionary:
+	var data := _valid_save()
+	data["version"] = 5
+	data["system"]["schema_version"] = 5
+	data.erase("locations")
+	var old_fish: Array[String] = ["catfish_bruiser", "tilapia_gym_rat", "gourami_shady", "carp_golden", "snakehead_sergeant", "arowana_don"]
+	for key: String in (data["fish_book"] as Dictionary).keys():
+		if not old_fish.has(key):
+			(data["fish_book"] as Dictionary).erase(key)
+	for key: String in (data["bucket"] as Dictionary).keys():
+		if ContentIds.FISH_IDS.has(StringName(key)) and not old_fish.has(key):
+			(data["bucket"] as Dictionary).erase(key)
+	for entry: Dictionary in (data["fish_book"] as Dictionary).values():
+		for duel: String in ["silat", "tambang", "gasing", "pinang"]:
+			(entry["duel_wins"] as Dictionary).erase(duel)
+	for key: String in ["silat_wins", "tambang_wins", "gasing_wins", "pinang_wins", "legends_defeated"]:
+		(data["stats"] as Dictionary).erase(key)
+	for key: String in ["silat_seen", "tambang_seen", "gasing_seen", "pinang_seen", "travel_seen"]:
+		(data["tutorials"] as Dictionary).erase(key)
+	data["stats"]["don_arowana_defeated"] = 2
+	data["fish_book"]["arowana_don"]["wins"] = 2
+	data["fish_book"]["arowana_don"]["discovered"] = true
+	data["bucket"]["carp_golden"] = 3
+	data["cash"] = 123456
+	return data
+
+
+# Revision 6.7: a schema 5 save loads, keeps everything and gains the new parts.
+func test_schema_5_save_migrates_to_6() -> bool:
+	_write_save(_schema_5_save())
+	check(SaveManager.load_game(), "the old save loads")
+	check_eq(SaveManager.get_last_load_status(), SaveManager.STATUS_OK, "load status")
+	check_eq(GameState.get_cash(), 123456, "cash kept")
+	check_eq(GameState.get_bucket_quantity(&"carp_golden"), 3, "bucket kept")
+	check_eq(int(GameState.get_fish_book_entry(&"arowana_don").get("wins", 0)), 2, "fish book kept")
+	check_eq(int(GameState.get_stat(&"legends_defeated")), 2, "Don Arowana counts as a legend already beaten")
+	check_eq(GameState.get_current_location(), ContentIds.START_LOCATION, "Darto is at Cempaka Lake")
+	check(not GameState.is_location_unlocked(&"kenanga"), "no new spot opens by itself")
+	check_eq(GameState.get_fish_book_entry(&"layaran_kapten").get("encounters", -1), 0, "new fish have empty entries")
+	check(not GameState.is_tutorial_seen(&"silat_seen"), "new tutorials start unseen")
+	check(SaveManager.save_game(&"test"), "saves again")
+	check_eq(_saved_file().get("version"), 6, "written back as schema 6")
+	return true
+
+
+# Revision 6.8: the game was renamed, which moves user:// on desktop. A save
+# in the folder of the old name is copied once; the old folder is untouched.
+func test_save_from_before_the_rename_is_imported_once() -> bool:
+	var legacy := ProjectSettings.globalize_path(STORAGE_DIR.path_join("legacy"))
+	var target_dir := STORAGE_DIR.path_join("renamed")
+	DirAccess.make_dir_recursive_absolute(legacy)
+	var data := _valid_save()
+	data["cash"] = 77777
+	write_text(legacy.path_join(SaveManager.SAVE_FILE), JSON.stringify(data))
+	write_text(legacy.path_join(SaveManager.BACKUP_FILE_PATTERN % "pre_migration"), "{}")
+	write_text(legacy.path_join("notes.txt"), "not a save")
+	check_eq(SaveManager.import_legacy_save(legacy, target_dir), 2, "the save and its backup are copied")
+	var target := ProjectSettings.globalize_path(target_dir)
+	check(FileAccess.file_exists(target.path_join(SaveManager.SAVE_FILE)), "the save is in the new folder")
+	check(not FileAccess.file_exists(target.path_join("notes.txt")), "other files stay behind")
+	check(FileAccess.file_exists(legacy.path_join(SaveManager.SAVE_FILE)), "the old folder keeps its save")
+	SaveManager.configure_storage(target_dir)
+	check(SaveManager.load_game(), "the imported save loads")
+	check_eq(GameState.get_cash(), 77777, "with the player's progress")
+	data["cash"] = 1
+	write_text(legacy.path_join(SaveManager.SAVE_FILE), JSON.stringify(data))
+	check_eq(SaveManager.import_legacy_save(legacy, target_dir), 0, "a folder that already has a save is never overwritten")
+	SaveManager.configure_storage(STORAGE_DIR)
 	return true
 
 

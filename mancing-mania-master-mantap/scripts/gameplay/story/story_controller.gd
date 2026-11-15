@@ -123,7 +123,7 @@ func _run(step: Dictionary) -> void:
 		await _wait_for_advance()
 	elif step.has("chat"):
 		var who := str(step["chat"])
-		_ui.show_chat(TextDb.t(StringName("speaker.%s" % who)) if who != "darto" else TextDb.t(&"speaker.darto"), TextDb.t(StringName(step["text"])), who == "darto")
+		_ui.show_chat(TextDb.t(StringName("speaker.%s" % who)) if who != "darto" else TextDb.t(&"speaker.darto"), TextDb.t(StringName(step["text"])), who == "darto", StringName(who))
 		await _wait_for_advance()
 	elif step.has("note"):
 		var keys: Array = step["note"]
@@ -131,7 +131,7 @@ func _run(step: Dictionary) -> void:
 		AudioManager.play_ui(&"ui_click")
 		await _wait_for_advance()
 	elif step.has("call"):
-		_ui.show_call(TextDb.t(StringName("story.phone.%s" % step["call"])))
+		_ui.show_call(TextDb.t(StringName("story.phone.%s" % step["call"])), StringName(step["call"]))
 	elif step.has("close_phone"):
 		_ui.close_phone()
 	elif step.has("pause"):
@@ -200,7 +200,9 @@ func _finish(skipped: bool) -> void:
 
 # --- Stage ------------------------------------------------------------------
 
-func _build_stage(set_name: String) -> void:
+## Builds `set_name` with the timeline's cast and props. `with_cast` false
+## leaves the stage empty (a second set of the same event places its own).
+func _build_stage(set_name: String, with_cast: bool = true) -> void:
 	for child: Node in _set_anchor.get_children() + _actors_root.get_children() + _props_root.get_children():
 		child.queue_free()
 	_actors.clear()
@@ -211,6 +213,8 @@ func _build_stage(set_name: String) -> void:
 	else:
 		_ui.set_black(true)
 	_cameras = _timeline.get("cameras", {})
+	if not with_cast:
+		return
 	for actor: Dictionary in _timeline.get("actors", []):
 		_spawn_actor(actor)
 	for prop: Dictionary in _timeline.get("props", []):
@@ -224,11 +228,15 @@ func _build_stage(set_name: String) -> void:
 
 
 ## The prologue's second shot: the road past the lake, wide, for the title.
+## Only Darto has come; the home's cast stays home. (Re-spawning the
+## timeline's cast here put Rini, who has no mark at the lake, on Darto's
+## spot with him.)
 func _build_lake_road() -> void:
-	_build_stage("none")
+	_build_stage("none", false)
 	_ui.set_black(false)
 	_set = (load(SETS["lake"]) as PackedScene).instantiate()
 	_set_anchor.add_child(_set)
+	_spawn_actor({"who": "darto", "marker": "DartoSpot", "clip": "idle_home"})
 	_camera.frame_marker(_set.get_node("Markers/StoryWide") as Node3D)
 	AudioManager.set_ambience_state(&"lake")
 

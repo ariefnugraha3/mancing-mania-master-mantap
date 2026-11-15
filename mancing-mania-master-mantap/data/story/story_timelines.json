@@ -1438,6 +1438,380 @@
 					"button": "story.story_postgame_unlock.05"
 				}
 			]
+		},
+		"story_unlock_kenanga": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "cash_count"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"focus": "CameraFocus"
+				},
+				"two_shot": {
+					"focus": "StoryTwoShot"
+				},
+				"darto": {
+					"focus": "StoryDarto"
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_kenanga.02"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_kenanga.04"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_kenanga.06"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.07"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_kenanga.08"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_kenanga.10"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_kenanga.11"
+				},
+				{
+					"unlock": "story.story_unlock_kenanga.12",
+					"body": "story.story_unlock_kenanga.13"
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_unlock_melati": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "cash_count"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"focus": "CameraFocus"
+				},
+				"two_shot": {
+					"focus": "StoryTwoShot"
+				},
+				"darto": {
+					"focus": "StoryDarto"
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"chat": "nisa",
+					"text": "story.story_unlock_melati.01"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_unlock_melati.02"
+				},
+				{
+					"chat": "nisa",
+					"text": "story.story_unlock_melati.03"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_unlock_melati.04"
+				},
+				{
+					"chat": "nisa",
+					"text": "story.story_unlock_melati.05"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_melati.06"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_melati.07"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_melati.08"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_melati.09"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_melati.10"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_melati.11"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_melati.12"
+				},
+				{
+					"unlock": "story.story_unlock_melati.13",
+					"body": "story.story_unlock_melati.14"
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_unlock_anggrek": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "cash_count"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"focus": "CameraFocus"
+				},
+				"two_shot": {
+					"focus": "StoryTwoShot"
+				},
+				"darto": {
+					"focus": "StoryDarto"
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"cam": "darto"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_unlock_anggrek.01"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_unlock_anggrek.02"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_unlock_anggrek.03"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_unlock_anggrek.04"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_unlock_anggrek.05"
+				},
+				{
+					"chat": "darto",
+					"text": "story.story_unlock_anggrek.06"
+				},
+				{
+					"chat": "rini",
+					"text": "story.story_unlock_anggrek.07"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_anggrek.08"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_anggrek.09"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_anggrek.10"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_anggrek.11"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_anggrek.12"
+				},
+				{
+					"unlock": "story.story_unlock_anggrek.13",
+					"body": "story.story_unlock_anggrek.14"
+				},
+				{
+					"fade": "out"
+				}
+			]
+		},
+		"story_unlock_mawar": {
+			"set": "market",
+			"ambience": "market",
+			"music": "silence",
+			"actors": [
+				{
+					"who": "darto",
+					"marker": "DartoSpot",
+					"clip": "market_idle"
+				},
+				{
+					"who": "bu_yati",
+					"marker": "BuYatiSpot",
+					"clip": "cash_count"
+				}
+			],
+			"cameras": {
+				"wide": {
+					"focus": "CameraFocus"
+				},
+				"two_shot": {
+					"focus": "StoryTwoShot"
+				},
+				"darto": {
+					"focus": "StoryDarto"
+				}
+			},
+			"steps": [
+				{
+					"fade": "in"
+				},
+				{
+					"cam": "two_shot"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.01"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_mawar.02"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.03"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_mawar.04"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.05"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_mawar.06"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.07"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_mawar.08"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.09"
+				},
+				{
+					"say": "darto",
+					"text": "story.story_unlock_mawar.10"
+				},
+				{
+					"say": "bu_yati",
+					"text": "story.story_unlock_mawar.11"
+				},
+				{
+					"unlock": "story.story_unlock_mawar.12",
+					"body": "story.story_unlock_mawar.13"
+				},
+				{
+					"fade": "out"
+				}
+			]
 		}
 	},
 	"credits": [

@@ -44,10 +44,6 @@ script = ExtResource("3_ui")
 
 [node name="ContinuePrompt" type="Label" parent="StoryCanvas/StoryUI/DialoguePanel/Column"]
 
-[node name="NotificationPanel" type="PanelContainer" parent="StoryCanvas/StoryUI"]
-
-[node name="Lines" type="VBoxContainer" parent="StoryCanvas/StoryUI/NotificationPanel"]
-
 [node name="SkipHoldIndicator" type="ProgressBar" parent="StoryCanvas/StoryUI"]
 
 [node name="FadeLayer" type="CanvasLayer" parent="."]

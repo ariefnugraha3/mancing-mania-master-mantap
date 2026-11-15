@@ -34,6 +34,11 @@ var _zone_target: float = 0.4
 var _retarget_left: float = 0.0
 var _feint_left: float = 0.0
 var _feint_target: float = 0.4
+## The spot's water (revision 6.7): a current that pushes the marker and waves
+## that strain the line. Calm water leaves both at zero.
+var _drift: float = 0.0
+var _location: LocationData
+var _clock: float = 0.0
 
 
 func setup(fish: FishData, rod_level: int, seed: int) -> void:
@@ -52,6 +57,19 @@ func setup(fish: FishData, rod_level: int, seed: int) -> void:
 	_feint_left = 0.0
 	landing = 0.0
 	stress = 0.0
+	_clock = 0.0
+
+
+## Applies the water of `location` (call after setup). Null means calm water.
+func setup_water(location: LocationData) -> void:
+	_location = location
+	_drift = location.reel_drift if location != null else 0.0
+	_clock = 0.0
+
+
+## Extra line stress per second the waves add right now.
+func get_wave_stress() -> float:
+	return _location.wave_stress(_clock) if _location != null else 0.0
 
 
 ## Carbon Rod widens the zone additively, up to the clamp (GDD Section 32).
@@ -63,6 +81,7 @@ static func half_width_for(fish: FishData, rod_level: int) -> float:
 
 ## Advances the minigame and reports whether it just ended.
 func step(delta: float, held: bool) -> StringName:
+	_clock += delta
 	_step_marker(delta, held)
 	_step_zone(delta)
 
@@ -76,6 +95,9 @@ func step(delta: float, held: bool) -> StringName:
 		landing -= _balance.landing_loss_outside_per_sec * delta
 	else:
 		stress -= _balance.stress_recover_release_per_sec * delta
+	# Waves strain the line while it is held, whatever the zone says.
+	if held:
+		stress += get_wave_stress() * delta
 	stress = maxf(stress, 0.0)
 	landing = clampf(landing, 0.0, LANDING_GOAL)
 
@@ -113,7 +135,7 @@ func _step_marker(delta: float, held: bool) -> void:
 	var target := _balance.marker_hold_velocity if held else _balance.marker_release_velocity
 	var swing := _balance.marker_hold_velocity - _balance.marker_release_velocity
 	marker_velocity = move_toward(marker_velocity, target, swing / maxf(_balance.input_ease_sec, 0.001) * delta)
-	marker += marker_velocity * delta
+	marker += (marker_velocity + _drift) * delta
 	if marker <= 0.0 or marker >= 1.0:
 		marker = clampf(marker, 0.0, 1.0)
 		marker_velocity = 0.0

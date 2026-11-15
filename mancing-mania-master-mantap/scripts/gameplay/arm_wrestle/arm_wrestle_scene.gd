@@ -111,7 +111,7 @@ func _bot() -> ArmWrestleBot:
 # --- Controller events ------------------------------------------------------
 
 func _on_duel_started(_snapshot: Dictionary) -> void:
-	_hud.show_banner(_fish.display_name.to_upper(), TextDb.t(&"arm.intro.subtitle"), INTRO_BANNER_SEC)
+	_hud.show_banner(_fish.get_display_name().to_upper(), TextDb.t(&"arm.intro.subtitle"), INTRO_BANNER_SEC)
 	if not GameState.is_tutorial_seen(TUTORIAL_ID):
 		_hud.show_hint(TextDb.t(&"arm.tutorial.hold" if HoldAssist.is_enabled() else &"arm.tutorial.mash"))
 

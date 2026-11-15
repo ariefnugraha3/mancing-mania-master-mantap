@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_sembilang_tua.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_sembilang_tua.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"sembilang_tua"
+display_name = "Old Sembilang"
+species_label = "EELTAIL CATFISH"
+tier = 5
+sale_base = 440000
+sale_multiplier = 1.25
+conditional_chance = 0.04
+strike_window_sec = 0.53
+reel_half_width = 0.105
+reel_move_speed = 0.78
+line_stress_per_sec = 58.0
+boxing_hp = 188.0
+boxing_attack = 26.0
+boxing_telegraph_sec = 0.52
+arm_strength = 83.0
+rhythm_skill = 89.0
+tell_truth_probability = 0.36
+duel_skill = 88.0
+weight_min_kg = 4.0
+weight_max_kg = 10.0
+dialogue_sequence_id = &"fish_sembilang_tua"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

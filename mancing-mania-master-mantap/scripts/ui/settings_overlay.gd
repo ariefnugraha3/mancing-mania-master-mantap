@@ -6,6 +6,9 @@ extends OverlayPanel
 
 ## Emitted after RESET SAVE removed the save, so the caller can refresh.
 signal save_reset()
+## Emitted after LANGUAGE changed. The main menu reloads itself in the new
+## language; anywhere else a note says the screen follows when it is left.
+signal language_changed()
 
 const VOLUME_STEP := 0.05
 
@@ -29,12 +32,21 @@ const ACCESSIBILITY_OPTIONS: Array[StringName] = [
 var _option_buttons: Dictionary[StringName, GameButton] = {}
 var _controls: ControlsOverlay
 var _privacy: PrivacyOverlay
+var _language_note: Label
 
 
 func build_content() -> void:
 	layer = 50
 	panel_width = 560.0
 	set_title(TextDb.t(&"settings.title"))
+
+	# Language first: a player who cannot read the rest finds it at the top.
+	content.add_child(_section(TextDb.t(&"settings.section.language")))
+	_add_option_row(&"language")
+	_language_note = make_label(TextDb.t(&"settings.language_note"), UiTokens.TYPE_SMALL)
+	_language_note.name = "LanguageNote"
+	_language_note.visible = false
+	content.add_child(_language_note)
 
 	content.add_child(_section(TextDb.t(&"settings.section.audio")))
 	# Each volume is a name and a value on one line and a full-width slider
@@ -146,7 +158,9 @@ func _add_option_row(key: StringName) -> void:
 		GameState.set_setting(key, next_value(key, GameState.get_setting(key)))
 		if key == &"fullscreen_web":
 			PlatformService.request_fullscreen(bool(GameState.get_setting(key)))
-		_refresh())
+		_refresh()
+		if key == &"language":
+			_on_language_changed())
 	row.add_child(button)
 	_option_buttons[key] = button
 
@@ -170,6 +184,8 @@ static func options_for(key: StringName) -> Array:
 			return SaveSchema.SKIP_HOLD_OPTIONS
 		&"quality_preset":
 			return SaveSchema.QUALITY_PRESETS
+		&"language":
+			return SaveSchema.LANGUAGE_MODES
 	return [false, true]
 
 
@@ -227,6 +243,16 @@ func open() -> void:
 	_refresh()
 	show_overlay()
 	focus_later(_close_button)
+
+
+## The new language is already active (DisplaySettings). The main menu
+## listens and reloads itself; with no listener the screen behind stays as
+## it is until it is left, and the note says so in the new language.
+func _on_language_changed() -> void:
+	if language_changed.get_connections().is_empty():
+		_language_note.text = TextDb.t(&"settings.language_note")
+		_language_note.visible = true
+	language_changed.emit()
 
 
 func on_cancel() -> void:

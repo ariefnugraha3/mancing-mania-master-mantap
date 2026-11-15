@@ -72,6 +72,8 @@ var _reel_was_held: bool = false
 
 
 func _ready() -> void:
+	# Away from Cempaka Lake, the spot's own set takes the lake's place.
+	_lake_set = SpotSet.swap_in(_lake_set, GameState.get_current_location())
 	var markers := _lake_set.get_node("Markers")
 	_darto_spot = (markers.get_node("DartoSpot") as Node3D).position
 	_float_spot = (markers.get_node("FloatSpot") as Node3D).position
@@ -90,6 +92,8 @@ func _ready() -> void:
 	_build_shadow()
 	_splash_small = _build_splash(22, 1.5)
 	_splash_large = _build_splash(48, 2.6)
+	# The bite "!" speaks in the comic display face, like the duel signs.
+	_bite_marker.font = UiSkin.heavy_font()
 	_bite_marker.visible = false
 	_float_root.visible = false
 	_float_root.position = _float_spot

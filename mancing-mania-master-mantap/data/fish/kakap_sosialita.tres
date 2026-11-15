@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_kakap_sosialita.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_kakap_sosialita.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"kakap_sosialita"
+display_name = "Socialite Barramundi"
+species_label = "BARRAMUNDI"
+tier = 4
+sale_base = 110000
+sale_multiplier = 1.0
+conditional_chance = 0.18
+strike_window_sec = 0.6
+reel_half_width = 0.13
+reel_move_speed = 0.6
+line_stress_per_sec = 48.0
+boxing_hp = 150.0
+boxing_attack = 21.0
+boxing_telegraph_sec = 0.58
+arm_strength = 74.0
+rhythm_skill = 84.0
+tell_truth_probability = 0.5
+duel_skill = 72.0
+weight_min_kg = 2.5
+weight_max_kg = 8.0
+dialogue_sequence_id = &"fish_kakap_sosialita"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

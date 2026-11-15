@@ -8,7 +8,7 @@
 script = ExtResource("1_fish")
 id = &"gourami_shady"
 display_name = "Shady Gourami"
-species_label = "GIANT GOURAMI / GURAMI"
+species_label = "GIANT GOURAMI"
 tier = 2
 sale_base = 34000
 sale_multiplier = 1.0
@@ -23,6 +23,7 @@ boxing_telegraph_sec = 0.69
 arm_strength = 56.0
 rhythm_skill = 72.0
 tell_truth_probability = 0.46
+duel_skill = 48.0
 weight_min_kg = 1.4
 weight_max_kg = 4.2
 dialogue_sequence_id = &"fish_gourami_shady"

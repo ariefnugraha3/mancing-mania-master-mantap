@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_belut_licin.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_belut_licin.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"belut_licin"
+display_name = "Slippery Eel"
+species_label = "SWAMP EEL"
+tier = 3
+sale_base = 48000
+sale_multiplier = 1.0
+conditional_chance = 0.22
+strike_window_sec = 0.66
+reel_half_width = 0.14
+reel_move_speed = 0.56
+line_stress_per_sec = 42.0
+boxing_hp = 110.0
+boxing_attack = 17.0
+boxing_telegraph_sec = 0.66
+arm_strength = 58.0
+rhythm_skill = 76.0
+tell_truth_probability = 0.55
+duel_skill = 56.0
+weight_min_kg = 0.4
+weight_max_kg = 1.6
+dialogue_sequence_id = &"fish_belut_licin"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

@@ -18,6 +18,11 @@ const STATE_STYLES: Dictionary = {
 	&"boxing": MusicSequencer.STYLE_BOXING,
 	&"arm_wrestle": MusicSequencer.STYLE_ARM,
 	&"suwit": MusicSequencer.STYLE_FISHING,
+	# The spot duels (revision 6.7) share the loops of their nearest kin.
+	&"silat": MusicSequencer.STYLE_BOXING,
+	&"gasing": MusicSequencer.STYLE_FISHING,
+	&"tambang": MusicSequencer.STYLE_ARM,
+	&"pinang": MusicSequencer.STYLE_ARM,
 	&"result": MusicSequencer.STYLE_FISHING,
 }
 ## Fixed seeds keep each state's loop the same every session.

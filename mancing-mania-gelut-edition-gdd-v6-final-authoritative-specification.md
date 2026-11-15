@@ -1,6 +1,6 @@
 # GAME DESIGN DOCUMENT
 
-# MANCING MANIA: GELUT EDITION
+# CATCH AND BRAWL
 
 ### Definitive Game Design Document — Version 6.0 (Final Authoritative Production, Release & Maintenance Specification — Godot Edition)
 
@@ -8,9 +8,37 @@
 
 **Revisi Mobile 6.2 (2026-11-15):** game ini menjadi **game HP**: dimainkan **tegak (portrait) saja** di **Android dan iOS/iPadOS, di HP maupun tablet**. Kanvas UI kini diukur dalam *point* setara dp/pt (HP ±390 pt lebar, tablet 600 pt), sehingga tombol 48 pt benar-benar memenuhi target sentuh 48 dp (Android) / 44 pt (iOS) dan teks badan terbaca seukuran teks badan HP. Mode landscape dihapus; layar yang lebih lebar dari tablet (desktop, browser landscape, foldable terbuka) menampilkan kanvas portrait terlebar dengan bilah di samping. Safe area (notch, Dynamic Island, status bar, home indicator, gesture bar) dihormati di semua layar. Build Web tetap ada sebagai build sekunder berbentuk portrait. Gameplay, balance, cerita, audio, art, dan save schema tidak berubah (kecuali nilai platform `ios`). Bagian yang direvisi: header, Section 92–96, 122, 123, 135, 167.7, 167.8, 169.7, 186.
 
+**Revisi Font 6.3 (2026-11-15):** atas permintaan pemilik proyek, font bawaan Godot diganti dua font berlisensi terbuka yang gratis dan boleh dipakai komersial: **Fredoka** (SIL OFL 1.1) untuk semua teks berjalan karena bentuknya bulat dan hangat, dan **Chewy** (Apache 2.0) untuk judul besar dan teks "cat papan" karena bentuknya kartun dan lucu. Ini satu-satunya pengecualian aturan zero-internet-asset: kedua file font diambil tanpa modifikasi dari repository resmi Google Fonts, lisensinya ikut di repo, di setiap build, dan di layar LICENSES dalam game. Gameplay, balance, cerita, audio, art 3D, layout, dan save schema tidak berubah. Bagian yang direvisi: header, Section 99, 167.3, 174.11, 184, 184.1, 184.12, 184.16, 187.8.
+
+**Revisi Ikon 6.4 (2026-11-15):** atas permintaan pemilik proyek, semua ikon UI dirombak dari siluet satu warna yang terlihat seperti placeholder menjadi **ikon stiker penuh warna** yang serasi dengan gaya "cozy warung card". Setiap ikon punya outline cocoa tebal, warna palet game, bibir gelap di sisi bawah, dan kilau krem di kiri atas. Ini berlaku untuk tombol, tab Market, chip HUD, tombol tinju, dan tangan Suwit. Ikon tetap digambar sepenuhnya oleh kode tanpa file gambar (Section 184.11). Gameplay, layout, dan save schema tidak berubah. Bagian yang direvisi: header, Section 174.10, 184.11.
+
+**Revisi Ponsel 6.5 (2026-11-15):** atas permintaan pemilik proyek, ponsel di adegan cerita (intro, chat Rini, telepon, pelunasan) berubah dari teks polos di layar teal gelap menjadi **aplikasi chat** dengan tata letak yang langsung dikenali pemain dari aplikasi chat populer. Isinya: status bar, header teal dengan avatar dan nama kontak, wallpaper bermotif doodle, bubble berekor dengan jam dan centang baca, kolom ketik pesan, dan layar panggilan suara. Tampilannya tetap milik game sendiri (palet hangat, Fredoka, ikon stiker), tanpa nama, logo, atau warna aplikasi sungguhan. Naskah, urutan cerita, dan save schema tidak berubah. Bagian yang direvisi: header, Section 168.3.
+
+**Revisi Bahasa 6.6 (2026-11-15):** atas permintaan pemilik proyek, game kini punya dua bahasa: **English** dan **Bahasa Indonesia**. Pilihannya ada di Settings → LANGUAGE dengan nilai Otomatis (ikut bahasa perangkat), English, atau Indonesia. Kedua bahasa memperlakukan nama secara berbeda:
+
+- **mode English** memakai nama Inggris untuk tempat dan permainan: Cempaka Lake, Market, Rock Paper Scissors;
+- **mode Indonesia** mempertahankan nama lokal: Danau Cempaka, Warung Bu Yati, Tinju Empang, Panco Maut, Joget Koplo, Suwit;
+- nama orang (Darto, Rini, Nisa, Bu Yati) sama di kedua bahasa.
+
+Gameplay, balance, dan urutan cerita tidak berubah. Save mendapat satu setting baru, `language`, dengan default `auto`. Save lama yang belum punya setting ini cukup diisi default tanpa dianggap rusak. Bagian yang direvisi: header, Section 133, 164.3, 182.11, 183.
+
+**Revisi Lokasi 6.7 (2026-11-15):** atas permintaan pemilik proyek, Danau Cempaka tidak lagi satu-satunya tempat memancing. Ada **4 tempat baru yang berjenjang**: Sungai Kenanga, Waduk Melati, Muara Anggrek, dan Dermaga Mawar (English: Kenanga River, Melati Reservoir, Anggrek Estuary, Mawar Pier). Setiap tempat terbuka lewat event cerita setelah pembayaran utang tertentu, butuh satu perlengkapan dari Market, punya sifat air sendiri, 5 ikan sendiri (termasuk 1 legenda), dan 1 duel khas: **Silat**, **Tarik Tambang**, **Adu Gasing**, dan **Panjat Pinang**. Semua ikan tetap dijual di Warung Bu Yati, dengan alasan cerita yang jelas. Total konten menjadi 26 ikan, 8 duel, 5 tempat, dan 15 set diorama. Save schema naik ke version 6 dengan migrasi otomatis dari version 5. Detail authoritative ada di **Section 198**. Bagian yang direvisi: header, Section 38, 164, 165, 171, 177, 179, 198 (baru).
+
+**Revisi Nama 6.8 (2026-11-15):** atas permintaan pemilik proyek, game berganti nama dari *Mancing Mania: Gelut Edition* menjadi **Catch and Brawl**, agar lebih mudah diterima dan dicari pemain di seluruh dunia. Nama ini plesetan dari "catch and release" dan mencakup semua duel, bukan hanya tinju. Nama yang sama dipakai di mode English dan Bahasa Indonesia. Yang ikut berubah:
+
+- logo menu dan layar boot;
+- kartu judul prolog dan kredit;
+- kebijakan privasi;
+- nama proyek Godot;
+- nama aplikasi di export preset;
+- application ID Android dan bundle ID iOS: `com.catchandbrawl.game` (belum pernah dirilis, jadi masih boleh diganti);
+- nama file build dan listing toko.
+
+Karena folder data di desktop dinamai sesuai proyek, save dari folder lama "Mancing Mania Gelut Edition" disalin sekali ke folder baru. Folder lama tidak diubah. Gameplay, cerita, dan save schema tidak berubah. Nama file GDD dan folder repository tetap memakai nama lama agar semua rujukan tidak putus. Bagian yang direvisi: header, Section 0, 12, 135, 162, 167, 182, 183, 186, 187, 194.
+
 **Revisi UI 6.1 (2026-11-14):** seluruh UI 2D (menu, tombol, overlay, HUD, Market, dialog, Wheel) dirombak ke gaya **"cozy warung card"** agar serasi dengan dunia diorama: palet hangat yang sama, sudut lebih bulat, setiap benda yang bisa ditekan punya "bibir" (lip) gelap di bawahnya dan tenggelam saat ditekan, judul pita (ribbon) di atas kartu, ikon prosedural, logo emblem, dan teks judul bergaya cat papan. Tetap tanpa file font/gambar UI eksternal. Bagian yang direvisi: Section 167.2–167.6, 167.9, 185.20. Perubahan art direction setelah RC1 ini disetujui eksplisit oleh pemilik proyek (Section 194.4); build berikutnya harus melewati QA dan human playtest ulang sebagai `v1.0.0-rc2` sebelum Gold Master.
 
-**Alternate Working Title:** *Baku Hantam Empang*  
+**Judul sebelumnya:** *Mancing Mania: Gelut Edition* (hingga revisi 6.7); judul kerja awal *Baku Hantam Empang*  
 **Genre:** Cozy Fishing / Casual Arcade / Comedy / Minigame Collection / Light Narrative Progression  
 **Engine:** Godot Engine 4.7 atau versi stable terbaru yang lebih baru  
 **Primary Scripting Language:** Typed GDScript  
@@ -23,9 +51,9 @@
 **Visual Style:** "Warm, Cozy & Cute" — diorama mini 3D low-poly, bentuk bulat empuk, warna solid hangat tanpa tekstur gambar, cahaya keemasan lembut, karakter chibi (lihat `VISUAL_STYLE_GUIDE.md` dan Section 99)  
 **Primary Mood:** Cozy, Warm, Sunday Afternoon, Nostalgic, Absurdly Funny  
 **Setting:** Indonesia  
-**In-Game Language:** English only  
+**In-Game Language:** English dan Bahasa Indonesia (revisi 6.6; Settings → LANGUAGE, default mengikuti bahasa perangkat)  
 **GDD Language:** Bahasa Indonesia  
-**Language Policy:** Game release v1.0 tetap English-only; Bahasa Indonesia hanya digunakan di dokumen desain/development  
+**Language Policy:** English adalah bahasa sumber; Bahasa Indonesia adalah terjemahan lengkap yang mempertahankan nama lokal (Section 133)  
 **Camera:** Satu kamera diorama ortografis tetap — yaw 45°, pitch 35°, roll 0°, rotasi dikunci, `KEEP_WIDTH` (Section 173)  
 **Business Model:** Single-player premium/free game without IAP, gacha, loot boxes, energy systems, ad SDK, or microtransactions
 **Network Model:** Offline-first single-player; no multiplayer/network gameplay
@@ -36,7 +64,7 @@
 
 # 0. HIGH CONCEPT
 
-*Mancing Mania: Gelut Edition* adalah game tentang seorang pria pengangguran bernama **Darto** yang sedang berusaha memperbaiki kehidupannya setelah kehilangan hampir seluruh hartanya akibat kecanduan judi online.
+*Catch and Brawl* adalah game tentang seorang pria pengangguran bernama **Darto** yang sedang berusaha memperbaiki kehidupannya setelah kehilangan hampir seluruh hartanya akibat kecanduan judi online.
 
 Darto sudah berhenti berjudi.
 
@@ -653,7 +681,7 @@ Hanya perjalanan santai.
 
 Judul muncul:
 
-# MANCING MANIA: GELUT EDITION
+# CATCH AND BRAWL
 
 Kemudian:
 
@@ -1532,6 +1560,8 @@ Kemudian Wheel of Fate.
 Masing-masing:
 
 25%.
+
+**Revisi 6.7:** daftar di atas adalah Wheel Danau Cempaka. Setiap tempat baru punya Wheel sendiri (duel khas tempat itu 4 segmen, dua duel lama masing-masing 2 segmen; Section 198.4). Wheel yang dipakai adalah Wheel tempat asal ikan.
 
 Outcome dipilih **sebelum animasi dimulai** menggunakan game RNG.
 
@@ -3281,7 +3311,7 @@ Aturan:
 - JANGAN memakai material transparan yang menerima cahaya;
 - emisi hanya untuk benda yang memang menyala;
 - tidak ada shader kustom di dunia 3D (shader `lake_water` dan `foliage_sway` versi lama dihapus); satu-satunya shader project adalah `ui_silhouette.gdshader` untuk UI Fish Book;
-- Godot built-in default font adalah baseline font v1.0.
+- font v1.0: Fredoka untuk teks dan Chewy untuk judul, file berlisensi di `assets/fonts/` (Section 167.3, 184.12, revisi 6.3).
 
 Generated asset bukan placeholder. Hero object tetap harus memenuhi Section 99–101 dan 185.
 
@@ -4324,6 +4354,54 @@ Story event disimpan sebagai resource/data sehingga dialog tidak hardcoded selur
 
 # 133. DIALOGUE & LANGUAGE DATA
 
+**Revisi 6.6: game punya dua bahasa, English dan Bahasa Indonesia.** Aturan di bawah tentang teks yang wajib berbahasa Inggris kini berlaku untuk mode English. Mode Indonesia wajib menerjemahkan seluruh teks yang sama.
+
+## 133.1 Pilihan bahasa
+
+Settings → LANGUAGE (baris paling atas), setting save `language`:
+
+| Nilai | Arti |
+|---|---|
+| `auto` (default) | ikut bahasa perangkat: Indonesia (`id`, atau kode lama `in`) memakai Bahasa Indonesia, bahasa lain memakai English |
+| `en` | English |
+| `id` | Bahasa Indonesia |
+
+Mengganti bahasa dari Main Menu langsung memuat ulang menu dalam bahasa baru. Dari menu Pause, teks baru berlaku sejak layar berikutnya, dan sebuah catatan menjelaskannya. Duel tidak pernah dimuat ulang supaya tidak bisa dipakai untuk kabur dari kekalahan.
+
+## 133.2 Nama per bahasa
+
+| Hal | English | Bahasa Indonesia |
+|---|---|---|
+| danau | Cempaka Lake | Danau Cempaka |
+| warung | Market | Warung Bu Yati |
+| tinju | Boxing | Tinju Empang |
+| panco | Arm Wrestling | Panco Maut |
+| joget | Dance | Joget Koplo |
+| suit | Rock Paper Scissors | Suwit |
+| ikan | Bruiser Catfish, Gym-Rat Tilapia, Shady Gourami, Golden Carp, Snakehead Sergeant, Don Arowana | Lele Jagoan, Nila Anak Gym, Gurami Mencurigakan, Ikan Mas Emas, Sersan Gabus, Don Arwana |
+| upgrade | Super Pellet Bait, Carbon Fibre Rod, Herbal Tonic, Black Coffee, Agate Charm Ring | Umpan Pelet Super, Joran Serat Karbon, Jamu Pegal Linu, Kopi Tubruk, Cincin Batu Akik |
+| sampah | Rusty Tin Can, Lost Sandal, Ancient Tyre | Kaleng Karatan, Sandal Jepit Sebelah, Ban Purba |
+| orang | Darto, Rini, Nisa, Bu Yati | sama |
+
+Rumah Darto tidak pernah disebut namanya di layar. Jika kelak disebut, namanya "Darto's House" dan "Rumah Darto".
+
+## 133.3 Format
+
+- **English**: Rp 1,800,000, 2.92 kg, jam 3:17 PM.
+- **Indonesia**: Rp 1.800.000, 2,92 kg, jam 15.17.
+
+`Money.format_rp()` dan `Money.decimal()` mengikuti bahasa aktif.
+
+## 133.4 Data teks
+
+- `data/dialogue/ui_text.tres` (English) adalah tabel sumber yang memuat setiap kunci.
+- `data/dialogue/ui_text_id.tres` memuat terjemahan untuk setiap kunci yang bukan alias, ditambah teks yang sumber English-nya ada di resource data: `fish.<id>.name`, `fish.<id>.species`, `upgrade.<id>.name`, `trash.<id>.name`, dan `fishline.<sequence>.<n>` untuk dialog pertemuan pertama.
+- Kunci yang tidak ada di tabel terjemahan jatuh ke English.
+- Test mewajibkan tabel Indonesia lengkap, dengan placeholder `{...}` dan jumlah baris yang sama.
+- Test juga memastikan teks English tidak lagi memuat nama lokal (danau, warung, suwit, kendang), dan tombol penting tetap utuh dalam kedua bahasa pada UI 130% + teks 150%.
+
+Aturan asli Section 133 (berlaku untuk mode English):
+
 **Seluruh teks yang pernah dilihat player harus berbahasa Inggris.**
 
 Termasuk:
@@ -4344,17 +4422,16 @@ Termasuk:
 - credits headings,
 - error message yang dibuat game.
 
-Nama proper seperti:
+Nama orang seperti:
 
 - Darto,
 - Rini,
 - Nisa,
 - Bu Yati,
-- Danau Cempaka,
 
-tetap dipertahankan sebagai nama Indonesia.
+tetap dipertahankan sebagai nama Indonesia. Nama tempat dan nama permainan memakai versi English di mode English (Section 133.2, revisi 6.6; sebelumnya "Danau Cempaka" juga dipertahankan).
 
-Source copy disimpan secara centralized, misalnya melalui dialogue resources/CSV/JSON internal, walaupun release v1.0 hanya mempunyai bahasa Inggris.
+Source copy disimpan secara centralized, misalnya melalui dialogue resources/CSV/JSON internal.
 
 Tujuan sentralisasi:
 
@@ -4444,7 +4521,7 @@ Export preset:
 
 Release output:
 
-`build/android/MancingManiaGelut.aab`
+`build/android/CatchAndBrawl.aab`
 
 Google Play release wajib:
 
@@ -4482,11 +4559,11 @@ Export preset:
 
 Release output:
 
-`build/ios/MancingManiaGelut.ipa`
+`build/ios/CatchAndBrawl.ipa`
 
 Bundle identifier:
 
-`com.mancingmania.gelutedition` (sama dengan Android).
+`com.catchandbrawl.game` (sama dengan Android).
 
 Versi:
 
@@ -4526,7 +4603,7 @@ CLI export dapat digunakan untuk CI:
 
 ```text
 godot --headless --path . --export-release "Web" build/web/index.html
-godot --headless --path . --export-release "Android" build/android/MancingManiaGelut.aab
+godot --headless --path . --export-release "Android" build/android/CatchAndBrawl.aab
 ```
 
 Nama executable Godot pada environment CI dapat berbeda.
@@ -5128,7 +5205,7 @@ Jika implementasi dan dokumen lama bertentangan dengan bagian ini, versi ini yan
 21. Gaya visual selalu **stylized 3D low-poly modern, warm, clean, dan cukup detail**.
 22. Tidak ada vertex wobble, pixelated retro filter, affine warping, atau imitasi PS1 sebagai style global.
 23. **Seluruh model 3D, material/texture production, UI visual/icon, animation, reference art, store art, music, ambience, dan SFX v1.0 harus dibuat programmatically dari repository sendiri tanpa mengambil asset internet.**
-24. Godot built-in default font adalah baseline; tidak ada downloaded font v1.0.
+24. Font v1.0 hanya Fredoka (OFL 1.1) dan Chewy (Apache 2.0), dibawa bersama lisensinya (Section 184.12, revisi 6.3); tidak ada font unduhan lain.
 25. Gameplay tidak boleh berubah menjadi gritty debt simulator.
 26. Komedi tidak boleh menghilangkan rasa hangat cerita keluarga.
 27. Tidak boleh ada gambling gameplay dengan uang player.
@@ -5177,7 +5254,7 @@ Jika developer bingung menentukan sebuah fitur, kembali ke kalimat ini:
 
 > **"A warm Sunday-afternoon fishing game about a flawed man slowly fixing his life, except every fish insists on settling the matter through an absurd duel first."**
 
-Itulah *Mancing Mania: Gelut Edition*.
+Itulah *Catch and Brawl*.
 ---
 
 # 163. AI IMPLEMENTATION CONTRACT — AUTHORITATIVE
@@ -5288,6 +5365,8 @@ Fitur dianggap selesai hanya jika:
 ---
 
 # 164. DEFINITION OF V1.0 SCOPE
+
+**Revisi 6.7:** scope v1.0 mencakup 5 tempat memancing, 26 ikan, dan 8 duel (Section 198.9).
 
 ## 164.1 PRODUCT DEFINITION
 
@@ -5409,7 +5488,7 @@ Tidak termasuk v1.0:
 - NPC relationship meters;
 - branching endings;
 - voice acting;
-- localization selain English;
+- localization selain English dan Bahasa Indonesia (revisi 6.6);
 - controller/gamepad requirement;
 - console release;
 - PC native executable release sebagai requirement;
@@ -5417,7 +5496,7 @@ Tidak termasuk v1.0:
 - achievements platform;
 - telemetry/analytics SDK;
 - crash-reporting cloud SDK.
-- downloaded/asset-store production art, model, texture, icon, animation, font, music, or SFX;
+- downloaded/asset-store production art, model, texture, icon, animation, font (kecuali dua font berlisensi Section 184.12, revisi 6.3), music, or SFX;
 - cloud asset-generation dependency.
 
 Fitur di atas hanya boleh masuk setelah v1.0 melalui revisi GDD.
@@ -5436,6 +5515,8 @@ Game boleh didistribusikan gratis atau one-time premium sesuai keputusan publish
 # 165. COMPLETE CONTENT MANIFEST — V1.0
 
 Section ini adalah daftar konten final. Jumlah konten tidak boleh diam-diam bertambah atau berkurang.
+
+**Revisi 6.7:** amandemen yang disetujui pemilik proyek menambah 4 tempat memancing, 8 set, 20 ikan, dan 4 duel. Angka final ada di Section 198.9 dan menggantikan angka "tepat 7 set", "tepat 6 ikan", dan "tidak ada explorable map tambahan" di bawah ini. Peta tetap tidak bisa dijelajahi bebas: pemain hanya memilih tempat dari daftar.
 
 ## 165.1 PLAYABLE LOCATIONS / SETS
 
@@ -5960,14 +6041,15 @@ Critical information tidak pernah bergantung pada warna saja.
 
 ## 167.3 TYPOGRAPHY
 
-Untuk menghindari dependency eksternal, v1.0 menggunakan Godot built-in/default readable sans fallback melalui Theme sebagai baseline.
+Revisi Font 6.3: dua typeface menggantikan font bawaan Godot. Nuansa yang dituju adalah **komedi yang hangat**. Fredoka yang bulat dan empuk menjaga kehangatan teks yang dibaca lama. Chewy yang kartun dan memantul membawa komedi pada teks besar yang dilihat sekilas. Keduanya dipasang lewat Theme project (`ui_art_builder.gd`) dan `UiSkin`, nama file dan bobotnya ada di `UiTokens`:
 
-Revisi UI 6.1 menambah dua potongan tebal yang dibuat dari font bawaan yang sama lewat `FontVariation.variation_embolden` (tanpa file font):
-
-- **bold** (embolden 0,55): tombol, tab, header, name tag, nilai chip;
-- **heavy** (embolden 0,9, spacing +1): logo dan judul besar.
+- **regular**: Fredoka, bobot 500. Ini `default_font` Theme untuk teks badan, dialog, label, dan teks kecil. Fredoka adalah variable font yang instance bawaannya Light, jadi bobot selalu diset eksplisit;
+- **bold**: Fredoka, bobot 600 (SemiBold), untuk tombol, tab, header, name tag, nilai chip, label HUD (`outline_text`), dan teks yang digambar langsung (lajur joget, Wheel);
+- **heavy**: Chewy, spacing +1 agar outline tebal tidak menyatukan huruf, dengan Fredoka bold sebagai fallback glyph. Dipakai untuk logo, judul layar, pita judul, dan semua teks "cat papan" (`UiSkin.sign_text`: banner duel, PERFECT/MISS, Result, Wheel, credits, judul warung), serta tanda gigitan "!" (Label3D) di atas pelampung.
 
 Teks besar di atas scene 3D memakai gaya **"cat papan"** (`UiSkin.sign_text`): isi cream/butter, outline cocoa tebal, dan drop shadow lembut. Label HUD yang lebih kecil (`outline_text`) memakai potongan bold, outline cocoa, dan shadow tipis.
+
+Setiap karakter teks game harus ada di Fredoka, dan di Chewy atau fallback-nya. Build Web tidak punya font sistem untuk cadangan, jadi ini dikunci test.
 
 Hierarchy pada reference scale:
 
@@ -6128,7 +6210,7 @@ Zona jempol: aksi utama di sepertiga bawah; Pause dan status di atas; tidak ada 
 - Continue paling atas jika save ada;
 - after-ending menu hanya berubah subtle sesuai Section 157;
 - versi build kecil di sudut untuk debug, hidden pada release jika tidak diperlukan.
-- logo = emblem bulat (matahari, ikan bersarung tinju) + judul "MANCING MANIA" bergaya cat papan butter + "GELUT EDITION" pada pita crust yang miring −3°;
+- logo = emblem bulat (matahari, ikan bersarung tinju) + judul "CATCH AND BRAWL" bergaya cat papan butter dalam satu baris yang ukurannya mengecil sendiri bila tidak muat lebar layar (revisi 6.8; pita crust miring −3° hanya muncul bila judul punya subjudul);
 - tombol menu memakai ikon (Continue ▶, New Game ✦, How to Play buku, Settings gear, Credits hati); tombol utama sedikit lebih tinggi (68 vs 58 px).
 
 ### Fishing HUD
@@ -6296,12 +6378,34 @@ Story (Node)
 │       ├── SpeakerLabel
 │       ├── DialogueLabel
 │       ├── ContinuePrompt
-│       ├── NotificationPanel
+│       ├── Phone (ChatPhone, dibuat oleh StoryUI)
 │       └── SkipHoldIndicator
 └── FadeLayer (CanvasLayer)
 ```
 
 Semua story timeline mengontrol scene ini melalui `CutsceneDirector`/`StoryDirector`.
+
+**Ponsel cerita (revisi 6.5).** `ChatPhone` (`scripts/ui/chat_phone.gd`) menggambar ponsel sebagai aplikasi chat dengan tata letak yang familiar:
+
+- bodi smartphone cocoa dengan punch-hole kamera;
+- status bar berisi jam 3:17 (selalu Minggu sore), sinyal, wifi, dan baterai yang hampir habis seperti rekening Darto;
+- header teal: tombol kembali, avatar, nama kontak, "online" atau "Business account" dengan lencana emas, serta ikon video, telepon, dan menu;
+- wallpaper krem dengan doodle ikan, kail, gelembung, bintang, dan ombak;
+- chip tanggal "TODAY";
+- kolom ketik "Message" dengan tombol mikrofon bulat.
+
+Pesan baru muncul di bawah dan pesan lama bergulir ke atas.
+
+Langkah timeline dipetakan ke ponsel seperti ini:
+
+| Langkah | Tampil sebagai |
+|---|---|
+| `phone` ("TOTAL DEBT: Rp 1,800,000") | kartu akun di tengah chat: label kecil, nominal besar |
+| `note` (CepatCash) | pesan dari akun bisnis CepatCash; judul notifikasi menjadi baris tebal |
+| `chat` | bubble di thread orang itu: lawan bicara di kiri (krem), Darto di kanan (hijau muda, centang baca) |
+| `call` | layar panggilan suara: avatar besar dengan cincin berdenyut, durasi berjalan, tombol speaker, mute, dan tutup merah |
+
+Isi dari kontak lain membuat ponsel pindah thread, seperti orang menutup satu chat lalu membuka chat lain. Bubble muncul dengan animasi pop kecil, kecuali saat Reduced Motion aktif. Ponsel tidak pernah menangkap ketukan, jadi ketukan di mana pun tetap memajukan cerita.
 
 ## 168.4 `fishing.tscn`
 
@@ -7118,6 +7222,8 @@ Disimpan sebagai `.tres` di `res://data/audio/`.
 # 171. EXACT SAVE SCHEMA — VERSION 5
 
 Bagian ini menggantikan conceptual schema lama jika ada perbedaan.
+
+**Revisi 6.7:** schema kini **version 6** (Section 198.8): blok `locations`, statistik dan tutorial baru, serta 20 ikan baru di Fish Book, Bucket, dan `duel_wins`. Nama file tetap `user://save_v5.json`. Save version 5 dimigrasi otomatis.
 
 Save path:
 
@@ -8002,11 +8108,23 @@ ui_icon_privacy
 ui_icon_accessibility
 ```
 
-UI icons dibuat melalui `ui_art_builder.gd` dari line/polygon/shape primitives.
+UI icons dibuat oleh `IconPainter` (`scripts/ui/icon_painter.gd`) dari polygon, kurva, dan stroke, tanpa file gambar. Theme hasil `ui_art_builder.gd` memberi warna ikon tombol putih, sehingga ikon tampil dengan warnanya sendiri.
+
+Revisi Ikon 6.4 menetapkan gaya **stiker penuh warna**:
+
+- ikon disusun dari beberapa bagian berwarna di grid 24 unit;
+- outline cocoa tebal (1,5 unit) di sekeliling siluet, dan garis tipis (0,8 unit) di tempat satu bagian menumpuk bagian lain;
+- setiap bagian punya bibir lebih gelap di sisi bawahnya (bahasa yang sama dengan tombol berlip) dan kilau krem di tepi kiri atasnya;
+- warna diambil dari palet UI dan diorama: emas, teal, crust, hijau, periwinkle, kayu, dan warna kulit karakter untuk tangan;
+- ikon tombol yang disabled digambar pudar dan kurang jenuh, bukan transparan;
+- badge chip HUD memakai versi pastel dari warna badge, supaya ikon berwarna tetap menonjol;
+- celah sempit yang tertutup outline menjadi gumpalan padat, dan ini dikunci test (`IconPainter.icons_with_holes()` harus kosong).
+
+Tangan Suwit (`ui_icon_rock`, `ui_icon_scissors`, `ui_icon_paper`) memakai gaya yang sama. Langkah asli hasil Charm ditandai cahaya teal di belakang tangan.
 
 ## 174.11 FONT
 
-v1.0 menggunakan Godot built-in default readable font. Tidak ada custom/downloaded font file.
+v1.0 menggunakan Fredoka (teks) dan Chewy (judul) sesuai Section 167.3 dan 184.12 (revisi 6.3). Tidak ada file font lain.
 
 ## 174.12 AUDIO
 
@@ -8527,6 +8645,8 @@ Jika FPS drop:
 
 Ini adalah rule authoritative.
 
+**Revisi 6.7:** empat event pembuka tempat (`story_unlock_kenanga`, `story_unlock_melati`, `story_unlock_anggrek`, `story_unlock_mawar`) ikut aturan ini dengan prioritas 300 dan butuh event utang setara (300k, 600k, 1000k, 1400k) sudah dilihat. Menyelesaikan atau melewati event itu langsung membuka tempatnya (Section 198.6).
+
 ## 177.1 MARKET VISIT DEFINITION
 
 Market visit dimulai saat transition `Fishing → Market` selesai.
@@ -8798,6 +8918,8 @@ Tidak menyertakan data pribadi karena game tidak mengumpulkan akun/data personal
 # 179. BALANCING SIMULATION TARGETS
 
 Tujuan simulasi bukan mengganti feel test, tetapi mendeteksi ekonomi rusak, RNG salah, atau progression terlalu pendek/panjang.
+
+**Revisi 6.7:** simulasi distribusi ikan dan Wheel dijalankan per tempat. Peluang ikan di tiap tempat baru adalah 30/26/22/18/4%, Wheel tempat baru 50% duel khas dan 25% untuk dua duel lainnya, dan nilai harapan per lemparan naik bertahap per jenjang (Section 198.3). Danau Cempaka tetap memakai target di bawah.
 
 ## 179.1 REQUIRED MONTE CARLO RUNS
 
@@ -9564,7 +9686,7 @@ Saat AI diminta “kerjakan Milestone N”:
 
 # 182. FINAL DELIVERY CONTRACT — DEFINITION OF DONE V1.0
 
-Project hanya boleh disebut **Mancing Mania: Gelut Edition v1.0 complete** jika seluruh contract berikut terpenuhi.
+Project hanya boleh disebut **Catch and Brawl v1.0 complete** jika seluruh contract berikut terpenuhi.
 
 ## 182.1 SOURCE PROJECT
 
@@ -9631,7 +9753,7 @@ Required:
 
 Required archive:
 
-`build/release/mancing-mania-gelut-edition-web-v1.0.zip`
+`build/release/catch-and-brawl-web-v1.0.zip`
 
 `index.html` harus berada di root ZIP.
 
@@ -9641,7 +9763,7 @@ Build harus smoke-tested pada Chromium + Firefox; WebKit/Safari bila tersedia di
 
 Target production:
 
-`build/android/MancingManiaGelut-v1.0.aab`
+`build/android/CatchAndBrawl-v1.0.aab`
 
 Play Store signing membutuhkan production keystore milik publisher/user.
 
@@ -9731,11 +9853,16 @@ Target first 10–12 min thesis tetap:
 
 ## 182.11 LANGUAGE GATE
 
-Release scan memastikan seluruh visible player-facing copy adalah English.
+Release scan memastikan seluruh visible player-facing copy ada dalam English dan Bahasa Indonesia (revisi 6.6, Section 133):
 
-Nama Indonesia tetap tidak diterjemahkan secara paksa.
+- tabel Indonesia lengkap;
+- placeholder dan jumlah baris cocok;
+- mode English tidak memuat nama tempat lokal;
+- tombol penting utuh dalam kedua bahasa.
 
-Tidak ada placeholder Bahasa Indonesia pada UI release.
+Nama orang tidak diterjemahkan.
+
+Tidak ada placeholder yang tertinggal di UI release, dalam bahasa mana pun.
 
 ## 182.12 SCOPE GATE
 
@@ -9800,7 +9927,7 @@ Dilarang menggunakan kata “done”, “finished”, atau “release-ready” u
 
 # 183. COMPLETE NARRATIVE SCRIPT BIBLE — FINAL V1.0 COPY
 
-Bagian ini adalah **source of truth final untuk narasi manusia, story event, notification, tutorial narrative copy, Fish Book flavor copy, dan ending v1.0**. Semua teks yang terlihat player tetap **English only**. Bahasa Indonesia pada bagian ini hanya menjelaskan staging/intent developer.
+Bagian ini adalah **source of truth final untuk narasi manusia, story event, notification, tutorial narrative copy, Fish Book flavor copy, dan ending v1.0**. Copy English di bagian ini adalah sumber. Terjemahan Bahasa Indonesia untuk pemain ada di `ui_text_id.tres` (Section 133, revisi 6.6). Nama tempat di copy English mengikuti Section 133.2: misalnya "Danau Cempaka" di bawah tampil sebagai "Cempaka Lake" di mode English. Bahasa Indonesia di bagian ini tetap hanya menjelaskan staging/intent developer.
 
 Jika Section 12–19 atau contoh dialog lama berbeda wording dengan Section 183, **Section 183 menang untuk copy final**, sedangkan fakta cerita, milestone, dan struktur gameplay lama tetap berlaku.
 
@@ -9961,7 +10088,7 @@ Tidak ada montage heroik.
 
 Title:
 
-> MANCING MANIA: GELUT EDITION
+> CATCH AND BRAWL
 
 Subtitle:
 
@@ -11019,7 +11146,7 @@ Web storage notice:
 Import invalid:
 
 > IMPORT FAILED
-> This file is not a valid Mancing Mania: Gelut Edition save.
+> This file is not a valid Catch and Brawl save.
 
 Unsupported save version:
 
@@ -11030,7 +11157,7 @@ Unsupported save version:
 
 Heading:
 
-> MANCING MANIA: GELUT EDITION
+> CATCH AND BRAWL
 
 Subheading:
 
@@ -11078,7 +11205,7 @@ Release gagal jika:
 
 # 184. PROGRAMMATIC ASSET GENERATION CONTRACT — ZERO INTERNET ASSETS
 
-v1.0 **tidak boleh mengambil asset 3D, UI image, icon, texture, animation, music, ambience, atau SFX dari internet, asset store, marketplace, stock library, model repository, sample pack, font website, atau generator cloud eksternal.**
+v1.0 **tidak boleh mengambil asset 3D, UI image, icon, texture, animation, music, ambience, atau SFX dari internet, asset store, marketplace, stock library, model repository, sample pack, font website, atau generator cloud eksternal.** Satu-satunya pengecualian adalah dua file font berlisensi terbuka di Section 184.12 (revisi 6.3).
 
 Tujuan:
 
@@ -11097,7 +11224,7 @@ Production v1.0 hanya boleh memakai:
 3. numeric/color/config resources `.tres` yang ditulis project;
 4. geometry yang dihasilkan oleh generator project sendiri;
 5. procedural `Image` / `ImageTexture` yang dibuat project sendiri;
-6. Godot default built-in font sebagai satu-satunya font baseline;
+6. dua font berlisensi di Section 184.12 (Fredoka, Chewy), bersama file lisensinya;
 7. shader source buatan project;
 8. procedural audio code Section 175;
 9. output render/screenshot yang dihasilkan dari asset project sendiri.
@@ -11326,6 +11453,8 @@ Icon harus dibentuk melalui code dari:
 - circles;
 - simple silhouettes.
 
+Revisi Ikon 6.4: bentuk-bentuk ini disusun menjadi ilustrasi stiker penuh warna (Section 174.10). Outline, bibir, dan kilau dihitung dengan `Geometry2D` (offset dan clip polygon) satu kali per ikon, lalu disimpan di cache.
+
 Contoh:
 
 - cash: rectangular note + central circle;
@@ -11337,13 +11466,19 @@ Contoh:
 
 ## 184.12 FONT RULE
 
-v1.0 menggunakan **Godot built-in default readable font only**.
+**Revisi Font 6.3:** pemilik proyek meminta font yang bernuansa komedi tapi hangat, gratis, dan boleh dikomersialkan. Font bawaan Godot diganti oleh tepat dua font yang sudah melewati license review:
 
-Tidak ada download font eksternal.
+| Font | Peran | Lisensi | File | Lisensi yang ikut |
+|---|---|---|---|---|
+| Fredoka (variable `wdth`/`wght`), Milena Brandão & Hafontia | semua teks berjalan | SIL Open Font License 1.1 (tanpa Reserved Font Name) | `res://assets/fonts/Fredoka-Variable.ttf` | `Fredoka-OFL.txt` |
+| Chewy, Font Diner (Sideshow) | judul besar, teks "cat papan" | Apache License 2.0 | `res://assets/fonts/Chewy-Regular.ttf` | `Chewy-LICENSE.txt` |
 
-Tidak ada custom font requirement.
+Aturan:
 
-Jika di masa depan custom font ditambahkan, itu perubahan post-v1.0 dan memerlukan revisi GDD + license review.
+- Font diambil tanpa modifikasi dari repository resmi Google Fonts. SHA-256 tercatat di `LICENSES.md`.
+- File lisensi berada di sebelah font, dipaketkan di setiap preset export (`include_filter` `assets/fonts/*.txt`), dan ditampilkan lengkap di layar Settings → PRIVACY AND LICENSES → LICENSES.
+- `AssetPolicyScan` menolak file font lain, dan menolak kedua font ini bila file lisensinya hilang.
+- Menambah atau mengganti font memerlukan revisi GDD, license review, entri di `LICENSES.md`, dan entri di `AssetPolicyScan.LICENSED_FONTS`.
 
 ## 184.13 ANIMATION GENERATION
 
@@ -11394,7 +11529,7 @@ Release scan gagal jika ditemukan:
 
 - imported `.glb`, `.fbx`, `.obj`, `.blend` yang bukan hasil generator repository;
 - downloaded `.png/.jpg/.webp/.svg` visual production asset;
-- downloaded font file;
+- font file selain dua font berlisensi di Section 184.12, atau salah satunya tanpa file lisensinya;
 - imported animation pack;
 - external sound file;
 - third-party asset-store license;
@@ -11911,7 +12046,7 @@ Bagian ini mengunci identity product, package naming, store copy, dan release me
 
 Final public title:
 
-> **Mancing Mania: Gelut Edition**
+> **Catch and Brawl**
 
 Internal project slug:
 
@@ -11919,11 +12054,11 @@ Internal project slug:
 
 Godot project name:
 
-`Mancing Mania Gelut Edition`
+`Catch and Brawl`
 
 Android application ID baseline:
 
-`com.mancingmania.gelutedition`
+`com.catchandbrawl.game`
 
 Rule:
 
@@ -12008,7 +12143,7 @@ Permission baru otomatis dianggap scope change dan memerlukan privacy review.
 
 Launcher label:
 
-> Mancing Mania: Gelut Edition
+> Catch and Brawl
 
 Adaptive icon dibuat programmatically melalui generator project.
 
@@ -12101,7 +12236,7 @@ No screenshot may:
 >
 > Win, bring the fish to Bu Yati's small lakeside market, sell your catch, upgrade your gear, and slowly pay down Darto's remaining debt.
 >
-> Mancing Mania: Gelut Edition is a warm, single-player fishing comedy about small progress, family, and learning to stop looking for shortcuts.
+> Catch and Brawl is a warm, single-player fishing comedy about small progress, family, and learning to stop looking for shortcuts.
 >
 > Features:
 > • Cozy fishing at Danau Cempaka
@@ -12119,7 +12254,7 @@ No marketing superlative yang tidak dapat dibuktikan.
 
 Title:
 
-> Mancing Mania: Gelut Edition
+> Catch and Brawl
 
 Short summary:
 
@@ -12310,11 +12445,11 @@ Hosting privacy policy is a publisher submission step and is **not** a runtime g
 
 Title:
 
-> Privacy Policy — Mancing Mania: Gelut Edition
+> Privacy Policy — Catch and Brawl
 
 Body:
 
-> Mancing Mania: Gelut Edition is designed to be played without creating an account and without sending gameplay data to the developer.
+> Catch and Brawl is designed to be played without creating an account and without sending gameplay data to the developer.
 >
 > **Data collection**
 >
@@ -12326,7 +12461,7 @@ Body:
 >
 > **Web version**
 >
-> The web version is hosted by a third-party distribution platform. That platform may process technical information under its own privacy policy when delivering the game files. Mancing Mania: Gelut Edition does not add its own analytics, advertising, or tracking system.
+> The web version is hosted by a third-party distribution platform. That platform may process technical information under its own privacy policy when delivering the game files. Catch and Brawl does not add its own analytics, advertising, or tracking system.
 >
 > **Save export and import**
 >
@@ -12369,7 +12504,7 @@ Because production art/audio/UI is generated internally:
 - no third-party asset attribution expected;
 - no stock asset license dependency;
 - no external music license;
-- no external font license.
+- external font licenses only for the two fonts of Section 184.12 (revisi 6.3): Fredoka under SIL OFL 1.1 and Chewy under Apache 2.0. Their copyright notices and full license texts ship with every build and are shown in-game on the LICENSES page.
 
 Godot Engine license/third-party notices required by the engine/export template must remain available as appropriate in `LICENSES.md`/credits.
 
@@ -14410,9 +14545,9 @@ release/v1.0.0/
   generator_manifest.json
   checksums.sha256
   web/
-    mancing-mania-gelut-edition-web-v1.0.0.zip
+    catch-and-brawl-web-v1.0.0.zip
   android/
-    MancingManiaGelut-v1.0.0.aab
+    CatchAndBrawl-v1.0.0.aab
   store/
     play/
     itch/
@@ -15302,6 +15437,170 @@ Setelah Version 6.0 disetujui:
 - fitur post-v1 yang material memerlukan specification/version baru terpisah.
 
 Tujuannya adalah menghentikan endless planning dan mulai shipping.
+
+---
+
+# 198. TEMPAT MEMANCING BERJENJANG — REVISI 6.7
+
+**Status:** amandemen GDD yang disetujui eksplisit oleh pemilik proyek (2026-11-15), mengikuti Section 191 dan 194.4. Section ini **authoritative** untuk semua hal tentang tempat memancing, ikan baru, duel baru, perlengkapan perjalanan, dan alasan cerita mengapa Darto selalu menjual ke Warung Bu Yati. Jika ada aturan lama yang menyebut "tepat 6 ikan", "tepat 4 duel", "hanya Danau Cempaka", atau "save schema version 5", section ini yang berlaku. Build berikutnya kembali melewati QA dan human playtest sebagai release candidate baru sebelum Gold Master.
+
+## 198.1 TUJUAN
+
+Bermain terus di Danau Cempaka lama-lama membosankan. Revisi ini menambah **4 tempat baru yang berjenjang**. Setiap tempat punya:
+
+- suasana dan set diorama sendiri;
+- satu sifat air yang mengubah cara memancing;
+- 5 ikan sendiri, termasuk 1 ikan legenda;
+- 1 duel khas yang hanya muncul di sana, ditambah 2 duel lama.
+
+Tempat terbuka satu per satu mengikuti pembayaran utang, jadi pemain selalu punya tujuan baru tanpa harus menggiling di tempat yang sama. Semua ikan dari semua tempat **tetap dijual di Warung Bu Yati** (198.6).
+
+## 198.2 DAFTAR TEMPAT
+
+| Jenjang | ID | English | Indonesia | Terbuka | Perlengkapan (harga) | Sifat air |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `cempaka` | Cempaka Lake | Danau Cempaka | dari awal | — | tenang (aturan lama) |
+| 2 | `kenanga` | Kenanga River | Sungai Kenanga | utang lunas Rp 300.000 | Kail Arus / Current Hook (Rp 25.000) | arus: marker reel terus turun, gigitan lebih cepat, jendela strike 10% lebih sempit |
+| 3 | `melati` | Melati Reservoir | Waduk Melati | utang lunas Rp 600.000 | Senar Panjang / Long Line (Rp 60.000) | air dalam: menunggu 25% lebih lama, ikan "big one" 2× lebih sering, berat ×1,15 |
+| 4 | `anggrek` | Anggrek Estuary | Muara Anggrek | utang lunas Rp 1.000.000 | Sepatu Lumpur / Mud Boots (Rp 100.000) | pasang surut: berganti setiap 4 lemparan; pasang = sampah ×0,5, surut = sampah ×2 |
+| 5 | `mawar` | Mawar Pier | Dermaga Mawar | utang lunas Rp 1.400.000 | Joran Laut / Sea Rod (Rp 180.000) | ombak: tegangan senar naik 14/detik saat ombak datang (periode 3,2 detik) selama reel ditahan |
+
+Aturan:
+
+- Tempat terbuka saat event cerita pembukanya selesai (198.6), bukan saat angka utang tercapai. Event itu ikut arbitrasi Market biasa (Section 177): prioritas 300, satu event per kunjungan, dan butuh event utang yang setara sudah dilihat.
+- Membuka tempat belum cukup. Perlengkapannya dibeli di Market (tab UPGRADES, bagian TRAVEL GEAR). Tanpa perlengkapan, tempat itu tampil di peta dengan pesan "Beli … di Market dulu".
+- Pindah tempat gratis dan bisa kapan saja saat Darto sedang diam (tidak sedang melempar/menunggu/reel), lewat chip peta di HUD memancing. Chip peta baru muncul setelah tempat kedua terbuka.
+- Kedatangan pertama di tiap tempat memutar 3 kalimat Darto (`arrival.<id>.1–3`).
+- Danau Cempaka tidak berubah sama sekali: peluang ikan, Wheel, dan semua angka lamanya tetap.
+
+## 198.3 IKAN BARU
+
+Setiap tempat punya tepat 5 ikan. Peluang di dalam pool ikan (setelah roll sampah gagal) adalah 30% / 26% / 22% / 18% / 4%. Ikan tier 5 adalah **legenda** tempat itu, harganya dikali 1,25 seperti Don Arowana, dan mengalahkannya menambah statistik `legends_defeated`.
+
+| Tempat | ID | English | Indonesia | Tier | Harga dasar | Skill duel |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kenanga | `baung_satpam` | Security Guard Baung | Baung Satpam | 2 | Rp 30.000 | 46 |
+| Kenanga | `tawes_gosip` | Gossip Tawes | Tawes Tukang Gosip | 2 | Rp 36.000 | 50 |
+| Kenanga | `belut_licin` | Slippery Eel | Belut Licin | 3 | Rp 48.000 | 56 |
+| Kenanga | `hampala_pembalap` | Street Racer Hampala | Hampala Pembalap Liar | 3 | Rp 66.000 | 62 |
+| Kenanga | `belida_pendekar` | Belida the Silat Master | Belida Sang Pendekar | 5 | Rp 320.000 ×1,25 | 84 |
+| Melati | `red_devil_palak` | Shakedown Red Devil | Red Devil Tukang Palak | 3 | Rp 40.000 | 54 |
+| Melati | `patin_stempel` | Rubber-Stamp Patin | Patin Juru Stempel | 3 | Rp 52.000 | 58 |
+| Melati | `jelawat_influencer` | Influencer Jelawat | Jelawat Influencer | 3 | Rp 64.000 | 62 |
+| Melati | `betutu_mager` | Couch Potato Betutu | Betutu Mager | 4 | Rp 88.000 | 60 |
+| Melati | `toman_jenderal` | General Toman | Jenderal Toman | 5 | Rp 380.000 ×1,25 | 86 |
+| Anggrek | `bandeng_tanpa_duri` | Boneless Milkfish | Bandeng Tanpa Duri | 3 | Rp 50.000 | 62 |
+| Anggrek | `buntal_pemarah` | Grumpy Pufferfish | Buntal Pemarah | 4 | Rp 62.000 | 66 |
+| Anggrek | `glodok_pelari` | Sprinter Mudskipper | Glodok Pelari | 4 | Rp 78.000 | 70 |
+| Anggrek | `kakap_sosialita` | Socialite Barramundi | Kakap Sosialita | 4 | Rp 110.000 | 72 |
+| Anggrek | `sembilang_tua` | Old Sembilang | Sembilang Tua | 5 | Rp 440.000 ×1,25 | 88 |
+| Mawar | `tongkol_ojol` | Rideshare Tuna | Tongkol Ojol | 4 | Rp 70.000 | 70 |
+| Mawar | `layur_penyair` | Poet Ribbonfish | Layur Penyair | 4 | Rp 84.000 | 74 |
+| Mawar | `barakuda_rentenir` | Loan Shark Barracuda | Barakuda Rentenir | 4 | Rp 105.000 | 78 |
+| Mawar | `kerapu_juragan` | Tycoon Grouper | Kerapu Juragan | 4 | Rp 140.000 | 80 |
+| Mawar | `layaran_kapten` | Captain Sailfish | Kapten Layaran | 5 | Rp 520.000 ×1,25 | 90 |
+
+Nilai pancing, tinju, panco, joget, dan suwit tiap ikan ada di `data/fish/<id>.tres` dan tetap dalam batas balancing lama (arm ≤ 84, HP tinju ≤ 190, ritme ≤ 90, tell ≥ 0,30). Nilai harapan per lemparan naik bertahap: ±Rp 57 rb (Kenanga), 74 rb (Melati), 90 rb (Anggrek), 117 rb (Mawar).
+
+Setiap ikan dibuat oleh `fish_builder.gd` dengan siluet dan aksesori khasnya sendiri (topi satpam, kerudung gosip, kacamata balap, ikat kepala silat, kalung emas, kacamata kantor, kacamata pink, topi tidur, topi jenderal, pita, duri, ikat keringat, kalung mutiara, caping, helm ojek, baret, rantai tipis, peci, topi kapten dan paruh layaran). Potret Fish Book dibuat oleh `reference_sheet_generator.gd`. Bahasa Indonesia memakai nama lokal di kolom "Indonesia"; nama spesies mengikuti bahasa.
+
+## 198.4 DUEL BARU
+
+Empat duel baru memakai pola duel lama: controller deterministik 120 Hz, satu hasil `{duel_id, fish_id, player_won, duration_sec, seed, metrics}`, keluar lewat `DuelExit`, dicatat sekali oleh `DuelOutcome`. Kekuatan ikan di duel baru diambil dari stat `duel_skill` (0–100). Kalah duel hanya berarti ikan lepas, sama seperti duel lama.
+
+| ID | English | Indonesia | Tempat | Kontrol | Aturan inti |
+| --- | --- | --- | --- | --- | --- |
+| `silat` | Silat | Silat | Kenanga | 4 panah (S D J K) | Ikan memperagakan urutan jurus satu per satu; pemain mengulang urutannya. Benar semua = balasan (poin Darto); salah atau terlambat = kena (poin ikan). 3 poin menang. Urutan mulai 3 jurus (4 untuk skill ≥ 70) dan bertambah 1 tiap ronde, maksimal 8. Tiap jurus tampil 0,62–0,40 detik, waktu jawab 1,6–1,05 detik per jurus. |
+| `tambang` | Tug of War | Tarik Tambang | Melati | TARIK (Space) | Marker mengayun di bar; TARIK di zona hijau menarik tali +0,13 (tengah zona +0,19). Di luar zona = terpeleset (−0,04, jeda 0,4 detik). Satu tarikan per lintasan marker. Ikan menarik 0,04–0,12/detik dan sesekali menyentak (+0,16 dalam 0,5 detik, ada peringatan 0,7 detik). Tali ke +1 = menang, ke −1 = kalah, habis waktu 45 detik = sisi bendera yang menang. |
+| `gasing` | Spinning Tops | Adu Gasing | Anggrek | KETUK (Space) | Ketuk sekali untuk bidikan (jarum mengayun), sekali lagi untuk tenaga. Putaran awal = 55 + 45 × (½ lurusnya bidikan + ½ tenaga). Lalu gasing beradu berkali-kali: cincin menutup dalam 1,1–0,75 detik; ketuk tepat (±0,09 detik) = −14 untuk gasing ikan, bagus (±0,22) = −8; terlalu cepat atau tidak mengetuk = gasing Darto kena 7–13. Kedua gasing kehilangan 2,5 putaran/detik. Gasing terakhir yang berputar menang. |
+| `pinang` | Greased Pole | Panjat Pinang | Mawar | KIRI / KANAN (A D) | Ketuk kiri dan kanan bergantian untuk memanjat (+0,034). Sisi yang sama dua kali = merosot (−0,05, jeda 0,45 detik). Mengetuk lebih cepat dari 0,17 detik menumpuk licin; licin penuh = merosot jauh (−0,08). Ikan memanjat tiap 0,40–0,22 detik dan kadang merosot (10–4%). Pertama sampai puncak menang; habis waktu 40 detik = yang lebih tinggi menang. |
+
+Wheel of Fate kini milik tempat: 8 segmen, duel khas tempat itu 4 segmen (50%) dan dua duel lama masing-masing 2 segmen (25%). Danau Cempaka tetap 4 duel lama × 25% (Section 38).
+
+| Tempat | Segmen Wheel |
+| --- | --- |
+| Cempaka | Tinju, Panco, Joget, Suwit (masing-masing 2) |
+| Kenanga | Silat ×4, Tinju ×2, Suwit ×2 |
+| Melati | Tarik Tambang ×4, Panco ×2, Joget ×2 |
+| Anggrek | Adu Gasing ×4, Suwit ×2, Tinju ×2 |
+| Mawar | Panjat Pinang ×4, Panco ×2, Joget ×2 |
+
+Setiap duel baru punya: arena diorama sendiri (`env_silat_set`, `env_tambang_set`, `env_gasing_set`, `env_pinang_set`), HUD portrait dengan tombol besar di zona jempol, banner pembuka dan tutorial sekali, bot QA (`--mm-auto-duel`), tab How to Play, baris Records, dan musik yang meminjam loop duel terdekat (Silat → tinju, Gasing → memancing, Tarik Tambang dan Panjat Pinang → panco). Semua informasi duel terbaca tanpa warna (bentuk, posisi, teks).
+
+## 198.5 PERLENGKAPAN, PETA, DAN UI
+
+- **Market → UPGRADES → TRAVEL GEAR:** satu kartu per tempat jenjang 2–5. Tempat yang belum terbuka menampilkan "???" dan syarat pembukaannya. Tombol BELI menjadi "SUDAH PUNYA" setelah dibeli.
+- **HUD memancing:** chip peta (ikon peta + nama tempat sekarang) di bar atas, hanya setelah tempat kedua terbuka; chip pasang/surut (panah naik/turun + teks) hanya di Muara Anggrek.
+- **WHERE TO? / MAU KE MANA?:** overlay daftar 5 tempat. Tiap baris: nama (atau "???"), sifat air atau alasan terkunci, jumlah ikan yang sudah dikalahkan ("Fish Book: 2 / 5"), dan tombol PERGI atau label "KAMU DI SINI".
+- **Fish Book:** dikelompokkan per tempat. Tempat yang belum terbuka hanya menampilkan judul "???" dan satu kalimat. Ikan legenda yang sudah dikalahkan diberi label emas LEGENDA.
+- **Records:** tambah Silat Wins, Tug of War Wins, Spinning Top Wins, Greased Pole Wins, Legends Defeated, dan Spots Visited (x / 5).
+- **How to Play:** tambah tab TRAVEL, SILAT, TARIK TAMBANG, ADU GASING, PANJAT PINANG.
+- **Ambience:** sungai (air deras), waduk (angin terbuka), muara (air + debur laut jauh), laut (debur ombak), semuanya sintetis dari kode (Section 175).
+- **Ikon baru:** peta dan panah bawah, digambar `IconPainter` seperti ikon lain.
+
+## 198.6 NARASI: KENAPA SELALU JUAL KE BU YATI
+
+Setiap tempat dibuka oleh satu event cerita di Market (`story_unlock_<id>`). Bersama-sama, keempat event menjawab mengapa Darto tetap pulang ke Warung Bu Yati:
+
+1. **Kontrak "orang van putih" (Kenanga, Mawar).** Pemasok restoran dari kota memesan ikan khusus lewat Bu Yati: mula-mula baung sungai, lalu pasokan rutin ikan laut untuk pesta pernikahan. Ikan dari mana pun berakhir di warung karena pesanannya lewat sana.
+2. **Timbangan jujur (Kenanga, Anggrek).** Tengkulak di jembatan Sungai Kenanga timbangannya miring ("rugi separuh"). Bu Yati tidak pernah mengakali timbangan siapa pun.
+3. **Pembeli lain tidak mau atau tidak bisa (Melati, Mawar).** Koperasi Waduk Melati hanya untuk anggota ("tiga fotokopi dan dua minggu"); Bu Yati hanya bertanya satu hal: "Ikannya segar?". Lelang ikan di Dermaga Mawar hanya untuk pemilik kapal, dan juru lelangnya pingsan kalau ikannya membalas bicara. Bu Yati satu-satunya yang tidak keberatan.
+4. **Kenangan keluarga (Anggrek).** Lewat chat, Rini bercerita ayahnya dulu mencari kepiting di Muara Anggrek dan selalu menjualnya ke warung yang sama, waktu itu milik ibu Bu Yati. Bu Yati menambahkan: dua puluh tahun, tak sekali pun timbangannya dicurangi, dan dia tak pernah menjual ke tempat lain. Darto: "Jadi itu sebabnya semua berakhir di sini."
+
+Kalimat kedatangan di tiap tempat mengulang alasan ini dengan lelucon kecil (tengkulak bertimbangan miring di jembatan, antrean koperasi di hari Minggu, juru lelang yang masih pucat); di Kenanga dan Mawar Darto menegaskan semua ikan tetap dibawa ke Bu Yati.
+
+Urutan event: Kenanga (setelah `story_debt_300k`), Melati (setelah `story_debt_600k`, dengan chat Nisa tentang sekolahnya di dekat waduk), Anggrek (setelah `story_debt_1000k`, dengan chat Rini), Mawar (setelah `story_debt_1400k`). Setiap event diakhiri kartu "TEMPAT BARU" dan instruksi membeli perlengkapan. Naskah lengkap English dan Indonesia ada di `ui_text.tres` / `ui_text_id.tres` (`story.story_unlock_*`).
+
+## 198.7 DATA DAN KODE
+
+- `ContentIds`: `LOCATION_IDS`, `START_LOCATION`, `LOCATION_FISH`, `LEGEND_FISH_IDS`, 26 `FISH_IDS`, 8 `DUEL_IDS`, event dan tutorial baru (`silat_seen`, `tambang_seen`, `gasing_seen`, `pinang_seen`, `travel_seen`).
+- `LocationData` (`data/locations/<id>.tres`): jenjang, event pembuka, harga perlengkapan, pengali tunggu/strike/big one/berat, drift reel, periode dan pengali pasang surut, tegangan dan periode ombak, segmen Wheel, set diorama, ambience.
+- `FishData.duel_skill` (0–100) untuk duel baru.
+- `EncounterRoller.roll(..., location_id, cast_index)` dan `ReelSimulation.setup_water(location)` menerapkan sifat air. Dengan tempat Danau Cempaka hasilnya identik dengan sebelumnya.
+- `WheelController.segments_for(fish_id)` memakai segmen tempat asal ikan.
+- `DuelControllerBase`, `SpotDuelScene`, `SpotDuelHud`, `SpotDuelWorld` adalah dasar bersama keempat duel baru. `SpotSet.swap_in` menukar set danau dengan set tempat di adegan memancing dan hasil duel.
+- Debug: `--mm-location=<id>` membuka tempat, memberi perlengkapan, dan memindahkan Darto ke sana (save tidak ditulis).
+
+## 198.8 SAVE SCHEMA VERSION 6
+
+Save schema naik ke **version 6**. File tetap `user://save_v5.json` agar save pemain lama ditemukan. Tambahan:
+
+```json
+"locations": {
+  "current": "cempaka",
+  "unlocked": ["cempaka"],
+  "gear": [],
+  "visited": ["cempaka"]
+}
+```
+
+- Statistik baru: `silat_wins`, `tambang_wins`, `gasing_wins`, `pinang_wins`, `legends_defeated`.
+- Fish Book, Bucket, dan `duel_wins` per ikan otomatis berisi 20 ikan baru.
+- Tutorial baru: `silat_seen`, `tambang_seen`, `gasing_seen`, `pinang_seen`, `travel_seen`.
+- Migrasi `migrate_5_to_6` menambah semua isian di atas tanpa mengubah data lama. `legends_defeated` dimulai dari jumlah kemenangan atas Don Arowana. Save version 5 lama dimuat, dimigrasi, lalu disimpan sebagai version 6.
+- Normalisasi: ID tempat yang tidak dikenal dibuang; `current` dikembalikan ke `cempaka` bila tempat itu belum terbuka atau perlengkapannya belum dimiliki.
+
+## 198.9 SCOPE YANG BERUBAH
+
+Section 165 dan 164 kini dibaca dengan angka berikut:
+
+- set diorama: 7 lama + 4 tempat (`env_river_set`, `env_reservoir_set`, `env_estuary_set`, `env_pier_set`) + 4 arena duel = **15**;
+- ikan gameplay: **26** (6 lama + 20 baru), 5 di antaranya legenda;
+- duel: **8** (4 lama + Silat, Tarik Tambang, Adu Gasing, Panjat Pinang);
+- tempat memancing: **5**;
+- karakter manusia tetap 4; tidak ada NPC bernama baru (tengkulak, petugas koperasi, juru lelang hanya disebut dalam dialog).
+
+Yang tetap di luar scope: peta yang bisa dijelajahi bebas, jual-beli di tempat selain Warung Bu Yati, cuaca dinamis, dan duel online.
+
+## 198.10 ACCEPTANCE CRITERIA
+
+- Danau Cempaka menghasilkan peluang, Wheel, dan hasil RNG yang sama persis dengan versi sebelumnya untuk seed yang sama.
+- Tiap tempat baru hanya bisa dipakai setelah event pembukanya selesai **dan** perlengkapannya dibeli; save yang dimodifikasi untuk melompati syarat itu dinormalisasi kembali ke Danau Cempaka.
+- Semua 20 ikan baru bisa didapat di tempatnya dan tidak muncul di tempat lain.
+- Keempat duel baru deterministik, bisa dimenangkan bot QA melawan setiap ikan tempatnya, tunduk pada `--mm-result`, dan tidak pernah menyita cash, upgrade, atau Bucket saat kalah.
+- Semua ikan selalu dijual di Warung Bu Yati; tidak ada tombol jual di tempat lain.
+- Save version 5 dari build sebelumnya termigrasi tanpa kehilangan progres.
+- Seluruh teks baru tersedia dalam English dan Bahasa Indonesia.
 
 ---
 

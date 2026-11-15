@@ -126,42 +126,47 @@ func _scroll_parent(control: Control) -> ScrollContainer:
 	return null
 
 
-# A11Y-001, A11Y-002: the screens with critical buttons at the largest sizes.
+# A11Y-001, A11Y-002: the screens with critical buttons at the largest sizes,
+# in every language (Indonesian labels run longer than English ones).
 func test_largest_scales_keep_critical_buttons_whole() -> bool:
 	GameState.set_setting(&"ui_scale", 1.3)
 	GameState.set_setting(&"text_scale", 1.5)
 	DisplaySettings.apply_all(tree)
 	var problems := PackedStringArray()
-	# A small 9:16 phone, a tall phone and a tablet.
-	for size: Vector2i in [Vector2i(720, 1280), Vector2i(1080, 2400), Vector2i(1536, 2048)]:
-		tree.root.size = size
-		for scene_path: String in ["res://scenes/menu/main_menu.tscn", "res://scenes/fishing/fishing.tscn", "res://scenes/market/market.tscn"]:
-			tree.change_scene_to_packed(load(scene_path))
-			await wait_frames(6)
-			var visible_rect := Rect2(Vector2.ZERO, tree.root.get_visible_rect().size)
-			for button: Node in tree.current_scene.find_children("*", "Button", true, false):
-				var control := button as Button
-				if not control.is_visible_in_tree() or control.text == "":
-					continue
-				var rect := control.get_global_rect()
-				# A button inside a scrolling page is reachable when the page
-				# itself is on screen (the smallest phone at the largest sizes
-				# scrolls the Market buttons with the list).
-				var reach := rect
-				var scroll := _scroll_parent(control)
-				if scroll != null:
-					reach = scroll.get_global_rect()
-					if rect.size.x > reach.size.x + 1.0:
-						problems.append("%s %s: %s is wider than its page" % [scene_path.get_file(), size, control.name])
-				if not visible_rect.grow(1.0).encloses(reach):
-					problems.append("%s %s: %s is off screen" % [scene_path.get_file(), size, control.name])
-				var font := control.get_theme_font(&"font")
-				var font_size := control.get_theme_font_size(&"font_size")
-				var text_width := font.get_string_size(control.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-				if not control.clip_text and text_width > rect.size.x + 1.0 and control.autowrap_mode == TextServer.AUTOWRAP_OFF:
-					problems.append("%s %s: %s text is wider than the button" % [scene_path.get_file(), size, control.name])
+	for language: String in TextDb.LANGUAGES:
+		GameState.set_setting(&"language", language)
+		# A small 9:16 phone, a tall phone and a tablet.
+		for size: Vector2i in [Vector2i(720, 1280), Vector2i(1080, 2400), Vector2i(1536, 2048)]:
+			tree.root.size = size
+			for scene_path: String in ["res://scenes/menu/main_menu.tscn", "res://scenes/fishing/fishing.tscn", "res://scenes/market/market.tscn"]:
+				tree.change_scene_to_packed(load(scene_path))
+				await wait_frames(6)
+				var where := "%s %s %s" % [language, scene_path.get_file(), size]
+				var visible_rect := Rect2(Vector2.ZERO, tree.root.get_visible_rect().size)
+				for button: Node in tree.current_scene.find_children("*", "Button", true, false):
+					var control := button as Button
+					if not control.is_visible_in_tree() or control.text == "":
+						continue
+					var rect := control.get_global_rect()
+					# A button inside a scrolling page is reachable when the page
+					# itself is on screen (the smallest phone at the largest sizes
+					# scrolls the Market buttons with the list).
+					var reach := rect
+					var scroll := _scroll_parent(control)
+					if scroll != null:
+						reach = scroll.get_global_rect()
+						if rect.size.x > reach.size.x + 1.0:
+							problems.append("%s: %s is wider than its page" % [where, control.name])
+					if not visible_rect.grow(1.0).encloses(reach):
+						problems.append("%s: %s is off screen" % [where, control.name])
+					var font := control.get_theme_font(&"font")
+					var font_size := control.get_theme_font_size(&"font_size")
+					var text_width := font.get_string_size(control.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+					if not control.clip_text and text_width > rect.size.x + 1.0 and control.autowrap_mode == TextServer.AUTOWRAP_OFF:
+						problems.append("%s: %s text is wider than the button" % [where, control.name])
 	check_empty(problems, "critical buttons stay on screen and whole at 130% UI and 150% text")
 	tree.root.size = Vector2i(1280, 720)
+	GameState.set_setting(&"language", "auto")
 	GameState.set_setting(&"ui_scale", 1.0)
 	GameState.set_setting(&"text_scale", 1.0)
 	DisplaySettings.apply_all(tree)

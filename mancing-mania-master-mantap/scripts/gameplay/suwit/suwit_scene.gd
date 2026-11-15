@@ -43,7 +43,7 @@ func _ready() -> void:
 	AudioManager.set_music_state(&"suwit")
 	_world.setup(_fish.id)
 	_controller.start_duel(_fish.id, RNGService.next_duel_seed())
-	_hud.show_banner(_fish.display_name.to_upper(), TextDb.t(&"suwit.intro.subtitle"), 1.6)
+	_hud.show_banner(_fish.get_display_name().to_upper(), TextDb.t(&"suwit.intro.subtitle"), 1.6)
 
 
 func _process(delta: float) -> void:

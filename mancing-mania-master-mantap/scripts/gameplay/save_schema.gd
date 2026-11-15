@@ -1,14 +1,17 @@
 class_name SaveSchema
 extends RefCounted
-## Save schema version 5 (GDD Section 171): defaults plus the normalization
-## that turns any parsed JSON into a dictionary the game can trust.
+## Save schema version 6 (GDD Section 171, revision 6.7): defaults plus the
+## normalization that turns any parsed JSON into a dictionary the game can
+## trust. Version 6 adds the `locations` block (current spot, unlocked spots,
+## gear owned, spots visited), the new fish, duels, stats and tutorials.
+## Version 5 saves are migrated by SaveManager.
 ##
 ## One documented extension over GDD 171.5: every fish_book entry also stores
 ## `duel_wins` (wins per duel mode). `favourite_duel` is defined as the mode
 ## with the most wins, which cannot be derived without those counts.
 ## See docs/implementation_decisions.md (D-003).
 
-const VERSION := 5
+const VERSION := 6
 const ENGINE_VERSION_LABEL := "4.7"
 
 const HUD_SHAKE_MODES: Array[String] = ["on", "reduced", "off"]
@@ -19,6 +22,12 @@ const HANDEDNESS_MODES: Array[String] = ["right", "left"]
 const DIALOGUE_SPEEDS: Array[String] = ["instant", "fast", "normal", "relaxed"]
 const SKIP_HOLD_OPTIONS: Array[float] = [0.4, 0.8, 1.2]
 const QUALITY_PRESETS: Array[String] = ["low", "medium", "high"]
+## "auto" follows the device language; the others pick one (revision 6.6).
+const LANGUAGE_MODES: Array[String] = ["auto", "en", "id"]
+## Settings added after saves of this version already existed. A save
+## without one simply gets the default: that is an update, not damage, so it
+## is not a repair (no pre-repair backup, no warning).
+const LATER_SETTINGS: Array[String] = ["language"]
 const PLATFORMS: Array[String] = ["web", "android", "ios", "other"]
 const RHYTHM_OFFSET_LIMIT_MS := 150
 ## Seeds stay inside 31 bits so they survive the JSON float round trip exactly.
@@ -41,7 +50,12 @@ const INT_STAT_KEYS: Array[String] = [
 	"arm_wrestle_wins",
 	"dance_wins",
 	"suwit_wins",
+	"silat_wins",
+	"tambang_wins",
+	"gasing_wins",
+	"pinang_wins",
 	"don_arowana_defeated",
+	"legends_defeated",
 	"lifetime_sales",
 	"lifetime_debt_paid",
 	"family_savings",
@@ -80,12 +94,24 @@ static func make_default(save_seed: int) -> Dictionary:
 		"story": default_story(),
 		"tutorials": default_tutorials(),
 		"settings": default_settings(),
+		"locations": default_locations(),
 		"rng": {
 			"save_seed": sanitize_seed(save_seed),
 			"encounter_counter": 0,
 			"duel_counter": 0,
 		},
 		"system": default_system(),
+	}
+
+
+## The fishing spots (revision 6.7): where Darto fishes now, which spots the
+## story has opened, which access gear he owns and where he has been.
+static func default_locations() -> Dictionary:
+	return {
+		"current": String(ContentIds.START_LOCATION),
+		"unlocked": [String(ContentIds.START_LOCATION)],
+		"gear": [],
+		"visited": [String(ContentIds.START_LOCATION)],
 	}
 
 
@@ -179,6 +205,7 @@ static func default_settings() -> Dictionary:
 		"quality_preset": "medium",
 		"fullscreen_web": false,
 		"input_remap": {},
+		"language": "auto",
 	}
 
 
@@ -248,6 +275,7 @@ static func normalize(raw: Variant) -> Dictionary:
 	out["story"] = _normalize_story(_take_dictionary(source, "story"))
 	out["tutorials"] = _normalize_tutorials(_take_dictionary(source, "tutorials"))
 	out["settings"] = normalize_settings(_take_dictionary(source, "settings"))
+	out["locations"] = _normalize_locations(_take_dictionary(source, "locations"))
 	out["rng"] = _normalize_rng(_take_dictionary(source, "rng"))
 	out["system"] = _normalize_system(_take_dictionary(source, "system"))
 
@@ -266,7 +294,7 @@ static func normalize_settings(source: Dictionary) -> Dictionary:
 			if not _same_value(normalized, source[key]):
 				_note("settings.%s repaired" % key)
 			settings[key] = normalized
-		else:
+		elif not LATER_SETTINGS.has(key):
 			_note("settings.%s missing" % key)
 	return settings
 
@@ -300,6 +328,8 @@ static func normalize_setting(key: String, value: Variant) -> Variant:
 			return _read_option(value, SKIP_HOLD_OPTIONS, fallback)
 		"quality_preset":
 			return _read_enum(value, QUALITY_PRESETS, fallback)
+		"language":
+			return _read_enum(value, LANGUAGE_MODES, fallback)
 		"input_remap":
 			return normalize_input_remap(value)
 	# Everything left is a boolean toggle.
@@ -478,6 +508,40 @@ static func _clean_event_list(value: Variant, exclude: Array, path: String) -> A
 		else:
 			clean.append(event_id)
 	return clean
+
+
+static func _normalize_locations(source: Dictionary) -> Dictionary:
+	var locations := default_locations()
+	var start := String(ContentIds.START_LOCATION)
+	for key: String in ["unlocked", "gear", "visited"]:
+		var clean: Array = [start] if key != "gear" else []
+		var value: Variant = source.get(key, clean)
+		if typeof(value) != TYPE_ARRAY:
+			_note("locations.%s was not a list" % key)
+			value = []
+		for item: Variant in value:
+			var id := String(item) if typeof(item) == TYPE_STRING or typeof(item) == TYPE_STRING_NAME else ""
+			if not ContentIds.LOCATION_IDS.has(StringName(id)):
+				_note("locations.%s dropped unknown spot '%s'" % [key, item])
+			elif not clean.has(id):
+				clean.append(id)
+		locations[key] = clean
+	var current := _take_string(source, "current", start, "locations.current")
+	# Darto can only stand at a spot that is open and that he has the gear for.
+	if not can_fish_at(locations, StringName(current)):
+		if current != start:
+			_note("locations.current moved back to '%s'" % start)
+		current = start
+	locations["current"] = current
+	return locations
+
+
+## True when the story has opened `location_id` and its gear is owned
+## (the first spot needs neither).
+static func can_fish_at(locations: Dictionary, location_id: StringName) -> bool:
+	if location_id == ContentIds.START_LOCATION:
+		return true
+	return (locations.get("unlocked", []) as Array).has(String(location_id)) and (locations.get("gear", []) as Array).has(String(location_id))
 
 
 static func _normalize_tutorials(source: Dictionary) -> Dictionary:

@@ -5,9 +5,13 @@ extends MarketPanel
 ## player spends anything. Flavour text alone is never enough.
 
 signal upgrade_requested(upgrade_id: StringName)
+## Travel gear for a fishing spot (revision 6.7).
+signal gear_requested(location_id: StringName)
 
 ## upgrade id -> {"level": Label, "current": Label, "next": Label, "button": GameButton}
 var _cards: Dictionary[StringName, Dictionary] = {}
+## location id -> {"name": Label, "desc": Label, "button": GameButton}
+var _gear: Dictionary[StringName, Dictionary] = {}
 
 
 func build() -> void:
@@ -17,6 +21,13 @@ func build() -> void:
 		if upgrade == null:
 			continue
 		body.add_child(_make_card(upgrade))
+	# TRAVEL GEAR: one item per spot after the first, in the order they open.
+	var gear_heading := make_label(TextDb.t(&"market.gear.title"), UiTokens.TYPE_SECTION)
+	gear_heading.name = "GearHeading"
+	body.add_child(gear_heading)
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		if location_id != ContentIds.START_LOCATION:
+			body.add_child(_make_gear_card(location_id))
 
 
 func refresh() -> void:
@@ -38,6 +49,29 @@ func refresh() -> void:
 			next_label.text = TextDb.tf(&"market.upgrade.next", {"effect": UpgradeEffects.describe(upgrade_id, level + 1)})
 			button.text = TextDb.tf(&"market.upgrade.buy", {"price": Money.format_rp(price)})
 			button.disabled = not GameState.can_buy_upgrade(upgrade_id)
+	for location_id: StringName in _gear:
+		_refresh_gear(location_id)
+
+
+func _refresh_gear(location_id: StringName) -> void:
+	var card: Dictionary = _gear[location_id]
+	var location := GameData.get_location(location_id)
+	var button: GameButton = card["button"]
+	var desc: Label = card["desc"]
+	var unlocked := GameState.is_location_unlocked(location_id)
+	(card["name"] as Label).text = TextDb.t(StringName("location.%s.gear" % location_id)).to_upper() if unlocked else TextDb.t(&"travel.locked_name")
+	# A closed spot's gear says what opens the spot, like the map does.
+	desc.text = TextDb.t(StringName("location.%s.gear_desc" % location_id)) if unlocked else TravelOverlay.status_text(location_id)
+	if GameState.has_location_gear(location_id):
+		button.text = TextDb.t(&"market.gear.owned")
+		button.disabled = true
+	else:
+		button.text = TextDb.tf(&"market.gear.buy", {"price": Money.format_rp(location.access_price)})
+		button.disabled = not GameState.can_buy_location_gear(location_id)
+
+
+func get_gear_button(location_id: StringName) -> GameButton:
+	return _gear[location_id]["button"] if _gear.has(location_id) else null
 
 
 func get_buy_button(upgrade_id: StringName) -> GameButton:
@@ -55,7 +89,7 @@ func _make_card(upgrade: UpgradeData) -> PanelContainer:
 
 	var title_row := HBoxContainer.new()
 	column.add_child(title_row)
-	var name_label := make_label(upgrade.name.to_upper())
+	var name_label := make_label(upgrade.get_display_name().to_upper())
 	name_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
 	name_label.add_theme_font_override(&"font", UiSkin.bold_font())
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -85,6 +119,28 @@ func _make_card(upgrade: UpgradeData) -> PanelContainer:
 	column.add_child(button)
 
 	_cards[upgrade.id] = {"level": level_label, "current": current_label, "next": next_label, "button": button}
+	return card
+
+
+func _make_gear_card(location_id: StringName) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.name = "Gear_%s" % location_id
+	card.add_theme_stylebox_override(&"panel", _card_style())
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override(&"separation", UiTokens.SPACE_4)
+	card.add_child(column)
+	var name_label := make_label("")
+	name_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
+	name_label.add_theme_font_override(&"font", UiSkin.bold_font())
+	column.add_child(name_label)
+	var desc := make_label("", UiTokens.TYPE_SMALL)
+	column.add_child(desc)
+	var button := make_button("", UiTokens.TYPE_CTA_BUTTON)
+	button.name = "BuyGearButton"
+	button.min_height = UiTokens.TOUCH_TARGET_MIN
+	button.pressed.connect(func() -> void: gear_requested.emit(location_id))
+	column.add_child(button)
+	_gear[location_id] = {"name": name_label, "desc": desc, "button": button}
 	return card
 
 

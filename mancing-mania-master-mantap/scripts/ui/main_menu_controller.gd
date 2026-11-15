@@ -45,7 +45,8 @@ var _busy: bool = false
 
 func _ready() -> void:
 	_title_line_1.text = TextDb.t(&"menu.title_line_1")
-	_title_line_2.text = TextDb.t(&"menu.title_line_2")
+	# "Catch and Brawl" has no subtitle (revision 6.8); the ribbon waits for one.
+	_title_line_2.text = TextDb.t(&"menu.title_line_2") if TextDb.has_key(&"menu.title_line_2") else ""
 	_continue_button.text = TextDb.t(&"menu.continue")
 	_new_game_button.text = TextDb.t(&"menu.new_game")
 	_how_to_button.text = TextDb.t(&"menu.how_to_play")
@@ -72,6 +73,8 @@ func _ready() -> void:
 	_settings = SettingsOverlay.new()
 	_settings.name = "SettingsOverlay"
 	_settings.save_reset.connect(_refresh)
+	# A new language redraws the whole menu in it.
+	_settings.language_changed.connect(func() -> void: SceneRouter.goto_main_menu())
 	add_child(_settings)
 	_how_to = HowToOverlay.new()
 	_how_to.name = "HowToOverlay"
@@ -107,6 +110,7 @@ func _apply_layout(_viewport_class: StringName = &"") -> void:
 	# tilted crust ribbon.
 	var title_size := int(clampf(area.x * 0.105, 30.0, 52.0))
 	UiSkin.sign_text(_title_line_1, title_size, DioramaStyle.BUTTER, 12)
+	_fit_title(area.x)
 	_title_line_2.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(int(clampf(title_size * 0.5, 17.0, 26.0))))
 	_emblem.diameter = clampf(area.x * 0.2, 64.0, 104.0)
 	# Presets size each block to its content, so they run after the content changed.
@@ -150,7 +154,7 @@ func _focus_later(button: GameButton) -> void:
 # --- Logo and entrance -------------------------------------------------------
 
 ## The title becomes a small logo: the round emblem above the big painted
-## title, with GELUT EDITION on a tilted ribbon under it.
+## title, with the subtitle (if the title has one) on a tilted ribbon under it.
 func _build_logo() -> void:
 	var row := VBoxContainer.new()
 	row.name = "TitleRow"
@@ -178,8 +182,22 @@ func _build_logo() -> void:
 	_title_text.add_child(_ribbon)
 	_title_line_2.reparent(_ribbon, false)
 	_title_line_2.theme_type_variation = UiTokens.TYPE_RIBBON_LABEL
+	# The ribbon carries a subtitle only when the title has one ("Catch and
+	# Brawl" since revision 6.8 is a single line).
+	_ribbon.visible = _title_line_2.text != ""
 	# Containers reset rotation when they lay out, so the tilt is re-applied.
 	_title_text.sort_children.connect(_tilt_ribbon)
+
+
+## The title stays on one line and never runs past the screen edge, even on
+## a narrow phone with large text: the font steps down until it fits.
+func _fit_title(width: float) -> void:
+	var font := _title_line_1.get_theme_font(&"font")
+	var fitted := _title_line_1.get_theme_font_size(&"font_size")
+	var room := width - UiTokens.SPACE_24
+	while fitted > 20 and font.get_string_size(_title_line_1.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fitted).x > room:
+		fitted -= 2
+	_title_line_1.add_theme_font_size_override(&"font_size", fitted)
 
 
 func _tilt_ribbon() -> void:

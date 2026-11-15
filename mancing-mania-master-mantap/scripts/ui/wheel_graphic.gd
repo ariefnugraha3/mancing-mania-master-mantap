@@ -8,6 +8,8 @@ extends Control
 const DUEL_COLORS: Dictionary = {
 	&"boxing": UiTokens.TERRACOTTA_500, &"arm_wrestle": UiTokens.GRASS_500,
 	&"dance": UiTokens.SUN_500, &"suwit": UiTokens.LAKE_500,
+	&"silat": UiTokens.RED_500, &"tambang": UiTokens.BLUE_400,
+	&"gasing": DioramaStyle.CRUST, &"pinang": DioramaStyle.PINE,
 }
 ## Width of the cream rim around the segments.
 const RIM := 14.0
@@ -21,6 +23,11 @@ var highlight: int = -1:
 	set(value):
 		highlight = value
 		queue_redraw()
+## The segments to paint, clockwise from the top (the spot's wheel).
+var segments: Array[StringName] = WheelController.SEGMENTS:
+	set(value):
+		segments = value
+		queue_redraw()
 
 
 func _ready() -> void:
@@ -32,7 +39,7 @@ func _draw() -> void:
 	var radius := minf(size.x, size.y) * 0.5 - RIM - 4.0
 	if radius <= 4.0:
 		return
-	var count := WheelController.SEGMENTS.size()
+	var count := segments.size()
 	var step := TAU / float(count)
 	# A soft shadow, a cocoa outline and the cream rim.
 	draw_circle(centre + Vector2(0.0, radius * 0.045), radius + RIM + 4.0, Color(UiTokens.INK_900, 0.28))
@@ -41,7 +48,7 @@ func _draw() -> void:
 	draw_arc(centre, radius + RIM * 0.5, 0.0, TAU, 64, UiTokens.EDGE_CREAM, 2.0, true)
 	draw_circle(centre, radius + 2.0, UiTokens.INK_900)
 	for index: int in count:
-		var duel: StringName = WheelController.SEGMENTS[index]
+		var duel: StringName = segments[index]
 		# Segment i is centred at i / 8 of a turn clockwise from the top;
 		# the wheel as a whole is turned back by `turns`.
 		var middle := (float(index) / float(count) - turns) * TAU - PI * 0.5
@@ -77,6 +84,24 @@ func _draw() -> void:
 				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0.8) * radius * 0.07, mark + Vector2(-1, 0.8) * radius * 0.07])
 			&"suwit":
 				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0) * radius * 0.08, mark + Vector2(0, 1) * radius * 0.08, mark + Vector2(-1, 0) * radius * 0.08])
+			&"silat":
+				# A five-pointed star.
+				for corner: int in 10:
+					var turn := -PI * 0.5 + PI * 0.2 * float(corner)
+					shape.append(mark + Vector2(cos(turn), sin(turn)) * radius * (0.085 if corner % 2 == 0 else 0.036))
+			&"tambang":
+				# A rope: a long bar.
+				var length := radius * 0.09
+				var thick := radius * 0.025
+				shape = PackedVector2Array([mark + Vector2(-length, -thick), mark + Vector2(length, -thick), mark + Vector2(length, thick), mark + Vector2(-length, thick)])
+			&"gasing":
+				# A spinning top: a diamond on its point.
+				shape = PackedVector2Array([mark + Vector2(0, -0.05) * radius, mark + Vector2(0.075, 0.0) * radius, mark + Vector2(0, 0.09) * radius, mark + Vector2(-0.075, 0.0) * radius])
+			&"pinang":
+				# A pole: a tall bar.
+				var tall := radius * 0.09
+				var narrow := radius * 0.022
+				shape = PackedVector2Array([mark + Vector2(-narrow, -tall), mark + Vector2(narrow, -tall), mark + Vector2(narrow, tall), mark + Vector2(-narrow, tall)])
 		draw_colored_polygon(shape, UiTokens.CREAM_50)
 		draw_polyline(shape + PackedVector2Array([shape[0]]), UiTokens.INK_900, 2.5, true)
 

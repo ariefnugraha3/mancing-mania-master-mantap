@@ -7,7 +7,8 @@ extends MarketPanel
 const COUNT_ROWS: Array[StringName] = [
 	&"total_casts", &"successful_strikes", &"lines_broken", &"trash_caught",
 	&"fish_landed", &"duel_wins", &"duel_losses", &"boxing_wins",
-	&"arm_wrestle_wins", &"dance_wins", &"suwit_wins", &"don_arowana_defeated",
+	&"arm_wrestle_wins", &"dance_wins", &"suwit_wins", &"silat_wins", &"tambang_wins",
+	&"gasing_wins", &"pinang_wins", &"don_arowana_defeated", &"legends_defeated",
 ]
 ## Counters shown as money.
 const MONEY_ROWS: Array[StringName] = [&"lifetime_sales", &"lifetime_debt_paid"]
@@ -20,6 +21,7 @@ func build() -> void:
 	set_heading(TextDb.t(&"market.records.title"))
 	for row_id: StringName in COUNT_ROWS:
 		_add_row(row_id)
+	_add_row(&"spots_visited")
 	_add_row(&"largest_fish")
 	for row_id: StringName in MONEY_ROWS:
 		_add_row(row_id)
@@ -31,6 +33,7 @@ func refresh() -> void:
 		_values[row_id].text = Money.group_thousands(int(GameState.get_stat(row_id)))
 	for row_id: StringName in MONEY_ROWS:
 		_values[row_id].text = Money.format_rp(int(GameState.get_stat(row_id)))
+	_values[&"spots_visited"].text = "%d / %d" % [GameState.get_visited_location_count(), ContentIds.LOCATION_IDS.size()]
 	_values[&"largest_fish"].text = _largest_fish_text()
 	_values[&"play_time"].text = format_play_time(float(GameState.get_stat(&"play_time_sec")))
 
@@ -56,6 +59,6 @@ func _largest_fish_text() -> String:
 	if fish_id == "":
 		return TextDb.t(&"records.largest_none")
 	return TextDb.tf(&"records.largest_value", {
-		"weight": "%.2f" % float(GameState.get_stat(&"largest_fish_weight_kg")),
+		"weight": Money.decimal(float(GameState.get_stat(&"largest_fish_weight_kg"))),
 		"name": GameData.get_item_display_name(StringName(fish_id)),
 	})

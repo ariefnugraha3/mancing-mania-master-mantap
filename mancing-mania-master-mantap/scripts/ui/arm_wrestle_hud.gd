@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 # --- Called by the arm wrestling scene --------------------------------------
 
 func setup(fish: FishData) -> void:
-	_position_bar.set_names(TextDb.t(&"boxing.hud.player"), fish.display_name.to_upper())
+	_position_bar.set_names(TextDb.t(&"boxing.hud.player"), fish.get_display_name().to_upper())
 	_position_bar.grip_band = GameData.get_arm_wrestle_config().sudden_grip_threshold
 	show_hint("")
 

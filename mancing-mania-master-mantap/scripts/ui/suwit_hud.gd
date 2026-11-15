@@ -82,12 +82,12 @@ func refresh(snapshot: Dictionary) -> void:
 	if charm_move != &"":
 		_tell.visible = true
 		_tell_icon.move = charm_move
-		_tell_icon.tint = UiTokens.LAKE_500
+		_tell_icon.highlighted = true
 		_tell_label.text = TextDb.tf(&"suwit.real_move", {"move": TextDb.t(StringName("suwit.move.%s" % charm_move))})
 	elif tell != &"":
 		_tell.visible = true
 		_tell_icon.move = tell
-		_tell_icon.tint = UiTokens.INK_900
+		_tell_icon.highlighted = false
 		_tell_label.text = TextDb.t(StringName("suwit.move.%s" % tell))
 	else:
 		_tell.visible = counting

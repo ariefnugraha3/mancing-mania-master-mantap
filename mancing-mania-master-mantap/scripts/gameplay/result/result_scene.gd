@@ -29,10 +29,15 @@ func _ready() -> void:
 
 	var fish := GameData.get_fish(result["fish_id"])
 	var won: bool = result["player_won"]
+	# Wrap is switched on before any text goes in: a label without wrap takes
+	# its whole one-line width as its minimum size, and a long fish name would
+	# then push the line off a narrow phone no matter what size layout gives it.
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.text = TextDb.t(&"duel.result.win.title" if won else &"duel.result.loss.title")
 	UiSkin.sign_text(_title, UiTokens.FONT_HERO + 8, DioramaStyle.BUTTER if won else UiTokens.CREAM_50, 14)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_detail.text = TextDb.tf(&"result.detail.win", {"fish": fish.display_name.to_upper()}) if won else ""
+	_detail.text = TextDb.tf(&"result.detail.win", {"fish": fish.get_display_name().to_upper()}) if won else ""
 	UiTokens.outline_text(_detail, UiTokens.FONT_HEADER)
 	_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_continue.text = TextDb.t(&"duel.result.continue")
@@ -56,7 +61,8 @@ func _ready() -> void:
 	(_darto.get_node("Rig/AnimationPlayer") as AnimationPlayer).play(&"market_idle")
 	if won:
 		DioramaMotion.stretch(_darto.get_node("Rig") as Node3D, 0.12)
-	AudioManager.set_ambience_state(&"lake")
+	var spot := GameData.get_location(GameState.get_current_location())
+	AudioManager.set_ambience_state(spot.ambience if spot != null else &"lake")
 	AudioManager.set_music_state(&"result")
 	AudioManager.play_ui(&"ui_sell" if won else &"ui_back")
 
@@ -77,7 +83,9 @@ func _ready() -> void:
 ## Darto stands at his fishing spot facing the camera, the bucket on his
 ## left on screen and the fish on his right, the lake behind (GDD 88).
 func _stage_cast() -> void:
-	var markers := get_node("World/ResultStageAnchor/Markers")
+	# The result plays out at the spot where the fish was caught.
+	var stage := SpotSet.swap_in(get_node("World/ResultStageAnchor") as Node3D, GameState.get_current_location())
+	var markers := stage.get_node("Markers")
 	var spot := (markers.get_node("DartoSpot") as Node3D).position
 	var right := DioramaStyle.screen_right()
 	var toward := -DioramaStyle.screen_in()
@@ -98,17 +106,33 @@ func _process(_delta: float) -> void:
 
 func _layout() -> void:
 	var area := _safe_root.size
-	# Both lines wrap on a narrow phone instead of running off the screen.
-	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place(_title, Rect2(0.0, area.y * 0.06, area.x, 64.0))
-	_place(_detail, Rect2(0.0, area.y * 0.06 + 68.0, area.x, 64.0))
+	# Both lines wrap on a narrow phone instead of running off the screen
+	# (wrap is on from _ready). A side margin keeps the outline off the edge,
+	# and the detail sits under however many lines the title needed.
+	var margin := float(UiTokens.SPACE_16)
+	var width := maxf(area.x - margin * 2.0, 1.0)
+	# A wrapped label grows to fit its lines; the detail goes under the
+	# title's real height.
+	_place_wrapped(_title, Vector2(margin, area.y * 0.06), width, 64.0)
+	_place_wrapped(_detail, Vector2(margin, _title.position.y + _title.size.y + 4.0), width, 64.0)
 	_detail.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	var width := minf(400.0, area.x)
+	var button_width := minf(400.0, area.x)
 	# CONTINUE takes the dialogue box's place once the talking is done.
 	var button_y := area.y - UiTokens.TOUCH_TARGET_PREFERRED - 40.0
-	_place(_continue, Rect2((area.x - width) * 0.5, button_y, width, UiTokens.TOUCH_TARGET_PREFERRED))
-	_place(_progress, Rect2((area.x - width) * 0.5, button_y + UiTokens.TOUCH_TARGET_PREFERRED + 8.0, width, 8.0))
+	_place(_continue, Rect2((area.x - button_width) * 0.5, button_y, button_width, UiTokens.TOUCH_TARGET_PREFERRED))
+	_place(_progress, Rect2((area.x - button_width) * 0.5, button_y + UiTokens.TOUCH_TARGET_PREFERRED + 8.0, button_width, 8.0))
+
+
+## Places a wrapped label: width first, then height. A wrapped label's
+## minimum height depends on its width, and a control never gets smaller than
+## its minimum, so setting both at once measured the lines at the old width.
+func _place_wrapped(label: Label, at: Vector2, width: float, min_height: float) -> void:
+	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	label.position = at
+	label.size = Vector2(width, label.size.y)
+	# The cached minimum was measured at the old width: measure again.
+	label.update_minimum_size()
+	label.size = Vector2(width, min_height)
 
 
 func _place(control: Control, rect: Rect2) -> void:

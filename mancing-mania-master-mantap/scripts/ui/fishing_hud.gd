@@ -13,6 +13,8 @@ extends CanvasLayer
 signal pause_pressed()
 signal market_pressed()
 signal bucket_pressed()
+## The map chip: opens WHERE TO? (revision 6.7).
+signal map_pressed()
 
 ## The bottom thumb row: the contextual button and the Market button.
 const THUMB_ROW_HEIGHT := 84.0
@@ -41,6 +43,10 @@ var _state: StringName = FishingController.STATE_IDLE
 var _banner_left: float = 0.0
 var _hint_left: float = 0.0
 var _market_available: bool = false
+var _map_widget: GameButton
+var _map_label: Label
+var _tide_widget: PanelContainer
+var _tide_label: Label
 
 
 func _ready() -> void:
@@ -70,6 +76,34 @@ func _process(delta: float) -> void:
 
 
 # --- Called by the fishing scene --------------------------------------------
+
+## The map chip names the spot Darto is at. It only appears once a second
+## spot has opened; before that there is nowhere else to go.
+func set_location(location_id: StringName, map_available: bool) -> void:
+	_map_label.text = TextDb.t(StringName("location.%s.name" % location_id))
+	_map_widget.tooltip_text = TextDb.t(&"travel.title")
+	_map_widget.visible = map_available
+	# The chip grows with the spot's name (the label sits over the button).
+	_map_widget.custom_minimum_size.x = maxf(86.0, _map_label.get_combined_minimum_size().x + 64.0)
+	_layout.call_deferred()
+
+
+## The tide chip at the estuary; hidden elsewhere.
+func set_tide(shown: bool, high: bool) -> void:
+	_tide_widget.visible = shown
+	_tide_label.text = TextDb.t(&"fishing.tide.high" if high else &"fishing.tide.low")
+	# The arrow says which way the water is, so the chip reads without colour.
+	var icon := _tide_widget.find_child("Badge", true, false).get_child(0) as UiIcon
+	icon.icon_id = IconPainter.ARROW_UP if high else IconPainter.ARROW_DOWN
+
+
+func get_map_widget() -> GameButton:
+	return _map_widget
+
+
+func get_tide_text() -> String:
+	return _tide_label.text if _tide_widget.visible else ""
+
 
 func set_cash(cash: int) -> void:
 	_cash_label.text = Money.format_rp(cash)
@@ -222,6 +256,24 @@ func _build_top_bar() -> void:
 	_bucket_widget.focus_mode = Control.FOCUS_NONE
 	_bucket_label = HudChip.add_content(_bucket_widget, UiIcon.ICON_BUCKET)
 	_bucket_widget.pressed.connect(func() -> void: bucket_pressed.emit())
+
+	_map_widget = GameButton.new()
+	_map_widget.name = "MapWidget"
+	_map_widget.custom_minimum_size = Vector2(86.0, UiTokens.TOUCH_TARGET_MIN)
+	_map_widget.focus_mode = Control.FOCUS_NONE
+	_map_widget.theme_type_variation = _bucket_widget.theme_type_variation
+	_map_label = HudChip.add_content(_map_widget, IconPainter.MAP)
+	_map_widget.pressed.connect(func() -> void: map_pressed.emit())
+	_map_widget.visible = false
+	_top_bar.add_child(_map_widget)
+
+	_tide_widget = PanelContainer.new()
+	_tide_widget.name = "TideWidget"
+	_tide_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tide_widget.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	_tide_label = HudChip.add_content(_tide_widget, IconPainter.ARROW_UP)
+	_tide_widget.visible = false
+	_top_bar.add_child(_tide_widget)
 
 
 func _build_prompt() -> void:

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_sequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://scripts/gameplay/data/dialogue_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Entry_1"]
+script = ExtResource("2_entry")
+speaker_id = &"jelawat_influencer"
+text = "Wait! Are we live? Hi guys!"
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_2"]
+script = ExtResource("2_entry")
+speaker_id = &"darto"
+text = "Who are you talking to?"
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_3"]
+script = ExtResource("2_entry")
+speaker_id = &"jelawat_influencer"
+text = "My followers. Wave to them."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_4"]
+script = ExtResource("2_entry")
+speaker_id = &"darto"
+text = "I'm not waving to a reservoir."
+post_pause_sec = 0.4
+
+[sub_resource type="Resource" id="Entry_5"]
+script = ExtResource("2_entry")
+speaker_id = &"jelawat_influencer"
+text = "Rude. That's going in the thumbnail."
+post_pause_sec = 0.4
+
+[resource]
+script = ExtResource("1_seq")
+id = &"fish_jelawat_influencer"
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_1"), SubResource("Entry_2"), SubResource("Entry_3"), SubResource("Entry_4"), SubResource("Entry_5")])

@@ -13,3 +13,8 @@ extends Resource
 
 func get_sale_value() -> int:
 	return sale_value
+
+
+## The name the player reads, in the current language (trash.<id>.name).
+func get_display_name() -> String:
+	return TextDb.text_or(StringName("trash.%s.name" % id), display_name)

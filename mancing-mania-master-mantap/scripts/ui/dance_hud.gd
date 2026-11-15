@@ -98,7 +98,7 @@ func _process(delta: float) -> void:
 # --- Called by the dance scene ----------------------------------------------
 
 func setup(fish: FishData, chart: Dictionary) -> void:
-	(_score.get_node("Row/Fish/Name") as Label).text = fish.display_name.to_upper()
+	(_score.get_node("Row/Fish/Name") as Label).text = fish.get_display_name().to_upper()
 	_field.beat_sec = float(chart["beat_sec"])
 	_field.beat_pulse = bool(GameState.get_setting(&"rhythm_beat_pulse"))
 	show_hint("")

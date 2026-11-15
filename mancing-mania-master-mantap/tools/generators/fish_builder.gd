@@ -119,6 +119,227 @@ const PROFILES: Dictionary = {
 		"pectoral": [0.26, -0.08, 0.16],
 		"eye": [0.42, 0.055, 0.056],
 	},
+	# The spot fish (revision 6.7).
+	&"baung_satpam": {
+		"length": 0.74, "squareness": 2.3,
+		"top": Color("7b7d74"), "belly": Color("e8e1cc"), "fin": Color("c2654a"),
+		"whiskers": true,
+		"gloves": true,
+		"sections": [[0.52, 0.057, 0.042, -0.0053], [0.47, 0.1283, 0.0788, 0.0], [0.38, 0.1662, 0.1103, 0.0], [0.26, 0.171, 0.126, 0.0053], [0.1, 0.1472, 0.1313, 0.0105], [-0.08, 0.1187, 0.1208, 0.0105], [-0.25, 0.0836, 0.0998, 0.0084], [-0.38, 0.0475, 0.0714, 0.0053], [-0.46, 0.0247, 0.0483, 0.0]],
+		"tail": [[-0.43, 0.035], [-0.6, 0.15], [-0.55, 0.0], [-0.6, -0.15], [-0.43, -0.035]],
+		"dorsal": [[0.16, 0.12], [0.08, 0.24], [0.0, 0.12]],
+		"anal": [[-0.08, -0.1], [-0.14, -0.15], [-0.3, -0.1], [-0.32, -0.06]],
+		"pectoral": [0.2, -0.04, 0.16],
+		"eye": [0.4, 0.055, 0.068],
+	},
+	&"tawes_gosip": {
+		"length": 0.56, "squareness": 2.0,
+		"top": Color("a7b3b2"), "belly": Color("f4f1e7"), "fin": Color("d9a45c"),
+		"sections": [[0.51, 0.03, 0.0414, 0.0], [0.45, 0.075, 0.1058, 0.0], [0.32, 0.105, 0.1794, 0.0092], [0.12, 0.12, 0.2162, 0.0092], [-0.08, 0.105, 0.2024, 0.0092], [-0.26, 0.072, 0.1426, 0.0], [-0.38, 0.04, 0.0782, 0.0], [-0.45, 0.022, 0.0534, 0.0]],
+		"tail": [[-0.43, 0.04], [-0.59, 0.17], [-0.53, 0.0], [-0.59, -0.17], [-0.43, -0.04]],
+		"dorsal": [[0.2, 0.19], [0.12, 0.3], [-0.02, 0.2]],
+		"anal": [[-0.12, -0.17], [-0.18, -0.24], [-0.3, -0.15], [-0.32, -0.1]],
+		"pectoral": [0.22, -0.06, 0.2],
+		"eye": [0.39, 0.06, 0.078],
+	},
+	&"belut_licin": {
+		"length": 0.86, "squareness": 2.0,
+		"top": Color("5d5a3b"), "belly": Color("cbbb8a"), "fin": Color("4d4b34"),
+		"sections": [[0.52, 0.04, 0.035, 0.0], [0.46, 0.07, 0.06, 0.0], [0.36, 0.076, 0.07, 0.0], [0.1, 0.072, 0.07, 0.0], [-0.15, 0.066, 0.066, 0.0], [-0.35, 0.05, 0.055, 0.0], [-0.46, 0.025, 0.035, 0.0]],
+		"tail": [[-0.44, 0.03], [-0.54, 0.05], [-0.58, 0.0], [-0.54, -0.05], [-0.44, -0.03]],
+		"dorsal": [[0.1, 0.06], [0.05, 0.1], [-0.45, 0.07], [-0.45, 0.03], [0.0, 0.06]],
+		"anal": [[0.0, -0.06], [-0.05, -0.1], [-0.45, -0.07], [-0.45, -0.03]],
+		"pectoral": [0.3, -0.02, 0.1],
+		"eye": [0.42, 0.035, 0.06],
+	},
+	&"hampala_pembalap": {
+		"length": 0.66, "squareness": 2.1,
+		"top": Color("a9b0a0"), "belly": Color("f2eedf"), "fin": Color("d8553f"),
+		"bands": true,
+		"sections": [[0.51, 0.0382, 0.0408, -0.0085], [0.44, 0.0808, 0.0892, 0.0], [0.32, 0.1148, 0.1403, 0.0127], [0.12, 0.1318, 0.1742, 0.0255], [-0.08, 0.119, 0.1615, 0.0213], [-0.26, 0.0799, 0.1148, 0.0085], [-0.39, 0.0399, 0.0612, 0.0], [-0.46, 0.0213, 0.0442, 0.0]],
+		"tail": [[-0.43, 0.04], [-0.59, 0.17], [-0.53, 0.0], [-0.59, -0.17], [-0.43, -0.04]],
+		"dorsal": [[0.16, 0.19], [0.1, 0.3], [-0.04, 0.18]],
+		"anal": [[-0.14, -0.15], [-0.2, -0.22], [-0.3, -0.13], [-0.3, -0.09]],
+		"pectoral": [0.24, -0.07, 0.18],
+		"eye": [0.39, 0.045, 0.07],
+	},
+	&"belida_pendekar": {
+		"length": 0.78, "squareness": 2.2,
+		"top": Color("8f8e86"), "belly": Color("ede7d8"), "fin": Color("77736a"),
+		"scales": true,
+		"sections": [[0.52, 0.03, 0.035, 0.01], [0.45, 0.06, 0.09, 0.03], [0.32, 0.075, 0.17, 0.06], [0.15, 0.08, 0.21, 0.05], [-0.05, 0.07, 0.18, 0.0], [-0.25, 0.05, 0.12, -0.03], [-0.4, 0.03, 0.06, -0.02], [-0.47, 0.015, 0.03, -0.01]],
+		"tail": [[-0.45, 0.02], [-0.53, 0.05], [-0.56, 0.0], [-0.53, -0.05], [-0.45, -0.02]],
+		"dorsal": [[0.06, 0.25], [0.0, 0.3], [-0.08, 0.24]],
+		"anal": [[0.2, -0.13], [0.1, -0.2], [-0.45, -0.07], [-0.46, -0.03], [0.0, -0.16]],
+		"pectoral": [0.3, -0.05, 0.14],
+		"eye": [0.42, 0.05, 0.06],
+	},
+	&"red_devil_palak": {
+		"length": 0.56, "squareness": 2.0,
+		"top": Color("d9534a"), "belly": Color("f4a16a"), "fin": Color("c4473d"),
+		"brow": true,
+		"sections": [[0.51, 0.03, 0.05, 0.0], [0.45, 0.075, 0.13, 0.02], [0.33, 0.11, 0.24, 0.05], [0.14, 0.12, 0.26, 0.03], [-0.08, 0.105, 0.23, 0.01], [-0.26, 0.07, 0.16, 0.0], [-0.38, 0.04, 0.085, 0.0], [-0.45, 0.022, 0.058, 0.0]],
+		"tail": [[-0.42, 0.05], [-0.58, 0.16], [-0.61, 0.0], [-0.58, -0.16], [-0.42, -0.05]],
+		"dorsal": [[0.18, 0.26], [0.1, 0.33], [-0.2, 0.28], [-0.32, 0.2], [-0.06, 0.24]],
+		"anal": [[-0.1, -0.2], [-0.16, -0.28], [-0.3, -0.19], [-0.32, -0.12]],
+		"pectoral": [0.22, -0.06, 0.2],
+		"eye": [0.4, 0.05, 0.07],
+	},
+	&"patin_stempel": {
+		"length": 0.7, "squareness": 2.2,
+		"top": Color("8d9aa0"), "belly": Color("f1f0ec"), "fin": Color("7d888d"),
+		"whiskers": true,
+		"sections": [[0.52, 0.051, 0.044, -0.0055], [0.47, 0.1148, 0.0825, 0.0], [0.38, 0.1487, 0.1155, 0.0], [0.26, 0.153, 0.132, 0.0055], [0.1, 0.1318, 0.1375, 0.011], [-0.08, 0.1062, 0.1265, 0.011], [-0.25, 0.0748, 0.1045, 0.0088], [-0.38, 0.0425, 0.0748, 0.0055], [-0.46, 0.0221, 0.0506, 0.0]],
+		"tail": [[-0.43, 0.04], [-0.59, 0.17], [-0.53, 0.0], [-0.59, -0.17], [-0.43, -0.04]],
+		"dorsal": [[0.12, 0.13], [0.06, 0.25], [-0.02, 0.13]],
+		"anal": [[-0.02, -0.11], [-0.06, -0.16], [-0.36, -0.1], [-0.38, -0.06]],
+		"pectoral": [0.22, -0.05, 0.15],
+		"eye": [0.41, 0.04, 0.062],
+	},
+	&"jelawat_influencer": {
+		"length": 0.66, "squareness": 2.1,
+		"top": Color("c9b37a"), "belly": Color("f6efdc"), "fin": Color("e2794e"),
+		"scales": true,
+		"sections": [[0.51, 0.0405, 0.0408, -0.0085], [0.44, 0.0855, 0.0892, 0.0], [0.32, 0.1215, 0.1403, 0.0127], [0.12, 0.1395, 0.1742, 0.0255], [-0.08, 0.126, 0.1615, 0.0213], [-0.26, 0.0846, 0.1148, 0.0085], [-0.39, 0.0423, 0.0612, 0.0], [-0.46, 0.0225, 0.0442, 0.0]],
+		"tail": [[-0.43, 0.04], [-0.59, 0.17], [-0.53, 0.0], [-0.59, -0.17], [-0.43, -0.04]],
+		"dorsal": [[0.14, 0.18], [0.08, 0.29], [-0.06, 0.18]],
+		"anal": [[-0.14, -0.15], [-0.2, -0.22], [-0.3, -0.13], [-0.3, -0.09]],
+		"pectoral": [0.24, -0.07, 0.19],
+		"eye": [0.39, 0.05, 0.074],
+	},
+	&"betutu_mager": {
+		"length": 0.62, "squareness": 2.4,
+		"top": Color("7a6a4c"), "belly": Color("e8dcc0"), "fin": Color("6a5a40"),
+		"brow": true,
+		"sections": [[0.52, 0.063, 0.038, -0.0047], [0.47, 0.1418, 0.0712, 0.0], [0.38, 0.1837, 0.0997, 0.0], [0.26, 0.189, 0.114, 0.0047], [0.1, 0.1628, 0.1187, 0.0095], [-0.08, 0.1313, 0.1092, 0.0095], [-0.25, 0.0924, 0.0902, 0.0076], [-0.38, 0.0525, 0.0646, 0.0047], [-0.46, 0.0273, 0.0437, 0.0]],
+		"tail": [[-0.42, 0.04], [-0.56, 0.12], [-0.61, 0.0], [-0.56, -0.12], [-0.42, -0.04]],
+		"dorsal": [[0.08, 0.1], [0.02, 0.17], [-0.08, 0.1], [-0.14, 0.1], [-0.2, 0.17], [-0.32, 0.08]],
+		"anal": [[-0.14, -0.09], [-0.2, -0.14], [-0.32, -0.08]],
+		"pectoral": [0.2, -0.04, 0.2],
+		"eye": [0.4, 0.07, 0.07],
+	},
+	&"toman_jenderal": {
+		"length": 0.84, "squareness": 2.4,
+		"top": Color("4f5a3d"), "belly": Color("d6c99c"), "fin": Color("3e4630"),
+		"bands": true,
+		"brow": true,
+		"sections": [[0.52, 0.055, 0.0374, 0.0], [0.46, 0.1155, 0.0715, 0.0], [0.36, 0.1375, 0.0935, 0.0], [0.18, 0.1375, 0.1045, 0.0], [-0.05, 0.1265, 0.1045, 0.0], [-0.25, 0.1012, 0.0935, 0.0], [-0.4, 0.0572, 0.0682, 0.0], [-0.47, 0.0275, 0.0462, 0.0]],
+		"tail": [[-0.44, 0.035], [-0.57, 0.11], [-0.62, 0.0], [-0.57, -0.11], [-0.44, -0.035]],
+		"dorsal": [[0.14, 0.1], [0.1, 0.16], [-0.38, 0.14], [-0.42, 0.06], [-0.1, 0.1]],
+		"anal": [[-0.02, -0.1], [-0.06, -0.15], [-0.38, -0.13], [-0.42, -0.06], [-0.1, -0.09]],
+		"pectoral": [0.26, -0.04, 0.15],
+		"eye": [0.42, 0.04, 0.06],
+	},
+	&"bandeng_tanpa_duri": {
+		"length": 0.66, "squareness": 2.0,
+		"top": Color("9fb4bd"), "belly": Color("f4f6f2"), "fin": Color("8aa0aa"),
+		"sections": [[0.51, 0.035, 0.04, 0.0], [0.45, 0.08, 0.09, 0.0], [0.34, 0.11, 0.13, 0.0], [0.14, 0.12, 0.15, 0.0], [-0.08, 0.11, 0.14, 0.0], [-0.26, 0.075, 0.09, 0.0], [-0.39, 0.035, 0.045, 0.0], [-0.46, 0.02, 0.03, 0.0]],
+		"tail": [[-0.43, 0.03], [-0.6, 0.18], [-0.52, 0.0], [-0.6, -0.18], [-0.43, -0.03]],
+		"dorsal": [[0.12, 0.14], [0.06, 0.26], [-0.06, 0.14]],
+		"anal": [[-0.2, -0.12], [-0.24, -0.18], [-0.3, -0.09]],
+		"pectoral": [0.25, -0.06, 0.16],
+		"eye": [0.41, 0.04, 0.072],
+	},
+	&"buntal_pemarah": {
+		"length": 0.5, "squareness": 2.0,
+		"top": Color("c9b36a"), "belly": Color("f5eedc"), "fin": Color("b89f55"),
+		"brow": true,
+		"bands": true,
+		"sections": [[0.5, 0.05, 0.05, 0.0], [0.44, 0.15, 0.15, 0.0], [0.32, 0.24, 0.24, 0.0], [0.12, 0.28, 0.28, 0.0], [-0.08, 0.26, 0.26, 0.0], [-0.24, 0.18, 0.18, 0.0], [-0.36, 0.07, 0.08, 0.0], [-0.43, 0.03, 0.05, 0.0]],
+		"tail": [[-0.4, 0.05], [-0.55, 0.13], [-0.58, 0.0], [-0.55, -0.13], [-0.4, -0.05]],
+		"dorsal": [[-0.18, 0.2], [-0.26, 0.29], [-0.34, 0.15]],
+		"anal": [[-0.18, -0.2], [-0.26, -0.29], [-0.34, -0.15]],
+		"pectoral": [0.2, 0.0, 0.17],
+		"eye": [0.38, 0.09, 0.075],
+	},
+	&"glodok_pelari": {
+		"length": 0.6, "squareness": 2.1,
+		"top": Color("8a7a5e"), "belly": Color("d9cdb1"), "fin": Color("6e6048"),
+		"scales": true,
+		"sections": [[0.51, 0.05, 0.05, 0.0], [0.45, 0.1, 0.1, 0.0], [0.34, 0.12, 0.12, 0.0], [0.15, 0.11, 0.11, 0.0], [-0.08, 0.09, 0.09, 0.0], [-0.26, 0.065, 0.07, 0.0], [-0.4, 0.035, 0.045, 0.0], [-0.46, 0.02, 0.03, 0.0]],
+		"tail": [[-0.43, 0.03], [-0.56, 0.1], [-0.6, 0.0], [-0.56, -0.1], [-0.43, -0.03]],
+		"dorsal": [[0.05, 0.11], [-0.02, 0.26], [-0.12, 0.24], [-0.16, 0.1]],
+		"anal": [[-0.1, -0.08], [-0.15, -0.13], [-0.38, -0.08], [-0.4, -0.04]],
+		"pectoral": [0.25, -0.07, 0.21],
+		"eye": [0.38, 0.105, 0.078],
+	},
+	&"kakap_sosialita": {
+		"length": 0.6, "squareness": 2.0,
+		"top": Color("d8604c"), "belly": Color("f7c3a8"), "fin": Color("c24c3e"),
+		"sections": [[0.51, 0.0315, 0.0427, 0.0], [0.45, 0.0788, 0.1092, 0.0], [0.32, 0.1103, 0.1852, 0.0095], [0.12, 0.126, 0.2232, 0.0095], [-0.08, 0.1103, 0.209, 0.0095], [-0.26, 0.0756, 0.1472, 0.0], [-0.38, 0.042, 0.0808, 0.0], [-0.45, 0.0231, 0.0551, 0.0]],
+		"tail": [[-0.42, 0.05], [-0.58, 0.16], [-0.6, 0.0], [-0.58, -0.16], [-0.42, -0.05]],
+		"dorsal": [[0.22, 0.2], [0.14, 0.29], [-0.06, 0.28], [-0.28, 0.22], [-0.32, 0.13], [-0.06, 0.2]],
+		"anal": [[-0.1, -0.18], [-0.16, -0.25], [-0.3, -0.17], [-0.32, -0.1]],
+		"pectoral": [0.22, -0.06, 0.21],
+		"eye": [0.39, 0.065, 0.08],
+	},
+	&"sembilang_tua": {
+		"length": 0.84, "squareness": 2.1,
+		"top": Color("5d5547"), "belly": Color("e2d7bd"), "fin": Color("4d4639"),
+		"whiskers": true,
+		"bands": true,
+		"brow": true,
+		"sections": [[0.52, 0.05, 0.04, 0.0], [0.46, 0.09, 0.075, 0.0], [0.36, 0.095, 0.09, 0.0], [0.1, 0.09, 0.09, 0.0], [-0.15, 0.08, 0.085, 0.0], [-0.35, 0.06, 0.068, 0.0], [-0.46, 0.028, 0.04, 0.0]],
+		"tail": [[-0.44, 0.03], [-0.55, 0.07], [-0.6, 0.0], [-0.55, -0.07], [-0.44, -0.03]],
+		"dorsal": [[0.2, 0.09], [0.14, 0.17], [0.06, 0.09], [-0.1, 0.09], [-0.15, 0.13], [-0.45, 0.07], [-0.45, 0.035]],
+		"anal": [[-0.05, -0.08], [-0.1, -0.12], [-0.45, -0.07], [-0.45, -0.035]],
+		"pectoral": [0.3, -0.03, 0.13],
+		"eye": [0.42, 0.04, 0.058],
+	},
+	&"tongkol_ojol": {
+		"length": 0.7, "squareness": 2.0,
+		"top": Color("3e5d7a"), "belly": Color("e9eef0"), "fin": Color("4e6a83"),
+		"bands": true,
+		"sections": [[0.51, 0.04, 0.04, 0.0], [0.45, 0.1, 0.1, 0.0], [0.34, 0.15, 0.16, 0.0], [0.14, 0.17, 0.19, 0.0], [-0.08, 0.15, 0.17, 0.0], [-0.26, 0.09, 0.1, 0.0], [-0.38, 0.035, 0.04, 0.0], [-0.45, 0.02, 0.03, 0.0]],
+		"tail": [[-0.42, 0.03], [-0.56, 0.2], [-0.5, 0.0], [-0.56, -0.2], [-0.42, -0.03]],
+		"dorsal": [[0.15, 0.17], [0.1, 0.27], [-0.02, 0.18]],
+		"anal": [[-0.1, -0.16], [-0.16, -0.23], [-0.24, -0.12]],
+		"pectoral": [0.24, -0.03, 0.17],
+		"eye": [0.41, 0.05, 0.065],
+	},
+	&"layur_penyair": {
+		"length": 0.95, "squareness": 2.6,
+		"top": Color("c9d3d8"), "belly": Color("f6f8f8"), "fin": Color("b8c4ca"),
+		"sections": [[0.52, 0.02, 0.03, 0.0], [0.47, 0.035, 0.065, 0.0], [0.38, 0.042, 0.09, 0.0], [0.15, 0.042, 0.095, 0.0], [-0.1, 0.036, 0.085, 0.0], [-0.3, 0.026, 0.06, 0.0], [-0.45, 0.012, 0.022, 0.0]],
+		"tail": [[-0.44, 0.012], [-0.57, 0.0], [-0.44, -0.012]],
+		"dorsal": [[0.36, 0.09], [0.3, 0.13], [-0.42, 0.04], [-0.44, 0.016], [0.0, 0.09]],
+		"pectoral": [0.3, -0.03, 0.09],
+		"eye": [0.43, 0.03, 0.06],
+	},
+	&"barakuda_rentenir": {
+		"length": 0.92, "squareness": 2.2,
+		"top": Color("6f7f86"), "belly": Color("e8ecea"), "fin": Color("59666c"),
+		"bands": true,
+		"brow": true,
+		"sections": [[0.52, 0.025, 0.03, -0.01], [0.46, 0.05, 0.055, -0.005], [0.36, 0.075, 0.08, 0.0], [0.15, 0.085, 0.095, 0.0], [-0.1, 0.08, 0.09, 0.0], [-0.3, 0.06, 0.07, 0.0], [-0.42, 0.03, 0.04, 0.0], [-0.48, 0.018, 0.028, 0.0]],
+		"tail": [[-0.45, 0.03], [-0.58, 0.14], [-0.54, 0.0], [-0.58, -0.14], [-0.45, -0.03]],
+		"dorsal": [[0.0, 0.09], [-0.04, 0.16], [-0.12, 0.09]],
+		"anal": [[-0.2, -0.08], [-0.25, -0.13], [-0.32, -0.07]],
+		"pectoral": [0.26, -0.04, 0.13],
+		"eye": [0.42, 0.035, 0.055],
+	},
+	&"kerapu_juragan": {
+		"length": 0.7, "squareness": 2.2,
+		"top": Color("a45d43"), "belly": Color("ecc9a5"), "fin": Color("8a4a36"),
+		"scales": true,
+		"sections": [[0.52, 0.06, 0.05, -0.01], [0.46, 0.13, 0.12, 0.0], [0.36, 0.17, 0.19, 0.01], [0.18, 0.18, 0.23, 0.02], [-0.02, 0.16, 0.22, 0.02], [-0.22, 0.11, 0.16, 0.01], [-0.37, 0.055, 0.085, 0.0], [-0.45, 0.03, 0.06, 0.0]],
+		"tail": [[-0.42, 0.05], [-0.58, 0.15], [-0.62, 0.0], [-0.58, -0.15], [-0.42, -0.05]],
+		"dorsal": [[0.2, 0.2], [0.12, 0.3], [-0.3, 0.24], [-0.36, 0.13], [0.0, 0.21]],
+		"anal": [[-0.12, -0.2], [-0.18, -0.28], [-0.34, -0.17], [-0.36, -0.1]],
+		"pectoral": [0.2, -0.06, 0.22],
+		"eye": [0.4, 0.07, 0.065],
+	},
+	&"layaran_kapten": {
+		"length": 0.88, "squareness": 2.1,
+		"top": Color("2f4e78"), "belly": Color("e5ecf1"), "fin": Color("3d6aa0"),
+		"bands": true,
+		"sections": [[0.52, 0.03, 0.03, 0.0], [0.46, 0.07, 0.07, 0.0], [0.36, 0.1, 0.1, 0.0], [0.18, 0.11, 0.12, 0.0], [-0.05, 0.1, 0.11, 0.0], [-0.25, 0.075, 0.08, 0.0], [-0.4, 0.035, 0.045, 0.0], [-0.47, 0.02, 0.03, 0.0]],
+		"tail": [[-0.44, 0.03], [-0.58, 0.2], [-0.53, 0.0], [-0.58, -0.2], [-0.44, -0.03]],
+		"dorsal": [[0.3, 0.11], [0.24, 0.42], [0.0, 0.46], [-0.25, 0.33], [-0.3, 0.1], [0.0, 0.12]],
+		"anal": [[-0.15, -0.1], [-0.22, -0.16], [-0.32, -0.08]],
+		"pectoral": [0.28, -0.06, 0.16],
+		"eye": [0.42, 0.04, 0.058],
+	},
 }
 
 
@@ -508,6 +729,26 @@ const BOX_STYLE: Dictionary = {
 	&"carp_golden": [1.4, 0.022, 3.0],
 	&"snakehead_sergeant": [0.8, 0.020, 1.5],
 	&"arowana_don": [2.0, 0.010, 1.5],
+	&"baung_satpam": [1.1, 0.026, 2.5],
+	&"tawes_gosip": [0.7, 0.040, 6.0],
+	&"belut_licin": [0.9, 0.020, 8.0],
+	&"hampala_pembalap": [0.55, 0.045, 5.0],
+	&"belida_pendekar": [1.6, 0.012, 1.5],
+	&"red_devil_palak": [0.8, 0.030, 4.0],
+	&"patin_stempel": [1.5, 0.012, 1.0],
+	&"jelawat_influencer": [0.7, 0.040, 7.0],
+	&"betutu_mager": [2.0, 0.008, 1.0],
+	&"toman_jenderal": [1.8, 0.010, 1.0],
+	&"bandeng_tanpa_duri": [0.6, 0.050, 5.0],
+	&"buntal_pemarah": [1.2, 0.030, 3.0],
+	&"glodok_pelari": [0.45, 0.060, 4.0],
+	&"kakap_sosialita": [1.3, 0.016, 3.0],
+	&"sembilang_tua": [2.2, 0.008, 1.0],
+	&"tongkol_ojol": [0.5, 0.050, 4.0],
+	&"layur_penyair": [1.7, 0.012, 6.0],
+	&"barakuda_rentenir": [1.5, 0.012, 1.5],
+	&"kerapu_juragan": [1.9, 0.010, 2.0],
+	&"layaran_kapten": [1.4, 0.014, 2.0],
 }
 
 
@@ -747,6 +988,26 @@ const BADGE_BRASS := Color("d9b45a")
 const SHADES := Color("2a2220")
 const CHAIN_GOLD := Style.GOLD
 const CHAIN_MUTED := Color("d4af5a")
+# Accessories of the spot fish (revision 6.7).
+const GUARD_NAVY := Color("3d4f73")
+const VISOR_BLACK := Color("2f2a28")
+const SCARF_PINK := Color("f2a0b4")
+const GOGGLE_RED := Color("d2544a")
+const LENS_BLUE := Color("9fd3e6")
+const IKAT_BROWN := Color("5a3b2a")
+const GLASS_FRAME := Color("4a3a32")
+const NIGHTCAP_BLUE := Color("8fa8d8")
+const GENERAL_OLIVE := Color("5d6b45")
+const BOW_YELLOW := Color("f5cf5a")
+const SPIKE_CREAM := Color("efe2b8")
+const SWEAT_BLUE := Color("6fa8dc")
+const PEARL := Color("fbf6ec")
+const STRAW := Color("e3c27a")
+const HELMET_GREEN := Color("3fa34d")
+const BERET_RED := Color("a33b3b")
+const PECI_BLACK := Color("2b2523")
+const CAPTAIN_WHITE := Color("f7f4ee")
+const BILL_GREY := Color("5d6f88")
 const SCAR := Color("f2d3b0")
 
 
@@ -804,7 +1065,219 @@ func _build_signature(fish_id: StringName, profile: Dictionary, skeleton: Skelet
 			builder.set_bone(skeleton.find_bone("tail_base"))
 			builder.color = Color("4a1d1a")
 			builder.puffy_outline(_outline([[-0.56, 0.11], [-0.635, 0.0], [-0.56, -0.11], [-0.59, 0.0]], length), 0.036 * length)
+		_:
+			_build_spot_signature(fish_id, profile, skeleton, builder)
 	return builder.commit(MaterialBuilder.surface_materials()) if not builder.is_empty() else null
+
+
+## Signatures of the twenty spot fish (revision 6.7): one readable prop each,
+## so a silhouette says who it is (GDD 172.7).
+func _build_spot_signature(fish_id: StringName, profile: Dictionary, skeleton: Skeleton3D, builder: RefCounted) -> void:
+	var length: float = profile["length"]
+	var eye: Array = profile["eye"]
+	var head_x: float = float(eye[0]) - 0.07
+	match fish_id:
+		&"baung_satpam":
+			# A security guard's peaked cap.
+			_cap(builder, profile, head_x, GUARD_NAVY, GUARD_NAVY.lightened(0.1), VISOR_BLACK, BADGE_BRASS)
+		&"tawes_gosip":
+			# A pink headscarf, knotted at the back.
+			_head_band(builder, profile, head_x, 0.08, 1.08, SCARF_PINK)
+			_knot(builder, profile, head_x - 0.05, SCARF_PINK)
+		&"hampala_pembalap":
+			# Racing goggles pushed up on the forehead.
+			_head_band(builder, profile, head_x, 0.035, 1.07, GOGGLE_RED)
+			_lenses(builder, profile, head_x + 0.03, 0.05, LENS_BLUE, VISOR_BLACK, 1.0)
+		&"belida_pendekar":
+			# A dark silat headcloth (iket) with its knot behind.
+			_head_band(builder, profile, head_x, 0.07, 1.07, IKAT_BROWN)
+			_knot(builder, profile, head_x - 0.05, IKAT_BROWN)
+		&"red_devil_palak":
+			# A chunky gold chain, bigger than it should be.
+			builder.set_bone(skeleton.find_bone("body_front"))
+			_bead_ring(builder, profile, 0.25, 1.08, 14, 0.032, CHAIN_GOLD, 0.06)
+		&"patin_stempel":
+			# Thin office glasses.
+			_lenses(builder, profile, float(eye[0]), 0.0, Color(LENS_BLUE, 1.0).lightened(0.4), GLASS_FRAME, 0.8)
+		&"jelawat_influencer":
+			# Big pink sunglasses.
+			_lenses(builder, profile, float(eye[0]), 0.0, SHADES, SCARF_PINK, 1.15)
+		&"betutu_mager":
+			# A floppy nightcap with a pompom.
+			_tall_hat(builder, profile, head_x, NIGHTCAP_BLUE, 0.16, true)
+		&"toman_jenderal":
+			# A general's cap: olive, gold badge, black peak.
+			_cap(builder, profile, head_x, GENERAL_OLIVE, GENERAL_OLIVE.darkened(0.1), VISOR_BLACK, CHAIN_GOLD)
+		&"bandeng_tanpa_duri":
+			# A cheerful yellow bow.
+			_bow(builder, profile, head_x, BOW_YELLOW)
+		&"buntal_pemarah":
+			# Spines all over (it is always a little puffed up).
+			builder.set_bone(skeleton.find_bone("body_mid"))
+			_spines(builder, profile, SPIKE_CREAM)
+		&"glodok_pelari":
+			# A runner's sweatband.
+			_head_band(builder, profile, head_x, 0.05, 1.08, SWEAT_BLUE)
+			_head_band(builder, profile, head_x, 0.015, 1.12, Style.FLOUR)
+		&"kakap_sosialita":
+			# A pearl necklace.
+			builder.set_bone(skeleton.find_bone("body_front"))
+			_bead_ring(builder, profile, 0.24, 1.07, 20, 0.022, PEARL, 0.05)
+		&"sembilang_tua":
+			# An old farmer's conical straw hat (caping).
+			_caping(builder, profile, head_x, STRAW)
+		&"tongkol_ojol":
+			# A green motorbike helmet with a dark visor.
+			_helmet(builder, profile, head_x, HELMET_GREEN, VISOR_BLACK)
+		&"layur_penyair":
+			# A poet's beret.
+			_beret(builder, profile, head_x, BERET_RED)
+		&"barakuda_rentenir":
+			# A thin gold chain, worn tight.
+			builder.set_bone(skeleton.find_bone("body_front"))
+			_bead_ring(builder, profile, 0.24, 1.05, 22, 0.012, CHAIN_GOLD, 0.02)
+		&"kerapu_juragan":
+			# A black peci, the cap of a man of standing.
+			_peci(builder, profile, head_x, PECI_BLACK)
+		&"layaran_kapten":
+			# A captain's cap and the sailfish's long bill.
+			_cap(builder, profile, head_x, CAPTAIN_WHITE, CAPTAIN_WHITE, VISOR_BLACK, CHAIN_GOLD)
+			builder.color = BILL_GREY
+			var nose := _section_at(profile, 0.5)
+			builder.cone(Vector3(0.49, float(nose[3]), 0.0) * length, Vector3(0.74, float(nose[3]) + 0.005, 0.0) * length, 0.022 * length, 10)
+
+
+## The top of the head at `x`: the centre of the section's upper edge.
+func _crown(profile: Dictionary, x: float) -> Vector3:
+	var section := _section_at(profile, x)
+	return Vector3(x, float(section[3]) + float(section[2]), 0.0) * float(profile["length"])
+
+
+## A peaked cap: a band, a soft crown, a visor over the eyes and a badge.
+func _cap(builder: RefCounted, profile: Dictionary, x: float, band: Color, crown: Color, visor: Color, badge: Color) -> void:
+	var length: float = profile["length"]
+	var section := _section_at(profile, x)
+	_head_band(builder, profile, x, 0.06, 1.08, band)
+	var top := _crown(profile, x)
+	builder.color = crown
+	builder.sphere(top + Vector3(0.0, 0.012, 0.0) * length, Vector3(0.075, 0.035, float(section[1]) * 1.15) * length, 12, 6)
+	builder.color = visor
+	builder.transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-14.0)), top + Vector3(0.06, -0.012, 0.0) * length)
+	builder.rounded_slab(Vector3(0.06, 0.012, float(section[1]) * 1.6) * length, Vector3.ZERO, 0.005 * length)
+	builder.transform = Transform3D.IDENTITY
+	builder.color = badge
+	builder.sphere(top + Vector3(0.04, 0.0, 0.0) * length, Vector3(0.016, 0.02, 0.012) * length, 8, 4)
+
+
+## A knot of cloth at the back of the head with two short tails.
+func _knot(builder: RefCounted, profile: Dictionary, x: float, color: Color) -> void:
+	var length: float = profile["length"]
+	var top := _crown(profile, x)
+	builder.color = color.darkened(0.08)
+	builder.sphere(top + Vector3(-0.01, -0.005, 0.0) * length, Vector3(0.025, 0.022, 0.022) * length, 8, 4)
+	builder.capsule(top, top + Vector3(-0.07, 0.03, 0.02) * length, 0.012 * length, 0.006 * length, 6, 2)
+	builder.capsule(top, top + Vector3(-0.08, -0.01, -0.02) * length, 0.012 * length, 0.006 * length, 6, 2)
+
+
+## A pair of round lenses with a frame, over the eyes or raised `lift`
+## body lengths above them.
+func _lenses(builder: RefCounted, profile: Dictionary, x: float, lift: float, lens: Color, frame: Color, scale: float) -> void:
+	var length: float = profile["length"]
+	var eye: Array = profile["eye"]
+	var radius: float = float(eye[2]) * length * scale
+	var y := float(eye[1]) + lift
+	for side: float in [-1.0, 1.0]:
+		var surface := Vector3(x, y, _surface_z(profile, x, y) * side) * length
+		var outward := Vector3(0.15, 0.1, side).normalized()
+		builder.color = frame
+		builder.sphere(surface + outward * radius * 0.5, Vector3(radius * 1.25, radius * 1.05, radius * 0.45), 10, 4)
+		builder.color = lens
+		builder.sphere(surface + outward * radius * 0.75, Vector3(radius * 1.0, radius * 0.85, radius * 0.3), 10, 4)
+	var top := Vector3(x + 0.01, y + 0.02, 0.0) * length
+	var reach := _surface_z(profile, x + 0.01, y + 0.02) * length
+	builder.color = frame
+	builder.capsule(top - Vector3(0, 0, reach - radius * 0.5), top + Vector3(0, 0, reach - radius * 0.5), radius * 0.16, -1.0, 6, 2)
+
+
+## A tall soft cone of a hat, flopping backwards, with a pompom.
+func _tall_hat(builder: RefCounted, profile: Dictionary, x: float, color: Color, height: float, pompom: bool) -> void:
+	var length: float = profile["length"]
+	var section := _section_at(profile, x)
+	_head_band(builder, profile, x, 0.05, 1.06, color.lightened(0.25))
+	var top := _crown(profile, x)
+	var tip := top + Vector3(-height * 0.7, height * 0.6, 0.0) * length
+	builder.color = color
+	builder.capsule(top, tip, float(section[1]) * 0.9 * length, 0.012 * length, 10, 4)
+	if pompom:
+		builder.color = Style.FLOUR
+		builder.sphere(tip, Vector3.ONE * 0.028 * length, 8, 4)
+
+
+## A two-loop bow on top of the head.
+func _bow(builder: RefCounted, profile: Dictionary, x: float, color: Color) -> void:
+	var length: float = profile["length"]
+	var top := _crown(profile, x) + Vector3(0.0, 0.01, 0.0) * length
+	builder.color = color
+	for side: float in [-1.0, 1.0]:
+		builder.sphere(top + Vector3(0.0, 0.02, 0.045 * side) * length, Vector3(0.03, 0.03, 0.04) * length, 8, 4)
+	builder.color = color.darkened(0.12)
+	builder.sphere(top + Vector3(0.0, 0.02, 0.0) * length, Vector3.ONE * 0.018 * length, 6, 3)
+
+
+## Short soft spines spread over the round body.
+func _spines(builder: RefCounted, profile: Dictionary, color: Color) -> void:
+	var length: float = profile["length"]
+	builder.color = color
+	for column: int in 5:
+		var x := 0.28 - float(column) * 0.11
+		var section := _section_at(profile, x)
+		for row: int in 7:
+			var angle := -PI * 0.5 + PI * float(row) / 6.0 + (0.2 if column % 2 == 1 else 0.0)
+			for side: float in [-1.0, 1.0]:
+				var direction := Vector3(0.0, sin(angle), cos(angle) * side)
+				var base := Vector3(x, float(section[3]), 0.0) * length + Vector3(0.0, sin(angle) * float(section[2]), cos(angle) * float(section[1]) * side) * length * 0.96
+				builder.cone(base, base + direction * 0.05 * length, 0.014 * length, 6)
+
+
+## A wide, shallow straw cone.
+func _caping(builder: RefCounted, profile: Dictionary, x: float, color: Color) -> void:
+	var length: float = profile["length"]
+	var top := _crown(profile, x)
+	builder.color = color
+	builder.cone(top + Vector3(0.0, -0.005, 0.0) * length, top + Vector3(0.0, 0.11, 0.0) * length, 0.2 * length, 16)
+	builder.color = color.darkened(0.15)
+	builder.cylinder(top + Vector3(0.0, -0.006, 0.0) * length, top + Vector3(0.0, 0.004, 0.0) * length, 0.205 * length, -1.0, 16)
+
+
+## A rounded motorbike helmet with a visor strip.
+func _helmet(builder: RefCounted, profile: Dictionary, x: float, color: Color, visor: Color) -> void:
+	var length: float = profile["length"]
+	var section := _section_at(profile, x)
+	var top := _crown(profile, x)
+	builder.color = color
+	builder.sphere(top + Vector3(0.0, -0.02, 0.0) * length, Vector3(0.12, 0.08, float(section[1]) * 1.2) * length, 14, 7)
+	builder.color = visor
+	builder.transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-30.0)), top + Vector3(0.08, -0.025, 0.0) * length)
+	builder.rounded_slab(Vector3(0.03, 0.04, float(section[1]) * 1.9) * length, Vector3.ZERO, 0.008 * length)
+	builder.transform = Transform3D.IDENTITY
+
+
+## A flat soft beret, tipped to one side, with its little stalk.
+func _beret(builder: RefCounted, profile: Dictionary, x: float, color: Color) -> void:
+	var length: float = profile["length"]
+	var top := _crown(profile, x)
+	builder.color = color
+	builder.sphere(top + Vector3(0.0, 0.012, 0.012) * length, Vector3(0.085, 0.025, 0.07) * length, 12, 5)
+	builder.capsule(top + Vector3(0.0, 0.035, 0.012) * length, top + Vector3(0.0, 0.055, 0.012) * length, 0.006 * length, -1.0, 6, 2)
+
+
+## A peci: a short, flat-topped oval cap.
+func _peci(builder: RefCounted, profile: Dictionary, x: float, color: Color) -> void:
+	var length: float = profile["length"]
+	var section := _section_at(profile, x)
+	var top := _crown(profile, x)
+	builder.color = color
+	builder.cylinder(top + Vector3(0.0, -0.02, 0.0) * length, top + Vector3(0.0, 0.045, 0.0) * length, float(section[1]) * 0.85 * length, -1.0, 16)
 
 
 ## Cross-section [x, half_width, half_height, y] at `x`, interpolated.

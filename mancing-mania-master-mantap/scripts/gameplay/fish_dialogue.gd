@@ -48,9 +48,16 @@ static func sequence_lines(sequence_id: StringName) -> Array[Dictionary]:
 	var sequence := load(path) as DialogueSequence
 	if sequence == null:
 		return lines
-	for entry: DialogueEntry in sequence.entries:
-		lines.append({"speaker": speaker_name(entry.speaker_id), "text": entry.text, "pause": entry.post_pause_sec})
+	for index: int in sequence.entries.size():
+		var entry := sequence.entries[index]
+		lines.append({"speaker": speaker_name(entry.speaker_id), "text": TextDb.text_or(line_key(sequence_id, index), entry.text), "pause": entry.post_pause_sec})
 	return lines
+
+
+## Where a sequence line's translation lives: fishline.<sequence>.<n>, n from 1.
+## The sequence resource holds the English line.
+static func line_key(sequence_id: StringName, index: int) -> StringName:
+	return StringName("fishline.%s.%d" % [sequence_id, index + 1])
 
 
 ## The lines after a duel: the fish speaks, then Darto reacts. Don Arowana's
@@ -81,7 +88,7 @@ static func speaker_name(speaker_id: StringName) -> String:
 	if speaker_id == &"darto":
 		return TextDb.t(&"speaker.darto")
 	var fish := GameData.get_fish(speaker_id)
-	return fish.display_name.to_upper() if fish != null else String(speaker_id).to_upper()
+	return fish.get_display_name().to_upper() if fish != null else String(speaker_id).to_upper()
 
 
 static func _index(seed: int, channel: String, count: int) -> int:

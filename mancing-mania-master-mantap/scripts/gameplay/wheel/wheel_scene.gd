@@ -33,7 +33,7 @@ func _ready() -> void:
 	_fish_anchor.add_child(model)
 	(model.get_node("AnimationPlayer") as AnimationPlayer).play(&"box_idle")
 	_stage_fish()
-	_title.text = fish.display_name.to_upper()
+	_title.text = fish.get_display_name().to_upper()
 	UiSkin.sign_text(_title, UiTokens.FONT_SCREEN_TITLE + 6, UiTokens.CREAM_50, 12)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiSkin.sign_text(_result, 52, DioramaStyle.BUTTER, 14)
@@ -54,6 +54,7 @@ func _ready() -> void:
 	if seed == 0:
 		seed = RNGService.next_duel_seed()
 	_controller.start_wheel(_fish_id, seed, allow_skip)
+	_wheel.segments = _controller.segments
 
 
 func _process(delta: float) -> void:

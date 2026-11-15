@@ -229,14 +229,16 @@ func test_wheel_odds_are_even() -> bool:
 	for seed: int in 100000:
 		var duel := WheelController.pick_duel(&"carp_golden", seed * 2654435761 % 2147483647)
 		counts[duel] = int(counts.get(duel, 0)) + 1
+	# Cempaka Lake's Wheel: the four original duels (spot Wheels: suite spots).
+	var lake_duels: Array[StringName] = [&"boxing", &"arm_wrestle", &"dance", &"suwit"]
 	check_eq(counts.size(), 4, "all four duels come up")
-	for duel: StringName in ContentIds.DUEL_IDS:
+	for duel: StringName in lake_duels:
 		check_near(float(counts.get(duel, 0)) / 100000.0, 0.25, 0.01, "%s about 25%%" % duel)
 	var segments := {}
 	for duel: StringName in WheelController.SEGMENTS:
 		segments[duel] = int(segments.get(duel, 0)) + 1
 	check_eq(WheelController.SEGMENTS.size(), 8, "eight segments")
-	for duel: StringName in ContentIds.DUEL_IDS:
+	for duel: StringName in lake_duels:
 		check_eq(segments[duel], 2, "%s has two segments" % duel)
 	return true
 

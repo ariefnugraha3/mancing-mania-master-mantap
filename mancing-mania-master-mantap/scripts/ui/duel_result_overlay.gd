@@ -50,7 +50,7 @@ func show_result(result: Dictionary) -> void:
 	var fish := GameData.get_fish(result["fish_id"])
 	if result["player_won"]:
 		_open(TextDb.t(&"duel.result.win.title"),
-			TextDb.tf(&"duel.result.win.body", {"fish": fish.display_name.to_upper()}),
+			TextDb.tf(&"duel.result.win.body", {"fish": fish.get_display_name().to_upper()}),
 			TextDb.t(&"duel.result.continue"))
 	else:
 		# The title is the whole message (GDD 88).

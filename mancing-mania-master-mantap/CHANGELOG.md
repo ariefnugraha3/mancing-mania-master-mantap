@@ -2,6 +2,145 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## Unreleased — Revisi Nama 6.8: Catch and Brawl
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.8.
+
+### Diubah
+
+- Game berganti nama dari **Mancing Mania: Gelut Edition** menjadi **Catch and Brawl**, sama di mode English dan Bahasa Indonesia.
+- Logo menu dan layar boot kini satu baris "CATCH AND BRAWL". Ukuran font mengecil sendiri bila tidak muat lebar layar, dan pita subjudul hanya muncul bila judul punya subjudul.
+- Kartu judul prolog, kredit, dan kebijakan privasi (dalam game, `PRIVACY_POLICY.md`, `release/privacy_policy.html`) memakai nama baru.
+- Nama proyek Godot, nama aplikasi di export preset, application ID Android dan bundle ID iOS menjadi `com.catchandbrawl.game`.
+- Nama file build menjadi `CatchAndBrawl.aab`, `CatchAndBrawl.ipa`, dan `catch-and-brawl-web-<versi>.zip`.
+- Contoh keystore di `README_BUILD.md` disesuaikan dengan nama baru.
+
+### Ditambahkan
+
+- Save dari folder data lama ("Mancing Mania Gelut Edition") disalin sekali ke folder baru saat game pertama kali dibuka dengan nama baru. Folder lama tidak diubah (`SaveManager.import_legacy_save`).
+
+## Unreleased — Revisi Lokasi 6.7: empat tempat memancing berjenjang
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi di bawah. Danau Cempaka tidak berubah. Detail authoritative: GDD Section 198.
+
+### Ditambahkan
+
+- **4 tempat memancing baru** yang terbuka bertahap: Sungai Kenanga (utang lunas Rp 300.000), Waduk Melati (Rp 600.000), Muara Anggrek (Rp 1.000.000), dan Dermaga Mawar (Rp 1.400.000). Setiap tempat punya set diorama, ambience, dan sifat air sendiri: arus yang menurunkan marker reel, air dalam dengan ikan lebih berat, pasang surut yang mengubah peluang sampah, dan ombak yang menambah tegangan senar.
+- **20 ikan baru** (5 per tempat, termasuk 4 legenda baru), masing-masing dengan model, aksesori khas, potret Fish Book, dialog pertemuan pertama, dan dialog duel dalam English dan Bahasa Indonesia.
+- **4 duel baru**: Silat (ulangi urutan jurus), Tarik Tambang (tarik di zona hijau), Adu Gasing (bidik, tenaga, lalu adu tepat waktu), dan Panjat Pinang (kiri-kanan bergantian tanpa terburu-buru). Setiap duel punya arena, HUD portrait, tutorial, bot QA, tab How to Play, dan baris Records.
+- **Wheel of Fate per tempat**: duel khas tempat itu 50%, dua duel lama masing-masing 25%.
+- **Perlengkapan perjalanan** di Market → UPGRADES → TRAVEL GEAR (Kail Arus, Senar Panjang, Sepatu Lumpur, Joran Laut).
+- **Peta WHERE TO?** dari chip peta di HUD memancing, chip pasang/surut di Muara Anggrek, dan kalimat kedatangan Darto di setiap tempat baru.
+- **Event cerita pembuka tempat** yang menjelaskan mengapa semua ikan tetap dijual ke Bu Yati (kontrak van putih, timbangan jujur, koperasi dan lelang yang menolak, kenangan ayah Rini).
+- Fish Book dikelompokkan per tempat dengan label LEGENDA. Records menambah 4 jenis kemenangan duel baru, Legends Defeated, dan Spots Visited.
+- Ikon peta dan panah bawah, ambience sungai/waduk/muara/laut, serta state musik untuk duel baru.
+- Argumen debug `--mm-location=<id>`; `reference_sheet_generator.gd` menerima `-- --only=<kata,...>`.
+
+### Diubah
+
+- Save schema naik ke **version 6** (file tetap `save_v5.json`) dengan migrasi otomatis dari version 5: blok `locations`, statistik dan tutorial baru, serta 20 ikan baru di Fish Book, Bucket, dan `duel_wins`.
+- `ContentIds`: 26 ikan, 8 duel, 5 tempat. Set diorama menjadi 15.
+- Adegan memancing dan hasil duel memakai set tempat yang sedang dikunjungi.
+- Memuat save lama yang hanya dimigrasi kini membuat satu backup (`pre_migration`), bukan dua.
+
+### Diperbaiki
+
+- Layar hasil duel: baris "<IKAN> ADDED TO BUCKET" terpotong di sisi kanan layar HP bila nama ikannya panjang. Judul dan detail kini membungkus ke baris berikutnya dan detail selalu tepat di bawah judul.
+- Prolog: pada adegan judul di jalan tepi danau, Rini ikut muncul dan bertumpuk dengan Darto di titik memancing. Set kedua sebuah event kini tidak memunculkan ulang pemeran set pertama; hanya Darto yang ada di danau.
+- Prolog: di HP sempit, baris kedua judul "MANCING MANIA: GELUT EDITION" menimpa subjudul "SUNDAY — 3:17 PM". Subjudul kini selalu berada di bawah baris terakhir judul.
+
+## Unreleased — Revisi Bahasa 6.6: English dan Bahasa Indonesia
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi di bawah. Gameplay, balance, dan urutan cerita tidak berubah.
+
+### Ditambahkan
+
+- **Bahasa Indonesia** lengkap. Semua 715 teks UI, cerita, dialog ikan, credits, dan kebijakan privasi diterjemahkan, ditambah nama ikan, upgrade, sampah, dan dialog pertemuan pertama (`data/dialogue/ui_text_id.tres`).
+- Settings → **LANGUAGE** (baris paling atas) dengan nilai OTOMATIS (ikut bahasa perangkat, default), ENGLISH, atau INDONESIA. Dari Main Menu, menu langsung dimuat ulang dalam bahasa baru.
+- Setting save `language` (default `auto`). Save lama tanpa setting ini diisi default tanpa dianggap rusak.
+- Format angka per bahasa: `Rp 1,800,000` / `Rp 1.800.000`, `2.92 kg` / `2,92 kg`, `3:17 PM` / `15.17`.
+- `TextDb.set_language()`, `get_language()`, `text_or()`, `get_table()`; `DisplaySettings.apply_language()` / `resolve_language()`; `FishData.get_display_name()` / `get_species_label()`, `TrashData.get_display_name()`, `UpgradeData.get_display_name()`; `Money.decimal()`; `FishDialogue.line_key()`.
+- Argumen debug `--mm-language=<auto|en|id>` (tidak pernah tersimpan).
+- Test: tabel Indonesia lengkap dan placeholder cocok; tiap bahasa memakai namanya sendiri; setting bahasa mengikuti perangkat; save lama tanpa `language` tidak dianggap rusak; tombol penting utuh dalam kedua bahasa (total 279 test).
+
+### Diubah
+
+- **Mode English** kini memakai nama Inggris untuk tempat dan permainan:
+  - "BU YATI'S WARUNG" → "MARKET";
+  - "Danau Cempaka" → "Cempaka Lake";
+  - "Suwit" → "Rock Paper Scissors";
+  - "kendang" → "drums";
+  - label spesies tanpa nama lokal ("CATFISH / LELE" → "CATFISH").
+- **Mode Indonesia** memakai nama lokal: Warung Bu Yati, Danau Cempaka, Tinju Empang, Panco Maut, Joget Koplo, Suwit.
+
+## Unreleased — Revisi Ponsel 6.5: ponsel cerita menjadi aplikasi chat
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi di bawah. Naskah, urutan cerita, dan save tidak berubah.
+
+### Diubah
+
+- Ponsel di adegan cerita (intro, chat Rini, telepon Nisa dan Rini, pelunasan) kini berupa aplikasi chat dengan tata letak yang familiar (`ChatPhone`):
+  - status bar dan punch-hole kamera;
+  - header teal dengan avatar, nama, dan status;
+  - wallpaper doodle;
+  - bubble berekor dengan jam dan centang baca;
+  - kolom ketik pesan dan tombol mikrofon.
+- Intro: saldo dan total utang tampil sebagai kartu akun, dan pengingat bayar tampil sebagai pesan dari akun bisnis CepatCash bercentang emas.
+- Telepon tampil sebagai layar panggilan suara dengan avatar berdenyut, durasi berjalan, dan tombol tutup merah.
+- Nama kontak di ponsel ditulis dengan kapital di awal saja ("Rini", "Nisa"). Status panggilan berubah dari "CALLING..." menjadi "Voice call".
+
+### Ditambahkan
+
+- `scripts/ui/chat_phone.gd` (`ChatPhone`); `StoryUi.get_phone()`; parameter id pengirim/penelepon di `StoryUi.show_chat()` dan `show_call()`.
+- Teks `story.phone.cepatcash`, `online`, `business`, `today`, `clock`, `time`, `input`.
+- Test: intro membuka chat CepatCash dengan kartu saldo dan utang lalu pesan pengingat; kontak lain membuka thread baru; Darto di kanan; telepon membuka layar panggilan.
+
+### Dihapus
+
+- Node `NotificationPanel`/`Lines` di `story.tscn` (diganti `ChatPhone` yang dibuat `StoryUi`).
+
+### Diperbaiki
+
+- Sudut ponsel tidak lagi menampilkan kotak lancip gelap. Layar kini dipotong dengan masker rounded-rect (`clip_children`), bukan ditutup potongan warna bodi yang ujungnya mencuat keluar dari lengkung bodi.
+
+## Unreleased — Revisi Ikon 6.4: ikon stiker penuh warna
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi di bawah. Gameplay, layout, dan save tidak berubah.
+
+### Diubah
+
+- Semua 31 ikon (`IconPainter`) digambar ulang sebagai ilustrasi stiker penuh warna: outline cocoa, bibir gelap di bawah, dan kilau krem. Contohnya uang kertas dengan koin, ember berisi ekor ikan, warung beratap belang, gear dengan baut emas, gamepad, buku terbuka berpita, clipboard utang, piala berbintang, sarung tinju tegak, ikan bermata, dan pintu keluar dengan panah. Ini berlaku di semua tombol, tab Market, chip HUD, dan tombol tinju.
+- Tangan Suwit (batu, gunting, kertas) kini ikon stiker berwarna kulit dengan lengan baju. Langkah asli hasil Charm ditandai cahaya teal (`MoveIcon.highlighted`), bukan lagi warna tangan.
+- Ikon PLAY menjadi tombol play bulat (cakram emas, segitiga krem).
+- Warna ikon tombol di theme menjadi putih (ikon tampil dengan warnanya sendiri). Ikon tombol disabled digambar pudar dan kurang jenuh. Generator theme `ui_art_builder` naik ke versi 4.
+- Badge chip HUD memakai versi pastel dari warnanya, dan ikonnya sedikit lebih besar.
+
+### Ditambahkan
+
+- `IconPainter.ALL`, `commands_for()`, `icons_with_holes()`; ikon `ROCK`, `SCISSORS`, `PAPER`. Geometri tiap ikon dihitung sekali (±50 ms untuk semua ikon) lalu di-cache bersama triangulasinya.
+- Test: setiap ikon berwarna dan beroutline, tidak ada celah yang tertutup jadi gumpalan, tombol menampilkan ikon dengan warna aslinya dan memudarkannya saat disabled.
+
+## Unreleased — Revisi Font 6.3: Fredoka + Chewy
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi di bawah. Gameplay, balance, cerita, audio, art 3D, layout, dan save tidak berubah.
+
+### Diubah
+
+- Semua teks game kini memakai dua font gratis yang boleh dikomersialkan, menggantikan font bawaan Godot: **Fredoka** (SIL OFL 1.1) untuk teks badan, dialog, tombol, header, dan HUD (bobot 500 dan 600), serta **Chewy** (Apache 2.0) untuk logo, judul, pita judul, dan teks "cat papan" (banner duel, PERFECT/MISS, Result, Wheel, credits, judul warung, tanda gigitan "!").
+- Tombol Privacy "ENGINE LICENSES" menjadi "LICENSES". Halamannya kini juga memuat kredit dan teks lisensi lengkap kedua font.
+- `AssetPolicyScan` mengizinkan tepat dua font ini, dan hanya bila file lisensinya ada. Font lain tetap ditolak.
+- Generator theme `ui_art_builder` naik ke versi 3.
+
+### Ditambahkan
+
+- `assets/fonts/`: `Fredoka-Variable.ttf`, `Fredoka-OFL.txt`, `Chewy-Regular.ttf`, `Chewy-LICENSE.txt`. Ketiga preset export memaketkan `assets/fonts/*.txt`.
+- `UiTokens.FONT_*` (file, lisensi, bobot); `UiSkin.regular_font()`, `make_body_font()`, `make_display_font()`.
+- Test: cakupan glyph semua teks game di kedua font, font dan bobot theme, teks lisensi font di game, dan preset memaketkan lisensi font (total 273 test).
+
+### Dihapus
+
+- `UiSkin.make_bold()` (potongan tebal tiruan dari `variation_embolden`).
+
 ## Unreleased — Revisi Mobile 6.2: game HP portrait (Android & iOS, HP & tablet)
 
 Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2` bersama revisi UI dan visual di bawah. Gameplay, balance, cerita, audio, dan art tidak berubah.

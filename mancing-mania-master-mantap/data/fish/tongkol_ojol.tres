@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_tongkol_ojol.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_tongkol_ojol.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"tongkol_ojol"
+display_name = "Rideshare Tuna"
+species_label = "MACKEREL TUNA"
+tier = 4
+sale_base = 70000
+sale_multiplier = 1.0
+conditional_chance = 0.3
+strike_window_sec = 0.62
+reel_half_width = 0.135
+reel_move_speed = 0.66
+line_stress_per_sec = 46.0
+boxing_hp = 140.0
+boxing_attack = 20.0
+boxing_telegraph_sec = 0.58
+arm_strength = 70.0
+rhythm_skill = 84.0
+tell_truth_probability = 0.62
+duel_skill = 70.0
+weight_min_kg = 1.5
+weight_max_kg = 5.0
+dialogue_sequence_id = &"fish_tongkol_ojol"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

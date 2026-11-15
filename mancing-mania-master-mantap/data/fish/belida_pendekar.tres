@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FishData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/fish_data.gd" id="1_fish"]
+[ext_resource type="PackedScene" path="res://generated/scenes/fish/fish_belida_pendekar.tscn" id="2_model"]
+[ext_resource type="Texture2D" path="res://generated/textures/fish_book/tex_fishbook_belida_pendekar.png" id="3_portrait"]
+
+[resource]
+script = ExtResource("1_fish")
+id = &"belida_pendekar"
+display_name = "Belida the Silat Master"
+species_label = "CLOWN FEATHERBACK"
+tier = 5
+sale_base = 320000
+sale_multiplier = 1.25
+conditional_chance = 0.04
+strike_window_sec = 0.55
+reel_half_width = 0.11
+reel_move_speed = 0.74
+line_stress_per_sec = 55.0
+boxing_hp = 185.0
+boxing_attack = 25.0
+boxing_telegraph_sec = 0.52
+arm_strength = 82.0
+rhythm_skill = 88.0
+tell_truth_probability = 0.38
+duel_skill = 84.0
+weight_min_kg = 3.0
+weight_max_kg = 7.0
+dialogue_sequence_id = &"fish_belida_pendekar"
+model_scene = ExtResource("2_model")
+portrait_texture = ExtResource("3_portrait")

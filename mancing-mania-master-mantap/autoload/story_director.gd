@@ -177,6 +177,10 @@ func complete_event(event_id: StringName, skipped: bool) -> void:
 		GameState.set_story_value(UNLOCKS[event_id], true)
 	if CHAPTERS.has(event_id):
 		GameState.set_story_value(&"chapter", CHAPTERS[event_id])
+	# A spot's unlock event opens the spot (revision 6.7).
+	for location: LocationData in GameData.get_all_locations():
+		if location.unlock_event == event_id:
+			GameState.unlock_location(location.id)
 	var event := get_event(event_id)
 	if event != null:
 		for obsolete: StringName in event.supersedes:

@@ -33,9 +33,9 @@ Smoke test Chromium (Chrome headless, WebGL 2 lewat SwiftShader): halaman memuat
 
 | | |
 |---|---|
-| Judul | Mancing Mania: Gelut Edition |
-| Application ID | `com.mancingmania.gelutedition` |
-| Label launcher | Mancing Mania: Gelut Edition (Section 186.4). Launcher ponsel bisa memotong label panjang; cek di perangkat. |
+| Judul | Catch and Brawl |
+| Application ID | `com.catchandbrawl.game` |
+| Label launcher | Catch and Brawl (Section 186.4). Launcher ponsel bisa memotong label panjang; cek di perangkat. |
 | Versi | 1.0.0-rc.1, versionCode 9901 |
 | Orientasi Android | portrait |
 | Arsitektur | arm64-v8a |
@@ -79,4 +79,4 @@ Target audiens 13+ (Section 188.4). Rating akhir ditentukan IARC dan bisa berbed
 
 ## Lisensi (Section 187.8)
 
-Tidak ada aset, font, musik, atau kode pihak ketiga selain Godot Engine. `LICENSES.md` memuat lisensi MIT Godot dan daftar 102 komponen pihak ketiga yang dibawa template export; teks lengkapnya juga tampil di layar ENGINE LICENSES di dalam game.
+Tidak ada aset, musik, atau kode pihak ketiga selain Godot Engine dan dua font berlisensi terbuka (revisi 6.3): Fredoka (SIL OFL 1.1) dan Chewy (Apache 2.0). Keduanya gratis untuk penggunaan komersial dan boleh di-embed di aplikasi. `LICENSES.md` memuat lisensi MIT Godot, daftar 102 komponen pihak ketiga yang dibawa template export, serta rincian dan hash kedua font. Teks lengkap semuanya, termasuk lisensi font, juga tampil di layar LICENSES di dalam game.

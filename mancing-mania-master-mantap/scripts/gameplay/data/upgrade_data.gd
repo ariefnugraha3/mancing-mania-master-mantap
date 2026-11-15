@@ -15,6 +15,11 @@ extends Resource
 @export_multiline var description: String = ""
 
 
+## The name the player reads, in the current language (upgrade.<id>.name).
+func get_display_name() -> String:
+	return TextDb.text_or(StringName("upgrade.%s.name" % id), name)
+
+
 ## Cost of the next level, or -1 when already at max level.
 func get_price_for_level(current_level: int) -> int:
 	if current_level < 0 or current_level >= max_level or current_level >= prices.size():

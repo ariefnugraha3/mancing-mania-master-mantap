@@ -8,7 +8,7 @@ extends RefCounted
 const BADGE_SIZE := 38.0
 
 ## Badge colour per icon: gold for money, periwinkle for the bucket, crust for
-## the Market, teal for the rod.
+## the Market, teal for the rod. The badge shows a pastel of it.
 const BADGE_COLORS: Dictionary = {
 	IconPainter.CASH: UiTokens.SUN_500,
 	IconPainter.BUCKET: UiTokens.BLUE_400,
@@ -106,9 +106,10 @@ static func add_stacked_content(parent: Control, icon_id: StringName) -> Label:
 	return label
 
 
-## A round coloured badge with an icon in it.
+## A round badge with a sticker icon in it. The badge is a pastel of the
+## icon's colour, so the full-colour icon stands out against it.
 static func make_badge(icon_id: StringName, diameter: float = BADGE_SIZE) -> PanelContainer:
-	var fill: Color = BADGE_COLORS.get(icon_id, UiTokens.LAKE_500)
+	var fill: Color = (BADGE_COLORS.get(icon_id, UiTokens.LAKE_500) as Color).lerp(UiTokens.CREAM_50, 0.6)
 	var badge := PanelContainer.new()
 	badge.name = "Badge"
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -117,8 +118,7 @@ static func make_badge(icon_id: StringName, diameter: float = BADGE_SIZE) -> Pan
 	badge.add_theme_stylebox_override(&"panel", UiSkin.badge(fill, diameter))
 	var icon := UiIcon.new()
 	icon.icon_id = icon_id
-	icon.icon_size = diameter * 0.62
-	icon.tint = UiTokens.INK_900 if fill.get_luminance() > 0.62 else UiTokens.CREAM_50
+	icon.icon_size = diameter * 0.74
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	badge.add_child(icon)

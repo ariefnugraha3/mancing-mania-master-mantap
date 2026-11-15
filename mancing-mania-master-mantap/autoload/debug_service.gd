@@ -261,7 +261,9 @@ func _mark_dirty() -> void:
 ##   --mm-upgrade=<upgrade id>:<level>               set an upgrade level
 ##   --mm-overlay                                    open the debug overlay
 ##   --mm-goto=<fishing|market>                      start a game if needed and go there
+##   --mm-location=<spot id>                         open a spot, give its gear and move there
 ##   --mm-cash=<amount>                              set cash
+##   --mm-language=<auto|en|id>                      switch the language (never saved)
 ##   --mm-debt-left=<amount>                         set the remaining debt
 ##   --mm-bucket=<item id>:<count>                   put a catch in the Bucket
 ##   --mm-win=<fish id>                              record a duel win against a fish
@@ -355,8 +357,24 @@ func _run_command_line_tools() -> void:
 				else:
 					SceneRouter.goto_fishing()
 				await SceneRouter.transition_finished
+			"location":
+				if not GameState.has_active_game():
+					GameState.new_game()
+				_mark_dirty()
+				if not ContentIds.LOCATION_IDS.has(StringName(value)):
+					GameLog.error(&"DEBUG", "--mm-location got an unknown spot", {"spot": value})
+				else:
+					GameState.debug_open_location(StringName(value))
 			"cash":
 				set_cash(value.to_int())
+			"language":
+				# Dirty first: the language is a setting, and settings save.
+				_mark_dirty()
+				GameState.set_setting(&"language", value)
+				# Like LANGUAGE in Settings: the main menu redraws itself in it.
+				if get_tree().current_scene != null and get_tree().current_scene.scene_file_path == SceneRouter.SCENE_PATHS[SceneRouter.SCENE_MAIN_MENU]:
+					SceneRouter.goto_main_menu()
+					await SceneRouter.transition_finished
 			"debt-left":
 				set_debt_remaining(value.to_int())
 			"bucket":

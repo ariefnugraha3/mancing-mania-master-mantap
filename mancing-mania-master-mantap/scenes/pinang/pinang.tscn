@@ -1,0 +1,46 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/pinang/pinang_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/pinang/pinang_controller.gd" id="2_controller"]
+[ext_resource type="Script" path="res://scripts/actors/pinang_world.gd" id="3_world"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_pinang_set.tscn" id="4_set"]
+[ext_resource type="PackedScene" path="res://generated/scenes/characters/chr_darto.tscn" id="5_darto"]
+[ext_resource type="Script" path="res://scripts/ui/pinang_hud.gd" id="6_hud"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_root.gd" id="7_safe"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="8_pause"]
+[ext_resource type="Script" path="res://scripts/visual/diorama_camera.gd" id="diorama_cam"]
+
+[node name="Pinang" type="Node"]
+script = ExtResource("1_scene")
+
+[node name="Controller" type="Node" parent="."]
+script = ExtResource("2_controller")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("3_world")
+
+[node name="ArenaSet" parent="World" instance=ExtResource("4_set")]
+
+[node name="DartoPose" type="Node3D" parent="World"]
+
+[node name="Rig" parent="World/DartoPose" instance=ExtResource("5_darto")]
+
+[node name="FishPose" type="Node3D" parent="World"]
+
+[node name="DuelCamera" type="Camera3D" parent="World"]
+script = ExtResource("diorama_cam")
+current = true
+
+[node name="Canvas" type="CanvasLayer" parent="."]
+script = ExtResource("6_hud")
+
+[node name="SafeRoot" type="Control" parent="Canvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_safe")
+
+[node name="PauseOverlay" parent="." instance=ExtResource("8_pause")]

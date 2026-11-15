@@ -4,7 +4,10 @@ extends OverlayPanel
 ## The copy is the final text from GDD 183.19. Diagrams and input icons join
 ## in the art and UI polish milestone.
 
-const TAB_IDS: Array[StringName] = [&"fishing", &"boxing", &"arm_wrestle", &"dance", &"suwit", &"market"]
+const TAB_IDS: Array[StringName] = [
+	&"fishing", &"travel", &"boxing", &"arm_wrestle", &"dance", &"suwit",
+	&"silat", &"tambang", &"gasing", &"pinang", &"market",
+]
 const BODY_HEIGHT := 300.0
 
 var _tabs: TabContainer

@@ -1067,25 +1067,44 @@ func test_wheel_and_result_follow_their_blueprints() -> bool:
 	return true
 
 
-# Exit gate: every fish works in every duel (in the real scenes).
+# Exit gate: every fish works in every duel it can meet (in the real scenes).
+# Cempaka Lake's six fish play the four original duels. Since revision 6.7
+# each spot's five fish also play the spot's own duel, and the spot's legend
+# plays the two shared duels of that spot's Wheel.
 func test_every_fish_in_every_duel_scene() -> bool:
 	if not check(await _enter_lake(), "reach the lake"):
 		return true
 	GameState.set_tutorial_seen(&"boxing_seen")
 	DebugService.set_auto_dialogue(true)
 	DebugService.set_forced_result(&"win")
+	var pairs: Array = []
+	for duel_id: StringName in [&"boxing", &"arm_wrestle", &"dance", &"suwit"]:
+		for fish_id: StringName in ContentIds.fish_of_location(ContentIds.START_LOCATION):
+			pairs.append([duel_id, fish_id])
+	for location: LocationData in GameData.get_all_locations():
+		if location.id == ContentIds.START_LOCATION:
+			continue
+		var signature: StringName = location.wheel_segments[0]
+		var fish_ids := ContentIds.fish_of_location(location.id)
+		for fish_id: StringName in fish_ids:
+			pairs.append([signature, fish_id])
+		for duel_id: StringName in location.get_duel_ids():
+			if duel_id != signature:
+				pairs.append([duel_id, fish_ids[fish_ids.size() - 1]])
 	var played := 0
-	for duel_id: StringName in ContentIds.DUEL_IDS:
-		for fish: FishData in GameData.get_all_fish():
-			await wait_until(func() -> bool: return not SceneRouter.is_transitioning(), BOOT_TIMEOUT_SEC)
-			GameState.current_fish = fish.id
-			GameState.current_catch = {"fish_id": fish.id, "weight_kg": fish.weight_min_kg, "is_big_one": false, "seed": played + 1}
-			var before := _finished_transitions.count(&"result")
-			SceneRouter.goto_duel(duel_id, fish.id)
-			var reached := await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 30.0)
-			check(reached, "%s vs %s reaches the Result" % [duel_id, fish.id])
-			played += 1 if reached else 0
-	check_eq(played, 24, "all 24 fish-duel pairs run")
-	check_eq(GameState.get_stat(&"duel_wins"), 24, "and each one is recorded once")
+	for pair: Array in pairs:
+		var duel_id: StringName = pair[0]
+		var fish := GameData.get_fish(pair[1])
+		await wait_until(func() -> bool: return not SceneRouter.is_transitioning(), BOOT_TIMEOUT_SEC)
+		GameState.current_fish = fish.id
+		GameState.current_catch = {"fish_id": fish.id, "weight_kg": fish.weight_min_kg, "is_big_one": false, "seed": played + 1}
+		var before := _finished_transitions.count(&"result")
+		SceneRouter.goto_duel(duel_id, fish.id)
+		var reached := await wait_until(func() -> bool: return _finished_transitions.count(&"result") > before, 30.0)
+		check(reached, "%s vs %s reaches the Result" % [duel_id, fish.id])
+		played += 1 if reached else 0
+	check_eq(pairs.size(), 52, "24 lake pairs, 20 spot-duel pairs and 8 legend pairs")
+	check_eq(played, pairs.size(), "every fish-duel pair runs")
+	check_eq(GameState.get_stat(&"duel_wins"), pairs.size(), "and each one is recorded once")
 	DebugService.clear_forces()
 	return true

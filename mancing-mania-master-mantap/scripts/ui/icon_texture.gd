@@ -2,8 +2,8 @@ class_name IconTexture
 extends Texture2D
 ## A procedural icon usable anywhere a texture is expected, mostly as
 ## Button.icon: the button then lays the icon and its text out together,
-## centred, and tints the icon with its theme icon colours. The icon is drawn
-## in white by IconPainter and the button's modulate gives it its colour.
+## centred. IconPainter draws the icon in its own colours; the button's theme
+## icon colour (white, or faded white when disabled) multiplies them.
 
 @export var icon_id: StringName = IconPainter.PLAY
 @export var icon_size: int = 24

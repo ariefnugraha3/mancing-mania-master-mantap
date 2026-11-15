@@ -47,6 +47,21 @@ const BORDER_WIDTH := 3
 const LIP := 6
 const LIP_PRESSED := 2
 
+# Typefaces (GDD 167.3, revision 6.3): two licensed font files shipped with
+# their licences (LICENSES.md). Fredoka, round and warm, carries all running
+# text; Chewy, a bouncy cartoon face, is the comic voice of big titles and
+# painted-sign text.
+const FONT_BODY_FILE := "res://assets/fonts/Fredoka-Variable.ttf"
+const FONT_DISPLAY_FILE := "res://assets/fonts/Chewy-Regular.ttf"
+## The licence that travels with each font file; both are packed into every
+## build and shown on the in-game LICENSES page.
+const FONT_BODY_LICENSE_FILE := "res://assets/fonts/Fredoka-OFL.txt"
+const FONT_DISPLAY_LICENSE_FILE := "res://assets/fonts/Chewy-LICENSE.txt"
+## Fredoka is a variable font (weight axis 300-700) whose default instance is
+## Light, so every cut names its weight.
+const FONT_WEIGHT_REGULAR := 500
+const FONT_WEIGHT_BOLD := 600
+
 # Type scale at the reference resolution (GDD 167.3): desktop / portrait.
 const FONT_HERO := 44
 const FONT_HERO_PORTRAIT := 36

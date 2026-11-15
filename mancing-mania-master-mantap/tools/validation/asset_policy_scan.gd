@@ -3,7 +3,8 @@ extends RefCounted
 ##
 ## Walks the project and reports every file that breaks the asset policy:
 ##   - audio media of any kind (all sound is synthesized from code);
-##   - font files (v1.0 uses the engine's built-in font only);
+##   - font files other than the licence-reviewed project fonts, and a
+##     reviewed font whose licence file is missing (GDD 184.12, revision 6.3);
 ##   - images and 3D models that are not outputs listed in the generator
 ##     manifest, i.e. anything that did not come out of this repository's
 ##     own generators.
@@ -12,6 +13,14 @@ const Manifest := preload("res://tools/generators/generator_manifest.gd")
 
 const AUDIO_EXTENSIONS: Array[String] = ["wav", "ogg", "mp3", "flac", "aac", "m4a", "opus", "aiff", "wma"]
 const FONT_EXTENSIONS: Array[String] = ["ttf", "otf", "woff", "woff2", "fnt", "ttc"]
+
+## The only font files the game may ship, each with the licence file that
+## must travel with it (LICENSES.md). Adding a font means a licence review and
+## an entry here.
+const LICENSED_FONTS: Dictionary[String, String] = {
+	UiTokens.FONT_BODY_FILE: UiTokens.FONT_BODY_LICENSE_FILE,
+	UiTokens.FONT_DISPLAY_FILE: UiTokens.FONT_DISPLAY_LICENSE_FILE,
+}
 const IMAGE_EXTENSIONS: Array[String] = ["png", "jpg", "jpeg", "webp", "svg", "bmp", "tga", "gif", "exr", "hdr", "dds", "ktx"]
 const MODEL_EXTENSIONS: Array[String] = ["glb", "gltf", "fbx", "obj", "blend", "dae"]
 
@@ -43,7 +52,10 @@ static func _scan_directory(path: String, generated: PackedStringArray, violatio
 		if AUDIO_EXTENSIONS.has(extension):
 			violations.append("audio file is forbidden (all audio is procedural): %s" % file_path)
 		elif FONT_EXTENSIONS.has(extension):
-			violations.append("font file is forbidden (built-in font only): %s" % file_path)
+			if not LICENSED_FONTS.has(file_path):
+				violations.append("font file is not a licence-reviewed project font: %s" % file_path)
+			elif not FileAccess.file_exists(LICENSED_FONTS[file_path]):
+				violations.append("font file ships without its licence file: %s" % file_path)
 		elif IMAGE_EXTENSIONS.has(extension) and not generated.has(file_path):
 			violations.append("image is not a generator output listed in the manifest: %s" % file_path)
 		elif MODEL_EXTENSIONS.has(extension) and not generated.has(file_path):

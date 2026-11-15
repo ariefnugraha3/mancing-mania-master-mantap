@@ -46,12 +46,16 @@ func test_boot_validation_passes_with_shipped_data() -> bool:
 
 
 func test_content_manifest_counts() -> bool:
-	check_eq(ContentIds.FISH_IDS.size(), 6, "fish roster size")
+	# Revision 6.7: 6 lake fish + 20 spot fish, 4 + 4 duels, 5 spots.
+	check_eq(ContentIds.FISH_IDS.size(), 26, "fish roster size")
 	check_eq(ContentIds.TRASH_IDS.size(), 3, "trash list size")
 	check_eq(ContentIds.UPGRADE_IDS.size(), 5, "upgrade families")
-	check_eq(ContentIds.DUEL_IDS.size(), 4, "duel modes")
-	check_eq(ContentIds.STORY_EVENT_IDS.size(), 13, "narrative events")
-	check_eq(GameData.get_all_fish().size(), 6, "fish resources")
+	check_eq(ContentIds.DUEL_IDS.size(), 8, "duel modes")
+	check_eq(ContentIds.LOCATION_IDS.size(), 5, "fishing spots")
+	check_eq(ContentIds.LEGEND_FISH_IDS.size(), 5, "one legend per spot")
+	check_eq(ContentIds.STORY_EVENT_IDS.size(), 17, "narrative events (13 + 4 spot openings)")
+	check_eq(GameData.get_all_fish().size(), 26, "fish resources")
+	check_eq(GameData.get_all_locations().size(), 5, "spot resources")
 	check_eq(GameData.get_all_trash().size(), 3, "trash resources")
 	check_eq(GameData.get_all_upgrades().size(), 5, "upgrade resources")
 	return true
@@ -201,9 +205,9 @@ func test_balance_configs_match_gdd() -> bool:
 # BOOT-002
 func test_missing_fish_data_fails_validation() -> bool:
 	var fish := GameData.get_all_fish()
-	fish.pop_back()
+	var dropped: FishData = fish.pop_back()
 	var errors := DataValidator.validate_fish_set(fish)
-	check_contains(errors, "missing FishData for 'arowana_don'", "missing fish is reported")
+	check_contains(errors, "missing FishData for '%s'" % dropped.id, "missing fish is reported")
 	return true
 
 
@@ -294,6 +298,103 @@ func test_text_table_is_complete_and_clean() -> bool:
 		check(not text.contains("TODO") and not text.contains("FIXME"), "text '%s' has no placeholder marker" % key)
 	check_eq(TextDb.t(&"definitely.missing.key"), "#definitely.missing.key#", "missing key is visible, not blank")
 	check_eq(TextDb.tf(&"menu.version", {"version": "1.2.3"}), "v1.2.3", "formatted text")
+	return true
+
+
+## GDD 133: every English text has an Indonesian one with the same
+## placeholders and line breaks, and so does every name and line that lives
+## in a data resource (fish, upgrades, trash, first meetings).
+func test_indonesian_text_is_complete() -> bool:
+	var english := TextDb.get_table(TextDb.ENGLISH)
+	var indonesian := TextDb.get_table(TextDb.INDONESIAN)
+	check(indonesian.size() > 0, "the Indonesian table loads")
+	var placeholder := RegEx.create_from_string("\\{[a-z_]+\\}")
+	var missing := PackedStringArray()
+	var mismatched := PackedStringArray()
+	for key: String in english:
+		var value: String = english[key]
+		if english.has(value) and value != key:
+			continue  # An alias follows its target in every language.
+		if not indonesian.has(key) or indonesian[key].strip_edges().is_empty():
+			missing.append(key)
+			continue
+		var wanted := _placeholders(placeholder, value)
+		if wanted != _placeholders(placeholder, indonesian[key]) or value.count("\n") != indonesian[key].count("\n"):
+			mismatched.append(key)
+	for fish_id: StringName in ContentIds.FISH_IDS:
+		for field: String in ["name", "species"]:
+			if not indonesian.has("fish.%s.%s" % [fish_id, field]):
+				missing.append("fish.%s.%s" % [fish_id, field])
+		var sequence := load(FishDialogue.SEQUENCE_PATH % GameData.get_fish(fish_id).dialogue_sequence_id) as DialogueSequence
+		for index: int in sequence.entries.size():
+			if not indonesian.has(String(FishDialogue.line_key(GameData.get_fish(fish_id).dialogue_sequence_id, index))):
+				missing.append(String(FishDialogue.line_key(GameData.get_fish(fish_id).dialogue_sequence_id, index)))
+	for upgrade_id: StringName in ContentIds.UPGRADE_IDS:
+		if not indonesian.has("upgrade.%s.name" % upgrade_id):
+			missing.append("upgrade.%s.name" % upgrade_id)
+	for trash_id: StringName in ContentIds.TRASH_IDS:
+		if not indonesian.has("trash.%s.name" % trash_id):
+			missing.append("trash.%s.name" % trash_id)
+	check_empty(missing, "every text has an Indonesian translation")
+	check_empty(mismatched, "translations keep their placeholders and line breaks")
+	return true
+
+
+func _placeholders(pattern: RegEx, text: String) -> PackedStringArray:
+	var found := PackedStringArray()
+	for match_result: RegExMatch in pattern.search_all(text):
+		found.append(match_result.get_string())
+	found.sort()
+	return found
+
+
+## In English the local names become English ones (Cempaka Lake, the
+## Market, Rock Paper Scissors); in Indonesian the local names stay.
+func test_each_language_uses_its_own_names() -> bool:
+	var local_words := RegEx.create_from_string("(?i)danau|warung|suwit|kendang|/ ?(lele|nila|gurami|ikan mas|gabus|arwana)")
+	var english := TextDb.get_table(TextDb.ENGLISH)
+	var local_in_english := PackedStringArray()
+	for key: String in english:
+		if local_words.search(english[key]) != null:
+			local_in_english.append(key)
+	check_empty(local_in_english, "English text has no local place or game names")
+	for fish_id: StringName in ContentIds.FISH_IDS:
+		check(not GameData.get_fish(fish_id).species_label.contains("/"), "%s species is English only" % fish_id)
+	TextDb.set_language(TextDb.INDONESIAN)
+	check_eq(TextDb.t(&"market.header.title"), "WARUNG BU YATI", "Indonesian keeps Warung Bu Yati")
+	check(TextDb.t(&"credits.17").contains("Danau Cempaka"), "Indonesian keeps Danau Cempaka")
+	check_eq(TextDb.t(&"duel.boxing"), "Tinju Empang", "Indonesian keeps Tinju Empang")
+	check_eq(GameData.get_fish(&"snakehead_sergeant").get_display_name(), "Sersan Gabus", "fish names are Indonesian")
+	check_eq(GameData.get_item_display_name(&"trash_sandal"), "Sandal Jepit Sebelah", "trash names are Indonesian")
+	check_eq(FishDialogue.first_meeting(&"catfish_bruiser")[0]["text"], "Turunkan aku.", "first meetings are Indonesian")
+	check_eq(TextDb.t(&"story.story_debt_100k.09"), "Gimana danaunya?", "aliases follow the translated line")
+	check_eq(Money.format_rp(1800000), "Rp 1.800.000", "Indonesian rupiah uses dots")
+	check_eq(Money.decimal(2.5), "2,50", "and a decimal comma")
+	DisplaySettings.apply_language()
+	check_eq(TextDb.t(&"market.header.title"), "MARKET", "English calls it the Market")
+	check(TextDb.t(&"credits.17").contains("Cempaka Lake"), "and the lake Cempaka Lake")
+	check_eq(GameData.get_fish(&"snakehead_sergeant").get_display_name(), "Snakehead Sergeant", "English fish names")
+	check_eq(Money.format_rp(1800000), "Rp 1,800,000", "English rupiah uses commas")
+	return true
+
+
+## LANGUAGE (GDD 133): "auto" follows the device, unknown values repair
+## to "auto", and a device language the game lacks reads English.
+func test_language_setting_follows_the_device() -> bool:
+	check_eq(SaveSchema.default_settings()["language"], "auto", "the default follows the device")
+	check_eq(SaveSchema.normalize_setting("language", "fr"), "auto", "an unknown language repairs to auto")
+	check_eq(SaveSchema.normalize_setting("language", "id"), "id", "Indonesian is kept")
+	var pinned := DisplaySettings.system_language_override
+	DisplaySettings.system_language_override = "id"
+	check_eq(DisplaySettings.resolve_language("auto"), "id", "an Indonesian device reads Indonesian")
+	DisplaySettings.system_language_override = "in"
+	check_eq(DisplaySettings.resolve_language("auto"), "id", "the old code for Indonesian too")
+	DisplaySettings.system_language_override = "fr"
+	check_eq(DisplaySettings.resolve_language("auto"), "en", "a language the game lacks reads English")
+	check_eq(DisplaySettings.resolve_language("id"), "id", "a chosen language wins over the device")
+	DisplaySettings.system_language_override = pinned
+	DisplaySettings.apply_language()
+	check_eq(TextDb.get_language(), "en", "tests read English")
 	return true
 
 

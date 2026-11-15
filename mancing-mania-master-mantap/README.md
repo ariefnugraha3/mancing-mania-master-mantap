@@ -1,4 +1,4 @@
-# Mancing Mania: Gelut Edition
+# Catch and Brawl
 
 Game memancing cozy berlatar Danau Cempaka. Setiap ikan yang berhasil ditarik menantang Darto dalam duel absurd: tinju, panco, joget koplo, atau suwit.
 

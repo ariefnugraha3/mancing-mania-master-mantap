@@ -26,6 +26,8 @@ static func commit(result: Dictionary) -> bool:
 		GameState.increment_stat(StringName("%s_wins" % duel_id))
 		if fish_id == ContentIds.BOSS_FISH_ID:
 			GameState.increment_stat(&"don_arowana_defeated")
+		if ContentIds.LEGEND_FISH_IDS.has(fish_id):
+			GameState.increment_stat(&"legends_defeated")
 	else:
 		GameState.record_fish_loss(fish_id)
 		GameState.increment_stat(&"duel_losses")

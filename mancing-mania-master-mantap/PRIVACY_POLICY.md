@@ -1,6 +1,6 @@
-# Privacy Policy — Mancing Mania: Gelut Edition
+# Privacy Policy — Catch and Brawl
 
-Mancing Mania: Gelut Edition is designed to be played without creating an account and without sending gameplay data to the developer.
+Catch and Brawl is designed to be played without creating an account and without sending gameplay data to the developer.
 
 ## Data collection
 
@@ -12,7 +12,7 @@ Game progress, settings, records, Fish Book progress, and story progress are sto
 
 ## Web version
 
-The web version is hosted by a third-party distribution platform. That platform may process technical information under its own privacy policy when delivering the game files. Mancing Mania: Gelut Edition does not add its own analytics, advertising, or tracking system.
+The web version is hosted by a third-party distribution platform. That platform may process technical information under its own privacy policy when delivering the game files. Catch and Brawl does not add its own analytics, advertising, or tracking system.
 
 ## Save export and import
 

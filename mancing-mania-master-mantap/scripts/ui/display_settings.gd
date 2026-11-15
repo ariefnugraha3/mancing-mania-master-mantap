@@ -19,9 +19,13 @@ const QUALITY: Dictionary = {
 
 static var _base_font_sizes: Dictionary = {}
 static var _applied_text_scale: float = 1.0
+## The device language as LANGUAGE "auto" sees it. Empty means ask the OS;
+## the test runner pins it so results never depend on the machine.
+static var system_language_override: String = ""
 
 
 static func apply_all(tree: SceneTree) -> void:
+	apply_language()
 	apply_ui_scale(tree)
 	apply_text_scale()
 	apply_quality(tree)
@@ -35,6 +39,24 @@ static func apply_setting(tree: SceneTree, key: StringName) -> void:
 			apply_text_scale()
 		&"quality_preset":
 			apply_quality(tree)
+		&"language":
+			apply_language()
+
+
+## LANGUAGE (GDD 133): the chosen language, or for "auto" the device's
+## when the game has it (Indonesian for an Indonesian phone), else English.
+static func apply_language() -> void:
+	TextDb.set_language(resolve_language(str(GameState.get_setting(&"language"))))
+
+
+static func resolve_language(setting: String) -> String:
+	if TextDb.LANGUAGES.has(setting):
+		return setting
+	var system := system_language_override if not system_language_override.is_empty() else OS.get_locale_language()
+	# "in" is the old ISO code for Indonesian that some devices still report.
+	if system == "in":
+		system = TextDb.INDONESIAN
+	return system if TextDb.LANGUAGES.has(system) else TextDb.ENGLISH
 
 
 static func apply_ui_scale(tree: SceneTree) -> void:

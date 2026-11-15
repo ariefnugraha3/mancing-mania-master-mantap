@@ -8,7 +8,7 @@
 script = ExtResource("1_fish")
 id = &"snakehead_sergeant"
 display_name = "Snakehead Sergeant"
-species_label = "SNAKEHEAD / GABUS"
+species_label = "SNAKEHEAD"
 tier = 4
 sale_base = 78000
 sale_multiplier = 1.0
@@ -23,6 +23,7 @@ boxing_telegraph_sec = 0.57
 arm_strength = 72.0
 rhythm_skill = 84.0
 tell_truth_probability = 0.52
+duel_skill = 62.0
 weight_min_kg = 1.8
 weight_max_kg = 5.5
 dialogue_sequence_id = &"fish_snakehead_sergeant"

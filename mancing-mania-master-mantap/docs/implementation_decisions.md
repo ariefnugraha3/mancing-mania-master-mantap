@@ -711,7 +711,7 @@ Tombol digambar sebagai wajah dengan rim 3 px dan rim bawah 6 px (lip). State pr
 
 ### D-119 — Font tebal dan ikon tanpa file
 
-Tetap tanpa file font (GDD 184.12, test `default_font == null`): potongan bold/heavy adalah `FontVariation` tanpa `base_font` dengan `variation_embolden`. Ikon digambar prosedural oleh `IconPainter` pada grid 24 unit; `IconTexture` (subkelas `Texture2D`) membuatnya bisa dipakai sebagai `Button.icon` dan diwarnai theme, `UiIcon` memakainya untuk badge chip HUD. `GameButton.icon_id` memasang ikon cukup dengan id.
+*(Bagian font digantikan oleh D-128–D-130, revisi 6.3.)* Tetap tanpa file font (GDD 184.12, test `default_font == null`): potongan bold/heavy adalah `FontVariation` tanpa `base_font` dengan `variation_embolden`. Ikon digambar prosedural oleh `IconPainter` pada grid 24 unit; `IconTexture` (subkelas `Texture2D`) membuatnya bisa dipakai sebagai `Button.icon` dan diwarnai theme, `UiIcon` memakainya untuk badge chip HUD. `GameButton.icon_id` memasang ikon cukup dengan id.
 
 ### D-120 — Gerak dekoratif dan run headless
 
@@ -752,4 +752,183 @@ Status dan Pause di atas, dunia di tengah, aksi di sepertiga bawah. Baris yang b
 ### D-127 — Preset iOS tanpa rahasia
 
 Preset iOS berisi bundle ID, keluarga perangkat iPhone + iPad, iOS 14, ikon 1024, latar launch screen cream, dan tanpa usage description. Team ID, sertifikat, dan provisioning profile milik pemilik dan diisi di mesin macOS; `*.p12`, `*.mobileprovision`, `build/ios/`, dan `*.ipa` diabaikan git. `application/short_version` = MAJOR.MINOR.PATCH karena App Store menolak suffix `-rc`.
+
+## Revisi Font 6.3 — Fredoka + Chewy
+
+Atas permintaan pemilik, semua teks game memakai font yang bernuansa komedi tapi hangat, gratis, dan boleh dikomersialkan (GDD header revisi 6.3, Section 167.3, 184.12, 187.8). D-119 (font tanpa file) digantikan.
+
+### D-128 — Dua typeface, satu peran masing-masing
+
+Kandidat dari Google Fonts dirender berdampingan dengan gaya UI game: judul cat papan, tombol berlip, kartu dialog, dan teks kecil.
+
+- Baloo 2 dan Playpen Sans ditolak karena line-height-nya sangat besar dan akan merusak layout HP.
+- Gluten dan Sour Gummy ditolak karena teks badannya sulit dibaca dan angkanya janggal.
+- Fredoka saja terlalu "rapi", nuansa komedinya kurang.
+
+Pilihan akhirnya pasangan: **Chewy** (Apache 2.0) memberi komedi kartun pada teks besar yang dilihat sekilas, dan **Fredoka** (OFL 1.1) menjaga kehangatan dan keterbacaan teks yang dibaca lama. Peran font mengikuti potongan yang sudah ada, jadi tidak ada layar yang perlu ditata ulang:
+
+- `regular_font()` adalah Fredoka bobot 500, yang menjadi `default_font` Theme;
+- `bold_font()` adalah Fredoka bobot 600;
+- `heavy_font()` adalah Chewy dengan Fredoka bold sebagai fallback.
+
+Bobot 500 dipilih karena teks badan di HP lebih tebal dan hangat dibanding 400, tapi tetap ringan dibanding bold. Font bawaan Godot sebelumnya (Open Sans SemiBold) juga cukup tebal.
+
+### D-129 — Font variable dengan bobot eksplisit
+
+Fredoka dipakai sebagai satu file variable (159 KB) alih-alih empat file statis. Bobot diatur lewat `FontVariation.variation_opentype` dengan tag `wght` (2003265652), bukan `variation_embolden`. Instance bawaan file ini adalah Light (300), jadi setiap potongan wajib menyebut bobotnya. Theme tetap byte-identik antar build karena `GeneratorIo` menormalkan id `ext_resource` dan membuang uid. `ui_art_builder` naik ke versi 3. Label3D (tanda gigitan "!") diberi Chewy secara eksplisit. Label3D lain otomatis memakai `default_font` Theme.
+
+### D-130 — Lisensi font ikut ke mana pun fontnya pergi
+
+`assets/fonts/` berisi kedua font dan file lisensinya. `AssetPolicyScan.LICENSED_FONTS` (diturunkan dari `UiTokens.FONT_*_FILE`) hanya mengizinkan kedua font itu, dan hanya bila file lisensinya ada. Font lain tetap ditolak. Ketiga preset export memaketkan `assets/fonts/*.txt`. Layar Privacy menampilkan teks lisensi lengkap di halaman yang tombolnya kini bernama LICENSES (sebelumnya ENGINE LICENSES). Teks lisensi yang di-hard-wrap 75 kolom disambung per paragraf (`PrivacyOverlay._reflow`) supaya tidak patah-patah di layar HP. Test baru mengunci empat hal: semua karakter teks game ada di Fredoka dan di Chewy+fallback (build Web tidak punya font sistem), theme memakai file dan bobot yang benar, teks lisensi tampil di game, dan preset memaketkan lisensi.
+
+
+## Revisi Ikon 6.4 — Ikon stiker penuh warna
+
+Atas permintaan pemilik, ikon tombol yang masih berupa siluet satu warna dan terlihat seperti placeholder digambar ulang (GDD header revisi 6.4, Section 174.10, 184.11). D-119 (bagian ikon) diperluas.
+
+### D-131 — Stiker, bukan siluet
+
+Ikon kini ilustrasi kecil berwarna dengan outline cocoa tebal, karena gaya ini paling serasi dengan UI berlip dan dunia diorama dan tetap terbaca di atas tombol krem maupun terracotta. Setiap ikon disusun dari "part". `IconPainter._compile()` memberi tiap part secara otomatis:
+
+- outline siluet;
+- garis tipis di tempat part menumpuk part lain;
+- bibir gelap, yaitu part dikurangi dirinya sendiri yang digeser ke atas;
+- kilau, yaitu part yang diciutkan dikurangi dirinya yang digeser ke kanan bawah.
+
+Desain per ikon hanya berisi bentuk dan warna. Alternatif ikon monokrom yang lebih rapi ditolak karena tetap terasa "UI sistem" dan tidak menjawab keluhan placeholder.
+
+### D-132 — Geometri sekali, gambar berkali-kali
+
+Operasi `Geometry2D` (offset, clip, merge) berjalan sekali per ikon, ±50 ms untuk 31 ikon, di grid yang diperbesar 32× agar kurva dan sambungan bulat tetap halus. Hasilnya di-cache bersama indeks triangulasinya. Saat menggambar hanya ada `canvas_item_add_triangle_array` dan polyline anti-alias tipis di tepi tiap poligon. Triangulasi tidak diulang saat menggambar karena poligon kecil sempat gagal ditriangulasi pada ukuran 24 px.
+
+Clipper tidak bisa menggambar lubang. Celah yang lebih sempit dari dua kali outline akan tertutup dan terisi cocoa, seperti yang sempat terjadi di antara batang not musik. `_outers()` mencatat setiap lubang yang dibuang, dan test mewajibkan daftar itu kosong.
+
+### D-133 — Ikon membawa warnanya sendiri
+
+Warna ikon tombol di theme menjadi putih, yang bertindak sebagai pengali netral. Warna disabled adalah putih dengan alpha 0,45, yang membuat `IconPainter` menggambar versi pudar dan kurang jenuh, bukan versi tembus pandang yang memperlihatkan outline di balik isi. `UiIcon.tint` dan `MoveIcon.tint` kini juga pengali (default putih). Badge chip HUD menjadi pastel dari warna lamanya. Penanda langkah asli hasil Charm di Suwit pindah dari warna tangan ke cahaya teal di belakang tangan.
+
+## Revisi Ponsel 6.5 — Ponsel cerita menjadi aplikasi chat
+
+Atas permintaan pemilik ("biar kayak chat di WhatsApp"), ponsel cerita yang sebelumnya berupa teks polos di layar teal gelap diganti `ChatPhone` (GDD header revisi 6.5, Section 168.3).
+
+### D-134 — Tata letak familiar, identitas sendiri
+
+Yang diambil dari aplikasi chat populer adalah tata letaknya, karena pemain membacanya tanpa berpikir:
+
+- header dengan avatar dan status;
+- bubble berekor, kiri untuk lawan bicara dan kanan untuk diri sendiri;
+- jam dan centang dua;
+- wallpaper doodle, chip tanggal, kolom ketik, dan layar panggilan.
+
+Nama, logo, ikon, dan warna merek aplikasi sungguhan sengaja tidak dipakai karena game ini komersial. Header memakai teal dari palet danau, bubble keluar memakai hijau muda yang hangat, dan wallpaper memakai krem diorama.
+
+### D-135 — Memetakan langkah cerita ke chat tanpa mengubah naskah
+
+Timeline tidak diubah. Langkah `phone` menjadi kartu akun di tengah chat (teks dipecah di ": " terakhir menjadi label dan nominal). Langkah `note` menjadi pesan dari akun bisnis CepatCash; ini cocok dengan kebiasaan pinjol di Indonesia yang menagih lewat chat. Langkah `chat` membuka thread orang itu, dan langkah `call` membuka layar panggilan. Isi dari kontak lain membuat ponsel berganti thread, misalnya pelunasan yang dimulai di chat CepatCash lalu pindah ke chat Rini. Jam selalu 3:17, sesuai kartu judul intro ("SUNDAY — 3:17 PM") dan tagline game tentang Minggu sore.
+
+### D-136 — Daftar pesan tumbuh dari bawah
+
+`Messages` adalah `VBoxContainer` yang berlabuh ke bawah area chat dan tumbuh ke atas. Area chat memotong isinya, jadi pesan lama bergulir ke balik header seperti di aplikasi chat sungguhan dan tidak pernah mendorong ponsel keluar layar. Lebar bubble dihitung dari lebar teks, maksimal 80% area chat. Pesan pendek menaruh jam di baris yang sama, dan pesan panjang menaruhnya di bawah. Lebar diukur langsung dengan font karena label di luar tree belum punya theme. Semua kontrol ponsel `MOUSE_FILTER_IGNORE`, sehingga ketukan tetap memajukan cerita.
+
+## Revisi Bahasa 6.6 — English dan Bahasa Indonesia
+
+Atas permintaan pemilik, game mendapat Bahasa Indonesia. Di mode English, nama lokal diganti nama Inggris (GDD header revisi 6.6, Section 133).
+
+### D-137 — English sumber, Indonesia terjemahan lengkap
+
+`ui_text.tres` tetap menjadi tabel sumber yang memuat setiap kunci. `ui_text_id.tres` memakai format `TextTable` yang sama. `TextDb` mencari di tabel bahasa aktif lalu jatuh ke English. Alias (nilai yang berupa kunci lain) hanya ada di English dan tetap diikuti ke baris terjemahan.
+
+Teks yang sumber English-nya ada di resource data (nama ikan, label spesies, nama upgrade, nama sampah, dialog `fish_*.tres`) tidak dipindahkan. Resource tetap menyimpan English, dan getter `get_display_name()` / `TextDb.text_or()` mengambil terjemahannya dari kunci `fish.<id>.name`, `upgrade.<id>.name`, `trash.<id>.name`, dan `fishline.<sequence>.<n>`. Dengan begitu validator data dan test GDD tidak perlu berubah.
+
+### D-138 — Nama per bahasa
+
+Mode English memakai nama Inggris untuk tempat dan permainan. Suwit menjadi "Rock Paper Scissors", nama yang dikenal semua pemain berbahasa Inggris. Nama lengkap ini muat di roda (label menyusut), di tab Cara Bermain (tab bisa digeser), dan di banner (boleh dua baris).
+
+Mode Indonesia mempertahankan nama lokal dari GDD: Warung Bu Yati, Danau Cempaka, Tinju Empang, Panco Maut, Joget Koplo, Suwit. Nama ikan, upgrade, dan sampah dilokalkan dengan rasa lokal yang sama lucunya, misalnya Lele Jagoan, Sersan Gabus, Jamu Pegal Linu, Kopi Tubruk, Cincin Batu Akik, dan Sandal Jepit Sebelah.
+
+Suara karakter dijaga lewat sapaan:
+
+- Lele preman memanggil "Bos".
+- Nila anak gym memanggil "bro".
+- Ikan Mas yang sombong ber-"Anda".
+- Sersan Gabus berteriak.
+- Nisa memanggil "Ayah", dan Darto memanggil Bu Yati "Ibu".
+
+Pun "outstanding" pada pesan CepatCash diganti pun yang setara, "Tunggakan Anda masih menunggak".
+
+### D-139 — Bahasa mengikuti perangkat, test tidak
+
+Setting `language` bernilai `auto` secara default. `DisplaySettings.resolve_language()` membaca `OS.get_locale_language()`: `id` atau kode lama `in` menjadi Indonesia, bahasa lain menjadi English. Runner test mengunci `system_language_override = "en"` sehingga hasil test tidak bergantung pada mesin. `SceneRouter` menerapkan bahasa sebelum layar boot menulis teks pertamanya.
+
+Save lama tanpa `language` diisi default lewat `SaveSchema.LATER_SETTINGS` tanpa catatan perbaikan. Sebelumnya, kunci yang hilang dianggap kerusakan: save ditulis ulang dan backup `pre_repair` dibuat untuk setiap pemain yang memperbarui game.
+
+### D-140 — Ganti bahasa di tengah layar
+
+UI dibangun saat `_ready`, sehingga layar yang sudah tampil tidak otomatis berganti bahasa. Saat bahasa diganti dari Main Menu, `SettingsOverlay.language_changed` membuat menu dimuat ulang. Di menu Pause tidak ada pendengar sinyal itu, jadi sebuah catatan kecil menjelaskan bahwa teks berganti di layar berikutnya. Scene gameplay tidak dimuat ulang, karena memuat ulang duel berarti kabur dari kekalahan.
+
+## Revisi Lokasi 6.7 — Tempat memancing berjenjang
+
+Atas permintaan pemilik, game mendapat 4 tempat memancing baru beserta ikan dan duelnya, tanpa milestone (GDD Section 198).
+
+### D-141 — Tempat adalah data
+
+Setiap tempat adalah `LocationData` di `data/locations/<id>.tres`. Semua perbedaan gameplay (pengali tunggu, strike, big one, berat, drift reel, pasang surut, ombak, segmen Wheel, set, ambience) adalah angka di resource itu, dan kode memancing hanya membacanya. Nilai default resource sama dengan aturan Danau Cempaka, sehingga `EncounterRoller`, `ReelSimulation`, dan `WheelController` menghasilkan RNG yang identik dengan versi sebelumnya di Danau Cempaka (Wheel yang semua segmennya sama besar tetap memakai jalur RNG lama).
+
+### D-142 — Tempat terbuka lewat event, dipakai lewat perlengkapan
+
+`StoryDirector.complete_event` membuka tempat yang `unlock_event`-nya cocok, baik event ditonton maupun dilewati. Membuka tempat tidak otomatis memindahkan Darto: perlengkapan harus dibeli dulu. Dua langkah ini membuat uang tetap punya tujuan selain utang, dan pemain yang masih nyaman di danau tidak dipaksa pindah. `SaveSchema.can_fish_at` adalah satu-satunya aturan "boleh memancing di sini", dipakai oleh `GameState`, normalisasi save, dan peta.
+
+### D-143 — Wheel milik tempat asal ikan
+
+Wheel memakai segmen tempat asal ikan (`ContentIds.location_of_fish`), bukan tempat Darto berdiri. Hasilnya sama dalam permainan normal, tetapi debug `--mm-duel` dan test bisa memanggil ikan mana pun dan tetap mendapat duel yang benar.
+
+### D-144 — Duel baru berbagi dasar
+
+`DuelControllerBase` memegang langkah 120 Hz, intro, hasil paksa (`--mm-result`), dan bentuk hasil. Keempat controller hanya berisi aturan. `SpotDuelScene` memegang pause, tutorial, play time, bot, dan `DuelExit`; `SpotDuelHud` memegang banner, Pause, titik skor, dan tombol aksi yang memakai action input yang sudah ada (`dance_lane_1..4`, `arm_mash`, `box_dodge_left/right`). Tidak ada action input baru, jadi remap kontrol lama langsung berlaku.
+
+Kekuatan ikan di duel baru diambil dari satu stat baru, `FishData.duel_skill` (0–100). Ikan lama juga punya nilai ini, karena Wheel tempat lain bisa saja dipanggil debug untuk ikan lama.
+
+### D-145 — Satu tarikan per lintasan, satu ritme untuk memanjat
+
+Tarik Tambang menghitung satu tarikan per lintasan marker melewati zona hijau, dan Panjat Pinang menghukum ketukan yang lebih cepat dari 0,17 detik dengan meteran licin. Keduanya mencegah "mash" (GDD Section 52 sudah membedakan mash yang disengaja dari yang tidak). Di HP, tombol sisi yang benar diberi warna CTA, tetapi tombol sisi lainnya tetap bisa ditekan karena salah sisi adalah bagian dari permainan.
+
+### D-146 — Set tempat menukar set danau
+
+Adegan memancing dan hasil duel tetap dibangun di atas set danau. Di tempat lain, `SpotSet.swap_in` mengganti node set itu dengan set tempat yang membawa marker yang sama (`DartoSpot`, `FloatSpot`, `BucketSpot`, `CameraFocus`, `ResultFocus`, `WheelFocus`). Marker berada di posisi layar yang sama, jadi seluruh logika kamera, pelampung, tarikan ikan, dan ember tidak perlu tahu tempatnya. Di Dermaga Mawar, Darto berdiri di dek setinggi 0,3 m; titik mendarat ikan mengikuti tinggi `DartoSpot`.
+
+### D-147 — Peta hanya muncul jika ada pilihan
+
+Chip peta disembunyikan sampai tempat kedua terbuka, dan saat pertama muncul diberi petunjuk sekali (`travel_seen`). Pindah tempat menyimpan game lalu memuat ulang adegan memancing, sehingga tidak ada state memancing setengah jalan yang terbawa ke tempat lain. Pindah hanya bisa saat Darto diam.
+
+### D-148 — Save version 6 di file lama
+
+Nama file tetap `save_v5.json`. Mengganti nama file berarti save pemain lama tidak ditemukan, padahal migrasi `migrate_5_to_6` sudah cukup. `legends_defeated` dimulai dari jumlah kemenangan atas Don Arowana, supaya Records tidak tiba-tiba menulis nol untuk pemain yang sudah mengalahkannya.
+
+Migrasi hanya melengkapi blok yang memang ada (Bucket, Fish Book, statistik, tutorial, setting). Blok yang hilang atau rusak dibiarkan apa adanya, sehingga validasi tetap menolak save yang rusak. Tanpa aturan ini, file `{"version": 5}` diterima sebagai game baru dan progres pemain hilang diam-diam.
+
+Migrasi biasa hanya membuat backup `pre_migration`. Backup `pre_repair` kini hanya dibuat bila normalisasi benar-benar memperbaiki sesuatu, jadi update game tidak meninggalkan dua salinan yang sama di folder save.
+
+## Revisi Nama 6.8 — Catch and Brawl
+
+Atas permintaan pemilik, game berganti nama menjadi **Catch and Brawl** (GDD header revisi 6.8).
+
+### D-149 — Satu nama untuk semua bahasa
+
+Nama game sama di mode English dan Bahasa Indonesia. Aturan Section 133.2 tentang nama lokal di mode Indonesia berlaku untuk tempat dan permainan di dalam game, bukan untuk merek game.
+
+### D-150 — Logo satu baris yang menyesuaikan lebar
+
+Logo lama punya dua tingkat: judul besar dan subjudul di pita miring. "Catch and Brawl" dipakai utuh di baris besar. Versi "CATCH" dengan pita "AND BRAWL" sudah dicoba, tetapi kata BRAWL menjadi terlalu kecil. Pita kini disembunyikan bila subjudulnya kosong.
+
+Judul tidak dibungkus otomatis. Label yang membungkus di dalam kontainer logo yang menyusut ke isinya pecah per suku kata ("CAT / CH"). Sebagai gantinya, ukuran font diturunkan sampai judul muat lebar layar, termasuk pada teks 150%. Layar boot memakai kontainer selebar layar, jadi di sana judul boleh membungkus.
+
+### D-151 — Application ID baru sebelum rilis pertama
+
+`com.mancingmania.gelutedition` diganti `com.catchandbrawl.game` di Android dan iOS. Game belum pernah dirilis ke toko, jadi penggantian ini aman. Setelah rilis pertama, ID tidak boleh diganti lagi.
+
+### D-152 — Save ikut pindah ke folder bernama baru
+
+Di desktop, `user://` dinamai sesuai nama proyek, jadi folder save ikut berpindah ke `app_userdata/Catch and Brawl`. Saat `SaveManager` siap, ia mencari folder bernama lama di sebelahnya. Bila folder baru belum punya save dan folder lama punya, semua file `save_v5*` disalin sekali. Folder lama tidak diubah atau dihapus, dan folder yang sudah punya save tidak pernah ditimpa. Di Android dan iOS, `user://` ada di sandbox aplikasi, jadi impor ini tidak berpengaruh di sana.
+
+Nama file GDD dan folder repository tetap memakai nama lama, karena banyak rujukan dan workspace mengarah ke sana.
 

@@ -86,12 +86,15 @@ func start_cast() -> void:
 	if _state != STATE_IDLE:
 		return
 	var forced := DebugService.get_forced_fish()
-	if forced == &"" and _is_first_catch():
+	var location_id := GameState.get_current_location()
+	if forced == &"" and _is_first_catch() and location_id == ContentIds.START_LOCATION:
 		# The very first fish is always Bruiser Catfish (GDD Section 13).
 		forced = &"catfish_bruiser"
 	var wait_override := DEBUG_FAST_WAIT_SEC if DebugService.is_fast_wait_enabled() else -1.0
+	# The cast count before this cast decides the tide on tidal water.
+	var cast_index := int(GameState.get_stat(&"total_casts"))
 	_encounter = EncounterRoller.roll(
-		RNGService.next_encounter_seed(), GameState.get_upgrade_level(&"bait"), forced, wait_override)
+		RNGService.next_encounter_seed(), GameState.get_upgrade_level(&"bait"), forced, wait_override, location_id, cast_index)
 	GameState.increment_stat(&"total_casts")
 	_timer = 0.0
 	_float_released = false
@@ -116,6 +119,7 @@ func attempt_strike() -> void:
 				_land_trash()
 			else:
 				_reel.setup(GameData.get_fish(_encounter["item_id"]), GameState.get_upgrade_level(&"rod"), int(_encounter["seed"]))
+				_reel.setup_water(GameData.get_location(_encounter.get("location", ContentIds.START_LOCATION)))
 				_set_state(STATE_REELING)
 		STATE_WAITING, STATE_BITE_WARNING:
 			_wait_left = maxf(_wait_left, 0.0) + GameData.get_fishing_balance().false_strike_delay_sec
@@ -137,6 +141,12 @@ func cancel_to_idle() -> void:
 
 func get_state() -> StringName:
 	return _state
+
+
+## On tidal water: true at high tide for the next cast (revision 6.7).
+func is_high_tide() -> bool:
+	var location := GameData.get_location(GameState.get_current_location())
+	return location == null or location.is_high_tide(int(GameState.get_stat(&"total_casts")))
 
 
 # --- Extras for the world, the HUD and tests --------------------------------

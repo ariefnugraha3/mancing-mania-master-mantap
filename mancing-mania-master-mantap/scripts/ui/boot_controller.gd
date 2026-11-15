@@ -22,7 +22,8 @@ var validation_errors: PackedStringArray = PackedStringArray()
 
 func _ready() -> void:
 	_title_line_1.text = TextDb.t(&"boot.title_line_1")
-	_title_line_2.text = TextDb.t(&"boot.title_line_2")
+	_title_line_2.text = TextDb.t(&"boot.title_line_2") if TextDb.has_key(&"boot.title_line_2") else ""
+	_title_line_2.visible = _title_line_2.text != ""
 	_status_label.text = ""
 	_progress_bar.value = 0.0
 	_run.call_deferred()

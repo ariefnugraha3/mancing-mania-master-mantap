@@ -46,9 +46,14 @@ func test_privacy_screen_is_in_settings() -> bool:
 	check_eq(privacy.get_page(), &"policy", "READ FULL PRIVACY POLICY opens the policy")
 	check(privacy.get_page_text().contains("does not collect, sell, or share personal information"), "the full policy text is shown offline")
 	privacy.on_cancel()
-	(privacy.find_child("EngineLicenses", true, false) as BaseButton).pressed.emit()
+	(privacy.find_child("Licenses", true, false) as BaseButton).pressed.emit()
 	await wait_frames(2)
 	check(privacy.get_page_text().contains("MIT"), "the engine licence is shown")
+	# The font licences travel with the fonts (GDD 184.12, 187.8).
+	check(privacy.get_page_text().contains("SIL OPEN FONT LICENSE Version 1.1"), "Fredoka's OFL text is shown in full")
+	check(privacy.get_page_text().contains("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION"), "Chewy's Apache License text is shown in full")
+	check(privacy.get_page_text().contains("Copyright 2016 The Fredoka Project Authors"), "Fredoka's copyright notice is shown")
+	check(privacy.get_page_text().contains("Font Diner, Inc DBA Sideshow"), "Chewy's copyright notice is shown")
 	settings.queue_free()
 	await wait_frames(1)
 	return true
@@ -69,15 +74,15 @@ func test_export_presets_follow_the_release_contract() -> bool:
 	var ios: String = by_name.get("iOS", "")
 	# The game is played upright on phones and tablets (GDD 122, 167.8).
 	check_eq(int(ProjectSettings.get_setting("display/window/handheld/orientation")), int(DisplayServer.SCREEN_PORTRAIT), "portrait orientation")
-	check_eq(presets.get_value(ios + ".options", "application/bundle_identifier"), "com.mancingmania.gelutedition", "iOS bundle identifier")
+	check_eq(presets.get_value(ios + ".options", "application/bundle_identifier"), "com.catchandbrawl.game", "iOS bundle identifier")
 	check_eq(int(presets.get_value(ios + ".options", "application/targeted_device_family")), 2, "iOS targets iPhone and iPad")
-	check_eq(presets.get_value(ios, "export_path"), "build/ios/MancingManiaGelut.ipa", "iOS exports an IPA")
+	check_eq(presets.get_value(ios, "export_path"), "build/ios/CatchAndBrawl.ipa", "iOS exports an IPA")
 	check(presets.get_value(android + ".options", "screen/support_xlarge"), "Android runs on tablets")
 	check_eq(int(presets.get_value(web + ".options", "progressive_web_app/orientation")), 2, "the Web app installs in portrait")
 	check_eq(presets.get_value(web, "export_path"), "build/web/index.html", "Web exports to build/web/index.html")
 	check_eq(presets.get_value(web + ".options", "variant/thread_support"), false, "Web does not depend on threads (GDD 135)")
-	check_eq(presets.get_value(android, "export_path"), "build/android/MancingManiaGelut.aab", "Android exports the App Bundle")
-	check_eq(presets.get_value(android + ".options", "package/unique_name"), "com.mancingmania.gelutedition", "application ID")
+	check_eq(presets.get_value(android, "export_path"), "build/android/CatchAndBrawl.aab", "Android exports the App Bundle")
+	check_eq(presets.get_value(android + ".options", "package/unique_name"), "com.catchandbrawl.game", "application ID")
 	check_eq(presets.get_value(android + ".options", "gradle_build/export_format"), 1, "AAB format")
 	check(int(presets.get_value(android + ".options", "gradle_build/target_sdk")) >= 36, "target SDK 36 or newer")
 	check_eq(int(presets.get_value(android + ".options", "gradle_build/min_sdk")), 24, "minimum SDK 24")
@@ -88,6 +93,7 @@ func test_export_presets_follow_the_release_contract() -> bool:
 	check((presets.get_value(android + ".options", "permissions/custom_permissions") as PackedStringArray).is_empty(), "no custom permission")
 	for section: String in [web, android, ios]:
 		check(str(presets.get_value(section, "include_filter")).contains("data/story/*.json"), "%s packs the story timelines" % presets.get_value(section, "name"))
+		check(str(presets.get_value(section, "include_filter")).contains("assets/fonts/*.txt"), "%s packs the font licences" % presets.get_value(section, "name"))
 		var excluded := str(presets.get_value(section, "exclude_filter"))
 		for folder: String in ["tests/*", "tools/*", "docs/*", "generated/references/*"]:
 			check(excluded.contains(folder), "%s leaves out %s" % [presets.get_value(section, "name"), folder])

@@ -9,7 +9,9 @@ extends Node
 
 signal wheel_resolved(duel_id: StringName)
 
-## Segment order around the wheel, clockwise from the top.
+## Segment order around the Cempaka Lake wheel, clockwise from the top.
+## Every spot has its own eight segments (LocationData.wheel_segments,
+## revision 6.7); a duel's share of them is its chance.
 const SEGMENTS: Array[StringName] = [&"boxing", &"arm_wrestle", &"dance", &"suwit", &"boxing", &"arm_wrestle", &"dance", &"suwit"]
 const MIN_SPIN_SEC := 3.1
 const MAX_SPIN_SEC := 4.0
@@ -27,6 +29,8 @@ const STATE_REVEAL := &"reveal"
 const STATE_DONE := &"done"
 
 var auto_advance: bool = true
+## The segments of the wheel being spun: the fish's spot's wheel.
+var segments: Array[StringName] = SEGMENTS
 
 var _state: StringName = STATE_IDLE
 var _duel: StringName = &""
@@ -49,10 +53,11 @@ func _process(delta: float) -> void:
 ## Picks the duel, then sets up a spin that lands on it. The first Wheel of a
 ## save is the tutorial and always lands on Boxing (GDD 176.10, WHEEL-005).
 func start_wheel(fish_id: StringName, seed: int, allow_skip: bool) -> void:
+	segments = segments_for(fish_id)
 	_duel = pick_duel(fish_id, seed)
 	var choices: Array[int] = []
-	for index: int in SEGMENTS.size():
-		if SEGMENTS[index] == _duel:
+	for index: int in segments.size():
+		if segments[index] == _duel:
 			choices.append(index)
 	_segment = choices[RNGService.choose_index(&"wheel_segment", seed, choices.size())]
 	_spin_sec = lerpf(MIN_SPIN_SEC, MAX_SPIN_SEC, RNGService.roll_float(&"wheel_time", seed))
@@ -106,7 +111,7 @@ func get_rotation_turns() -> float:
 ## Which segment is under the pointer right now.
 func get_segment_under_pointer() -> int:
 	var turn := fposmod(get_rotation_turns(), 1.0)
-	return roundi(turn * float(SEGMENTS.size())) % SEGMENTS.size()
+	return roundi(turn * float(segments.size())) % segments.size()
 
 
 ## Rotation that puts `segment` under the pointer at the top.
@@ -114,15 +119,32 @@ static func segment_angle(segment: int) -> float:
 	return TAU * float(segment) / float(SEGMENTS.size())
 
 
+## The eight segments of the wheel for a fish: its spot's wheel.
+static func segments_for(fish_id: StringName) -> Array[StringName]:
+	var location := GameData.get_location(ContentIds.location_of_fish(fish_id))
+	if location == null or location.wheel_segments.size() != SEGMENTS.size():
+		return SEGMENTS
+	return location.wheel_segments
+
+
 ## The duel for this fish and seed: Boxing for the tutorial, otherwise one of
-## the four with equal odds from the game RNG.
-static func pick_duel(_fish_id: StringName, seed: int) -> StringName:
+## the spot's duels by its share of the wheel, from the game RNG. On an even
+## wheel (Cempaka Lake: four duels, two segments each) every duel has the same
+## chance, rolled exactly as before revision 6.7.
+static func pick_duel(fish_id: StringName, seed: int) -> StringName:
 	var forced := DebugService.get_forced_duel()
 	if forced != &"":
 		return forced
 	if not GameState.is_tutorial_seen(&"wheel_seen"):
 		return &"boxing"
-	return ContentIds.DUEL_IDS[RNGService.choose_index(&"wheel_duel", seed, ContentIds.DUEL_IDS.size())]
+	var wheel := segments_for(fish_id)
+	var duels: Array[StringName] = []
+	for duel_id: StringName in wheel:
+		if not duels.has(duel_id):
+			duels.append(duel_id)
+	if wheel.size() % duels.size() == 0 and duels.all(func(duel_id: StringName) -> bool: return wheel.count(duel_id) == wheel.size() / duels.size()):
+		return duels[RNGService.choose_index(&"wheel_duel", seed, duels.size())]
+	return wheel[RNGService.choose_index(&"wheel_duel", seed, wheel.size())]
 
 
 func advance(delta: float) -> void:

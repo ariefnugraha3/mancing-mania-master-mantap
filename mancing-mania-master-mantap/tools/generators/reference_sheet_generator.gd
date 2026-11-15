@@ -28,6 +28,11 @@ const FISH_SCENE := "res://generated/scenes/fish/fish_%s.tscn"
 const FISH_IDS: Array[String] = [
 	"catfish_bruiser", "tilapia_gym_rat", "gourami_shady",
 	"carp_golden", "snakehead_sergeant", "arowana_don",
+	# The spot fish (revision 6.7).
+	"baung_satpam", "tawes_gosip", "belut_licin", "hampala_pembalap", "belida_pendekar",
+	"red_devil_palak", "patin_stempel", "jelawat_influencer", "betutu_mager", "toman_jenderal",
+	"bandeng_tanpa_duri", "buntal_pemarah", "glodok_pelari", "kakap_sosialita", "sembilang_tua",
+	"tongkol_ojol", "layur_penyair", "barakuda_rentenir", "kerapu_juragan", "layaran_kapten",
 ]
 const BACKGROUND := Color("f5e6ca")
 const INK := Color("3b2a20")
@@ -228,6 +233,72 @@ const SUBJECTS: Array = [
 	{
 		"id": "ref_fish_lineup", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
 		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
+		"lineup_ids": ["catfish_bruiser", "tilapia_gym_rat", "gourami_shady", "carp_golden", "snakehead_sergeant", "arowana_don"],
+	},
+	# --- Revision 6.7: the four new spots, their duels and their fish. ---
+	{
+		"id": "ref_set_kenanga", "kind": "set", "scene": "res://generated/scenes/environment/env_river_set.tscn",
+		"actors": [{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "idle_fishing"}],
+	},
+	{
+		"id": "ref_set_melati", "kind": "set", "scene": "res://generated/scenes/environment/env_reservoir_set.tscn",
+		"actors": [{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "idle_fishing"}],
+	},
+	{
+		"id": "ref_set_anggrek", "kind": "set", "scene": "res://generated/scenes/environment/env_estuary_set.tscn",
+		"actors": [{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "idle_fishing"}],
+	},
+	{
+		"id": "ref_set_mawar", "kind": "set", "scene": "res://generated/scenes/environment/env_pier_set.tscn",
+		"actors": [{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "idle_fishing"}],
+	},
+	{
+		"id": "ref_set_silat", "kind": "set", "scene": "res://generated/scenes/environment/env_silat_set.tscn",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "box_idle"},
+			{"scene": "res://generated/scenes/fish/fish_belida_pendekar.tscn", "marker": "Markers/FishSpot", "clip": "box_block"},
+		],
+	},
+	{
+		"id": "ref_set_tambang", "kind": "set", "scene": "res://generated/scenes/environment/env_tambang_set.tscn",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "arm_push_hard"},
+			{"scene": "res://generated/scenes/fish/fish_toman_jenderal.tscn", "marker": "Markers/FishSpot", "clip": "arm_burst"},
+		],
+	},
+	{
+		"id": "ref_set_gasing", "kind": "set", "scene": "res://generated/scenes/environment/env_gasing_set.tscn",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "lean_forward"},
+			{"scene": "res://generated/scenes/fish/fish_sembilang_tua.tscn", "marker": "Markers/FishSpot", "clip": "dance_idle"},
+		],
+	},
+	{
+		"id": "ref_set_pinang", "kind": "set", "scene": "res://generated/scenes/environment/env_pinang_set.tscn",
+		"actors": [
+			{"scene": "res://generated/scenes/characters/chr_darto.tscn", "marker": "Markers/DartoSpot", "clip": "arm_idle_grip"},
+			{"scene": "res://generated/scenes/fish/fish_layaran_kapten.tscn", "marker": "Markers/FishSpot", "clip": "arm_idle"},
+		],
+	},
+	{
+		"id": "ref_fish_lineup_kenanga", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
+		"lineup_ids": ["baung_satpam", "tawes_gosip", "belut_licin", "hampala_pembalap", "belida_pendekar"],
+	},
+	{
+		"id": "ref_fish_lineup_melati", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
+		"lineup_ids": ["red_devil_palak", "patin_stempel", "jelawat_influencer", "betutu_mager", "toman_jenderal"],
+	},
+	{
+		"id": "ref_fish_lineup_anggrek", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
+		"lineup_ids": ["bandeng_tanpa_duri", "buntal_pemarah", "glodok_pelari", "kakap_sosialita", "sembilang_tua"],
+	},
+	{
+		"id": "ref_fish_lineup_mawar", "kind": "set", "scene": "res://generated/scenes/environment/env_dance_set.tscn",
+		"focus_point": Vector3(0.0, 0.5, 0.0), "width": 5.6, "lineup": true,
+		"lineup_ids": ["tongkol_ojol", "layur_penyair", "barakuda_rentenir", "kerapu_juragan", "layaran_kapten"],
 	},
 ]
 
@@ -249,8 +320,16 @@ func _run() -> void:
 		return
 	DirAccess.make_dir_recursive_absolute(OUTPUT_DIR)
 
+	# `-- --only=a,b` renders only the subjects and portraits whose IDs
+	# contain one of the words (handy after generating a few new assets).
+	var only := PackedStringArray()
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--only="):
+			only = argument.trim_prefix("--only=").split(",", false)
 	var failures := 0
 	for subject: Dictionary in SUBJECTS:
+		if not _wanted(String(subject["id"]), only):
+			continue
 		if not ResourceLoader.exists(subject["scene"]):
 			print("[REF] skipped %s (asset not generated yet)" % subject["id"])
 			continue
@@ -265,6 +344,8 @@ func _run() -> void:
 
 	DirAccess.make_dir_recursive_absolute(PORTRAIT_DIR)
 	for fish_id: String in FISH_IDS:
+		if not _wanted("tex_fishbook_%s" % fish_id, only):
+			continue
 		var scene_path := FISH_SCENE % fish_id
 		if not ResourceLoader.exists(scene_path):
 			print("[REF] skipped portrait %s (fish not generated yet)" % fish_id)
@@ -281,6 +362,15 @@ func _run() -> void:
 	if not manifest.write():
 		failures += 1
 	quit(1 if failures > 0 else 0)
+
+
+static func _wanted(id: String, only: PackedStringArray) -> bool:
+	if only.is_empty():
+		return true
+	for word: String in only:
+		if id.contains(word):
+			return true
+	return false
 
 
 func _render_subject(subject: Dictionary) -> Image:
@@ -369,7 +459,7 @@ func _render_set(subject: Dictionary) -> Image:
 	_stage.add_child(set_root)
 	# A line-up of all six fish in their dance pose, gloves off.
 	if subject.get("lineup", false):
-		var ids: Array[String] = FISH_IDS
+		var ids: Array = subject.get("lineup_ids", FISH_IDS)
 		for index: int in ids.size():
 			var fish: Node3D = load(FISH_SCENE % ids[index]).instantiate()
 			_stage.add_child(fish)

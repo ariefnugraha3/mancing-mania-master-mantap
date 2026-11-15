@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LocationData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/data/location_data.gd" id="1_location"]
+[ext_resource type="PackedScene" path="res://generated/scenes/environment/env_lake_set.tscn" id="2_set"]
+
+[resource]
+script = ExtResource("1_location")
+id = &"cempaka"
+tier = 1
+unlock_event = &""
+access_price = 0
+wait_multiplier = 1.0
+strike_window_multiplier = 1.0
+big_one_multiplier = 1.0
+weight_multiplier = 1.0
+reel_drift = 0.0
+tide_period_casts = 0
+tide_high_trash_multiplier = 1.0
+tide_low_trash_multiplier = 1.0
+wave_stress_per_sec = 0.0
+wave_period_sec = 3.2
+wheel_segments = Array[StringName]([&"boxing", &"arm_wrestle", &"dance", &"suwit", &"boxing", &"arm_wrestle", &"dance", &"suwit"])
+set_scene = ExtResource("2_set")
+ambience = &"lake"

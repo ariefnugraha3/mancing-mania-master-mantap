@@ -10,7 +10,8 @@ const PROBABILITY_TOLERANCE := 0.0001
 static func validate_fish_set(fish: Array, require_models: bool = false, require_portraits: bool = false) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var seen: Dictionary[StringName, bool] = {}
-	var chance_total := 0.0
+	# Chances add up to 1 within each spot (revision 6.7).
+	var chance_totals: Dictionary[StringName, float] = {}
 
 	for entry: Variant in fish:
 		var data := entry as FishData
@@ -68,13 +69,54 @@ static func validate_fish_set(fish: Array, require_models: bool = false, require
 			errors.append("%s: model_scene is missing" % tag)
 		if require_portraits and data.portrait_texture == null:
 			errors.append("%s: portrait_texture is missing" % tag)
-		chance_total += data.conditional_chance
+		var spot := ContentIds.location_of_fish(data.id)
+		chance_totals[spot] = chance_totals.get(spot, 0.0) + data.conditional_chance
 
 	for fish_id: StringName in ContentIds.FISH_IDS:
 		if not seen.has(fish_id):
 			errors.append("fish: missing FishData for '%s'" % fish_id)
-	if not fish.is_empty() and absf(chance_total - 1.0) > PROBABILITY_TOLERANCE:
-		errors.append("fish: conditional chances sum to %.4f instead of 1.0" % chance_total)
+	for spot: StringName in chance_totals:
+		if absf(chance_totals[spot] - 1.0) > PROBABILITY_TOLERANCE:
+			errors.append("fish: conditional chances at '%s' sum to %.4f instead of 1.0" % [spot, chance_totals[spot]])
+	return errors
+
+
+## The fishing spots (revision 6.7): every spot exists, its Wheel holds eight
+## known duels, its water multipliers are sane and every spot after the first
+## is opened by a known story event and has an access price.
+static func validate_location_set(locations: Array) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var seen: Dictionary[StringName, bool] = {}
+	for entry: Variant in locations:
+		var data := entry as LocationData
+		if data == null:
+			errors.append("location: entry is not a LocationData resource")
+			continue
+		var tag := "location '%s'" % data.id
+		if not ContentIds.LOCATION_IDS.has(data.id):
+			errors.append("%s: id is not a known spot" % tag)
+		elif seen.has(data.id):
+			errors.append("%s: duplicate id" % tag)
+		seen[data.id] = true
+		if data.wheel_segments.size() != 8:
+			errors.append("%s: the Wheel needs 8 segments" % tag)
+		for duel_id: StringName in data.wheel_segments:
+			if not ContentIds.DUEL_IDS.has(duel_id):
+				errors.append("%s: unknown duel '%s' on the Wheel" % [tag, duel_id])
+		if data.wait_multiplier <= 0.0 or data.strike_window_multiplier <= 0.0 or data.big_one_multiplier <= 0.0 or data.weight_multiplier <= 0.0:
+			errors.append("%s: water multipliers must be > 0" % tag)
+		if data.id != ContentIds.START_LOCATION:
+			if not ContentIds.STORY_EVENT_IDS.has(data.unlock_event):
+				errors.append("%s: unlock_event is not a known story event" % tag)
+			if data.access_price <= 0:
+				errors.append("%s: access_price must be > 0" % tag)
+		if data.set_scene == null:
+			errors.append("%s: set_scene is missing" % tag)
+		if ContentIds.fish_of_location(data.id).is_empty():
+			errors.append("%s: has no fish" % tag)
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		if not seen.has(location_id):
+			errors.append("location: missing LocationData for '%s'" % location_id)
 	return errors
 
 
@@ -179,6 +221,11 @@ const STORY_PRIORITIES: Dictionary = {
 	&"story_debt_600k": 500,
 	&"story_debt_300k": 450,
 	&"story_debt_100k": 400,
+	# Revision 6.7: the spot openings rank below every debt milestone.
+	&"story_unlock_kenanga": 300,
+	&"story_unlock_melati": 300,
+	&"story_unlock_anggrek": 300,
+	&"story_unlock_mawar": 300,
 }
 
 

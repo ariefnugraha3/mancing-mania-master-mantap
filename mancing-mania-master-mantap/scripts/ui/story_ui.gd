@@ -1,24 +1,25 @@
 class_name StoryUi
 extends Control
 ## The story's screen layer (GDD 168.3, 167.9): the dialogue box with the
-## speaker's name, the phone (balance, notifications, messages, calls), the
-## title card, unlock panels, the skip ring and the fade.
+## speaker's name, the phone (a chat app, see ChatPhone: account cards,
+## CepatCash messages, chats, calls), the title card, unlock panels, the skip
+## ring and the fade.
 ##
 ## A tap, click or confirm advances. Nothing important advances by itself.
 
 signal advanced()
 
 const PHONE_WIDTH := 340.0
+const PHONE_MAX_HEIGHT := 480.0
 const PANEL_HEIGHT := 158.0
 
 @onready var _panel: PanelContainer = $DialoguePanel
 @onready var _speaker: Label = $DialoguePanel/Column/SpeakerLabel
 @onready var _line: Label = $DialoguePanel/Column/DialogueLabel
 @onready var _prompt: Label = $DialoguePanel/Column/ContinuePrompt
-@onready var _phone: PanelContainer = $NotificationPanel
-@onready var _phone_lines: VBoxContainer = $NotificationPanel/Lines
 @onready var _skip: ProgressBar = $SkipHoldIndicator
 
+var _phone: ChatPhone
 var _title: Label
 var _subtitle: Label
 var _unlock: PanelContainer
@@ -54,11 +55,11 @@ func _ready() -> void:
 	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(arrow)
 	_panel.visible = false
+	_phone = ChatPhone.new()
+	_phone.name = "Phone"
 	_phone.visible = false
-	_phone.clip_contents = true
-	_phone_lines.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_phone.add_theme_stylebox_override(&"panel", _phone_style())
-	_phone_lines.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	add_child(_phone)
+	move_child(_phone, _panel.get_index() + 1)
 	_skip.show_percentage = false
 	_skip.max_value = 1.0
 	_skip.visible = false
@@ -122,61 +123,45 @@ func clear_line_if(_step: Dictionary) -> void:
 	pass
 
 
+## A phone line ("TOTAL DEBT: Rp ..."): an account card in the chat that is
+## open, or in the CepatCash chat when the phone has just come out.
 func show_phone_line(text: String) -> void:
-	_open_phone()
-	_add_phone_label(text, UiTokens.FONT_BUTTON, HORIZONTAL_ALIGNMENT_CENTER)
+	if _phone.get_contact() == &"" or _phone.is_call_visible():
+		_open_contact(ChatPhone.CEPATCASH, "")
+	_phone.add_info(text)
 
 
+## A notification is a message from the CepatCash business account: the
+## title is its bold heading, the body its text.
 func show_notification(title: String, body: String) -> void:
-	_open_phone()
-	var card := PanelContainer.new()
-	var note_style := UiSkin.card(UiTokens.CREAM_50, 16, UiTokens.SPACE_12, 2)
-	note_style.shadow_size = 4
-	card.add_theme_stylebox_override(&"panel", note_style)
-	var column := VBoxContainer.new()
-	card.add_child(column)
-	var heading := Label.new()
-	heading.text = title
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	heading.add_theme_font_override(&"font", UiSkin.bold_font())
-	heading.add_theme_font_size_override(&"font_size", UiTokens.FONT_SMALL + 2)
-	column.add_child(heading)
-	if body != "":
-		var text := Label.new()
-		text.text = body
-		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text.theme_type_variation = UiTokens.TYPE_SMALL
-		column.add_child(text)
-	_phone_lines.add_child(card)
+	_open_contact(ChatPhone.CEPATCASH, "")
+	if body == "":
+		_phone.add_message(title, false)
+	else:
+		_phone.add_message(body, false, title)
 
 
-## A message bubble: the other person's on the left, Darto's on the right.
-func show_chat(sender: String, text: String, from_darto: bool) -> void:
-	if not _phone.visible:
-		_open_phone()
-		_add_phone_label(TextDb.t(&"story.phone.messages"), UiTokens.FONT_SMALL, HORIZONTAL_ALIGNMENT_CENTER)
-	var bubble := PanelContainer.new()
-	var style := UiSkin.pill(UiTokens.LAKE_500.lightened(0.5) if from_darto else UiTokens.CREAM_50, 2, 18, Vector2(UiTokens.SPACE_12, UiTokens.SPACE_8), 2)
-	bubble.add_theme_stylebox_override(&"panel", style)
-	bubble.size_flags_horizontal = Control.SIZE_SHRINK_END if from_darto else Control.SIZE_SHRINK_BEGIN
-	var label := Label.new()
-	label.text = text if from_darto else "%s: %s" % [sender, text]
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size.x = 220.0
-	bubble.add_child(label)
-	_phone_lines.add_child(bubble)
+## A message bubble: the other person's on the left, Darto's on the right,
+## in that person's chat.
+func show_chat(sender: String, text: String, from_darto: bool, sender_id: StringName = &"") -> void:
+	if not from_darto:
+		_open_contact(sender_id if sender_id != &"" else StringName(sender.to_lower()), sender)
+	elif _phone.get_contact() == &"" or _phone.is_call_visible():
+		_open_contact(&"messages", TextDb.t(&"story.phone.messages"))
+	_phone.add_message(text, from_darto)
 
 
-func show_call(caller: String) -> void:
-	_open_phone()
-	_add_phone_label(TextDb.t(&"story.phone.call"), UiTokens.FONT_SMALL, HORIZONTAL_ALIGNMENT_CENTER)
-	_add_phone_label(caller, UiTokens.FONT_SCREEN_TITLE, HORIZONTAL_ALIGNMENT_CENTER)
+func show_call(caller: String, caller_id: StringName = &"") -> void:
+	_phone.show_call(caller_id if caller_id != &"" else StringName(caller.to_lower()), caller)
 
 
 func close_phone() -> void:
-	_phone.visible = false
-	for child: Node in _phone_lines.get_children():
-		child.queue_free()
+	_phone.close()
+
+
+## The phone, for tests.
+func get_phone() -> ChatPhone:
+	return _phone
 
 
 func show_title(title: String, subtitle: String) -> void:
@@ -184,6 +169,8 @@ func show_title(title: String, subtitle: String) -> void:
 	_subtitle.text = subtitle
 	_title.visible = true
 	_subtitle.visible = subtitle != ""
+	# The title may need two lines on a phone; the subtitle goes under it.
+	_place_title()
 
 
 func hide_title() -> void:
@@ -227,38 +214,11 @@ func fade(out: bool) -> void:
 	await tween.finished
 
 
-func _open_phone() -> void:
-	if not _phone.visible:
-		for child: Node in _phone_lines.get_children():
-			child.queue_free()
-	_phone.visible = true
-
-
-func _add_phone_label(text: String, size: int, alignment: HorizontalAlignment) -> void:
-	var label := Label.new()
-	label.text = text
-	label.horizontal_alignment = alignment
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override(&"font_size", size)
-	label.add_theme_color_override(&"font_color", UiTokens.CREAM_50)
-	_phone_lines.add_child(label)
-
-
-## A chunky toy phone: a dark teal screen in a thick cocoa body.
-func _phone_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color("2f4746")
-	box.border_color = UiTokens.INK_900
-	box.set_border_width_all(10)
-	box.border_width_top = 22
-	box.border_width_bottom = 22
-	box.set_corner_radius_all(30)
-	box.set_content_margin_all(UiTokens.SPACE_16)
-	box.content_margin_top = 30.0
-	# No drop shadow: the phone clips its chat list, which would cut a shadow
-	# into a square band.
-	box.anti_aliasing = true
-	return box
+## Opens `contact`'s chat. The phone's contact name ("Rini") comes from
+## story.phone.<id> when there is one, else from `fallback`.
+func _open_contact(contact: StringName, fallback: String) -> void:
+	var key := StringName("story.phone.%s" % contact)
+	_phone.open_thread(contact, TextDb.t(key) if TextDb.has_key(key) else fallback.capitalize())
 
 
 func _outlined(size: int) -> Label:
@@ -270,6 +230,27 @@ func _outlined(size: int) -> Label:
 	UiSkin.sign_text(label, size, UiTokens.CREAM_50 if size < UiTokens.FONT_HERO else DioramaStyle.BUTTER, 12)
 	add_child(label)
 	return label
+
+
+## The title card (the prologue's "CATCH AND BRAWL"): the
+## title wraps on a narrow phone and the subtitle always sits under its last
+## line instead of a fixed distance below its first.
+func _place_title() -> void:
+	var area := size
+	var margin := float(UiTokens.SPACE_16)
+	var width := maxf(area.x - margin * 2.0, 1.0)
+	_place_wrapped(_title, Vector2(margin, area.y * 0.38), width, 70.0)
+	_place_wrapped(_subtitle, Vector2(margin, _title.position.y + _title.size.y + 6.0), width, 40.0)
+
+
+## Width first, then height: a wrapped label's minimum height depends on its
+## width, and a control is never smaller than its (cached) minimum.
+static func _place_wrapped(label: Label, at: Vector2, width: float, min_height: float) -> void:
+	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	label.position = at
+	label.size = Vector2(width, label.size.y)
+	label.update_minimum_size()
+	label.size = Vector2(width, min_height)
 
 
 func _layout() -> void:
@@ -290,15 +271,12 @@ func _layout() -> void:
 	_panel.offset_bottom = -bottom_inset
 	_panel.offset_top = -bottom_inset - PANEL_HEIGHT
 	var phone_width := minf(PHONE_WIDTH, safe.size.x - edge * 2.0)
+	# As tall as fits above the dialogue card, so a line can play under it.
+	var phone_room := area.y - top_inset - bottom_inset - PANEL_HEIGHT - edge
 	_phone.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_phone.size = Vector2(phone_width, minf(area.y * 0.56, 460.0))
+	_phone.size = Vector2(phone_width, clampf(minf(area.y * 0.6, PHONE_MAX_HEIGHT), 300.0, maxf(300.0, phone_room)))
 	_phone.position = Vector2((area.x - phone_width) * 0.5, top_inset)
-	_title.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_title.position = Vector2(0.0, area.y * 0.38)
-	_title.size = Vector2(area.x, 70.0)
-	_subtitle.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_subtitle.position = Vector2(0.0, area.y * 0.38 + 76.0)
-	_subtitle.size = Vector2(area.x, 40.0)
+	_place_title()
 	var unlock_width := minf(560.0, area.x)
 	_unlock.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_unlock.size = Vector2(unlock_width, 0.0)

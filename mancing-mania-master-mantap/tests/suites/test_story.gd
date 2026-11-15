@@ -206,6 +206,84 @@ func test_lines_wait_for_the_player_and_advance_on_tap() -> bool:
 	return true
 
 
+## The prologue's title shot on the lake road: Darto alone at the lake.
+## Rini stays home (she was once re-spawned there, on top of Darto).
+func test_prologue_title_shot_leaves_rini_at_home() -> bool:
+	var scene: Node = (load(STORY_SCENE) as PackedScene).instantiate()
+	var controller := scene.get_node("StoryController") as StoryController
+	var ui := scene.get_node("StoryCanvas/StoryUI") as StoryUi
+	scene.set_script(null)
+	tree.root.add_child(scene)
+	controller.setup(scene.get_node("StageRoot"), ui)
+	controller.play(&"story_prologue_zero")
+	await wait_frames(3)
+	check(controller.get_actor("rini") != null, "Rini is at home in the first shot")
+	controller._build_lake_road()
+	await wait_frames(2)
+	check(controller.get_actor("rini") == null, "Rini does not come to the lake")
+	var darto := controller.get_actor("darto")
+	if check(darto != null, "Darto is at the lake"):
+		var lake_spot := scene.get_node("StageRoot").find_child("DartoSpot", true, false) as Node3D
+		check(lake_spot != null and darto.global_position.is_equal_approx(lake_spot.global_position), "on his fishing spot")
+	controller.skip()
+	await wait_frames(3)
+	scene.queue_free()
+	await wait_frames(2)
+	return true
+
+
+## The story phone is a chat app (GDD 168.3): the prologue opens the CepatCash
+## business chat with the balance and debt as account cards and the reminder
+## as a message; a chat opens that person's thread with Darto on the right;
+## a call shows the call view.
+func test_the_phone_is_a_chat_app() -> bool:
+	var scene: Node = (load(STORY_SCENE) as PackedScene).instantiate()
+	var controller := scene.get_node("StoryController") as StoryController
+	var ui := scene.get_node("StoryCanvas/StoryUI") as StoryUi
+	scene.set_script(null)
+	tree.root.add_child(scene)
+	controller.setup(scene.get_node("StageRoot"), ui)
+	controller.play(&"story_prologue_zero")
+	var phone := ui.get_phone()
+	check(await wait_until(func() -> bool: return phone.is_open(), 6.0), "the phone comes out")
+	check_eq(phone.get_contact(), ChatPhone.CEPATCASH, "on the CepatCash chat")
+	check(phone.get_chat_text().contains("Rp 18,430"), "the balance is an account card")
+	ui.advanced.emit()
+	check(await wait_until(func() -> bool: return phone.get_chat_text().contains("Rp 1,800,000"), 4.0), "the debt card follows")
+	ui.advanced.emit()
+	check(await wait_until(func() -> bool: return phone.get_message_count() == 1, 3.0), "the reminder is a message from CepatCash")
+	check(phone.get_chat_text().contains("outstandingly disappointed"), "with its text")
+	controller.skip()
+	await wait_frames(3)
+	scene.queue_free()
+	await wait_frames(2)
+
+	var chat := ChatPhone.new()
+	chat.size = Vector2(340, 460)
+	tree.root.add_child(chat)
+	await wait_frames(1)
+	chat.open_thread(ChatPhone.CEPATCASH, "CepatCash")
+	chat.add_message("Thank you.", false, "CEPATCASH")
+	chat.open_thread(&"rini", "Rini")
+	check_eq(chat.get_message_count(), 0, "another contact opens a fresh thread")
+	chat.add_message("How was the lake?", false)
+	chat.add_message("Both.", true)
+	check_eq(chat.get_message_count(), 2, "two bubbles")
+	var sides := PackedStringArray()
+	for bubble: Node in chat.find_children("*", "PanelContainer", true, false):
+		if bubble is ChatPhone.Bubble:
+			sides.append("right" if (bubble as Control).size_flags_horizontal == Control.SIZE_SHRINK_END else "left")
+	check_eq(sides, PackedStringArray(["left", "right"]), "Rini on the left, Darto on the right")
+	check(chat.get_chat_text().contains(TextDb.t(&"story.phone.time")), "messages carry a time")
+	chat.show_call(&"nisa", "Nisa")
+	check(chat.is_call_visible(), "a call shows the call view")
+	chat.close()
+	check(not chat.is_open(), "closing puts the phone away")
+	chat.queue_free()
+	await wait_frames(1)
+	return true
+
+
 # --- Systems around the story -----------------------------------------------
 
 func test_banter_is_occasional_and_never_beside_an_event() -> bool:
