@@ -338,7 +338,9 @@ func _build_chair() -> Node3D:
 		# Legs splay outward slightly, like the real thing.
 		builder.capsule(Vector3(corner.x * 0.1, seat - 0.01, corner.y * 0.09), Vector3(corner.x * 0.12, 0.012, corner.y * 0.11), 0.014, 0.011, 8, 2)
 	builder.color = FADED_RED
-	builder.transform = Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-8.0)), Vector3(0, seat, 0.11))
+	# The back leans back, away from the seat (+Z): +8 degrees about +X
+	# moves its top toward +Z.
+	builder.transform = Transform3D(Basis(Vector3.RIGHT, deg_to_rad(8.0)), Vector3(0, seat, 0.11))
 	builder.rounded_slab(Vector3(0.25, 0.2, 0.025), Vector3(0, 0.2, 0), 0.012)
 	for side: float in [-1.0, 1.0]:
 		builder.capsule(Vector3(0.1 * side, 0.0, 0), Vector3(0.1 * side, 0.1, 0), 0.012, -1.0, 6, 2)

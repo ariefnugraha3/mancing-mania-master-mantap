@@ -14,10 +14,17 @@ Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`
 - Nama proyek Godot, nama aplikasi di export preset, application ID Android dan bundle ID iOS menjadi `com.catchandbrawl.game`.
 - Nama file build menjadi `CatchAndBrawl.aab`, `CatchAndBrawl.ipa`, dan `catch-and-brawl-web-<versi>.zip`.
 - Contoh keystore di `README_BUILD.md` disesuaikan dengan nama baru.
+- Emblem di atas judul digambar ulang. Versi lama berupa piringan matahari dengan ikan poligon datar yang tampak seperti placeholder. Versi baru adalah lencana bergaya stiker yang sama dengan ikon tombol: cincin terakota berjahit krem, langit senja dengan sunburst, danau, dan ikan oranye yang melompat dengan alis galak, sarung tinju merah, kail di bibir, bintang hantaman, dan percikan air (`IconPainter.EMBLEM`). Di menu, emblem diperbesar dari 20% menjadi 28% lebar layar.
 
 ### Ditambahkan
 
 - Save dari folder data lama ("Mancing Mania Gelut Edition") disalin sekali ke folder baru saat game pertama kali dibuka dengan nama baru. Folder lama tidak diubah (`SaveManager.import_legacy_save`).
+
+### Diperbaiki
+
+- Atap rumah terbalik (berbentuk "V"): rumah di seberang Danau Cempaka, gedung koperasi dan sekolah di Waduk Melati, dan rumah panggung di Muara Anggrek. Kedua sisi atap pelana kini menurun ke arah lisplangnya masing-masing.
+- Atap gedung lelang TPI di Dermaga Mawar terbalik dengan cara yang sama.
+- Sandaran kursi plastik condong ke depan, menutupi dudukan. Kini bersandar ke belakang (Market, rumah, panggung joget, arena Tarik Tambang dan Panjat Pinang).
 
 ## Unreleased — Revisi Lokasi 6.7: empat tempat memancing berjenjang
 

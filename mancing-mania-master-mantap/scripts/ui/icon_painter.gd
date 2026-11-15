@@ -54,12 +54,14 @@ const SCISSORS := &"ui_icon_scissors"
 const PAPER := &"ui_icon_paper"
 const ARROW_DOWN := &"ui_icon_arrow_down"
 const MAP := &"ui_icon_map"
+## The game's round emblem above the title (revision 6.8).
+const EMBLEM := &"ui_logo_emblem"
 
 ## Every icon, for tests and previews.
 const ALL: Array[StringName] = [
 	CASH, BUCKET, MARKET, PAUSE, WARNING, ROD, PLAY, SPARKLE, BOOK, GEAR, HEART, BACK, CLOSE, MUSIC,
 	SOUND, DOOR, CHECK, KEYS, FISH, LEDGER, ARROW_UP, TROPHY, RETRY, SHIELD, ARROW_LEFT, ARROW_RIGHT,
-	GLOVE, HAND, ROCK, SCISSORS, PAPER, ARROW_DOWN, MAP,
+	GLOVE, HAND, ROCK, SCISSORS, PAPER, ARROW_DOWN, MAP, EMBLEM,
 ]
 
 # Line weights and depth, in grid units (1/24 of the icon).
@@ -88,6 +90,22 @@ const WOOD_DARK := DioramaStyle.BARK
 const PINK := DioramaStyle.BLUSH
 const SKIN := Color("e8bd95")
 const SLEEVE := UiTokens.LAKE_500
+# The emblem's own palette: a sunset over the lake and an orange fish.
+const EMBLEM_RING := UiTokens.TERRACOTTA_500
+const EMBLEM_STITCH := Color("fff4d6")
+const EMBLEM_SKY := Color("ffe5a0")
+const EMBLEM_SKY_LIGHT := Color("fff6d8")
+const EMBLEM_SUN_CORE := Color("ffd774")
+const EMBLEM_WATER := Color("6fb7ae")
+const EMBLEM_WATER_DEEP := Color("5ca39b")
+const EMBLEM_RIPPLE := Color("dcf2ee")
+const EMBLEM_SPLASH := Color("c4e8e2")
+const EMBLEM_FISH := Color("f58b48")
+const EMBLEM_FIN := Color("d95f3b")
+const EMBLEM_BELLY := Color("ffd3a3")
+## Where the emblem's fish sits: its own frame (nose toward +X), turned up
+## as it leaps.
+const EMBLEM_FISH_FRAME := Transform2D(-0.36, Vector2(1.06, 1.06), 0.0, Vector2(11.5, 11.7))
 
 # Geometry2D works on fixed-point coordinates; the grid is scaled up while
 # clipping so curves and round joins stay smooth.
@@ -223,6 +241,8 @@ func _design(id: StringName) -> void:
 			_part(_rounded(_poly([12, 21.8, 2.6, 12.4, 8.1, 12.4, 8.1, 2.4, 15.9, 2.4, 15.9, 12.4, 21.4, 12.4]), 1.4), GREEN)
 		MAP:
 			_design_map()
+		EMBLEM:
+			_design_emblem()
 		TROPHY:
 			_design_trophy()
 		RETRY:
@@ -255,6 +275,97 @@ func _design(id: StringName) -> void:
 			_design_rock()
 		SCISSORS:
 			_design_scissors()
+
+
+## The game's emblem (revision 6.8), above "CATCH AND BRAWL": a round
+## vintage badge. A terracotta ring with cream stitching holds a sunset over
+## the lake; a chubby orange fish leaps out of the water with a scowl, a red
+## boxing glove up and a fishing line still caught in its lip (the catch and
+## the brawl). An impact star flies off the glove and water drops splash
+## under its tail. Every part is a sticker part like the icons, so the
+## emblem shares their outline, lip and rim of light.
+func _design_emblem() -> void:
+	var centre := Vector2(12, 12)
+	# Badge: the ring, its stitching, and the sky disc inside.
+	_part(_circle(centre, 10.6), EMBLEM_RING, 1.1)
+	for stitch: int in 20:
+		var at := centre + Vector2.from_angle(TAU * float(stitch) / 20.0 - PI * 0.5) * 9.7
+		_flat(_ellipse(at, 0.34, 0.34), EMBLEM_STITCH)
+	var disc := _circle(centre, 8.75)
+	_part(disc, EMBLEM_SKY, 0.0, false)
+	# Sunburst behind the sun: every other wedge a lighter cream.
+	var burst := Vector2(12, 15.4)
+	for wedge: int in 16:
+		if wedge % 2 == 1:
+			continue
+		var from := -PI + PI * float(wedge) / 16.0 - 0.02
+		var to := from + PI / 16.0
+		var ray := PackedVector2Array([burst, burst + Vector2.from_angle(from) * 14.0, burst + Vector2.from_angle(to) * 14.0])
+		_flat(_intersect_one(ray, _offset_one(disc, -0.15)), EMBLEM_SKY_LIGHT)
+	_part(_intersect_one(_circle(Vector2(12, 15.6), 5.2), disc), GOLD, 0.0, false)
+	_flat(_intersect_one(_circle(Vector2(12, 15.6), 3.7), disc), EMBLEM_SUN_CORE)
+	# Water: a wavy surface across the lower part of the disc.
+	var water := PackedVector2Array()
+	for step: int in 25:
+		var x := 1.0 + float(step) * 22.0 / 24.0
+		water.append(Vector2(x, 15.55 + 0.32 * sin(x * 1.25)))
+	water.append(Vector2(23.0, 24.0))
+	water.append(Vector2(1.0, 24.0))
+	_part(_intersect_one(water, disc), EMBLEM_WATER, 0.0, false)
+	_flat(_intersect_one(_moved(water, Vector2(0.0, 2.4)), disc), EMBLEM_WATER_DEEP)
+	for ripple: Array in [[Vector2(4.6, 18.0), 2.2], [Vector2(15.4, 19.0), 2.6], [Vector2(9.0, 20.6), 1.8]]:
+		var start: Vector2 = ripple[0]
+		_line(PackedVector2Array([start, start + Vector2(float(ripple[1]), 0.0)]), EMBLEM_RIPPLE, 0.45)
+	# Splash where the fish broke the surface.
+	for drop: Array in [[Vector2(5.0, 13.9), 0.45], [Vector2(6.5, 12.9), 0.6], [Vector2(15.3, 15.1), 0.5], [Vector2(16.7, 14.3), 0.36]]:
+		_part(_circle(drop[0], float(drop[1])), EMBLEM_SPLASH, 0.0, false)
+	# The fish: tail and fins first, so the body sits on top of them.
+	_part(_fish_shape(_rounded(_poly([-3.9, 0.2, -7.1, -2.9, -6.0, 0.1, -7.0, 3.0]), 0.7)), EMBLEM_FIN, 0.9, false)
+	_part(_fish_shape(_rounded(_poly([-2.2, -2.7, -0.4, -4.9, 1.8, -4.4, 2.0, -2.6]), 0.6)), EMBLEM_FIN, 0.0, false)
+	_part(_fish_shape(_rounded(_poly([-1.6, 2.6, -0.6, 4.3, 0.9, 2.8]), 0.5)), EMBLEM_FIN, 0.0, false)
+	var body := _fish_shape(_merge(_ellipse(Vector2(0.2, 0.0), 4.9, 3.25), _ellipse(Vector2(3.4, 0.25), 2.2, 2.35)))
+	_part(body, EMBLEM_FISH, 1.0)
+	_flat(_intersect_one(body, _fish_shape(_ellipse(Vector2(0.9, 2.65), 4.6, 1.75))), EMBLEM_BELLY)
+	# Scales: three soft arcs on the back.
+	for scale_at: Vector2 in [Vector2(-1.9, -0.6), Vector2(-0.3, -1.1), Vector2(-1.1, 0.7)]:
+		_line(_fish_shape(_arc(scale_at, 0.75, -0.9, 0.9)), _shade(EMBLEM_FISH).lerp(EMBLEM_FISH, 0.35), 0.35)
+	_line(_fish_shape(_arc(Vector2(0.4, 0.2), 2.3, -0.95, 0.85)), _shade(EMBLEM_FISH), 0.42)
+	# Face: a big bead eye under a cross brow, a blush and a cocky grin.
+	_part(_fish_shape(_circle(Vector2(2.85, -0.85), 0.88)), CREAM, 0.0, false)
+	_flat(_fish_shape(_circle(Vector2(3.1, -0.78), 0.5)), INK)
+	_flat(_fish_shape(_circle(Vector2(2.95, -0.98), 0.18)), CREAM)
+	_part(_fish_shape(_stroke(_poly([1.85, -2.05, 3.8, -1.45]), 0.55)), INK, 0.0, false, false, false)
+	_flat(_fish_shape(_ellipse(Vector2(2.6, 0.75), 0.8, 0.45)), Color(PINK, 0.85))
+	_line(_fish_shape(_curve(Vector2(3.9, 1.05), Vector2(4.5, 1.25), Vector2(5.05, 0.55), 6)), INK, 0.36)
+	# The fishing line comes in from the rod beyond the badge, over the
+	# fish's head, and ends in its lip with a little hook.
+	var lip := _fish_point(Vector2(5.0, 0.4))
+	var line := PackedVector2Array([Vector2(3.4, 4.2)])
+	line.append_array(_curve(Vector2(3.4, 4.2), Vector2(12.0, 2.6), lip, 14))
+	_line(line, INK, 0.38)
+	_line(_fish_shape(_arc(Vector2(5.15, 0.8), 0.42, -PI * 0.5, PI * 0.6)), STEEL.darkened(0.25), 0.32)
+	# The glove arm: the front fin reaching to the cuff, then the glove.
+	# The punch goes out low and forward, under the chin, so the grin and the
+	# hooked lip stay in view.
+	_part(_fish_shape(_stroke(_poly([0.8, 2.3, 2.9, 3.6]), 1.2)), EMBLEM_FIN, 0.0, false)
+	_part(_fish_shape(_rounded(_poly([2.6, 3.0, 3.9, 2.4, 4.6, 3.9, 3.2, 4.6]), 0.4)), CREAM, 0.0, false)
+	var glove := _fish_shape(_merge(_circle(Vector2(5.5, 4.1), 1.85), _circle(Vector2(6.75, 2.85), 0.78)))
+	_part(glove, RED, 0.9)
+	_line(_fish_shape(_arc(Vector2(5.5, 4.1), 1.15, -1.9, -0.5)), _light(RED), 0.4)
+	# The hit: an impact star off the glove and two little twinkles.
+	_part(_star5(Vector2(20.7, 12.4), 1.55, 0.72), GOLD, 0.0, false)
+	_part(_sparkle(Vector2(18.6, 5.9), 1.0), EMBLEM_SKY_LIGHT, 0.0, false)
+	_flat(_sparkle(Vector2(5.7, 8.6), 0.7), CREAM)
+
+
+## Places a point of the fish (its own frame: nose toward +X) on the badge.
+static func _fish_point(point: Vector2) -> Vector2:
+	return EMBLEM_FISH_FRAME * point
+
+
+## Places a whole shape of the fish on the badge.
+static func _fish_shape(shape: PackedVector2Array) -> PackedVector2Array:
+	return EMBLEM_FISH_FRAME * shape
 
 
 ## A folded paper map (three panels) with a winding river and a red pin.

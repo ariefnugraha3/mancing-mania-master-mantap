@@ -54,7 +54,7 @@
       "generator_version": 2.0,
       "output": "res://generated/scenes/environment/env_estuary_set.tscn",
       "seed": 20261114.0,
-      "sha256": "59ec63be363c0c8a90542bd898e06b60e64b518877fb7c9774942c46b7798979"
+      "sha256": "6f5321e3ef2072fc1a2586d3c9cbb2dff79d000ff30036ede19c9a14ffd623ac"
     },
     "env_gasing_set": {
       "generator": "environment_builder",
@@ -75,7 +75,7 @@
       "generator_version": 2.0,
       "output": "res://generated/scenes/environment/env_lake_set.tscn",
       "seed": 20261114.0,
-      "sha256": "6b5ca0b1811681c7a5ec5383aeaa96aef4edb605ae4957c2565621d922f657bc"
+      "sha256": "a847c9652b80f964a159705036cf2038d2117da7a1ce1605a1d0e626c0f4209b"
     },
     "env_market_set": {
       "generator": "environment_builder",
@@ -89,7 +89,7 @@
       "generator_version": 2.0,
       "output": "res://generated/scenes/environment/env_pier_set.tscn",
       "seed": 20261114.0,
-      "sha256": "6498e7d1889821db65cbb62e1e70bc11623ca0c81906c609eb7b2f299cd6c063"
+      "sha256": "9e5c501336d2672c5e0b41d66c127f73db32d9d91c156820ed46ec7376b947d4"
     },
     "env_pinang_set": {
       "generator": "environment_builder",
@@ -103,7 +103,7 @@
       "generator_version": 2.0,
       "output": "res://generated/scenes/environment/env_reservoir_set.tscn",
       "seed": 20261114.0,
-      "sha256": "2dc6a1f97c13dc379e6f2ba58c4409d9cf7ee63c43e07aba3cc19e2f2363e92b"
+      "sha256": "2db54a9f9228026704bc134d51cb442057a613fe881a2371363c583d51b48366"
     },
     "env_river_set": {
       "generator": "environment_builder",
@@ -558,7 +558,7 @@
       "generator_version": 2.0,
       "output": "res://generated/scenes/props/prop_plastic_chair.tscn",
       "seed": 0.0,
-      "sha256": "0c8b6d3d934f57889ec4f35f3ef2afff49d675c152e11633de1e208607e5368b"
+      "sha256": "e3db76199fb0bf9f287fdf770f6ed2c84da9e7ff8d1a5e8cb3c9c4bf6742d992"
     },
     "prop_rice_cooker": {
       "generator": "prop_builder",
@@ -653,38 +653,38 @@
     },
     "ref_fish_lineup": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_fish_lineup.png",
-      "seed": 0.0,
-      "sha256": "496381780ebc7b84b2ec88f632b29ab122029e61b6927f885f7b3dabc0a30e18"
+      "seed": 0,
+      "sha256": "31744e4085d0a8590751a5981a81f926e460b07cb5acac1bbc13c7257bf9bd3e"
     },
     "ref_fish_lineup_anggrek": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_fish_lineup_anggrek.png",
-      "seed": 0.0,
-      "sha256": "c8ae00fbe6869b7a04e6ab1144ccbe67c8f529bc8834cfa02f47b9e0e493abf3"
+      "seed": 0,
+      "sha256": "5f9f6a1d105e93e46268eea5607dbd9b7d1a2efa9ec3fe4d674239d23cd7dc5c"
     },
     "ref_fish_lineup_kenanga": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_fish_lineup_kenanga.png",
-      "seed": 0.0,
-      "sha256": "f275bf647220f84ad97939f2c985a61472828dbb4bd68cee7a79652f34f92ed8"
+      "seed": 0,
+      "sha256": "d38c45446f888b213622acaa9aefd5b505303d7d3cb6420b122552f9c3efa995"
     },
     "ref_fish_lineup_mawar": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_fish_lineup_mawar.png",
-      "seed": 0.0,
-      "sha256": "8b9ff6ba6838db9291a7ebf7a537403d888eeeea4cc7817b96be29e2ebd188db"
+      "seed": 0,
+      "sha256": "3e4ec265aa60d3ac8d4141dffcc33d8414ea4a2c41ea440306623390ff0010c1"
     },
     "ref_fish_lineup_melati": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_fish_lineup_melati.png",
-      "seed": 0.0,
-      "sha256": "4b92646d4faf7404cc50521d423a87272fd6a6460008b6778458deb605e5f1b7"
+      "seed": 0,
+      "sha256": "1cdeca85eeffb8f9422994669f1f433648d01f40df9a0e187ad47b0ea9ad94b5"
     },
     "ref_fish_snakehead": {
       "generator": "reference_sheet_generator",
@@ -712,7 +712,7 @@
       "generator_version": 2,
       "output": "res://generated/references/ref_set_anggrek.png",
       "seed": 0,
-      "sha256": "1baae8849a7067103c56c70228e9f215c935865250fb435ae255179746efb0ad"
+      "sha256": "4cf0d97eb9ab93e0af934a3b9545b6a1df7b0ff231f6b2d08f487a3f86d5c031"
     },
     "ref_set_arm": {
       "generator": "reference_sheet_generator",
@@ -737,10 +737,10 @@
     },
     "ref_set_dance": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_dance.png",
-      "seed": 0.0,
-      "sha256": "63622be090e842704178cb635315c4b03f37793c92505f5adc295c446990c5d7"
+      "seed": 0,
+      "sha256": "613be9bad6eca892b08e419ac7eee1fa380235e503432d348df529c839db6238"
     },
     "ref_set_gasing": {
       "generator": "reference_sheet_generator",
@@ -751,65 +751,65 @@
     },
     "ref_set_home": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_home.png",
-      "seed": 0.0,
-      "sha256": "0a515e38a6f010abeaa4128f80f57cb148e75b16855d5206a8703a3dd5e8af00"
+      "seed": 0,
+      "sha256": "ca4291f331280a5f1d3cd1e439029bae6b52309043332e8ff8b3767a145ac037"
     },
     "ref_set_kenanga": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_kenanga.png",
-      "seed": 0,
+      "seed": 0.0,
       "sha256": "08ce8e1c600d16d743225643da4afe918ee6fb9027473c7190767724b0d3802a"
     },
     "ref_set_lake": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_lake.png",
-      "seed": 0.0,
-      "sha256": "e7ff4b1a857e81e87eb12803a77408f3651b19f684e89d77443ee1df03ad3b95"
+      "seed": 0,
+      "sha256": "0ee7e852e227e670abc788641c45064735b2e65c1bab790cb861c723ec8e8f41"
     },
     "ref_set_market": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_market.png",
-      "seed": 0.0,
-      "sha256": "027bf65bec5927c205ac80931d98c289dcfcb5629445b5fc4306fd9a93def472"
+      "seed": 0,
+      "sha256": "13b9f2559d719bdc4ff0b903e1668babe3d7fb995e1a7dc47e6b6bca0e357e3c"
     },
     "ref_set_market_portrait": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_market_portrait.png",
-      "seed": 0.0,
-      "sha256": "7f792c92b7da4389ffb81569979ce8f5bc8ed2c7084695118e463d92163b4392"
+      "seed": 0,
+      "sha256": "a36b701b9bb7a2c8d3d8843e8f826293414d4e6643a7923ecbf621ae6f3aa4b3"
     },
     "ref_set_mawar": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_mawar.png",
-      "seed": 0.0,
-      "sha256": "bc9e79a58d9ee6a480e3cf910b016f2316b1153425b12c8eb58377c3c1f98ab2"
+      "seed": 0,
+      "sha256": "2275556ce5e1bbefe716d13caca881a1fde4015ae069652dadc4bebe68c13a5b"
     },
     "ref_set_melati": {
       "generator": "reference_sheet_generator",
       "generator_version": 2,
       "output": "res://generated/references/ref_set_melati.png",
       "seed": 0,
-      "sha256": "bc8b7d81145b39235ec9b4e02f9e5d17d3eb214f81960a8aabd8526d7b31f0eb"
+      "sha256": "90d580e2fbfadf7c02e1f61e372f6afb2539bd8fa9d03f756e5a944ea6257c3e"
     },
     "ref_set_pinang": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_pinang.png",
-      "seed": 0.0,
-      "sha256": "819d510b20d94d5c622a864b4faa404b2a06f42481e8f46238dc86e186ddc475"
+      "seed": 0,
+      "sha256": "40203bd12d4f82fd51718397e7178006993c32ba314fab7cb952ca7f200a20cf"
     },
     "ref_set_silat": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2,
+      "generator_version": 2.0,
       "output": "res://generated/references/ref_set_silat.png",
-      "seed": 0,
+      "seed": 0.0,
       "sha256": "01ea5455c4d8f79efa4a2cf0dfcf5dd227015d66a0d114ec47d2de539dc9ede5"
     },
     "ref_set_suwit": {
@@ -821,10 +821,10 @@
     },
     "ref_set_tambang": {
       "generator": "reference_sheet_generator",
-      "generator_version": 2.0,
+      "generator_version": 2,
       "output": "res://generated/references/ref_set_tambang.png",
-      "seed": 0.0,
-      "sha256": "71d5ef13c9f003be0e6774403b5c184d8aad6d003851cdeeede19eb24e03947d"
+      "seed": 0,
+      "sha256": "11d15f7661dc4f2b6643ee1334a769f934011674e6b8086f3dcf74750d95be3b"
     },
     "tex_fishbook_arowana_don": {
       "generator": "reference_sheet_generator",

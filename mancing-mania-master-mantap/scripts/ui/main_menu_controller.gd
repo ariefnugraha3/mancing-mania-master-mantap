@@ -112,7 +112,8 @@ func _apply_layout(_viewport_class: StringName = &"") -> void:
 	UiSkin.sign_text(_title_line_1, title_size, DioramaStyle.BUTTER, 12)
 	_fit_title(area.x)
 	_title_line_2.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(int(clampf(title_size * 0.5, 17.0, 26.0))))
-	_emblem.diameter = clampf(area.x * 0.2, 64.0, 104.0)
+	# The emblem is an illustration now (revision 6.8): big enough to read.
+	_emblem.diameter = clampf(area.x * 0.28, 84.0, 140.0)
 	# Presets size each block to its content, so they run after the content changed.
 	_place.call_deferred()
 

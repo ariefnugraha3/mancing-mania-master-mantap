@@ -498,8 +498,11 @@ func _house(builder: RefCounted, at: Vector3, yaw: float, mute: float) -> void:
 	builder.color = Style.muted([PLASTER, Style.MINT.lerp(PLASTER, 0.5), Style.STRAWBERRY.lerp(PLASTER, 0.55)][_random.randi() % 3], mute)
 	builder.rounded_slab(size, Vector3(0, size.y * 0.5, 0), 0.04)
 	builder.color = Style.muted(ROOF, mute)
+	# A gable: each half slopes down toward its own eave. Turning about +X
+	# by +angle lowers the +Z edge, so the half on the +Z side takes +angle
+	# (a negative sign here made a V-shaped, upside-down roof).
 	for side: float in [-1.0, 1.0]:
-		builder.transform = Transform3D(Basis(Vector3.UP, yaw + PI * 0.25) * Basis(Vector3.RIGHT, -0.62 * side), at + Basis(Vector3.UP, yaw + PI * 0.25) * Vector3(0, size.y + 0.17, size.z * 0.22 * side))
+		builder.transform = Transform3D(Basis(Vector3.UP, yaw + PI * 0.25) * Basis(Vector3.RIGHT, 0.62 * side), at + Basis(Vector3.UP, yaw + PI * 0.25) * Vector3(0, size.y + 0.17, size.z * 0.22 * side))
 		builder.rounded_slab(Vector3(size.x + 0.16, 0.06, size.z * 0.66), Vector3.ZERO, 0.025)
 	builder.transform = Transform3D(Basis(Vector3.UP, yaw + PI * 0.25), at)
 	builder.color = Style.muted(WOOD_DARK, mute)
@@ -1629,7 +1632,8 @@ func build_pier_set() -> Node3D:
 		hall.capsule(Vector3(corner.x, 0.1, corner.y), Vector3(corner.x, 1.3, corner.y), 0.06, -1.0, 8, 2)
 	hall.color = Style.muted(ROOF_BLUE, 0.2)
 	for side: float in [-1.0, 1.0]:
-		hall.transform = Transform3D(turn * Basis(Vector3.RIGHT, -0.38 * side), hall_at + turn * Vector3(0.0, 1.5, 0.62 * side))
+		# Each half slopes down to its own eave (see _house).
+		hall.transform = Transform3D(turn * Basis(Vector3.RIGHT, 0.38 * side), hall_at + turn * Vector3(0.0, 1.5, 0.62 * side))
 		hall.rounded_slab(Vector3(3.6, 0.07, 1.4), Vector3.ZERO, 0.025)
 	hall.transform = Transform3D.IDENTITY
 	root.add_child(Kit.bake("AuctionHall", hall))

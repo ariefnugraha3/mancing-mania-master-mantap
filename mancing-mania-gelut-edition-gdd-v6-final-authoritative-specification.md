@@ -6210,7 +6210,7 @@ Zona jempol: aksi utama di sepertiga bawah; Pause dan status di atas; tidak ada 
 - Continue paling atas jika save ada;
 - after-ending menu hanya berubah subtle sesuai Section 157;
 - versi build kecil di sudut untuk debug, hidden pada release jika tidak diperlukan.
-- logo = emblem bulat (matahari, ikan bersarung tinju) + judul "CATCH AND BRAWL" bergaya cat papan butter dalam satu baris yang ukurannya mengecil sendiri bila tidak muat lebar layar (revisi 6.8; pita crust miring −3° hanya muncul bila judul punya subjudul);
+- logo = emblem bulat bergaya stiker (revisi 6.8: lencana terakota berjahit krem, langit senja dengan sunburst, danau, ikan oranye melompat dengan sarung tinju merah, kail di bibir, bintang hantaman; lebarnya 28% layar, 84–140 pt) + judul "CATCH AND BRAWL" bergaya cat papan butter dalam satu baris yang ukurannya mengecil sendiri bila tidak muat lebar layar (revisi 6.8; pita crust miring −3° hanya muncul bila judul punya subjudul);
 - tombol menu memakai ikon (Continue ▶, New Game ✦, How to Play buku, Settings gear, Credits hati); tombol utama sedikit lebih tinggi (68 vs 58 px).
 
 ### Fishing HUD
