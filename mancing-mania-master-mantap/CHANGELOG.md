@@ -2,6 +2,77 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## Unreleased — Revisi Android 6.11: tidak crash di HP Android
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.11, Section 115, 125, 135, 186, 195.12. Sumber: `ANDROID_STABILITY_AND_RELEASE_GUIDE.md`.
+
+### Diperbaiki
+
+- MSAA 3D mati di HP dan tablet pada semua preset, termasuk browser HP. Sebelumnya preset MEDIUM (bawaan Android) memakai 2×, yang dengan renderer Compatibility di Godot 4.7 membocorkan framebuffer setiap frame sampai game ditutup paksa setelah 2–4 menit. `project.godot` kini memuat `msaa_3d.mobile=0`.
+- Semua audio buatan kode (musik, ambience, SFX) diberi ekor 16 sampel setelah datanya, agar mixer Android tidak membaca melewati ujung buffer (crash SIGSEGV di AudioTrack). Panjang loop dan ritme tidak berubah.
+- Tombol Back Android tidak lagi langsung menutup game: panel teratas ditutup dulu, saat bermain membuka Pause, dan di Main Menu muncul pertanyaan QUIT THE GAME? lalu game disimpan sebelum keluar. Credits dari menu kembali ke menu; Back saat scene dimuat diabaikan.
+- Bus audio yang hilang dibuat dengan `set_bus_count()`, bukan `add_bus()`.
+
+### Ditambah
+
+- Cadangan save `save_v5.json.bak`: save lama yang masih terbaca disimpan sebelum diganti. Bila save utama rusak, game memuat cadangan itu.
+- AAB Android memuat `armeabi-v7a` untuk HP lama 32-bit, selain `arm64-v8a`.
+- Preset export `Android APK (test)` untuk instal cepat lewat USB.
+- Teks baru `menu.quit_confirm.*` (English dan Bahasa Indonesia).
+- Test: MSAA mati di HP untuk semua preset dan tidak ada scene yang menyalakannya, ekor audio di musik, ambience, dan SFX, Back di menu dan saat bermain, cadangan `.bak`, preset Android dan keystore kosong.
+
+### Perlu dicek di HP sungguhan
+
+- Main 10 menit di HP fisik: `Native Heap` dan `GL mtrack` di `adb shell dumpsys meminfo com.catchandbrawl.game` harus datar di menit 1, 5, dan 10, dan `dumpsys dropbox` bersih dari native crash atau ANR.
+- Ukuran AAB pertama dengan `armeabi-v7a` harus masuk budget GDD 190.13 (≤ 100 MB).
+
+## Unreleased — Revisi Duel 6.10: kalah berarti ikan lepas
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.10, Section 176.10.
+
+### Diubah
+
+- Kalah di duel tinju pertama kini sama dengan kekalahan lain: lele lepas kembali ke danau dan tidak tertangkap, kekalahan tercatat, dan layar hasil menampilkan THE FISH GOT AWAY. Sebelumnya duel itu diulang terus ("THAT WAS ROUGH. / TRY AGAIN") sampai pemain menang, sehingga ikan pertama pasti tertangkap.
+- Tidak ada yang lain yang hilang saat kalah: cash, upgrade, progres utang, dan isi ember tetap.
+- Petunjuk tutorial tinju tetap muncul di duel tinju berikutnya sampai pemain menang sekali.
+
+### Dihapus
+
+- Layar ulang duel pertama beserta teksnya (`duel.result.retry.*`, English dan Bahasa Indonesia).
+
+## Unreleased — Revisi Musik 6.9: setiap state punya lagunya sendiri
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD Section 199.
+
+### Ditambahkan
+
+- **13 instrumen baru** ("band kampung"), semuanya disintesis dari kode: gitar nilon, cak-cuk ukulele, suling, electric piano, saron/bonang, gong, bas pizzicato, kecrek, woodblock, sompret, brass, tom, dan crash.
+- **Lagu tema Main Menu**: keroncong-pop ceria, 104 BPM. Suling bernyanyi di atas gitar, cak-cuk, bas, kecrek, dan kendang ringan. Bagian tengahnya dijawab electric piano, lalu turnaround kembali ke awal.
+- **Lagu duel tempat baru** yang sebelumnya meminjam loop tinju atau panco:
+  - Silat: kendang pencak silat, gong dan kempul, bonang, sompret bernada pelog;
+  - Adu Gasing: gamelan jenaka, saron dan peking bersahutan (slendro), suling;
+  - Tarik Tambang dan Panjat Pinang: drumband 17 Agustus dengan snare mars, glockenspiel, brass, dan crash.
+- **Lagu Suwit sendiri**: parodi suspense dengan bas pizzicato yang mengendap, woodblock tik-tok, dan "ting" lonceng. Sebelumnya Suwit memakai loop danau.
+- Lagu Joget mendapat suling yang menggandakan melodi, kecrek, stab keyboard di off-beat, dan gong tiap 8 bar. Chart untuk seed yang sama tidak berubah.
+
+### Diubah
+
+- **Musik danau** kini dua take akustik yang tenang (gitar nilon atau electric piano, bas, suling atau saron, tanpa drum), diputar bergantian dengan **jeda hening 30 detik** di antaranya. Lebih dari 40% waktu di danau tetap sunyi (GDD 175.11).
+- **Tinju** mendapat riff chip dua bar yang bisa disenandungkan, bridge, hentakan brass, crash, dan fill kendang.
+- **Panco** menjadi mars heroik-kocak dengan tom, snare roll, dan fanfare brass.
+- Melodi disusun dari motif yang berulang dan saling menjawab, dan nada pada ketukan kuat selalu nada akor, sehingga mudah diingat. Kekerasan tiap lagu disamakan, dengan musik danau sedikit lebih pelan.
+
+### Performa
+
+- Musik dirender di **worker thread** bila platform mendukung (desktop, Android, iOS), jadi main thread tidak menanggung biayanya.
+- Di Web tanpa thread, rendering dipotong menjadi irisan 3 ms per frame. Kini mixing, wrap loop, normalisasi, dan encode 16-bit juga bisa berhenti di tengah. Sebelumnya tahap akhir dikerjakan sekaligus dalam satu frame.
+- Sintesis instrumen dibuat jauh lebih hemat: envelope perkalian, resonator teredam empat parsial sekaligus dalam `Vector4`, noise loop untuk napas suling, dan nada yang berhenti begitu tidak terdengar. Waktu sintesis satu nada lonceng turun dari 114 ms menjadi 7 ms. Satu lagu kini butuh 0,4–1,8 detik CPU sekali render.
+- Paling banyak 5 lagu disimpan di memori (±1,5 MB per lagu). Take danau pertama disiapkan di belakang lagu menu, jadi sudah siap saat pemain menekan Play.
+
+### Diperbaiki
+
+- Pemutar musik dihentikan dan worker task dikumpulkan saat game ditutup, sehingga tidak ada objek audio yang tertinggal.
+
 ## Unreleased — Revisi Nama 6.8: Catch and Brawl
 
 Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.8.
@@ -24,6 +95,9 @@ Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`
 
 - Atap rumah terbalik (berbentuk "V"): rumah di seberang Danau Cempaka, gedung koperasi dan sekolah di Waduk Melati, dan rumah panggung di Muara Anggrek. Kedua sisi atap pelana kini menurun ke arah lisplangnya masing-masing.
 - Atap gedung lelang TPI di Dermaga Mawar terbalik dengan cara yang sama.
+- Bayangan tombol di panel overlay (Pause, Settings, How to Play, dialog) dan di halaman Market terpotong lurus menjadi kotak di tepi area gulir, begitu juga cincin fokus. Area gulir kini menyisakan ruang untuk bayangan (6 pt ke samping, 9 pt ke bawah) dan cincin fokus (6 pt). Margin kartu dikurangi sebesar ruang itu, jadi posisi tombol tidak bergeser.
+- Teks tombol berikon (Pause, Main Menu, Settings, dan lainnya) tidak di tengah tombol, karena Godot menengahkan teks di ruang setelah ikon. `GameButton` kini menggambar sendiri ikon kirinya bila tombol cukup lebar, sehingga teks tepat di tengah tombol tanpa memperbesar ukuran minimum tombol. Pada tombol yang terlalu sempit (teks akan menyentuh ikon), tata letak lama dipakai.
+- Saat dialog tampil (di Market, saat memancing, di layar hasil), menekan Spasi atau Enter memajukan dialog sekaligus menekan tombol yang sedang fokus. Klik atau ketukan juga ikut menekan tombol di bawah jari. Dialog kini membaca input lebih dulu (sebelum tombol) dan memegang kontrol selama tampil. Panel yang dibuka di atas dialog (Pause, konfirmasi) tetap memegang kontrolnya sendiri.
 - Sandaran kursi plastik condong ke depan, menutupi dudukan. Kini bersandar ke belakang (Market, rumah, panggung joget, arena Tarik Tambang dan Panjat Pinang).
 
 ## Unreleased — Revisi Lokasi 6.7: empat tempat memancing berjenjang

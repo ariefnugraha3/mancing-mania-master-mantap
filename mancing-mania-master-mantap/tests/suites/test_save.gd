@@ -157,6 +157,58 @@ func test_corrupt_json_is_preserved_and_reported() -> bool:
 	return true
 
 
+# Revision 6.11: tmp -> verify -> keep the replaced save as .bak -> rename.
+func test_the_replaced_save_is_kept_as_bak() -> bool:
+	GameState.new_game()
+	check(SaveManager.save_game(&"new_game"), "first save")
+	check(not FileAccess.file_exists(SaveManager.get_last_good_path()), "a brand-new game has no .bak")
+	var first := _saved_file()
+	GameState.add_cash(100)
+	check(SaveManager.save_game(&"test"), "second save")
+	check_eq(_comparable(read_json(SaveManager.get_last_good_path())), _comparable(first), "the .bak is the save that was replaced")
+
+	# A damaged file is never copied over a good .bak.
+	write_text(SaveManager.get_save_path(), "{ \"version\": 6, \"cash\": 1")
+	check(SaveManager.save_game(&"test"), "saving over a damaged file still works")
+	check_eq(_comparable(read_json(SaveManager.get_last_good_path())), _comparable(first), "and the .bak stays the good one")
+	check(not SaveManager.validate_save(_saved_file()).is_empty(), "the save itself is good again")
+	return true
+
+
+func test_an_unreadable_save_falls_back_to_the_bak() -> bool:
+	GameState.new_game()
+	GameState.add_cash(1234)
+	check(SaveManager.save_game(&"test"), "a save")
+	var good_cash := GameState.get_cash()
+	check(SaveManager.save_game(&"test"), "and another, so the .bak holds it too")
+	var garbage := "{ \"version\": 6, \"cash\": 12"
+	write_text(SaveManager.get_save_path(), garbage)
+	GameState.clear_game()
+
+	check(SaveManager.load_game(), "the game still loads")
+	check_eq(SaveManager.get_last_load_status(), SaveManager.STATUS_OK, "status is ok")
+	check(GameState.has_active_game(), "the game is active")
+	check_eq(GameState.get_cash(), good_cash, "with the last good progress")
+	check_eq(FileAccess.get_file_as_string(SaveManager.get_corrupt_backup_path()), garbage, "the unreadable file is preserved")
+	check(not SaveManager.validate_save(_saved_file()).is_empty(), "the save on disk is good again")
+	return true
+
+
+func test_new_game_and_delete_leave_no_bak() -> bool:
+	GameState.new_game()
+	SaveManager.save_game(&"test")
+	SaveManager.save_game(&"test")
+	check(FileAccess.file_exists(SaveManager.get_last_good_path()), "playing keeps a .bak")
+	GameState.new_game()
+	check(SaveManager.save_game(&"new_game"), "a new game is saved")
+	check(not FileAccess.file_exists(SaveManager.get_last_good_path()), "and the old game's .bak is gone")
+	SaveManager.save_game(&"test")
+	check(FileAccess.file_exists(SaveManager.get_last_good_path()), "the new game gets its own .bak")
+	check(SaveManager.delete_save(), "delete")
+	check(not FileAccess.file_exists(SaveManager.get_last_good_path()), "deleting the save deletes its .bak too")
+	return true
+
+
 func test_non_object_root_and_bad_version_are_rejected() -> bool:
 	_write_save([1, 2, 3])
 	check(not SaveManager.load_game(), "array root is rejected")

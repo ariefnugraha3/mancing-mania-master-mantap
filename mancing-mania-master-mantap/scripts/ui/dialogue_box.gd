@@ -123,15 +123,40 @@ func skip() -> void:
 		_close()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not _playing:
+## The dialogue has the controls while it is up. Input is read here, before
+## the GUI: a Space, Enter, click or tap meant for the next line would
+## otherwise also press the button that has focus or sits under the finger
+## (in the Market, the dialogue advanced and a Market button fired at once).
+## An overlay opened over the dialogue (Pause, a prompt) keeps its own input.
+func _input(event: InputEvent) -> void:
+	if not _playing or _overlay_open():
+		return
+	# A touch also arrives as an emulated mouse click: the touch advances, its
+	# mouse copy is only kept away from the buttons.
+	var mouse := event as InputEventMouseButton
+	if mouse != null and mouse.device == InputEvent.DEVICE_ID_EMULATION:
+		if mouse.pressed:
+			get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed(InputActions.UI_CANCEL):
 		get_viewport().set_input_as_handled()
 		skip()
-	elif event.is_action_pressed(InputActions.UI_CONFIRM) or event.is_action_pressed(&"fish_cast") or InputActions.is_primary_press(event):
+	elif _is_advance(event):
 		get_viewport().set_input_as_handled()
 		advance()
+
+
+static func _is_advance(event: InputEvent) -> bool:
+	if InputActions.is_primary_press(event):
+		return true
+	for action: StringName in [InputActions.UI_CONFIRM, &"ui_accept", &"fish_cast"]:
+		if event.is_action_pressed(action):
+			return true
+	return false
+
+
+func _overlay_open() -> bool:
+	return is_inside_tree() and get_tree().get_first_node_in_group(OverlayPanel.OPEN_GROUP) != null
 
 
 func _next() -> void:

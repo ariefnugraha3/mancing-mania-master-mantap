@@ -12,11 +12,20 @@ extends CanvasLayer
 signal closed()
 
 const DIM_COLOR := UiTokens.BACKDROP
+## Every overlay on screen is in this group, so a dialogue under one knows
+## the overlay has the controls.
+const OPEN_GROUP := &"open_overlays"
 ## Gap between the card and the safe area's edges (phone, tablet).
 const SCREEN_MARGIN := UiTokens.SPACE_12
 const SCREEN_MARGIN_TABLET := UiTokens.SPACE_32
 ## How far the ribbon reaches down over the card's top edge.
 const RIBBON_OVERLAP := 22
+
+## Room kept around the controls of the scrolling body: a button's shadow
+## reaches 6 pt to the sides and 9 pt below, its focus ring 6 pt all round.
+const SHADOW_ROOM_SIDE := 8
+const SHADOW_ROOM_TOP := 8
+const SHADOW_ROOM_BOTTOM := 12
 
 ## Preferred panel width at the reference resolution; it shrinks on narrow screens.
 @export var panel_width: float = 520.0
@@ -33,6 +42,7 @@ var _ribbon: PanelContainer
 var _panel: PanelContainer
 var _title_label: Label
 var _scroll: ScrollContainer
+var _body_padding: MarginContainer
 var _tween: Tween
 var _gameplay_input_was_enabled: bool = true
 
@@ -42,6 +52,7 @@ func _ready() -> void:
 	visible = false
 	_build_frame()
 	build_content()
+	_apply_overlap()
 	get_viewport().size_changed.connect(fit_to_screen)
 	PlatformService.safe_area_changed.connect(fit_to_screen)
 	content.minimum_size_changed.connect(fit_to_screen)
@@ -81,6 +92,7 @@ func show_overlay() -> void:
 	_gameplay_input_was_enabled = InputManager.is_gameplay_input_enabled()
 	InputManager.set_gameplay_input_enabled(false)
 	visible = true
+	add_to_group(OPEN_GROUP)
 	fit_to_screen()
 	_animate()
 	# Wrapped text only knows its height after one layout pass at the final width.
@@ -92,6 +104,7 @@ func hide_overlay() -> void:
 	if not visible:
 		return
 	visible = false
+	remove_from_group(OPEN_GROUP)
 	InputManager.set_gameplay_input_enabled(_gameplay_input_was_enabled)
 	closed.emit()
 
@@ -152,7 +165,7 @@ func fit_to_screen() -> void:
 	_scroll.custom_minimum_size.y = 0.0
 	var chrome_height := _stack.get_combined_minimum_size().y
 	var body_room := float(safe.size.y) - margin * 2.0 - chrome_height
-	var body_height := content.get_combined_minimum_size().y
+	var body_height := _body_padding.get_combined_minimum_size().y
 	_scroll.custom_minimum_size.y = maxf(minf(body_height, body_room), 0.0)
 
 
@@ -199,7 +212,8 @@ func _build_frame() -> void:
 
 	var layout := VBoxContainer.new()
 	layout.name = "Layout"
-	layout.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
+	# The body's bottom shadow room already separates it from the footer.
+	layout.add_theme_constant_override(&"separation", UiTokens.SPACE_12 - SHADOW_ROOM_BOTTOM + UiTokens.SPACE_4)
 	_panel.add_child(layout)
 
 	_scroll = ScrollContainer.new()
@@ -208,16 +222,42 @@ func _build_frame() -> void:
 	_scroll.follow_focus = true
 	layout.add_child(_scroll)
 
+	# A scroll area clips what it holds to its own rectangle. Buttons cast a
+	# shadow (6 pt to the sides, 9 pt below) and draw a focus ring 6 pt
+	# outside themselves, so the body keeps that much room around its
+	# controls; without it the shadows were cut off square at the edges.
+	_body_padding = _shadow_room("BodyPadding")
+	_body_padding.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(_body_padding)
+
 	content = VBoxContainer.new()
 	content.name = "Content"
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
-	_scroll.add_child(content)
+	_body_padding.add_child(content)
 
+	# The footer gets the same side room, so its buttons line up with the
+	# body's.
+	var footer_padding := _shadow_room("FooterPadding")
+	footer_padding.add_theme_constant_override(&"margin_top", 0)
+	footer_padding.add_theme_constant_override(&"margin_bottom", 0)
+	layout.add_child(footer_padding)
 	footer = BoxContainer.new()
 	footer.name = "Footer"
 	footer.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
-	layout.add_child(footer)
+	footer_padding.add_child(footer)
+
+
+## Room for button shadows and focus rings around a clipped area.
+static func _shadow_room(node_name: String) -> MarginContainer:
+	var room := MarginContainer.new()
+	room.name = node_name
+	room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	room.add_theme_constant_override(&"margin_left", SHADOW_ROOM_SIDE)
+	room.add_theme_constant_override(&"margin_right", SHADOW_ROOM_SIDE)
+	room.add_theme_constant_override(&"margin_top", SHADOW_ROOM_TOP)
+	room.add_theme_constant_override(&"margin_bottom", SHADOW_ROOM_BOTTOM)
+	return room
 
 
 ## The card overlaps the ribbon's lower half only when there is a title.
@@ -226,7 +266,11 @@ func _apply_overlap() -> void:
 	if card == null:
 		return
 	var base := UiSkin.card()
-	card.content_margin_top = base.content_margin_top + (float(RIBBON_OVERLAP) - 4.0 if _ribbon.visible else 0.0)
+	# The body and footer keep shadow room of their own, so the card's own
+	# margin gives that much back and the buttons sit where they always did.
+	card.content_margin_left = base.content_margin_left - SHADOW_ROOM_SIDE
+	card.content_margin_right = base.content_margin_right - SHADOW_ROOM_SIDE
+	card.content_margin_top = base.content_margin_top - SHADOW_ROOM_TOP + (float(RIBBON_OVERLAP) - 4.0 if _ribbon.visible else 0.0)
 	_panel.add_theme_stylebox_override(&"panel", card)
 	_stack.add_theme_constant_override(&"separation", -RIBBON_OVERLAP if _ribbon.visible else 0)
 

@@ -129,10 +129,12 @@ func set_ambience_state(state_id: StringName, _seed: int = -1) -> void:
 		_ambience.set_state(state_id)
 
 
-## Switches the background music: &"menu", &"fishing", &"boxing",
-## &"arm_wrestle" loop; any other state (&"market", &"dance", &"silence") is
-## silent, which is a valid music state (GDD 175.11). The Dance track is a
-## song, started with prepare_song() and play_song().
+## Switches the background music. The menu, the water (&"fishing",
+## &"result") and each duel (&"boxing", &"arm_wrestle", &"suwit", &"silat",
+## &"gasing", &"tambang", &"pinang") have their own piece (revision 6.9);
+## any other state (&"market", &"dance", &"silence") is silent, which is a
+## valid music state (GDD 175.11). The Dance track is a song, started with
+## prepare_song() and play_song().
 func set_music_state(state_id: StringName, _seed: int = -1, _bpm_override: float = -1.0) -> void:
 	if _music_state == state_id:
 		return
@@ -300,12 +302,14 @@ func _make_voices(count: int, bus_id: StringName) -> Array[AudioStreamPlayer]:
 
 
 ## The layout normally comes from default_bus_layout.tres; this guarantees the
-## buses also exist if that file is ever missing.
+## buses also exist if that file is ever missing. A missing bus is appended
+## with set_bus_count(): add_bus() can shift the bus order on some export
+## platforms and leave the game silent (revision 6.11).
 func _ensure_buses() -> void:
 	for bus_id: StringName in CHILD_BUSES:
 		if AudioServer.get_bus_index(bus_id) >= 0:
 			continue
-		AudioServer.add_bus()
+		AudioServer.set_bus_count(AudioServer.bus_count + 1)
 		var index := AudioServer.bus_count - 1
 		AudioServer.set_bus_name(index, bus_id)
 		AudioServer.set_bus_send(index, BUS_MASTER)

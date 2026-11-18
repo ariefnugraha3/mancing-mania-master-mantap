@@ -97,6 +97,13 @@ func is_from_menu() -> bool:
 	return _from_menu
 
 
+## Android Back (GDD 135): credits opened from the menu go back to it. After
+## the ending the roll plays on; holding still skips it.
+func handle_back() -> void:
+	if _from_menu:
+		finish(true)
+
+
 func _layout() -> void:
 	var area := _safe_root.size
 	var width := minf(640.0, area.x - 32.0)

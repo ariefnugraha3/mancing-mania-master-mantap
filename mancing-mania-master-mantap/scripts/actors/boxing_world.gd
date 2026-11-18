@@ -96,7 +96,7 @@ func setup(fish_id: StringName) -> void:
 	reset()
 
 
-## Both fighters back in their guard, e.g. before a tutorial retry.
+## Both fighters back in their guard, before a round starts.
 func reset() -> void:
 	_finished = false
 	_telegraphing = false

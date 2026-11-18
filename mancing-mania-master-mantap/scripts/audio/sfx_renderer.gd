@@ -12,6 +12,13 @@ extends RefCounted
 ##   noise_amount       balance between tone and noise
 ##   attack / decay / release   the overall shape and length
 
+## Extra samples after the end of every stream made in code (revision 6.11).
+## While Android's mixer interpolates it reads a few samples past the end of
+## the data or the loop point; without this pad, a long buffer that ends right
+## before a protected memory page crashes the audio thread (SIGSEGV in
+## AudioTrack). The pad is not part of the sound: loop_end stops before it.
+const TAIL_PAD := 16
+
 const SYNTH_CLICK := &"click"
 const SYNTH_NOISE_SWEEP := &"noise_sweep"
 const SYNTH_DROPLET := &"droplet"
@@ -83,17 +90,40 @@ static func render(preset: AudioPreset, mix_rate: int, seed: int = -1) -> Packed
 	return samples
 
 
-## Wraps mono samples as an in-memory 16-bit PCM stream.
-static func to_stream(samples: PackedFloat32Array, mix_rate: int) -> AudioStreamWAV:
+## Wraps mono samples as an in-memory 16-bit PCM stream. A looping stream
+## loops over all of `samples`.
+static func to_stream(samples: PackedFloat32Array, mix_rate: int, looping: bool = false) -> AudioStreamWAV:
+	var count := samples.size()
 	var bytes := PackedByteArray()
-	bytes.resize(samples.size() * 2)
-	for index: int in samples.size():
+	bytes.resize((count + TAIL_PAD) * 2)
+	for index: int in count:
 		bytes.encode_s16(index * 2, int(clampf(samples[index], -1.0, 1.0) * 32767.0))
+	write_tail_pad(bytes, count, looping)
+	return make_stream(bytes, mix_rate, count, looping)
+
+
+## Fills the TAIL_PAD samples after the first `count` 16-bit samples: a loop
+## repeats its first samples there, a one-shot gets silence.
+static func write_tail_pad(bytes: PackedByteArray, count: int, looping: bool) -> void:
+	for pad: int in TAIL_PAD:
+		var value := 0
+		if looping and count > 0:
+			value = bytes.decode_s16((pad % count) * 2)
+		bytes.encode_s16((count + pad) * 2, value)
+
+
+## Wraps 16-bit mono PCM that already ends in its tail pad. `count` is the
+## length without the pad; a loop ends there.
+static func make_stream(bytes: PackedByteArray, mix_rate: int, count: int, looping: bool) -> AudioStreamWAV:
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = mix_rate
 	stream.stereo = false
 	stream.data = bytes
+	if looping:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = count
 	return stream
 
 

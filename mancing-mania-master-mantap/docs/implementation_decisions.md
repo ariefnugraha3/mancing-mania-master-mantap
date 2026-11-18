@@ -393,7 +393,9 @@ Result scene dan Wheel adalah Milestone 7. Sampai saat itu:
 
 ### D-062 — Pelajaran tinju pertama
 
-Duel pertama memberi petunjuk satu baris yang diambil dari teks How To Play (Section 183.19). Kalah di duel itu tidak dicatat dan langsung diulang (Section 176.10). Dialog Catfish dan Darto untuk momen ini (Section 183.4) menunggu sistem dialog; teks layar ulang `THAT WAS ROUGH.` diambil dari dialog itu, sedangkan `No harm done. Again.` ditulis sendiri.
+Duel pertama memberi petunjuk satu baris yang diambil dari teks How To Play (Section 183.19).
+
+Revisi 6.10 mengganti aturan lama. Dulu kekalahan di duel ini tidak dicatat dan langsung diulang dengan layar `THAT WAS ROUGH.` / `TRY AGAIN`. Kini kekalahan di duel pertama sama dengan kekalahan lain: ikan lepas, kekalahan tercatat, dan layar hasil menampilkan THE FISH GOT AWAY. Petunjuknya tetap muncul di duel tinju berikutnya sampai pemain menang sekali, karena `boxing_seen` baru diset saat menang. Teks layar ulang dan `DuelResultOverlay.show_retry()` dihapus.
 
 ### D-063 — HUD tinju
 
@@ -932,3 +934,30 @@ Di desktop, `user://` dinamai sesuai nama proyek, jadi folder save ikut berpinda
 
 Nama file GDD dan folder repository tetap memakai nama lama, karena banyak rujukan dan workspace mengarah ke sana.
 
+## Revisi Android 6.11 — Stabil di HP Android
+
+Sumber: `ANDROID_STABILITY_AND_RELEASE_GUIDE.md` di root repository. Aturan proyek (GDD, test runner) tetap menang bila berbeda; satu-satunya perbedaan adalah runner test, yang tetap memakai `--script res://tests/run_all.gd` karena suite dimuat setelah autoload siap.
+
+### D-153 — MSAA mati di HP, dicek sebelum preset
+
+`DisplaySettings.msaa_for()` memeriksa perangkat dulu (`mobile`, `android`, `ios`, `web_android`, `web_ios`) dan baru membaca preset di desktop. `project.godot` juga memuat `msaa_3d.mobile=0`. D-096 di atas sudah tidak berlaku untuk HP: MEDIUM dan HIGH memakai MSAA hanya di desktop. Preset LOW tetap 75% resolusi 3D; tanpa MSAA, buffer internal itu aman.
+
+### D-154 — Ekor 16 sampel di `SfxRenderer`
+
+Ekor ditulis di satu tempat: `SfxRenderer.to_stream()`, `write_tail_pad()`, dan `make_stream()`. `MusicRenderer` memakai dua fungsi terakhir agar encode bertahapnya tidak berubah. `loop_end` dan `get_samples()` tetap tanpa ekor, jadi jam lagu Joget dan test lama tidak bergeser.
+
+### D-155 — Back lewat jalur cancel yang sudah ada
+
+`InputManager.handle_back_request()` mengirim `ui_cancel` ke viewport dengan `push_input()` dan memeriksa apakah ada yang menanganinya. Overlay, dialog, dan baris dialog sudah menangani Esc, jadi Back otomatis menutup yang paling atas tanpa daftar layer baru. Bila tidak ada yang menangani, scene dengan `handle_back()` (Main Menu, Credits) menjawab; selain itu Back menekan action Pause yang sudah dibaca setiap scene gameplay. Sinyal `go_back_requested` disambung deferred agar tidak berjalan di tengah pemrosesan event jendela.
+
+### D-156 — `.bak` disalin, bukan dipindah
+
+Save lama disalin ke `.bak` (bukan di-rename), sehingga selalu ada save utama di disk meskipun game mati di antara dua langkah. `.bak` hanya ditulis bila save lama masih terbaca, jadi file rusak tidak pernah menimpa cadangan yang bagus. New Game tidak membuat `.bak` dari game lama, dan `delete_save()` ikut menghapusnya karena isinya data pemain.
+
+### D-157 — `armeabi-v7a` dan preset APK uji
+
+GDD 186 mengizinkan arsitektur tambahan bila ada alasan QA dan masuk budget. Alasannya: HP Android Go dan HP lama yang menjalankan Android 32-bit. Ukuran AAB belum diukur karena belum ada export Android di mesin ini; dicek saat export pertama. Preset `Android APK (test)` tanpa Gradle dan ditandatangani debug key editor, sehingga tidak ada data keystore di repository.
+
+### D-158 — Lifecycle tidak diubah
+
+Panduan meminta save saat aplikasi ke background. Danau dan Market sudah menyimpan saat `NOTIFICATION_APPLICATION_PAUSED`, dan semua scene gameplay membuka Pause saat fokus hilang. Duel sengaja tidak menyimpan di tengah pertarungan (GDD 176.5: Continue memulihkan progres tetap, bukan duel yang sedang berjalan), dan scene lain sudah menyimpan saat event-nya terjadi. Jadi tidak ada handler pusat baru.

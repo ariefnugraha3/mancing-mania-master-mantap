@@ -40,7 +40,8 @@ func _ready() -> void:
 	_fish = GameData.get_fish(fish_id)
 	if _fish == null:
 		_fish = GameData.get_fish(DEFAULT_FISH)
-	# The first duel teaches; losing it only means another try (GDD 176.10).
+	# The hints teach every boxing duel until the first win. A loss is a loss,
+	# the first one included: the fish goes back to the water (revision 6.10).
 	_tutorial = not GameState.is_tutorial_seen(TUTORIAL_ID)
 
 	_controller.duel_started.connect(_on_duel_started)
@@ -174,14 +175,6 @@ func _on_duel_finished(result: Dictionary) -> void:
 	AudioManager.play_sfx(&"box_ko")
 	await get_tree().create_timer(RESULT_DELAY_SEC).timeout
 	if _leaving:
-		return
-
-	if _tutorial and not result["player_won"]:
-		# Nothing is recorded: the lesson simply starts over.
-		_result_overlay.show_retry()
-		await _result_overlay.continued
-		if not _leaving:
-			_start_round()
 		return
 
 	if result["player_won"]:

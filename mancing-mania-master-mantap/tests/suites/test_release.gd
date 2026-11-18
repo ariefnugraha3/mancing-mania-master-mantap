@@ -87,6 +87,23 @@ func test_export_presets_follow_the_release_contract() -> bool:
 	check(int(presets.get_value(android + ".options", "gradle_build/target_sdk")) >= 36, "target SDK 36 or newer")
 	check_eq(int(presets.get_value(android + ".options", "gradle_build/min_sdk")), 24, "minimum SDK 24")
 	check(presets.get_value(android + ".options", "architectures/arm64-v8a"), "arm64-v8a")
+	# Revision 6.11: low-end phones that run 32-bit Android install it too.
+	check(presets.get_value(android + ".options", "architectures/armeabi-v7a"), "armeabi-v7a")
+	check(not presets.get_value(android + ".options", "architectures/x86_64") and not presets.get_value(android + ".options", "architectures/x86"), "no x86 in the store build")
+	# An APK for quick installs over USB, same package and filters as the AAB.
+	check(by_name.has("Android APK (test)"), "an APK preset for testing on a phone")
+	var apk: String = by_name.get("Android APK (test)", "")
+	if apk != "":
+		check_eq(int(presets.get_value(apk + ".options", "gradle_build/export_format")), 0, "it exports an APK")
+		check_eq(presets.get_value(apk, "export_path"), "build/android/CatchAndBrawl-test.apk", "into build/android")
+		check_eq(presets.get_value(apk + ".options", "package/unique_name"), "com.catchandbrawl.game", "same application ID")
+		check_eq(presets.get_value(apk, "exclude_filter"), presets.get_value(android, "exclude_filter"), "same package contents")
+	# Signing details never live in the repository; release builds read them
+	# from GODOT_ANDROID_KEYSTORE_RELEASE_* environment variables.
+	for section: String in presets.get_sections():
+		for key: String in presets.get_section_keys(section):
+			if key.begins_with("keystore/"):
+				check_eq(str(presets.get_value(section, key)), "", "%s %s is empty" % [presets.get_value(section.trim_suffix(".options"), "name", section), key])
 	for key: String in presets.get_section_keys(android + ".options"):
 		if key.begins_with("permissions/") and key != "permissions/custom_permissions":
 			check(not bool(presets.get_value(android + ".options", key)), "no %s" % key)

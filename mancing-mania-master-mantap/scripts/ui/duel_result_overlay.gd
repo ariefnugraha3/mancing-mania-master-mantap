@@ -57,11 +57,6 @@ func show_result(result: Dictionary) -> void:
 		_open(TextDb.t(&"duel.result.loss.title"), "", TextDb.t(&"duel.result.continue"))
 
 
-## The first duel is a lesson: losing it only means trying again (GDD 176.10).
-func show_retry() -> void:
-	_open(TextDb.t(&"duel.result.retry.title"), TextDb.t(&"duel.result.retry.body"), TextDb.t(&"duel.result.retry.button"))
-
-
 func get_title_text() -> String:
 	return _title_label.text
 

@@ -4,8 +4,11 @@ extends Node
 ##
 ## Writes go to a temporary file that is verified and then renamed over the
 ## real save, so an interrupted write leaves the previous save untouched.
+## Just before the rename, the save being replaced is kept as
+## save_v5.json.bak when it reads back as a save (revision 6.11).
 ## A save that cannot be read is copied to the corrupt-backup path and is
-## never overwritten until the player explicitly starts a new game.
+## never overwritten until the player explicitly starts a new game; when the
+## kept .bak is good, the game loads that instead of losing everything.
 
 signal save_started()
 signal save_finished(success: bool)
@@ -14,6 +17,8 @@ signal save_error(message: String)
 
 const SAVE_FILE := "save_v5.json"
 const TEMP_FILE := "save_v5.json.tmp"
+## The last good save, one write behind the real one.
+const LAST_GOOD_FILE := "save_v5.json.bak"
 const CORRUPT_BACKUP_FILE := "save_v5_corrupt_backup.json"
 const BACKUP_FILE_PATTERN := "save_v5_backup_%s.json"
 const DEFAULT_STORAGE_DIR := "user://"
@@ -75,6 +80,8 @@ func load_game() -> bool:
 		return _finish_load(STATUS_MISSING)
 
 	var parsed: Variant = _read_json_file(get_save_path())
+	if not _looks_like_save(parsed) and _restore_last_good_save():
+		parsed = _read_json_file(get_save_path())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_preserve_corrupt_file()
 		return _finish_load(STATUS_CORRUPT)
@@ -122,7 +129,8 @@ func save_game(reason: StringName = &"manual") -> bool:
 	data["last_played_at_utc"] = SaveSchema.utc_timestamp()
 	data["system"] = SaveSchema.default_system()
 
-	var failure := _write_atomically(JSON.stringify(data, "\t"))
+	# A new game replaces the old one for good: it leaves no .bak behind.
+	var failure := _write_atomically(JSON.stringify(data, "\t"), reason != &"new_game")
 	if failure != "":
 		_has_unsaved_changes = true
 		GameLog.warn(&"SAVE", "save failed", {"reason": reason, "cause": failure})
@@ -136,11 +144,12 @@ func save_game(reason: StringName = &"manual") -> bool:
 	return true
 
 
-## Removes the save and any leftover temp file. Backups are kept on purpose.
+## Removes the save, its .bak copy and any leftover temp file. The named
+## backups are kept on purpose.
 func delete_save() -> bool:
 	_settings_timer.stop()
 	var ok := true
-	for path: String in [get_save_path(), _temp_path()]:
+	for path: String in [get_save_path(), _temp_path(), get_last_good_path()]:
 		if FileAccess.file_exists(path) and DirAccess.remove_absolute(path) != OK:
 			ok = false
 	_has_unsaved_changes = false
@@ -269,6 +278,10 @@ func get_corrupt_backup_path() -> String:
 	return _storage_dir.path_join(CORRUPT_BACKUP_FILE)
 
 
+func get_last_good_path() -> String:
+	return _storage_dir.path_join(LAST_GOOD_FILE)
+
+
 ## Points the manager at another folder. Tests use this to work on an isolated
 ## temp save; passing nothing restores user://.
 ## Copies the save files from the folder the game used under its old name
@@ -337,8 +350,11 @@ func _temp_path() -> String:
 	return _storage_dir.path_join(TEMP_FILE)
 
 
-## Returns "" on success or a short cause on failure.
-func _write_atomically(text: String) -> String:
+## Returns "" on success or a short cause on failure. The steps: write a
+## temp file, read it back, keep the save it replaces as .bak (or, with
+## `keep_last_good` false, drop the .bak), then rename the temp file over
+## the save.
+func _write_atomically(text: String, keep_last_good: bool = true) -> String:
 	if simulate_write_failure:
 		return "simulated write failure"
 	var temp_path := _temp_path()
@@ -358,6 +374,10 @@ func _write_atomically(text: String) -> String:
 	if simulate_interrupted_write:
 		return "simulated interruption before replace"
 
+	if keep_last_good:
+		_keep_last_good_save()
+	elif FileAccess.file_exists(get_last_good_path()):
+		DirAccess.remove_absolute(get_last_good_path())
 	var rename_error := DirAccess.rename_absolute(temp_path, get_save_path())
 	if rename_error != OK:
 		return "cannot replace save (%s)" % error_string(rename_error)
@@ -379,6 +399,31 @@ func _recover_interrupted_write() -> void:
 		GameLog.warn(&"SAVE", "recovered save from an interrupted write")
 	else:
 		DirAccess.remove_absolute(temp_path)
+
+
+## The save about to be replaced becomes the .bak copy, but only if it reads
+## back as a save: a good .bak is never replaced by a damaged file.
+func _keep_last_good_save() -> void:
+	var path := get_save_path()
+	if FileAccess.file_exists(path) and _looks_like_save(_read_json_file(path)):
+		_copy_file(path, get_last_good_path())
+
+
+## The save on disk cannot be read but its .bak can: the unreadable file is
+## kept at the corrupt-backup path and the .bak takes its place. Returns
+## false (and changes nothing) when there is no good .bak.
+func _restore_last_good_save() -> bool:
+	if not _looks_like_save(_read_json_file(get_last_good_path())):
+		return false
+	_preserve_corrupt_file()
+	if not _copy_file(get_last_good_path(), get_save_path()):
+		return false
+	GameLog.warn(&"SAVE", "unreadable save replaced by the last good one", {"from": get_last_good_path()})
+	return true
+
+
+static func _looks_like_save(parsed: Variant) -> bool:
+	return typeof(parsed) == TYPE_DICTIONARY and SaveSchema.read_version(parsed) > 0
 
 
 func _preserve_corrupt_file() -> void:

@@ -185,6 +185,69 @@ func test_skipping_applies_everything_watching_would() -> bool:
 	return true
 
 
+## While a dialogue is up it has the controls: Space or a click advances the
+## line and never also presses the focused button or the one under the
+## pointer (it did both in the Market). With an overlay open over it, the
+## overlay keeps its input.
+func test_dialogue_comes_before_buttons() -> bool:
+	var holder := Control.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tree.root.add_child(holder)
+	var button := GameButton.new()
+	button.text = "SELL ALL"
+	button.position = Vector2(40.0, 40.0)
+	button.size = Vector2(220.0, 60.0)
+	holder.add_child(button)
+	var presses: Array[int] = [0]
+	button.pressed.connect(func() -> void: presses[0] += 1)
+	var box := DialogueBox.new()
+	tree.root.add_child(box)
+	await wait_frames(2)
+	button.grab_focus()
+	var lines: Array[Dictionary] = [
+		{"speaker": "Bu Yati", "text": "One."}, {"speaker": "Bu Yati", "text": "Two."}, {"speaker": "Bu Yati", "text": "Three."}]
+	box.play(lines)
+	await wait_frames(2)
+	box.advance()
+	_send_key(KEY_SPACE)
+	await wait_frames(2)
+	check_eq(box.get_current_line().get("text", ""), "Two.", "Space advances the dialogue")
+	check_eq(presses[0], 0, "and does not press the focused button")
+	box.advance()
+	_send_click(button.get_global_rect().get_center())
+	await wait_frames(2)
+	check_eq(box.get_current_line().get("text", ""), "Three.", "a click advances the dialogue")
+	check_eq(presses[0], 0, "and does not press the button under it")
+	box.skip()
+	await wait_frames(1)
+	_send_key(KEY_SPACE)
+	await wait_frames(2)
+	check_eq(presses[0], 1, "once the dialogue is over, Space presses the button again")
+	box.queue_free()
+	holder.queue_free()
+	await wait_frames(1)
+	return true
+
+
+func _send_key(keycode: Key) -> void:
+	for pressed: bool in [true, false]:
+		var key := InputEventKey.new()
+		key.keycode = keycode
+		key.physical_keycode = keycode
+		key.pressed = pressed
+		tree.root.push_input(key)
+
+
+func _send_click(at: Vector2) -> void:
+	for pressed: bool in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.position = at
+		click.global_position = at
+		click.pressed = pressed
+		tree.root.push_input(click)
+
+
 func test_lines_wait_for_the_player_and_advance_on_tap() -> bool:
 	var scene: Node = (load(STORY_SCENE) as PackedScene).instantiate()
 	var controller := scene.get_node("StoryController") as StoryController

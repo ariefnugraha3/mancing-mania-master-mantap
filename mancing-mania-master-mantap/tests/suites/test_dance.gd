@@ -351,29 +351,101 @@ func test_result_contract_and_shared_commit() -> bool:
 	return true
 
 
-# The other music states (GDD 175.11, Section 115 tones).
+# The state music (GDD 175.11, Section 115 tones, revision 6.9).
 func test_music_loops_render_cleanly() -> bool:
-	for style: StringName in [MusicSequencer.STYLE_FISHING, MusicSequencer.STYLE_BOXING, MusicSequencer.STYLE_ARM]:
-		var schedule := MusicSequencer.build_loop(style, 12)
-		check(schedule["loop"], "%s loops" % style)
-		var renderer := MusicRenderer.new()
-		renderer.start(schedule)
-		var stream := renderer.render_all()
-		var samples := renderer.get_samples()
-		check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s stream loops" % style)
-		check_near(float(samples.size()) / MusicRenderer.RATE, float(schedule["length_sec"]), 0.01, "%s loop length" % style)
-		check(not SynthDsp.has_invalid_samples(samples) and SynthDsp.peak(samples) <= 1.0, "%s renders without NaN or clipping" % style)
-		check(SynthDsp.peak(samples) > 0.05, "%s is audible" % style)
-	# Fishing music leaves long silences (GDD 175.11).
-	var fishing := MusicRenderer.new()
-	fishing.start(MusicSequencer.build_loop(MusicSequencer.STYLE_FISHING, 31337))
-	fishing.render_all()
+	for style: StringName in MusicSequencer.PIECE_STYLES:
+		for take: int in MusicSequencer.takes(style):
+			var label := "%s take %d" % [style, take]
+			var schedule := MusicSequencer.build_piece(style, 12, take)
+			var renderer := MusicRenderer.new()
+			renderer.start(schedule)
+			var stream := renderer.render_all()
+			var samples := renderer.get_samples()
+			check(not SynthDsp.has_invalid_samples(samples) and SynthDsp.peak(samples) <= 1.0, "%s renders without NaN or clipping" % label)
+			check(SynthDsp.peak(samples) > 0.05, "%s is audible" % label)
+			if schedule["loop"]:
+				check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % label)
+				check_near(float(samples.size()) / MusicRenderer.RATE, float(schedule["length_sec"]), 0.01, "%s loop length" % label)
+			else:
+				check_eq(stream.loop_mode, AudioStreamWAV.LOOP_DISABLED, "%s plays once" % label)
+				check(float(schedule["rest_sec"]) > 0.0, "%s is followed by quiet" % label)
+	check(not MusicSequencer.build_piece(MusicSequencer.STYLE_FISHING, 12)["loop"], "the water's takes play once")
+	check_eq(MusicSequencer.takes(MusicSequencer.STYLE_FISHING), 2, "and alternate between two")
+
+	# The water leaves long silences (GDD 175.11): each take and the quiet after it.
 	var quiet := 0
-	var samples := fishing.get_samples()
-	for index: int in range(0, samples.size(), 2205):
-		if absf(samples[index]) < 0.005:
-			quiet += 1
-	check(float(quiet) / float(samples.size() / 2205) > 0.4, "fishing music is mostly quiet (%d%% silent)" % roundi(100.0 * float(quiet) / float(samples.size() / 2205)))
+	var points := 0
+	for take: int in MusicSequencer.takes(MusicSequencer.STYLE_FISHING):
+		var schedule := MusicSequencer.build_piece(MusicSequencer.STYLE_FISHING, 31337, take)
+		var fishing := MusicRenderer.new()
+		fishing.start(schedule)
+		fishing.render_all()
+		var samples := fishing.get_samples()
+		for index: int in range(0, samples.size(), 2205):
+			points += 1
+			if absf(samples[index]) < 0.005:
+				quiet += 1
+		var rest_points := int(float(schedule["rest_sec"]) * MusicRenderer.RATE / 2205.0)
+		quiet += rest_points
+		points += rest_points
+	check(float(quiet) / float(points) > 0.4, "fishing music is mostly quiet (%d%% silent)" % roundi(100.0 * float(quiet) / float(points)))
+
+	# Every music state has its own piece, and a seed always gives the same one.
+	for state: StringName in [&"menu", &"fishing", &"boxing", &"arm_wrestle", &"suwit", &"silat", &"gasing", &"tambang", &"pinang"]:
+		check(MusicSequencer.PIECE_STYLES.has(MusicEngine.STATE_STYLES.get(state, &"")), "%s has a piece" % state)
+	check_eq(MusicSequencer.build_piece(MusicSequencer.STYLE_MENU, 5)["events"], MusicSequencer.build_piece(MusicSequencer.STYLE_MENU, 5)["events"], "a seed always gives the same piece")
+
+	# Rendering in small slices gives exactly the samples of one long render.
+	var piece := MusicSequencer.build_piece(MusicSequencer.STYLE_SUWIT, 3)
+	var whole := MusicRenderer.new()
+	whole.start(piece)
+	whole.render_all()
+	var sliced := MusicRenderer.new()
+	sliced.start(piece)
+	var slices := 0
+	while not sliced.step(1):
+		slices += 1
+	check(slices > 3, "a piece renders over several slices (%d)" % slices)
+	check_eq(sliced.get_samples(), whole.get_samples(), "and the slices add up to the same samples")
+	check_eq(sliced.get_stream().data, whole.get_stream().data, "and the same stream")
+
 	var clicks := MusicSequencer.build_click_track(100.0, 12)
 	check_eq((clicks["events"] as Array).size(), 12, "the calibration click track has one click per beat")
+	return true
+
+
+# The koplo band of revision 6.9 (suling, kecrek, keys, gong) adds sound
+# but no chart notes, and keeps the main events in their order.
+func test_koplo_band_leaves_the_chart_alone() -> bool:
+	var schedule := MusicSequencer.build_koplo(SEED, 140.0, 12, 2)
+	var events: Array = schedule["events"]
+	var band: Array[StringName] = [MusicVoices.SULING, MusicVoices.SHAKER, MusicVoices.KEYS, MusicVoices.GONG]
+	var voices := {}
+	var in_order := true
+	var band_lanes := 0
+	var melody: Array = []
+	var doubled: Array = []
+	for index: int in events.size():
+		var event: Dictionary = events[index]
+		voices[event["voice"]] = true
+		if index > 0 and float(event["t"]) < float(events[index - 1]["t"]):
+			in_order = false
+		if band.has(event["voice"]) and int(event["lane_hint"]) >= 0:
+			band_lanes += 1
+		if event["voice"] == MusicVoices.PLUCK:
+			melody.append([event["t"], event["hz"]])
+		elif event["voice"] == MusicVoices.SULING:
+			doubled.append([event["t"], event["hz"]])
+	for voice: StringName in band:
+		check(voices.has(voice), "the band has a %s" % voice)
+	check_eq(band_lanes, 0, "no band note suggests a lane")
+	check(in_order, "the schedule stays in time order")
+	check_eq(doubled, melody, "the suling doubles every melody note")
+	# The chart reads only lane events, and the band adds none, so the
+	# Dance chart of a seed is what it was before the band joined.
+	var lanes := 0
+	for event: Dictionary in events:
+		if int(event["lane_hint"]) >= 0:
+			lanes += 1
+	check(lanes > 0, "the lane hints are all there (%d)" % lanes)
 	return true

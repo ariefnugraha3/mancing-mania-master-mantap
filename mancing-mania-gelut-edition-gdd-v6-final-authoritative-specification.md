@@ -36,6 +36,44 @@ Gameplay, balance, dan urutan cerita tidak berubah. Save mendapat satu setting b
 
 Karena folder data di desktop dinamai sesuai proyek, save dari folder lama "Mancing Mania Gelut Edition" disalin sekali ke folder baru. Folder lama tidak diubah. Gameplay, cerita, dan save schema tidak berubah. Nama file GDD dan folder repository tetap memakai nama lama agar semua rujukan tidak putus. Bagian yang direvisi: header, Section 0, 12, 135, 162, 167, 182, 183, 186, 187, 194.
 
+**Revisi Musik 6.9 (2026-11-16):** atas permintaan pemilik proyek, musik dibuat jauh lebih enak didengar dan lebih hidup, tetap sesuai tema, dan tanpa memperberat performa. Sebelumnya hanya ada tiga loop pendek: menu, Suwit, dan layar hasil memakai loop danau, sedangkan keempat duel tempat baru meminjam loop tinju atau panco. Kini setiap state punya lagunya sendiri dari satu palet **"band kampung"**: gitar nilon, cak-cuk ukulele, suling, electric piano, saron/bonang, gong, bas pizzicato, kecrek, woodblock, sompret, brass, tom, dan crash. Rinciannya:
+
+- menu: lagu tema keroncong-pop;
+- danau: dua take akustik yang tenang, bergantian dengan jeda hening 30 detik;
+- tinju: arcade;
+- panco: mars heroik-kocak;
+- Suwit: parodi suspense;
+- Silat: kendang pencak silat;
+- Adu Gasing: gamelan jenaka;
+- Tarik Tambang dan Panjat Pinang: drumband 17 Agustus.
+
+Lagu Joget mendapat suling, kecrek, keyboard, dan gong tanpa mengubah chart. Rendering pindah ke worker thread bila platform mendukung, dan semua tahapnya dipotong kecil per frame bila tidak. Gameplay, balance, cerita, dan save schema tidak berubah. Bagian yang direvisi: header, Section 110, 175.10, 175.11, 175.15, 199.
+
+**Revisi Duel 6.10 (2026-11-16):** atas permintaan pemilik proyek, kalah duel selalu berarti ikan lepas kembali ke air dan tidak tertangkap, **termasuk duel tinju pertama**. Sebelumnya kekalahan di duel pertama tidak dicatat dan duel langsung diulang ("THAT WAS ROUGH. / TRY AGAIN") sampai pemain menang, sehingga lele pertama pasti tertangkap. Kini kekalahan itu diperlakukan seperti kekalahan lain:
+
+- layar hasil menampilkan THE FISH GOT AWAY;
+- lele melompat kembali ke danau;
+- kekalahan tercatat;
+- tidak ada cash, upgrade, progres utang, atau isi ember yang hilang (Section 176.11).
+
+Petunjuk tutorial tinju tetap muncul di duel tinju berikutnya sampai pemain menang sekali. Wheel tetap hanya memaksa tinju pada putaran pertama, dan tutorial Market tidak membutuhkan ikan, jadi tidak ada softlock. Bagian yang direvisi: header, Section 13, 14, 176.10.
+
+**Revisi Android 6.11 (2026-11-18):** atas permintaan pemilik proyek, game disesuaikan dengan `ANDROID_STABILITY_AND_RELEASE_GUIDE.md` agar tidak crash di HP Android dan tetap aman di HP spek rendah:
+
+- **MSAA 3D mati di HP dan tablet** pada semua preset, termasuk build Web di browser HP. Dengan renderer Compatibility, MSAA di GPU HP membuat Godot 4.7 membuat framebuffer baru setiap frame tanpa membuang yang lama, sampai Android menutup paksa game setelah 2–4 menit. `project.godot` memuat `msaa_3d.mobile=0`, dan pengecekan perangkat di Settings dilakukan sebelum membaca preset, jadi tidak ada setting yang bisa menyalakannya lagi. Desktop tidak berubah (MEDIUM 2×, HIGH 4×).
+- **Semua audio buatan kode diberi ekor 16 sampel** setelah datanya: musik, ambience, dan SFX. Loop mengulang 16 sampel awalnya di ekor, sedangkan one-shot diberi hening. `loop_end` tidak berubah, jadi panjang lagu dan ritme Joget tetap sama. Ini mencegah crash audio thread Android (SIGSEGV di AudioTrack) saat mixer membaca sedikit melewati ujung buffer. Bus yang hilang dibuat dengan `set_bus_count()`, bukan `add_bus()`.
+- **Tombol Back Android** kini mengikuti Section 135 dan tidak pernah langsung menutup game:
+  - panel atau dialog paling atas ditutup lebih dulu;
+  - saat bermain, Back membuka Pause, dan Back lagi melanjutkan permainan;
+  - di Main Menu muncul pertanyaan QUIT THE GAME? / KELUAR DARI GAME?, dan game disimpan sebelum keluar;
+  - Credits yang dibuka dari menu kembali ke menu;
+  - Back saat scene sedang dimuat diabaikan;
+  - build Web tidak mencoba menutup tab.
+- **Save menyimpan cadangan `save_v5.json.bak`.** Sebelum file baru menggantikan save, save lama disimpan sebagai `.bak` bila masih terbaca. Bila save utama rusak tetapi `.bak` bagus, game memuat `.bak`; file yang rusak tetap disimpan sebagai cadangan corrupt. New Game dan hapus save juga menghapus `.bak`.
+- **Build Android.** AAB kini memuat `armeabi-v7a` selain `arm64-v8a`, supaya HP lama yang menjalankan Android 32-bit bisa memasang game. Google Play hanya mengirim satu arsitektur ke tiap HP, jadi ukuran unduhan tidak naik, tetapi ukuran AAB tetap wajib dicek terhadap budget Section 190.13 saat export pertama. Ada juga preset `Android APK (test)` untuk instal cepat lewat USB. Data keystore tetap tidak pernah disimpan di repository.
+
+Gameplay, balance, cerita, dan save schema tidak berubah. Bagian yang direvisi: header, Section 115, 125, 135, 186, 195.12.
+
 **Revisi UI 6.1 (2026-11-14):** seluruh UI 2D (menu, tombol, overlay, HUD, Market, dialog, Wheel) dirombak ke gaya **"cozy warung card"** agar serasi dengan dunia diorama: palet hangat yang sama, sudut lebih bulat, setiap benda yang bisa ditekan punya "bibir" (lip) gelap di bawahnya dan tenggelam saat ditekan, judul pita (ribbon) di atas kartu, ikon prosedural, logo emblem, dan teks judul bergaya cat papan. Tetap tanpa file font/gambar UI eksternal. Bagian yang direvisi: Section 167.2–167.6, 167.9, 185.20. Perubahan art direction setelah RC1 ini disetujui eksplisit oleh pemilik proyek (Section 194.4); build berikutnya harus melewati QA dan human playtest ulang sebagai `v1.0.0-rc2` sebelum Gold Master.
 
 **Judul sebelumnya:** *Mancing Mania: Gelut Edition* (hingga revisi 6.7); judul kerja awal *Baku Hantam Empang*  
@@ -745,7 +783,7 @@ Player mendapat tutorial.
 
 Kemenangan duel pertama sangat mudah.
 
-Jika player gagal, duel otomatis diberikan retry tutorial.
+Jika player gagal, ikan lepas kembali ke danau seperti kekalahan duel lainnya (revisi 6.10). Petunjuk tutorial tinju tetap muncul di duel tinju berikutnya sampai player menang sekali.
 
 Tidak ada kemungkinan softlock di prologue.
 
@@ -753,7 +791,7 @@ Tidak ada kemungkinan softlock di prologue.
 
 # 14. CHAPTER 1 — ONE HONEST FISH
 
-Setelah ikan pertama berhasil masuk ember, Darto pergi ke The Market.
+Setelah ikan pertama berhasil masuk ember, Darto pergi ke The Market. Bila lele pertama lepas, Darto tetap bisa memancing ikan lain atau langsung ke Market; tutorial Market tidak membutuhkan ikan (revisi 6.10).
 
 Bu Yati membeli ikan.
 
@@ -3540,6 +3578,15 @@ Narrative:
 
 sparse.
 
+Revisi 6.9 menambahkan:
+
+- Main Menu: lagu tema keroncong-pop yang ceria;
+- Silat: kendang pencak silat dengan gong dan sompret;
+- Adu Gasing: gamelan jenaka;
+- Tarik Tambang dan Panjat Pinang: drumband 17 Agustus.
+
+Palet instrumen, bentuk tiap lagu, dan anggaran performanya ada di Section 199.
+
 ---
 
 # 111. AUDIO PRIORITY
@@ -3657,6 +3704,8 @@ Pada Android, save berada di app user data.
 Pada Web export, `user://` menggunakan storage browser yang dikelola platform Web; player harus diberi catatan bahwa membersihkan site data/browser storage dapat menghapus save.
 
 Save write menggunakan temporary file + replace strategy bila platform memungkinkan agar risiko corrupt lebih kecil.
+
+Revisi 6.11: urutannya tulis file sementara, baca balik untuk dicek, simpan save lama sebagai `save_v5.json.bak` bila masih terbaca, lalu ganti save dengan file sementara. Bila save utama tidak terbaca tetapi `.bak` bagus, game memuat `.bak` dan file rusak disimpan sebagai cadangan corrupt. New Game dan hapus save juga menghapus `.bak`.
 
 ---
 
@@ -4129,8 +4178,10 @@ Quality presets hanya menukar resolusi, kepadatan rumput, dan anti-aliasing. Art
 | Preset | 3D scale | Rumput (scatter) | MSAA 3D |
 |---|---:|---:|---|
 | LOW | 0,75 | 50% | mati |
-| MEDIUM (default Android) | 1,0 | 100% | 2× |
-| HIGH (default Web/Desktop bila mampu) | 1,0 | 100% | 4× desktop, dibatasi 2× di Android |
+| MEDIUM (default Android) | 1,0 | 100% | 2× desktop/Web desktop, mati di HP/tablet |
+| HIGH (default Web/Desktop bila mampu) | 1,0 | 100% | 4× desktop, mati di HP/tablet |
+
+Revisi 6.11: HP dan tablet (Android, iOS, dan build Web di browser HP) tidak pernah memakai MSAA 3D di preset mana pun. Dengan renderer Compatibility, MSAA di GPU HP membuat Godot 4.7 membocorkan framebuffer setiap frame sampai Android menutup paksa game setelah beberapa menit. `project.godot` memuat `anti_aliasing/quality/msaa_3d.mobile=0`, dan pengecekan perangkat dilakukan sebelum preset dibaca. Tidak ada SubViewport yang ikut dirilis boleh menyalakan MSAA.
 
 Elemen 2D digambar dengan antialiasing sendiri (renderer Compatibility tidak punya MSAA 2D).
 
@@ -4531,7 +4582,7 @@ Google Play release wajib:
 - mempunyai adaptive launcher icon,
 - mempunyai version code/version name yang dinaikkan tiap release,
 - memenuhi target API level yang diwajibkan Google Play pada saat submission,
-- menggunakan 64-bit ARM build (`arm64-v8a`) sebagai architecture utama,
+- menggunakan 64-bit ARM build (`arm64-v8a`) sebagai architecture utama, ditambah `armeabi-v7a` untuk HP 32-bit (revisi 6.11),
 - permission seminimal mungkin.
 
 Game tidak membutuhkan:
@@ -4595,6 +4646,15 @@ Back gesture/button (Android):
 - saat menu child → kembali satu level,
 - tidak langsung menutup game tanpa konteks.
 
+Revisi 6.11, urutan penanganan Back:
+
+1. Back saat scene sedang dimuat diabaikan.
+2. Overlay, dialog, atau baris dialog paling atas menerima Back seperti Esc (cancel). Dialog tanpa pilihan batal (misalnya pemulihan save rusak) tidak tertutup.
+3. Scene yang punya jawaban sendiri memberikannya: Main Menu bertanya QUIT THE GAME? / KELUAR DARI GAME? (pilihan KEEP PLAYING / QUIT), dan Credits yang dibuka dari menu kembali ke menu.
+4. Di tempat lain Back menekan Pause, yang dibuka setiap scene gameplay. Back di menu Pause melanjutkan permainan.
+
+`application/config/quit_on_go_back=false`. Sebelum keluar dari Main Menu game disimpan bila ada game aktif. Build Web tidak menutup tab.
+
 ---
 
 ## EXPORT AUTOMATION
@@ -4604,7 +4664,10 @@ CLI export dapat digunakan untuk CI:
 ```text
 godot --headless --path . --export-release "Web" build/web/index.html
 godot --headless --path . --export-release "Android" build/android/CatchAndBrawl.aab
+godot --headless --path . --export-debug "Android APK (test)" build/android/CatchAndBrawl-test.apk
 ```
+
+Revisi 6.11: preset `Android APK (test)` membuat APK untuk instal cepat lewat USB (`adb install -r`). Isinya sama dengan AAB dan ditandatangani debug key editor. Release keystore tidak pernah ditulis di `export_presets.cfg`; build rilis membacanya dari environment variable `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER`, dan `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`.
 
 Nama executable Godot pada environment CI dapat berbeda.
 
@@ -8366,6 +8429,8 @@ Pattern:
 
 Tidak boleh menggunakan frame delta sebagai beat authority.
 
+Revisi 6.9 menambahkan suling yang menggandakan melodi, kecrek di setiap seperdelapan, stab keyboard di off-beat, dan gong di awal setiap 8 bar. Lapisan ini tidak memakai generator acak dan tidak membawa lane hint. Urutan event utama juga dipertahankan, sehingga chart Joget untuk seed yang sama tidak berubah.
+
 ## 175.11 FISHING MUSIC
 
 Minimalist state.
@@ -8381,6 +8446,8 @@ Generator menggunakan:
 Rule:
 
 silence is valid music state.
+
+Revisi 6.9: musik air terdiri dari dua take akustik (12 bar, 80 BPM, tanpa drum) yang diputar bergantian. Instrumennya gitar nilon atau electric piano lembut, bas pizzicato, dan suling atau saron. Melodinya baru masuk setelah beberapa bar dan hanya ada di sebagian take. Setelah tiap take ada **jeda hening 30 detik** sebelum take berikutnya, jadi lebih dari 40% waktu di danau tetap sunyi (lihat Section 199.5).
 
 ## 175.12 MARKET RADIO FEEL
 
@@ -8447,6 +8514,15 @@ Target simultaneous synth voices:
 SFX pendek dipre-render/cached in memory.
 
 No synthesis allocation setiap audio sample frame.
+
+Revisi 6.9 (musik):
+
+- setiap lagu dirender sekali ke AudioStreamWAV mono 22.050 Hz 16-bit lalu diputar ulang, jadi biaya CPU saat bermain hanya satu pemutar per lagu;
+- rendering berjalan di WorkerThreadPool bila platform punya thread;
+- tanpa thread (Web), rendering berjalan dalam irisan 3 ms per frame. Mixing, wrap loop, normalisasi, dan encode 16-bit semuanya dipotong per 4.096 sampel;
+- paling banyak 5 lagu disimpan di memori (±1,5 MB per lagu), lagu yang paling lama tidak dipakai dibuang lebih dulu.
+
+Detail di Section 199.7.
 
 ## 175.16 WEB AUDIO UNLOCK
 
@@ -8577,7 +8653,7 @@ Tidak boleh:
 
 - first fish scripted Catfish;
 - first duel scripted Boxing;
-- first duel loss grants retry tutorial;
+- first duel loss is a normal loss: the fish goes back to the water (revisi 6.10; sebelumnya retry tutorial). Tutorial hints stay on boxing duels until the first win;
 - Market/debt tutorial cannot softlock;
 - tutorial skip tidak menghilangkan required unlock.
 
@@ -12124,7 +12200,8 @@ Milestone 10 wajib memverifikasi kembali requirement Google Play saat tanggal su
 Architecture production:
 
 - `arm64-v8a` wajib;
-- architecture tambahan hanya jika ukuran/performance masuk budget dan ada alasan QA.
+- architecture tambahan hanya jika ukuran/performance masuk budget dan ada alasan QA;
+- `armeabi-v7a` ikut sejak revisi 6.11. Alasan QA: HP spek rendah yang menjalankan Android 32-bit tidak bisa memasang build arm64 saja. Google Play mengirim satu arsitektur ke tiap HP, jadi ukuran unduhan tidak naik, tetapi AAB tetap harus masuk budget Section 190.13.
 
 Permission policy:
 
@@ -14762,6 +14839,9 @@ Critical item bertanda **[CRITICAL]** memblokir Gold Master jika belum checked.
 - [ ] current required target API rechecked at release time.
 - [ ] min SDK/device policy documented.
 - [ ] arm64-v8a included as required architecture.
+- [ ] armeabi-v7a included for 32-bit phones; AAB still within budget (revisi 6.11).
+- [ ] no 3D MSAA on phones; every audio stream made in code has its 16-sample tail pad (revisi 6.11).
+- [ ] 10-minute play on a physical phone: Native Heap and GL mtrack in `dumpsys meminfo` stay flat at minute 1, 5 and 10; `dumpsys dropbox` shows no native crash or ANR (revisi 6.11).
 - [ ] portrait orientation correct.
 - [ ] back gesture behavior pass.
 - [ ] clean install physical Android pass.
@@ -15601,6 +15681,106 @@ Yang tetap di luar scope: peta yang bisa dijelajahi bebas, jual-beli di tempat s
 - Semua ikan selalu dijual di Warung Bu Yati; tidak ada tombol jual di tempat lain.
 - Save version 5 dari build sebelumnya termigrasi tanpa kehilangan progres.
 - Seluruh teks baru tersedia dalam English dan Bahasa Indonesia.
+
+---
+
+# 199. MUSIK STATE — REVISI 6.9
+
+## 199.1 TUJUAN
+
+Atas permintaan pemilik proyek, musik dibuat jauh lebih bagus, engaging, dan menarik, tetap sesuai tema game (kampung, hangat, lucu), dan **tidak memperberat performa**. Section ini melengkapi Section 110 dan 175. Bila ada perbedaan, Section 199 yang berlaku untuk musik state.
+
+## 199.2 PALET INSTRUMEN — "BAND KAMPUNG"
+
+Semua instrumen tetap disintesis dari kode (Section 175.1). Tidak ada file audio.
+
+| Instrumen | Peran | Sintesis |
+|---|---|---|
+| Gitar nilon | petikan arpeggio | Karplus-Strong gelap + resonator badan |
+| Cak-cuk (ukulele) | off-beat keroncong | tiga senar Karplus-Strong berjarak 9 ms |
+| Suling | melodi | sinus + harmonik ke-2/ke-3, napas, scoop, vibrato |
+| Electric piano | akor, jawaban melodi | FM dua operator yang meredup |
+| Saron / bonang / glockenspiel | melodi, ostinato | 4 parsial inharmonik sebagai resonator teredam |
+| Gong / kempul | penanda siklus | pasangan nada rendah yang berdenyut |
+| Bas pizzicato | bas | segitiga dibulatkan + thump |
+| Kecrek, woodblock | ritme ringan | noise band-limited, nada kayu |
+| Sompret | melodi pencak silat | pulse sengau + vibrato lebar |
+| Brass | fanfare, hentakan | dua saw detune + filter yang menutup |
+| Tom, crash | drumband | sinus pitch-drop, noise panjang |
+
+Instrumen lama (kick, snare, hat, kendang, bass, pluck, pad, accent, blip) tetap dipakai.
+
+## 199.3 MUSIK PER STATE
+
+| State | Karakter | Tempo | Bentuk |
+|---|---|---|---|
+| Main Menu | tema keroncong-pop ceria | 104 BPM | 16 bar loop: intro gitar dan lonceng, A (suling) tanya-jawab, B (keys), turnaround |
+| Memancing, layar hasil | akustik tenang | 80 BPM | 2 take × 12 bar, diputar sekali lalu hening 30 detik |
+| Tinju Empang | arcade | 150 BPM | 16 bar loop: riff chip 2 bar, bridge, brass, fill kendang |
+| Panco Maut | mars heroik-kocak | 112 BPM | 16 bar loop: tom, snare roll, fanfare brass, aksen lucu |
+| Suwit | parodi suspense | 96 BPM | 8 bar loop: bas pizzicato mengendap, woodblock tik-tok, stab keys, "ting" |
+| Silat | pencak silat | 120 BPM | 8 bar loop: kendang rapat, gong dan kempul, bonang, sompret pelog |
+| Adu Gasing | gamelan jenaka | 104 BPM | 8 bar loop: saron dan peking bersahutan (slendro), kenong, gong, suling |
+| Tarik Tambang, Panjat Pinang | drumband 17 Agustus | 120 BPM | 16 bar loop: snare mars dan roll, bass drum, glockenspiel, brass, crash |
+| Market, Joget, Wheel, cerita | — | — | tetap seperti sebelumnya (radio warung di ambience, lagu Joget, hening) |
+
+## 199.4 KOMPOSISI
+
+- Melodi disusun dari motif dua bar: frase "tanya", frase "jawab" dengan ritme dan kontur yang sama tetapi pulang ke nada dasar, frase kontras, lalu frase pertama lagi.
+- Nada pada ketukan kuat selalu nada akor. Langkah antarnada kebanyakan kecil, dengan rentang dibatasi agar nyaman didengar.
+- Skala: pentatonik mayor (menu, danau, panco, drumband), pentatonik minor (tinju), pelog (silat), slendro (gasing).
+- Gema dotted-eighth yang lembut menggantikan reverb.
+- Seed tiap state tetap, jadi lagu yang sama terdengar setiap sesi.
+- Tidak ada melodi lagu yang sudah ada yang ditiru.
+
+## 199.5 MUSIK AIR (SECTION 175.11)
+
+- Take A: gitar nilon, suling masuk setelah 4 bar, lonceng menutup.
+- Take B: electric piano dengan petikan gitar, saron lalu suling.
+- Tanpa drum.
+- Setiap take diputar sekali, lalu hening 30 detik, lalu take berikutnya.
+- Saat masuk state memancing, take langsung dimulai.
+- Total waktu hening lebih dari 40% (diuji).
+
+## 199.6 LAGU JOGET
+
+Lapisan tambahan (Section 175.10) dibaca dari jadwal utama yang sudah selesai. Lapisan ini tidak memakai RNG dan tidak membawa lane hint. Event utama digabung tanpa mengubah urutannya, sehingga chart untuk seed yang sama tetap identik.
+
+## 199.7 ANGGARAN PERFORMA
+
+**Render sekali, putar berkali-kali.** Saat bermain, musik hanya satu AudioStreamPlayer per lagu, tanpa sintesis per frame.
+
+**Thread.** Bila platform punya thread (desktop, Android, iOS), rendering berjalan di WorkerThreadPool. Main thread tidak menanggung biayanya. AudioStreamWAV tetap dibuat di main thread.
+
+**Tanpa thread (Web tanpa thread support).** Rendering berjalan dalam irisan 3 ms per frame. Semua tahap bisa berhenti di tengah, setiap 4.096 sampel:
+
+- mixing tiap nada;
+- wrap loop;
+- pencarian puncak;
+- normalisasi, soft-clip, dan encode 16-bit.
+
+Hasil irisan identik sampel demi sampel dengan render sekaligus (diuji).
+
+**Sintesis hemat.** Envelope dikalikan per sampel, bukan memanggil `exp()`. Parsial dihitung sebagai resonator teredam, empat sekaligus dalam satu `Vector4`. Napas suling memakai noise loop. Nada berhenti setelah tidak terdengar. Waktu sintesis satu nada lonceng turun dari 114 ms menjadi 7 ms.
+
+**Ukuran desktop (editor build).** Satu lagu butuh 0,4–1,8 detik CPU total. Lagu Joget 2,9 detik saat "get ready". Satu irisan main thread terlama sekitar 10–25 ms, hanya pada build tanpa thread.
+
+**Prefetch.** Take danau pertama dirender di belakang lagu menu. Take berikutnya dirender selagi take sekarang diputar.
+
+**Memori.** Paling banyak 5 lagu (±0,7–1,6 MB per lagu, mono 16-bit). Lagu yang paling lama tidak dipakai dibuang lebih dulu. Lagu yang sedang diputar dan take berikutnya tidak pernah dibuang. Perpindahan state berulang tidak menumpuk memori (Section 190.4).
+
+**Volume.** Tiap lagu disamakan kekerasannya, dengan musik air sedikit lebih pelan di bawah ambience.
+
+## 199.8 ACCEPTANCE CRITERIA
+
+- Setiap state di tabel 199.3 memutar lagunya sendiri.
+- Semua lagu dirender tanpa NaN atau clipping dan terdengar (puncak > 0,05).
+- Lagu loop panjangnya tepat dan berulang mulus. Take danau tidak loop dan diikuti hening.
+- Musik danau lebih dari 40% hening, dihitung dari take dan jeda.
+- Render per irisan menghasilkan sampel dan stream yang identik dengan render sekaligus.
+- Lapisan band Joget tidak punya lane hint, urutan jadwal tetap menurut waktu, dan suling menggandakan setiap nada melodi.
+- Lagu menu dirender di latar belakang, dan take danau pertama siap sebelum pemain menekan Play.
+- Tidak ada objek yang tertinggal saat keluar (worker task selalu dikumpulkan).
 
 ---
 

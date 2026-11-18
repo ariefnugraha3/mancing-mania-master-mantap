@@ -8,8 +8,8 @@ extends RefCounted
 ## - QUALITY LOW/MEDIUM/HIGH changes 3D resolution, scatter density and
 ##   anti-aliasing. Art direction stays the same at every level: there are no
 ##   real shadows at any level, only the fake shadow discs, and no screen
-##   effects (VISUAL_STYLE_GUIDE 6.1). HIGH uses 4x MSAA on desktop and 2x on
-##   phones, as the guide asks.
+##   effects (VISUAL_STYLE_GUIDE 6.1). MSAA is for desktop only: phones and
+##   tablets never use it at any level (revision 6.11, see msaa_for()).
 
 const QUALITY: Dictionary = {
 	"low": {"scale_3d": 0.75, "scatter": 0.5, "msaa": Viewport.MSAA_DISABLED},
@@ -108,12 +108,28 @@ static func apply_quality(tree: SceneTree) -> void:
 		apply_quality_to(tree.current_scene)
 
 
-## Phones and tablets cap anti-aliasing at 2x (VISUAL_STYLE_GUIDE 6.1).
+## Phones and tablets never get 3D MSAA, whatever the preset (revision 6.11).
+## With the Compatibility renderer on mobile GPUs, MSAA makes Godot 4.7 create
+## a new framebuffer every frame without freeing the old one; after 2-4
+## minutes the app runs out of memory and Android kills it. The device check
+## comes before the preset, so no setting can turn MSAA back on there.
 static func msaa_for(quality: Dictionary) -> Viewport.MSAA:
-	var wanted: Viewport.MSAA = quality["msaa"]
-	if OS.has_feature("mobile") and wanted > Viewport.MSAA_2X:
-		return Viewport.MSAA_2X
-	return wanted
+	return msaa_for_device(quality, runs_on_phone())
+
+
+static func msaa_for_device(quality: Dictionary, on_phone: bool) -> Viewport.MSAA:
+	if on_phone:
+		return Viewport.MSAA_DISABLED
+	return quality["msaa"]
+
+
+## A phone or tablet: the Android or iOS app, or the Web build in a phone's
+## browser.
+static func runs_on_phone() -> bool:
+	for feature: String in ["mobile", "android", "ios", "web_android", "web_ios"]:
+		if OS.has_feature(feature):
+			return true
+	return false
 
 
 ## Scatter density of a freshly opened scene. Lights never cast real shadows.

@@ -364,8 +364,8 @@ func test_rhythm_calibration_persists_after_reload() -> bool:
 
 # --- Graphics quality (GDD 190.1) ---------------------------------------------
 
-## VISUAL_STYLE_GUIDE 6.1: no shadow maps at any level; MSAA 4x on desktop,
-## 2x on phones. Quality only trades resolution, scatter and anti-aliasing.
+## VISUAL_STYLE_GUIDE 6.1: no shadow maps at any level; MSAA only on desktop
+## (revision 6.11). Quality only trades resolution, scatter and anti-aliasing.
 func test_quality_presets_change_resolution_and_aa_only() -> bool:
 	tree.change_scene_to_packed(load("res://scenes/fishing/fishing.tscn"))
 	await wait_frames(4)
@@ -386,4 +386,35 @@ func test_quality_presets_change_resolution_and_aa_only() -> bool:
 	check_eq(tree.root.msaa_3d, Viewport.MSAA_2X, "MEDIUM is the default look with 2x MSAA")
 	tree.current_scene.queue_free()
 	await wait_frames(2)
+	return true
+
+
+## Revision 6.11: with the Compatibility renderer, MSAA on a phone's GPU leaks
+## a framebuffer every frame until Android kills the game, so phones and
+## tablets never get it, at any preset, and no scene can switch it on.
+func test_phones_never_use_msaa() -> bool:
+	check_eq(int(ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d.mobile", -1)), 0, "project.godot: msaa_3d.mobile=0")
+	check_eq(str(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")), "gl_compatibility", "phones use the Compatibility renderer")
+	for preset: String in DisplaySettings.QUALITY:
+		check_eq(DisplaySettings.msaa_for_device(DisplaySettings.QUALITY[preset], true), Viewport.MSAA_DISABLED, "%s has no MSAA on a phone" % preset.to_upper())
+	check_eq(DisplaySettings.msaa_for_device(DisplaySettings.QUALITY["high"], false), Viewport.MSAA_4X, "desktop HIGH keeps 4x")
+	check(not DisplaySettings.runs_on_phone(), "the test runner is not a phone")
+
+	# No scene or script that ships sets MSAA on a viewport of its own.
+	var offenders := PackedStringArray()
+	var folders: Array[String] = ["res://scenes", "res://generated", "res://scripts", "res://autoload"]
+	while not folders.is_empty():
+		var folder: String = folders.pop_back()
+		for sub: String in DirAccess.get_directories_at(folder):
+			folders.append(folder.path_join(sub))
+		for file_name: String in DirAccess.get_files_at(folder):
+			if not (file_name.ends_with(".tscn") or file_name.ends_with(".tres") or file_name.ends_with(".gd")):
+				continue
+			var path := folder.path_join(file_name)
+			if path == "res://scripts/ui/display_settings.gd":
+				continue
+			var text := FileAccess.get_file_as_string(path)
+			if text.contains("msaa_3d = ") or text.contains("msaa_3d=") or text.contains(".msaa_3d ="):
+				offenders.append(path)
+	check_empty(offenders, "only DisplaySettings sets MSAA")
 	return true

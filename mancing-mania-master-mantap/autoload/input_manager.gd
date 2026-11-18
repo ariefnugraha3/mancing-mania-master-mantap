@@ -37,6 +37,10 @@ func _ready() -> void:
 		_device_type = DEVICE_TOUCH
 	GameState.state_replaced.connect(_apply_saved_remap)
 	GameState.settings_changed.connect(_on_settings_changed)
+	# Android Back never closes the game by itself (GDD 135); project.godot
+	# says so too, this keeps it true whatever the settings file holds.
+	get_tree().quit_on_go_back = false
+	get_window().go_back_requested.connect(handle_back_request, CONNECT_DEFERRED)
 
 
 func _input(event: InputEvent) -> void:
@@ -106,6 +110,30 @@ func is_gameplay_input_enabled() -> bool:
 	return _gameplay_enabled
 
 
+## Android Back button or back gesture (GDD 135), one step at a time:
+## 1. ignored while a scene is loading;
+## 2. the topmost overlay, prompt or dialogue line takes it exactly like Esc
+##    (cancel), so Back closes the newest thing on screen first;
+## 3. a scene with an answer of its own gives it (the Main Menu asks
+##    "Quit the game?", credits opened from the menu go back to it);
+## 4. anywhere else it presses Pause, which every gameplay scene opens.
+## It never closes the game without asking.
+func handle_back_request() -> void:
+	if SceneRouter.is_transitioning():
+		return
+	var viewport := get_viewport()
+	viewport.push_input(_cancel_event(true))
+	var taken := viewport.is_input_handled()
+	viewport.push_input(_cancel_event(false))
+	if taken:
+		return
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method(&"handle_back"):
+		scene.call(&"handle_back")
+		return
+	press_action(InputActions.PAUSE)
+
+
 ## Entry points for on-screen touch controls.
 func press_action(action: StringName) -> void:
 	if InputMap.has_action(action):
@@ -135,6 +163,13 @@ func get_default_events(action: StringName) -> Array:
 
 
 # --- Internals --------------------------------------------------------------
+
+static func _cancel_event(pressed: bool) -> InputEventAction:
+	var event := InputEventAction.new()
+	event.action = InputActions.UI_CANCEL
+	event.pressed = pressed
+	return event
+
 
 func _register_press(action: StringName) -> void:
 	if InputActions.GAMEPLAY.has(action) and not _gameplay_enabled:

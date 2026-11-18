@@ -38,11 +38,18 @@ func _ready() -> void:
 	_scroll.follow_focus = true
 	add_child(_scroll)
 
-	# Room on the right keeps the numbers clear of the scroll bar.
+	# Room on the right keeps the numbers clear of the scroll bar. The scroll
+	# area clips to its rectangle, so there is also room all round for the
+	# shadows (6 pt to the sides, 9 pt below) and focus rings (6 pt) of the
+	# buttons and cards inside; without it they were cut off square.
 	var padding := MarginContainer.new()
 	padding.name = "Padding"
 	padding.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# (The scroll bar's room on the right already covers a shadow there.)
+	padding.add_theme_constant_override(&"margin_left", OverlayPanel.SHADOW_ROOM_SIDE - 2)
 	padding.add_theme_constant_override(&"margin_right", UiTokens.SPACE_8)
+	padding.add_theme_constant_override(&"margin_top", OverlayPanel.SHADOW_ROOM_TOP)
+	padding.add_theme_constant_override(&"margin_bottom", OverlayPanel.SHADOW_ROOM_BOTTOM)
 	_scroll.add_child(padding)
 
 	_column = VBoxContainer.new()

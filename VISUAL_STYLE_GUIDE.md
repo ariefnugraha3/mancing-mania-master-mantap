@@ -45,7 +45,7 @@ lighting:
   sun: DirectionalLight "#FFE3A8" x 0.95, rotation_deg (-52, -135, 0), shadow OFF
   interior_lamps: OmniLight "#FFAA44" x 0.55, 1 lampu per 9 m2 lantai, range max(3, 0.6 x sisi terpanjang), shadow OFF
   shadows: palsu (cakram gelap transparan di lantai), tanpa shadow map, tanpa SSAO/glow/fog
-  msaa_3d: 4x desktop, 2x ponsel
+  msaa_3d: 4x desktop, mati di ponsel dan tablet
 ```
 
 ---
@@ -278,7 +278,7 @@ func make_sun() -> DirectionalLight3D:
 - Matahari dengan rotasi (-52°, -135°, 0°) menyinari ke arah +X, +Z sambil turun, **searah dengan pandangan kamera**. Sisi benda yang menghadap kamera selalu terang dan mudah dibaca.
 - Lampu interior: OmniLight `#FFAA44`, energi 0,55, satu lampu per 9 m² lantai (minimal satu), jangkauan `max(3, 0.6 × sisi ruangan terpanjang)`, digantung di 0,9 × tinggi dinding, tanpa bayangan.
 - **Tanpa shadow map, SSAO, glow, atau fog.** Target render adalah WebGL2 dan ponsel kelas bawah; efek layar penuh adalah hal pertama yang membuat frame turun.
-- MSAA 3D: 4× di desktop, 2× di ponsel. Elemen 2D digambar dengan antialiasing sendiri (renderer Compatibility tidak punya MSAA 2D).
+- MSAA 3D: 4× di desktop, mati di ponsel dan tablet (GDD revisi 6.11: MSAA di GPU ponsel dengan renderer Compatibility membocorkan memori sampai game ditutup paksa). Elemen 2D digambar dengan antialiasing sendiri (renderer Compatibility tidak punya MSAA 2D).
 
 ### 6.2 Bayangan palsu
 

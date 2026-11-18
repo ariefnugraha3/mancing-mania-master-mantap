@@ -50,7 +50,14 @@ func test_stream_conversion() -> bool:
 	check_eq(stream.format, AudioStreamWAV.FORMAT_16_BITS, "16-bit PCM")
 	check_eq(stream.mix_rate, 48000, "mix rate")
 	check_eq(stream.stereo, false, "mono")
-	check_eq(stream.data.size(), samples.size() * 2, "two bytes per sample")
+	check_eq(stream.data.size(), (samples.size() + SfxRenderer.TAIL_PAD) * 2, "two bytes per sample, plus the tail pad")
+	check(_tail_is_padded(stream, samples.size()), "a one-shot ends in silence past its last sample")
+
+	# A loop repeats its first samples past the loop point (revision 6.11).
+	var looped := SfxRenderer.to_stream(samples, 48000, true)
+	check_eq(looped.loop_mode, AudioStreamWAV.LOOP_FORWARD, "loops")
+	check_eq(looped.loop_end, samples.size(), "the loop ends before the pad")
+	check(_tail_is_padded(looped, samples.size()), "the pad repeats the start of the loop")
 
 	var cached := AudioManager.get_sfx_stream(&"ui_click")
 	check(cached != null, "manager returns a stream")
@@ -185,7 +192,8 @@ func test_lake_ambience_is_synthesized() -> bool:
 		var stream := player.stream as AudioStreamWAV
 		check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % layer)
 		check_eq(player.bus, &"Ambience", "%s plays on the Ambience bus" % layer)
-		var seconds := float(stream.data.size() / 2) / float(stream.mix_rate)
+		check(_tail_is_padded(stream, stream.loop_end), "%s has its tail pad" % layer)
+		var seconds := float(stream.loop_end) / float(stream.mix_rate)
 		check_near(seconds, float(AmbienceEngine.LAKE_LAYERS[layer][0]), 0.01, "%s loop length" % layer)
 		# The loop must contain real signal, not silence.
 		var loudest := 0
@@ -247,8 +255,8 @@ func test_market_ambience_is_synthesized() -> bool:
 		if not check(stream != null, "%s layer has a stream" % layer):
 			continue
 		check_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % layer)
-		@warning_ignore("integer_division")
-		var seconds := float(stream.data.size() / 2) / float(stream.mix_rate)
+		check(_tail_is_padded(stream, stream.loop_end), "%s has its tail pad" % layer)
+		var seconds := float(stream.loop_end) / float(stream.mix_rate)
 		check_near(seconds, float(AmbienceEngine.MARKET_LAYERS[layer][0]), 0.01, "%s loop length" % layer)
 		var loudest := 0
 		for index: int in range(0, stream.data.size() - 1, 2):
@@ -327,6 +335,15 @@ func test_music_engine_plays_states_and_songs() -> bool:
 	AudioManager.set_music_state(&"boxing")
 	check(await wait_until(func() -> bool: return music.get_loop_stream(&"boxing") != null, 60.0), "the boxing loop renders in the background")
 	check_eq(music.get_loop_stream(&"boxing").loop_mode, AudioStreamWAV.LOOP_FORWARD, "and loops")
+	check(_tail_is_padded(music.get_loop_stream(&"boxing"), music.get_loop_stream(&"boxing").loop_end), "the loop has its tail pad")
+	# The title theme, and the water's first take prepared behind it (revision 6.9).
+	AudioManager.set_music_state(&"menu")
+	check(await wait_until(func() -> bool: return music.get_loop_stream(&"menu") != null, 60.0), "the title theme renders")
+	check(await wait_until(func() -> bool: return music.get_loop_stream(&"fishing") != null, 60.0), "and the water's first take is ready before Play")
+	check_eq(music.get_loop_stream(&"fishing").loop_mode, AudioStreamWAV.LOOP_DISABLED, "a take of the water plays once; quiet follows it")
+	@warning_ignore("integer_division")
+	var take_samples := music.get_loop_stream(&"fishing").data.size() / 2 - SfxRenderer.TAIL_PAD
+	check(_tail_is_padded(music.get_loop_stream(&"fishing"), take_samples), "and ends in a silent tail pad")
 	AudioManager.set_music_state(&"market")
 	check_eq(music.get_state(), &"market", "the Market has no music of its own")
 
@@ -345,6 +362,7 @@ func test_music_engine_plays_states_and_songs() -> bool:
 	check(times[-1] > times[0], "and moves while the song plays")
 	music.stop_song()
 	AudioManager.set_music_state(&"silence")
+	check(await wait_until(func() -> bool: return not music.is_piece_playing() and not music.is_rendering(), 10.0), "silence fades the piece out")
 	return true
 
 
@@ -363,4 +381,27 @@ func test_calibration_suggests_the_median_offset() -> bool:
 	for count: int in 12:
 		early.append(beats[count] - 0.25)
 	check_eq(CalibrationOverlay.suggest_offset_ms(early, beats), -150, "the suggestion is clamped to -150 ms")
+	return true
+
+
+# Revision 6.11: buses that go missing are appended with set_bus_count(), never
+# add_bus(), which can reorder buses on some export platforms.
+func test_audio_code_never_calls_add_bus() -> bool:
+	for path: String in ["res://autoload/audio_manager.gd", "res://scripts/audio/music_engine.gd", "res://scripts/audio/ambience_engine.gd"]:
+		check(not FileAccess.get_file_as_string(path).contains("AudioServer.add_bus("), "%s does not call add_bus()" % path.get_file())
+	for bus_id: StringName in AudioManager.CHILD_BUSES:
+		check(AudioServer.get_bus_index(bus_id) > 0, "%s exists after Master" % bus_id)
+	return true
+
+
+## A stream made in code ends in SfxRenderer.TAIL_PAD extra samples after its
+## first `count`: the loop's first samples for a loop, silence for a one-shot.
+func _tail_is_padded(stream: AudioStreamWAV, count: int) -> bool:
+	if stream == null or count <= 0 or stream.data.size() != (count + SfxRenderer.TAIL_PAD) * 2:
+		return false
+	var looping := stream.loop_mode != AudioStreamWAV.LOOP_DISABLED
+	for pad: int in SfxRenderer.TAIL_PAD:
+		var expected := stream.data.decode_s16((pad % count) * 2) if looping else 0
+		if stream.data.decode_s16((count + pad) * 2) != expected:
+			return false
 	return true

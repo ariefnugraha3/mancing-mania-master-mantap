@@ -195,6 +195,41 @@ func test_corrupt_save_offers_recovery() -> bool:
 	return true
 
 
+# GDD 135, AND-004 (revision 6.11): Android Back goes back one step at a time
+# and never closes the game without asking.
+func test_android_back_on_the_menu_goes_one_step_back_and_asks_before_quitting() -> bool:
+	check(not bool(ProjectSettings.get_setting("application/config/quit_on_go_back")), "project.godot: Back does not quit")
+	check(not tree.quit_on_go_back, "and the running game agrees")
+	if not check(await _boot_to_menu(), "boot reaches the Main Menu"):
+		return true
+	var menu := tree.current_scene
+
+	# A child screen closes first.
+	_button("SettingsButton").pressed.emit()
+	var settings := menu.get_node("SettingsOverlay") as OverlayPanel
+	check(await wait_until(settings.is_open, 2.0), "Settings opens")
+	InputManager.handle_back_request()
+	await wait_frames(3)
+	check(not settings.is_open(), "Back closes Settings")
+	check(not _dialog().is_open(), "and asks nothing yet")
+
+	# With nothing open, Back asks before the game closes.
+	InputManager.handle_back_request()
+	check(await wait_until(_dialog().is_open, 2.0), "Back on the bare menu asks first")
+	check_eq((_dialog().footer.get_child(0) as Button).text, TextDb.t(&"menu.quit_confirm.stay"), "KEEP PLAYING comes first")
+	check_eq((_dialog().footer.get_child(1) as Button).text, TextDb.t(&"menu.quit_confirm.quit"), "QUIT is the other choice")
+	InputManager.handle_back_request()
+	await wait_frames(3)
+	check(not _dialog().is_open(), "Back again keeps playing")
+	check(tree.current_scene == menu, "still on the menu")
+	InputManager.handle_back_request()
+	check(await wait_until(_dialog().is_open, 2.0), "and the question comes back on the next Back")
+	_dialog().footer.get_child(0).pressed.emit()
+	await wait_frames(3)
+	check(not _dialog().is_open(), "KEEP PLAYING closes it")
+	return true
+
+
 # --- Fishing scene (Milestone 2 exit gate) ----------------------------------
 
 ## New Game from the menu, then wait until the lake is on screen.
@@ -311,6 +346,31 @@ func test_pause_freezes_the_lake_and_quit_returns_to_menu() -> bool:
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"main_menu") >= 2, BOOT_TIMEOUT_SEC), "QUIT TO MENU returns to the Main Menu")
 	check(not tree.paused, "the tree is not left paused")
 	DebugService.clear_forces()
+	return true
+
+
+# GDD 135, AND-003 (revision 6.11): Android Back during play opens Pause, and
+# Back again resumes. A Back pressed while a scene loads is ignored.
+func test_android_back_pauses_play_and_back_again_resumes() -> bool:
+	if not check(await _enter_lake(), "New Game reaches the lake"):
+		return true
+	var scene := tree.current_scene
+	var pause := scene.get_node("PauseOverlay") as PauseOverlay
+	InputManager.handle_back_request()
+	check(await wait_until(pause.is_open, 2.0), "Back opens the pause menu")
+	check(tree.paused, "the game is paused")
+	InputManager.handle_back_request()
+	await wait_frames(3)
+	check(not pause.is_open(), "Back again closes the pause menu")
+	check(not tree.paused, "and play goes on")
+	check(tree.current_scene == scene, "still at the lake")
+
+	SceneRouter.goto_main_menu()
+	check(await wait_until(SceneRouter.is_transitioning, 2.0), "a scene change starts")
+	InputManager.handle_back_request()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"main_menu") >= 2, BOOT_TIMEOUT_SEC), "the menu arrives")
+	await wait_frames(4)
+	check(not _dialog().is_open(), "a Back pressed during loading did nothing")
 	return true
 
 
@@ -646,45 +706,31 @@ func test_first_catch_is_boxed_and_a_win_fills_the_bucket() -> bool:
 	return true
 
 
-# GDD 176.10 and 176.11: the lesson can be lost for free; a real loss costs the fish only.
-func test_losing_the_lesson_is_a_retry_and_a_real_loss_costs_only_the_fish() -> bool:
+# GDD 176.10 and 176.11 (revision 6.10): losing a duel, the very first one
+# included, lets the fish go back to the water. Nothing else is lost.
+func test_losing_a_duel_lets_the_fish_go_and_costs_nothing_else() -> bool:
 	DebugService.set_forced_result(&"loss")
 	if not check(await _enter_boxing(&"catfish_bruiser"), "reach the ring"):
 		return true
-	var scene := tree.current_scene
-	var controller := scene.get_node("BoxingController") as BoxingController
-	var overlay := scene.get_node("ResultOverlay") as DuelResultOverlay
-	check(await wait_until(overlay.is_open, 8.0), "losing the first duel shows the retry")
-	check_eq(overlay.get_title_text(), TextDb.t(&"duel.result.retry.title"), "it is the retry, not a loss")
-	check_eq(GameState.get_stat(&"duel_losses"), 0, "nothing was recorded")
-	check_eq(GameState.get_fish_book_entry(&"catfish_bruiser")["losses"], 0, "no Fish Book loss")
-	check_eq(GameState.current_fish, &"catfish_bruiser", "the fish is still on its stool")
-
-	DebugService.clear_forces()
-	overlay.footer.get_child(0).pressed.emit()
-	check(await wait_until(func() -> bool: return controller.get_state() == BoxingController.STATE_INTRO or controller.get_state() == BoxingController.STATE_FIGHTING, 3.0), "the duel starts again")
-	check_eq(controller.get_snapshot()["player_hp"], 100.0, "with full HP")
-
-	# Past the lesson a loss is a loss: the fish leaves, everything else stays.
-	GameState.set_tutorial_seen(&"boxing_seen")
+	check(not GameState.is_tutorial_seen(&"boxing_seen"), "this is the first duel, the one with the hints")
 	GameState.add_bucket_item(&"trash_can", 2)
 	var cash := GameState.get_cash()
-	DebugService.set_forced_result(&"loss")
-	GameState.record_encounter(&"carp_golden")
-	GameState.current_fish = &"carp_golden"
-	GameState.current_catch = {"fish_id": &"carp_golden", "weight_kg": 2.0, "is_big_one": false, "seed": 3}
-	SceneRouter.goto_duel(&"boxing", &"carp_golden")
-	if not check(await wait_until(func() -> bool: return _finished_transitions.count(&"boxing") >= 2, BOOT_TIMEOUT_SEC), "a second fish reaches the ring"):
-		return true
-	await wait_frames(3)
 	DebugService.set_auto_dialogue(true)
 	var loss_scene := await _await_result()
-	if not check(loss_scene != null and loss_scene.name == &"Result", "the Result scene follows the loss"):
+	if not check(loss_scene != null and loss_scene.name == &"Result", "the loss goes to the Result scene, not to a retry"):
 		return true
 	check_eq((loss_scene.get_node("ResultCanvas/SafeRoot/ResultTitle") as Label).text, TextDb.t(&"duel.result.loss.title"), "THE FISH GOT AWAY")
-	check_eq(GameState.get_bucket_quantity(&"carp_golden"), 0, "the carp is gone")
+	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 0, "the catfish went back to the water")
 	check_eq(GameState.get_stat(&"duel_losses"), 1, "the loss is recorded")
+	check_eq(GameState.get_stat(&"duel_wins"), 0, "and is no win")
+	check_eq(GameState.get_fish_book_entry(&"catfish_bruiser")["losses"], 1, "the Fish Book counts it")
+	check(not GameState.is_fish_discovered(&"catfish_bruiser"), "an escaped fish is not caught")
+	check_eq(GameState.current_fish, &"", "no catch is pending")
 	check_eq(GameState.get_cash(), cash, "no cash lost")
+	check_eq(GameState.get_bucket_quantity(&"trash_can"), 2, "the Bucket keeps the rest")
+	check(not GameState.is_tutorial_seen(&"boxing_seen"), "the hints stay for the next boxing duel")
+	var saved: Dictionary = read_json(SaveManager.get_save_path())
+	check_eq(int(saved["bucket"]["catfish_bruiser"]), 0, "the save has no catfish either")
 	await _continue_from_result(loss_scene)
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "back to the lake")
 	DebugService.clear_forces()

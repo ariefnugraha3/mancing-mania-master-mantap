@@ -1,7 +1,8 @@
 extends Node
 ## Main Menu (GDD 84, 85, 167.9, 168.2): Continue, New Game with a two-step
 ## overwrite confirmation, How To Play and Settings, plus save recovery when
-## the save on disk could not be read.
+## the save on disk could not be read. Android Back here asks before the game
+## closes (GDD 135).
 
 ## The button column fills a phone's width and stops growing on a tablet.
 const BUTTON_COLUMN_MAX_WIDTH := 400.0
@@ -273,6 +274,29 @@ func _on_credits_pressed() -> void:
 func _on_version_label_input(event: InputEvent) -> void:
 	if InputActions.is_primary_press(event):
 		DebugService.notify_version_label_tapped()
+
+
+## Android Back with nothing open on the menu (GDD 135): ask before the game
+## closes, and save first. Back again keeps playing. A browser tab cannot
+## close itself, so the Web build has nothing to ask.
+func handle_back() -> void:
+	if _busy or PlatformService.is_web():
+		return
+	_busy = true
+	var choice := await _dialog.prompt(
+		TextDb.t(&"menu.quit_confirm.title"),
+		TextDb.t(&"menu.quit_confirm.body") if GameState.has_active_game() else "",
+		[
+			ModalDialog.option(&"stay", TextDb.t(&"menu.quit_confirm.stay"), &"", true),
+			ModalDialog.option(&"quit", TextDb.t(&"menu.quit_confirm.quit"), UiTokens.TYPE_DANGER_BUTTON),
+		])
+	if choice == &"quit":
+		if GameState.has_active_game():
+			SaveManager.save_game(&"quit")
+		get_tree().quit()
+		return
+	_busy = false
+	_refresh()
 
 
 # --- Flows ------------------------------------------------------------------

@@ -4,6 +4,13 @@ extends Button
 ## into its lip (theme), a quick press-in, a tiny overshoot on release and a
 ## procedural click. A disabled button answers with a dry tap and does nothing
 ## else. `icon_id` puts a procedural icon (IconPainter) before the text.
+##
+## Centred text beside a left icon: Godot centres a button's text in the
+## space after its icon, which pushes the words right of the middle. When
+## the button is wide enough, this script draws the icon itself at the left
+## padding instead, so Godot centres the text across the whole button, and
+## the button's minimum size does not grow. On a button too narrow for that
+## (the text would reach the icon), Godot lays the icon out as before.
 
 @export var click_sfx: StringName = &"ui_click"
 @export var min_height: int = UiTokens.TOUCH_TARGET_PREFERRED
@@ -13,22 +20,112 @@ extends Button
 @export var icon_id: StringName = &"":
 	set(value):
 		icon_id = value
-		icon = IconTexture.make(value, icon_pixels) if value != &"" else null
+		_icon_texture = IconTexture.make(value, icon_pixels) if value != &"" else null
+		_drawn_icon = false
+		icon = _icon_texture
+		if is_inside_tree():
+			_queue_icon_layout()
 
 var _tween: Tween
 ## Side padding asked for with set_side_padding(), or -1 for the theme's.
 var _side_padding: float = -1.0
+## The icon `icon_id` made (Button.icon is cleared while it is drawn here).
+var _icon_texture: Texture2D
+## True while this script draws the icon, so the text centres on the button.
+var _drawn_icon: bool = false
+var _layout_queued: bool = false
 
 
 func _ready() -> void:
 	custom_minimum_size.y = maxf(custom_minimum_size.y, float(min_height))
-	if icon_id != &"" and icon == null:
-		icon = IconTexture.make(icon_id, icon_pixels)
+	if icon_id != &"" and _icon_texture == null:
+		_icon_texture = IconTexture.make(icon_id, icon_pixels)
+		icon = _icon_texture
 	button_down.connect(_on_button_down)
 	button_up.connect(_on_button_up)
 	pressed.connect(_on_pressed)
 	if _side_padding >= 0.0:
 		_apply_side_padding()
+	resized.connect(_queue_icon_layout)
+	minimum_size_changed.connect(_queue_icon_layout)
+	_queue_icon_layout()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED and is_node_ready():
+		_queue_icon_layout()
+
+
+func _draw() -> void:
+	if not _drawn_icon or _icon_texture == null:
+		return
+	var state := _style_state()
+	var style := get_theme_stylebox(state)
+	var side := _icon_side()
+	var top := style.get_margin(SIDE_TOP)
+	var bottom := style.get_margin(SIDE_BOTTOM)
+	var at := Vector2(style.get_margin(SIDE_LEFT), top + (size.y - top - bottom - side) * 0.5)
+	draw_texture_rect(_icon_texture, Rect2(at, Vector2(side, side)), false, get_theme_color(StringName("icon_%s_color" % state)))
+
+
+## True while the icon is drawn by this script (text centred on the button).
+func is_text_centred() -> bool:
+	return _drawn_icon
+
+
+func _queue_icon_layout() -> void:
+	if not _layout_queued:
+		_layout_queued = true
+		_update_icon_layout.call_deferred()
+
+
+## Chooses who draws the icon: this script (text centred on the whole
+## button) when the text clears the icon, Godot (text centred after the
+## icon) when it would not.
+func _update_icon_layout() -> void:
+	_layout_queued = false
+	if not is_inside_tree() or _icon_texture == null:
+		return
+	var draw_here := _has_side_icon() and _centred_text_clears_icon()
+	if draw_here == _drawn_icon and (icon == null) == draw_here:
+		return
+	_drawn_icon = draw_here
+	icon = null if draw_here else _icon_texture
+	queue_redraw()
+
+
+## An icon left of centred text: the layout that pulls the text off centre.
+func _has_side_icon() -> bool:
+	return text != "" and icon_alignment == HORIZONTAL_ALIGNMENT_LEFT 		and vertical_icon_alignment == VERTICAL_ALIGNMENT_CENTER and alignment == HORIZONTAL_ALIGNMENT_CENTER
+
+
+func _centred_text_clears_icon() -> bool:
+	var style := get_theme_stylebox(&"normal")
+	var font := get_theme_font(&"font")
+	if style == null or font == null:
+		return false
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, get_theme_font_size(&"font_size")).x
+	var icon_end := style.get_margin(SIDE_LEFT) + _icon_side() + float(get_theme_constant(&"h_separation"))
+	return (size.x - text_width) * 0.5 >= icon_end
+
+
+## The icon's side in points, capped by the theme like Button's own icon.
+func _icon_side() -> float:
+	var side := float(_icon_texture.get_width())
+	var max_width := get_theme_constant(&"icon_max_width")
+	return minf(side, float(max_width)) if max_width > 0 else side
+
+
+## The style (and icon colour) name for the button's current look.
+func _style_state() -> String:
+	match get_draw_mode():
+		DRAW_DISABLED:
+			return "disabled"
+		DRAW_PRESSED, DRAW_HOVER_PRESSED:
+			return "pressed"
+		DRAW_HOVER:
+			return "hover"
+	return "normal"
 
 
 ## Narrows the side padding of every state, so a small thumb button keeps

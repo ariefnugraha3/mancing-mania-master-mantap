@@ -374,11 +374,7 @@ func _finish_loop(layer: StringName, samples: PackedFloat32Array, seconds: float
 		var blend := float(index) / float(fade)
 		samples[index] = samples[index] * blend + samples[length + index] * (1.0 - blend)
 	samples.resize(length)
-	var stream := SfxRenderer.to_stream(samples, LOOP_RATE)
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = 0
-	stream.loop_end = length
-	_players[layer].stream = stream
+	_players[layer].stream = SfxRenderer.to_stream(samples, LOOP_RATE, true)
 
 
 ## A short phrase of chirps: sine tones with quick pitch sweeps. The variants
