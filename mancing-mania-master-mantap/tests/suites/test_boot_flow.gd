@@ -551,6 +551,97 @@ func test_leaving_the_market_plays_the_fish_book_call() -> bool:
 	return true
 
 
+# Revision 6.12: on a phone a finger drags a Market page from anywhere on it,
+# its cards and buttons included. A drag that starts on a BUY button scrolls
+# and buys nothing; a tap still presses the button.
+func test_market_pages_scroll_under_a_finger() -> bool:
+	if not check(await _enter_market(), "reach the Market"):
+		return true
+	var scene := tree.current_scene
+	var talk := scene.get_node("DialogueBox") as DialogueBox
+	while talk.is_playing():
+		talk.skip()
+		await wait_frames(2)
+	var hud := scene.get_node("MarketCanvas") as MarketHud
+	# Enough cash that BAIT can be bought, so a press would really buy it.
+	GameState.debug_set_cash(1000000)
+	hud.select_tab(MarketHud.TAB_UPGRADES, false)
+	await wait_frames(4)
+	var page := hud.upgrade_panel
+	check(not page.get_buy_button(&"bait").disabled, "BAIT is affordable")
+	var scroll := page.get_node("Scroll") as ScrollContainer
+	check(scroll.get_v_scroll_bar().max_value > scroll.size.y + 40.0, "the Upgrades page is longer than its panel")
+	var was_emulating := Input.emulate_touch_from_mouse
+	# What a phone reports: a touchscreen, so ScrollContainer follows drags.
+	Input.emulate_touch_from_mouse = true
+	check(DisplayServer.is_touchscreen_available(), "the run behaves like a touchscreen")
+
+	var card := page.body.get_child(0) as Control
+	await _finger_drag(card, Vector2(40.0, 14.0), Vector2(0.0, -160.0))
+	check(scroll.scroll_vertical > 40, "a drag on an upgrade card scrolls the page (%d)" % scroll.scroll_vertical)
+
+	scroll.scroll_vertical = 0
+	await wait_frames(3)
+	var button := page.get_buy_button(&"bait")
+	var presses := [0]
+	button.pressed.connect(func() -> void: presses[0] += 1)
+	await _finger_drag(button, button.size * 0.5, Vector2(0.0, -160.0))
+	check(scroll.scroll_vertical > 40, "a drag that starts on a BUY button scrolls too (%d)" % scroll.scroll_vertical)
+	check_eq(presses[0], 0, "and buys nothing")
+	check(button.scale.is_equal_approx(Vector2.ONE) or await wait_until(func() -> bool: return button.scale.is_equal_approx(Vector2.ONE), 1.0), "the button springs back after the cancelled press")
+
+	scroll.scroll_vertical = 0
+	await wait_frames(3)
+	await _finger_drag(button, button.size * 0.5, Vector2(0.0, 3.0))
+	check_eq(presses[0], 1, "a tap that wobbles a little still presses it")
+	Input.emulate_touch_from_mouse = was_emulating
+
+	# Every page of the ledger: nothing in it holds a drag back.
+	for tab_id: StringName in MarketHud.TAB_ORDER:
+		hud.select_tab(tab_id, false)
+		await wait_frames(2)
+		var holding := PackedStringArray()
+		for panel: Node in scene.find_children("*", "MarketPanel", true, false):
+			var panel_scroll := panel.get_node("Scroll") as ScrollContainer
+			for node: Node in panel_scroll.find_children("*", "Control", true, false):
+				if TouchScroll.should_pass(node as Control):
+					holding.append(str(panel_scroll.get_path_to(node)))
+		check_empty(holding, "%s: nothing holds a drag back" % tab_id)
+	return true
+
+
+## A finger on `control` at `local`, moved by `travel` in a few steps, then lifted.
+func _finger_drag(control: Control, local: Vector2, travel: Vector2) -> void:
+	var to_window := tree.root.get_final_transform() * control.get_global_transform_with_canvas()
+	var at := to_window * local
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.button_mask = MOUSE_BUTTON_MASK_LEFT
+	press.position = at
+	press.global_position = at
+	tree.root.push_input(press)
+	await wait_frames(1)
+	var steps := 6
+	var step := (to_window.basis_xform(travel)) / float(steps)
+	for index: int in steps:
+		at += step
+		var motion := InputEventMouseMotion.new()
+		motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+		motion.position = at
+		motion.global_position = at
+		motion.relative = step
+		tree.root.push_input(motion)
+		await wait_frames(1)
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	release.position = at
+	release.global_position = at
+	tree.root.push_input(release)
+	await wait_frames(2)
+
+
 func test_market_pause_and_both_screen_shapes() -> bool:
 	if not check(await _enter_market({&"catfish_bruiser": 1}), "reach the Market"):
 		return true

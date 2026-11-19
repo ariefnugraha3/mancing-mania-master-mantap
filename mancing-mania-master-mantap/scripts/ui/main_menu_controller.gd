@@ -150,7 +150,7 @@ func _refresh() -> void:
 func _focus_later(button: GameButton) -> void:
 	await get_tree().process_frame
 	if is_inside_tree() and button.is_inside_tree() and not _dialog.is_open():
-		button.grab_focus()
+		InputManager.give_focus(button)
 
 
 # --- Logo and entrance -------------------------------------------------------

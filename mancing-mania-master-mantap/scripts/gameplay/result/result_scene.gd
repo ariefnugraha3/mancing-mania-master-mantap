@@ -76,7 +76,7 @@ func _ready() -> void:
 		StoryDirector.complete_event(&"story_arowana_first_win", false)
 		SaveManager.save_game(&"story")
 	_continue.disabled = false
-	_continue.grab_focus()
+	InputManager.give_focus(_continue)
 	_controller.start_auto_continue()
 
 

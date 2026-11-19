@@ -33,7 +33,7 @@ func build_content() -> void:
 	content.add_child(_status)
 	_result = make_label("", UiTokens.TYPE_SMALL)
 	content.add_child(_result)
-	footer.vertical = true
+	stack_footer = true
 	_accept = make_button(TextDb.t(&"calibration.accept"), UiTokens.TYPE_CTA_BUTTON)
 	_accept.pressed.connect(_on_accept)
 	footer.add_child(_accept)

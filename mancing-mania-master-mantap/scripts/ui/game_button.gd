@@ -54,6 +54,10 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_THEME_CHANGED and is_node_ready():
 		_queue_icon_layout()
+	elif what == NOTIFICATION_SCROLL_BEGIN and is_node_ready():
+		# The finger started on this button but dragged the list: the press is
+		# cancelled (no button_up follows), so the button rises again here.
+		_animate_scale(1.0, UiTokens.RELEASE_SEC, false)
 
 
 func _draw() -> void:

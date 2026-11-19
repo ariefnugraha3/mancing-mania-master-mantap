@@ -8,6 +8,7 @@ const SCROLL_PX_PER_SEC := 46.0
 const END_HOLD_SEC := 2.5
 const LINE_GAP := {"heading": 18, "sub": 54, "role": 30, "name": 6, "final": 40}
 const FONT_SIZES := {"heading": 40, "sub": 20, "role": 16, "name": 26, "final": 22}
+const SKIP_BAR_WIDTH := 180.0
 
 @onready var _lake_set: Node3D = $World/LakeSet
 @onready var _camera: DioramaCamera = $World/CreditsCamera
@@ -109,7 +110,10 @@ func _layout() -> void:
 	var width := minf(640.0, area.x - 32.0)
 	_roll.size = Vector2(width, 0.0)
 	_roll.position.x = (area.x - width) * 0.5
-	_skip.size = Vector2(180.0, 10.0)
-	_skip.position = Vector2(area.x - 196.0, area.y - 28.0)
-	_skip_label.position = Vector2(area.x - 196.0, area.y - 56.0)
+	# HOLD TO SKIP and its bar sit centred at the bottom, under the roll.
+	_skip.size = Vector2(SKIP_BAR_WIDTH, 10.0)
+	_skip.position = Vector2((area.x - SKIP_BAR_WIDTH) * 0.5, area.y - 28.0)
+	_skip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_skip_label.size = Vector2(area.x, _skip_label.get_minimum_size().y)
+	_skip_label.position = Vector2(0.0, area.y - 56.0)
 	_skip_label.visible = true

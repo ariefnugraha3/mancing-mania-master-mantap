@@ -104,6 +104,12 @@ static func apply_quality(tree: SceneTree) -> void:
 	var root := tree.root
 	root.scaling_3d_scale = float(quality["scale_3d"])
 	root.msaa_3d = msaa_for(quality)
+	# The phone app draws straight into the screen instead of into a
+	# screen-sized texture that is copied to the screen every frame
+	# (revision 6.12): one full-screen buffer less in memory and one copy less
+	# per frame. Nothing in the game reads the screen back.
+	if PlatformService.is_mobile():
+		RenderingServer.viewport_set_render_direct_to_screen(root.get_viewport_rid(), true)
 	if tree.current_scene != null:
 		apply_quality_to(tree.current_scene)
 

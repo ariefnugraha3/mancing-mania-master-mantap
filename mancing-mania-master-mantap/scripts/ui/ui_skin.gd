@@ -243,6 +243,41 @@ static func make_display_font(fallback: Font) -> FontVariation:
 	return font
 
 
+## Drops the letters every size and outline of the game's two fonts has drawn
+## so far (revision 6.12). Each size keeps its letters in atlas textures that
+## nothing frees, and a phone draws them at its full screen resolution, so
+## every new scene's titles used to stay in memory for the rest of the
+## session. The Scene Router calls this while the screen is black between
+## two scenes; the next scene draws only the letters it shows. Returns how
+## many size caches were dropped.
+static func release_glyph_caches() -> int:
+	var dropped := 0
+	for path: String in [UiTokens.FONT_BODY_FILE, UiTokens.FONT_DISPLAY_FILE]:
+		var file := load(path) as FontFile
+		if file == null:
+			continue
+		for index: int in file.get_cache_count():
+			dropped += file.get_size_cache_list(index).size()
+			file.clear_size_cache(index)
+	return dropped
+
+
+## Bytes of the letter atlases the game's two fonts hold right now.
+static func glyph_cache_bytes() -> int:
+	var bytes := 0
+	for path: String in [UiTokens.FONT_BODY_FILE, UiTokens.FONT_DISPLAY_FILE]:
+		var file := load(path) as FontFile
+		if file == null:
+			continue
+		for index: int in file.get_cache_count():
+			for size: Vector2i in file.get_size_cache_list(index):
+				for page: int in file.get_texture_count(index, size):
+					var image := file.get_texture_image(index, size, page)
+					if image != null:
+						bytes += image.get_data_size()
+	return bytes
+
+
 ## Big friendly text over the 3D scene: a filled face, a thick cocoa outline
 ## and a soft drop shadow, like painted letters on a sign.
 static func sign_text(label: Label, font_size: int, fill: Color = UiTokens.CREAM_50, outline: int = 12) -> void:

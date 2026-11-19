@@ -92,8 +92,10 @@ func _ready() -> void:
 	_build_shadow()
 	_splash_small = _build_splash(22, 1.5)
 	_splash_large = _build_splash(48, 2.6)
-	# The bite "!" speaks in the comic display face, like the duel signs.
-	_bite_marker.font = UiSkin.heavy_font()
+	# The bite "!" speaks in the comic display face, like the duel signs. It
+	# takes Chewy alone: Chewy has "!", and the heavy font's Fredoka fallback
+	# would also draw it at this huge size, 4 MB of atlas for one mark.
+	_bite_marker.font = load(UiTokens.FONT_DISPLAY_FILE) as FontFile
 	_bite_marker.visible = false
 	_float_root.visible = false
 	_float_root.position = _float_spot

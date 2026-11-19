@@ -116,14 +116,14 @@ func _run(step: Dictionary) -> void:
 		_cut_to(str(step["cam"]))
 	elif step.has("say"):
 		var who := str(step["say"])
-		_ui.show_line(StoryTimelines.speaker_name(StringName(who)), TextDb.t(StringName(step["text"])))
+		_ui.show_line(StoryTimelines.speaker_name(StringName(who)), StoryTimelines.line_text(StringName(step["text"])))
 		await _wait_for_advance()
 	elif step.has("phone"):
 		_ui.show_phone_line(TextDb.t(StringName(step["phone"])))
 		await _wait_for_advance()
 	elif step.has("chat"):
 		var who := str(step["chat"])
-		_ui.show_chat(TextDb.t(StringName("speaker.%s" % who)) if who != "darto" else TextDb.t(&"speaker.darto"), TextDb.t(StringName(step["text"])), who == "darto", StringName(who))
+		_ui.show_chat(TextDb.t(StringName("speaker.%s" % who)) if who != "darto" else TextDb.t(&"speaker.darto"), StoryTimelines.line_text(StringName(step["text"])), who == "darto", StringName(who))
 		await _wait_for_advance()
 	elif step.has("note"):
 		var keys: Array = step["note"]

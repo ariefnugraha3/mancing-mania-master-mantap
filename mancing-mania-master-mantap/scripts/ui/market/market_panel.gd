@@ -37,6 +37,8 @@ func _ready() -> void:
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.follow_focus = true
 	add_child(_scroll)
+	# A finger drags the page from anywhere on its cards and buttons.
+	TouchScroll.attach(_scroll)
 
 	# Room on the right keeps the numbers clear of the scroll bar. The scroll
 	# area clips to its rectangle, so there is also room all round for the

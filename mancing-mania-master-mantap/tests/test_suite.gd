@@ -35,10 +35,15 @@ func after_each() -> void:
 
 
 func run() -> void:
+	# `-- --test=<name>` runs only the tests whose name contains <name>.
+	var only := ""
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--test="):
+			only = argument.trim_prefix("--test=")
 	await before_all()
 	for method: Dictionary in get_method_list():
 		var method_name: String = method["name"]
-		if not method_name.begins_with("test_"):
+		if not method_name.begins_with("test_") or (only != "" and not method_name.contains(only)):
 			continue
 		_current_test = method_name
 		_current_failed = false

@@ -76,13 +76,38 @@ func test_every_story_line_exists_in_the_text_table() -> bool:
 # NAR-002
 func test_no_placeholder_in_the_story() -> bool:
 	var found := PackedStringArray()
-	var markers: Array[String] = ["todo", "tbd", "placeholder", "lorem", "xxx", "fixme", "[", "{"]
-	for key: String in StoryTimelines.all_keys():
-		var text := TextDb.t(StringName(key)).to_lower()
-		for marker: String in markers:
-			if text.contains(marker):
-				found.append("%s: %s" % [key, text])
+	var markers: Array[String] = ["todo", "tbd", "placeholder", "lorem", "xxx", "fixme", "[", "{", "}"]
+	var language := TextDb.get_language()
+	for each: String in TextDb.LANGUAGES:
+		TextDb.set_language(each)
+		for key: String in StoryTimelines.all_keys():
+			# As shown: a line that quotes the player's numbers has them filled in.
+			var text := StoryTimelines.line_text(StringName(key)).to_lower()
+			for marker: String in markers:
+				if text.contains(marker):
+					found.append("%s (%s): %s" % [key, each, text])
+	TextDb.set_language(language)
 	check_empty(found, "no story line is a placeholder")
+	return true
+
+
+## The family's tally in the epilogue is the player's own: how often the
+## catfish won a duel against Darto.
+func test_the_epilogue_counts_the_catfish_wins() -> bool:
+	GameState.new_game()
+	for loss: int in 3:
+		GameState.record_fish_loss(&"catfish_bruiser")
+	GameState.record_fish_loss(&"tilapia_gym_rat")
+	var language := TextDb.get_language()
+	for each: String in TextDb.LANGUAGES:
+		TextDb.set_language(each)
+		var line := StoryTimelines.line_text(&"story.story_final_family.03")
+		check(line.contains("3") and not line.contains("4") and not line.contains("{"), "%s: the line quotes the catfish's 3 wins (%s)" % [each, line])
+	TextDb.set_language(language)
+	var spoken := StoryTimelines.to_dialogue([{"say": "rini", "text": "story.story_final_family.03"}])
+	check(spoken[0]["text"].contains("3"), "and so does the dialogue box")
+	GameState.new_game()
+	check(StoryTimelines.line_text(&"story.story_final_family.03").contains("0"), "a player the catfish never beat hears 0")
 	return true
 
 
@@ -432,6 +457,16 @@ func test_menu_credits_return_to_the_menu() -> bool:
 		return true
 	var credits := tree.current_scene
 	check(credits.get_node("CreditsCanvas/SafeRoot/Roll").get_child_count() >= StoryTimelines.get_credits().size(), "every credit line is in the roll")
+	# HOLD TO SKIP and its bar sit in the middle of the screen, one above the other.
+	await wait_frames(2)
+	var safe_root := credits.get_node("CreditsCanvas/SafeRoot") as Control
+	var label := credits.get_node("CreditsCanvas/SafeRoot/SkipLabel") as Label
+	var bar := credits.get_node("CreditsCanvas/SafeRoot/SkipHoldIndicator") as Control
+	var middle := safe_root.size.x * 0.5
+	check_near(bar.position.x + bar.size.x * 0.5, middle, 0.5, "the hold bar is centred")
+	check_eq(label.horizontal_alignment, HORIZONTAL_ALIGNMENT_CENTER, "HOLD TO SKIP is centred")
+	check_near(label.position.x + label.size.x * 0.5, middle, 0.5, "on the same middle as the bar")
+	check(label.position.y + label.size.y <= bar.position.y + 2.0, "the text sits above the bar")
 	credits.finish(true)
 	check(await _wait_for_scene(&"main_menu"), "and they return to the menu")
 	check(not bool(GameState.get_story_value(&"postgame_unlocked")), "without unlocking anything")
@@ -466,6 +501,16 @@ func test_paying_the_debt_runs_the_ending_into_the_postgame() -> bool:
 	tree.current_scene.finish(true)
 	check(await _wait_for_scene(&"story", 3), "after the credits, the post-game unlock")
 	check_eq(_story_controller().event_id, &"story_postgame_unlock", "FREE FISHING MODE UNLOCKED")
+	# Revision 6.12: the unlock card sits like every popup card, in the middle
+	# of the screen and clear of its sides (it was full width, at 28% height).
+	var story_ui := tree.current_scene.get_node("StoryCanvas/StoryUI") as StoryUi
+	if check(await wait_until(story_ui.is_unlock_visible, 5.0), "the unlock card shows"):
+		await wait_frames(2)
+		var card := (story_ui.get_node("UnlockPanel") as Control).get_global_rect()
+		var screen := tree.root.get_visible_rect().size
+		check_near(card.get_center().x, screen.x * 0.5, 0.5, "the unlock card is centred across the screen")
+		check_near(card.get_center().y, screen.y * 0.5, 0.5, "and down it")
+		check(card.position.x >= float(OverlayPanel.SCREEN_MARGIN) - 0.5, "clear of the screen's sides")
 	_story_controller().skip()
 	check(await _wait_for_scene(&"fishing"), "and back to the lake")
 

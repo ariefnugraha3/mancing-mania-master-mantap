@@ -42,7 +42,7 @@ func prompt(title: String, body: String, options: Array[Dictionary]) -> StringNa
 		child.queue_free()
 	# On a phone the buttons stack full width so long labels never get cut
 	# off; a tablet puts two side by side.
-	footer.vertical = not PlatformService.is_tablet() or options.size() > 2
+	stack_footer = not PlatformService.is_tablet() or options.size() > 2
 
 	var focus_target: GameButton = null
 	for entry: Dictionary in options:

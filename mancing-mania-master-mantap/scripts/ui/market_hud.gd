@@ -157,7 +157,7 @@ func focus_default() -> void:
 	var target: Control = _tab_buttons[_current_tab]
 	if _current_tab == TAB_SELL and not sell_panel.get_sell_all_button().disabled:
 		target = sell_panel.get_sell_all_button()
-	target.grab_focus()
+	InputManager.give_focus(target)
 
 
 # --- Cash -------------------------------------------------------------------

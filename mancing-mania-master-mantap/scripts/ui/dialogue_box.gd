@@ -60,6 +60,9 @@ func _ready() -> void:
 	_hint.name = "Advance"
 	_hint.theme_type_variation = UiTokens.TYPE_SMALL
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# Wraps rather than widening the card past the screen at the largest text.
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint.text = TextDb.t(&"dialogue.advance")
 	foot.add_child(_hint)
 	foot.add_child(AdvanceArrow.new())
@@ -184,5 +187,6 @@ func _layout() -> void:
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_panel.reset_size()
 	var height := maxf(_panel.get_combined_minimum_size().y, 150.0)
-	_panel.position = Vector2((root.size.x - width) * 0.5, root.size.y - height - UiTokens.SPACE_8)
 	_panel.size = Vector2(width, height)
+	# Centred by the size it really took, which is never under its minimum.
+	_panel.position = Vector2((root.size.x - _panel.size.x) * 0.5, root.size.y - _panel.size.y - UiTokens.SPACE_8)

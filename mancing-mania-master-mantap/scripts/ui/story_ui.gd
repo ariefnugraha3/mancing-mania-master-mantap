@@ -183,7 +183,7 @@ func show_unlock(title: String, body: String, button: String) -> void:
 	_unlock_body.text = body
 	_unlock_button.text = button
 	_unlock.visible = true
-	_unlock_button.grab_focus.call_deferred()
+	InputManager.give_focus.call_deferred(_unlock_button)
 
 
 func hide_unlock() -> void:
@@ -277,10 +277,16 @@ func _layout() -> void:
 	_phone.size = Vector2(phone_width, clampf(minf(area.y * 0.6, PHONE_MAX_HEIGHT), 300.0, maxf(300.0, phone_room)))
 	_phone.position = Vector2((area.x - phone_width) * 0.5, top_inset)
 	_place_title()
-	var unlock_width := minf(560.0, area.x)
-	_unlock.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_unlock.size = Vector2(unlock_width, 0.0)
-	_unlock.position = Vector2((area.x - unlock_width) * 0.5, area.y * 0.28)
+	# Like every popup card (OverlayPanel): clear of the screen's sides and in
+	# the middle of the screen, growing both ways as its text wraps.
+	var unlock_width := minf(560.0, safe.size.x - float(OverlayPanel.SCREEN_MARGIN) * 2.0)
+	_unlock.set_anchors_preset(Control.PRESET_CENTER)
+	_unlock.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_unlock.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_unlock.offset_left = -unlock_width * 0.5
+	_unlock.offset_right = unlock_width * 0.5
+	_unlock.offset_top = 0.0
+	_unlock.offset_bottom = 0.0
 	_skip.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_skip.size = Vector2(200.0, 12.0)
 	_skip.position = Vector2(area.x - 216.0, area.y - bottom_inset - PANEL_HEIGHT - 28.0)

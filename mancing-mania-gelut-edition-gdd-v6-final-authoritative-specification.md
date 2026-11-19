@@ -666,7 +666,7 @@ Rini sedang mengenakan sepatu kerja.
 
 Rini:
 
-> "I'm leaving."
+> "Off to work. Back after my shift."
 
 Darto:
 
@@ -10084,7 +10084,7 @@ Rini sedang mengenakan sepatu kerja.
 
 Rini:
 
-> "I'm leaving."
+> "Off to work. Back after my shift."
 
 Darto:
 

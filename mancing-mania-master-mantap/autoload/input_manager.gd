@@ -134,6 +134,14 @@ func handle_back_request() -> void:
 	press_action(InputActions.PAUSE)
 
 
+## Gives `control` the keyboard focus, so Enter and the arrows work at once,
+## but shows the gold focus ring only to a keyboard or gamepad player (GDD
+## 167). After a tap or a click the focus is there without a ring.
+func give_focus(control: Control) -> void:
+	if is_instance_valid(control) and control.is_inside_tree():
+		control.grab_focus(not _keyboard_active)
+
+
 ## Entry points for on-screen touch controls.
 func press_action(action: StringName) -> void:
 	if InputMap.has_action(action):
@@ -194,7 +202,7 @@ func _detect_device(event: InputEvent) -> void:
 		# Mouse events emulated from a touch must not flip the mode back.
 		detected = DEVICE_KEYBOARD_MOUSE
 	var keyboard := _keyboard_active
-	if event is InputEventKey and event.is_pressed():
+	if (event is InputEventKey or event is InputEventJoypadButton) and event.is_pressed():
 		keyboard = true
 	elif event is InputEventScreenTouch or event is InputEventMouseButton:
 		keyboard = false

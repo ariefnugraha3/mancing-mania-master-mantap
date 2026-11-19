@@ -67,6 +67,69 @@ func test_every_required_setting_is_on_the_settings_screen() -> bool:
 	return true
 
 
+## GDD 167: the gold focus ring is for keyboard and gamepad players. A menu
+## that opens after a tap or a click still has its button focused (Enter
+## works) but shows no ring; after a key press it shows the ring.
+func test_the_focus_ring_shows_only_for_keyboard_and_gamepad() -> bool:
+	var tap := InputEventMouseButton.new()
+	tap.button_index = MOUSE_BUTTON_LEFT
+	tap.pressed = true
+	InputManager._input(tap)
+	check(not InputManager.is_keyboard_active(), "a click: not a keyboard player")
+	var overlay := _settings()
+	overlay.open()
+	await wait_frames(3)
+	var focused := tree.root.gui_get_focus_owner()
+	check(focused != null and focused.has_focus(), "the first button has the focus, so Enter works")
+	check(focused != null and not focused.has_focus(true), "but no ring is drawn for a tap or a click")
+	overlay.hide_overlay()
+	await wait_frames(1)
+
+	var key := InputEventKey.new()
+	key.keycode = KEY_SHIFT
+	key.physical_keycode = KEY_SHIFT
+	key.pressed = true
+	InputManager._input(key)
+	check(InputManager.is_keyboard_active(), "a key press: a keyboard player")
+	overlay.open()
+	await wait_frames(3)
+	focused = tree.root.gui_get_focus_owner()
+	check(focused != null and focused.has_focus(true), "now the ring shows")
+
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_A
+	pad.pressed = true
+	InputManager._input(tap)
+	InputManager._input(pad)
+	check(InputManager.is_keyboard_active(), "a gamepad button counts as keyboard navigation too")
+	InputManager._input(tap)
+	overlay.queue_free()
+	await wait_frames(1)
+	return true
+
+
+## Revision 6.12: on a phone the Settings list scrolls under a finger from
+## anywhere on it. Only the sliders keep the drag for themselves.
+func test_a_finger_scrolls_the_settings_list_from_anywhere() -> bool:
+	var overlay := _settings()
+	overlay.open()
+	await wait_frames(3)
+	var scroll := overlay.find_child("Body", true, false) as ScrollContainer
+	if not check(scroll != null, "the settings body scrolls"):
+		overlay.queue_free()
+		return true
+	check(scroll.find_child("TouchScroll", false, false) is TouchScroll, "it follows a finger")
+	check_eq(scroll.scroll_deadzone, TouchScroll.DEADZONE, "after the touch slop")
+	var holding := PackedStringArray()
+	for node: Node in scroll.find_children("*", "Control", true, false):
+		if TouchScroll.should_pass(node as Control):
+			holding.append(str(scroll.get_path_to(node)))
+	check_empty(holding, "nothing in the list holds a drag back")
+	overlay.queue_free()
+	await wait_frames(1)
+	return true
+
+
 func test_option_rows_cycle_and_autosave() -> bool:
 	# Settings are written into an existing save (GDD 189.1).
 	check(SaveManager.save_game(&"test"), "a save exists")
@@ -171,6 +234,91 @@ func test_largest_scales_keep_critical_buttons_whole() -> bool:
 	GameState.set_setting(&"text_scale", 1.0)
 	DisplaySettings.apply_all(tree)
 	tree.current_scene.queue_free()
+	await wait_frames(2)
+	return true
+
+
+## Every popup, built and opened on its own.
+func _popups() -> Array[Dictionary]:
+	var quit := func(dialog: ModalDialog) -> void:
+		dialog.prompt(TextDb.t(&"menu.quit_confirm.title"), TextDb.t(&"menu.quit_confirm.body"), [
+			ModalDialog.option(&"stay", TextDb.t(&"menu.quit_confirm.stay"), UiTokens.TYPE_CTA_BUTTON, true),
+			ModalDialog.option(&"quit", TextDb.t(&"menu.quit_confirm.quit"), UiTokens.TYPE_DANGER_BUTTON),
+		])
+	return [
+		{"make": SettingsOverlay.new, "open": func(o: SettingsOverlay) -> void: o.open()},
+		{"make": ControlsOverlay.new, "open": func(o: ControlsOverlay) -> void: o.open()},
+		{"make": PrivacyOverlay.new, "open": func(o: PrivacyOverlay) -> void: o.open()},
+		{"make": CalibrationOverlay.new, "open": func(o: CalibrationOverlay) -> void: o.open()},
+		{"make": HowToOverlay.new, "open": func(o: HowToOverlay) -> void: o.open()},
+		{"make": PauseOverlay.new, "open": func(o: PauseOverlay) -> void: o.open()},
+		{"make": TravelOverlay.new, "open": func(o: TravelOverlay) -> void: o.open()},
+		{"make": BucketPeekOverlay.new, "open": func(o: BucketPeekOverlay) -> void: o.open()},
+		{"make": ReceiptOverlay.new, "open": func(o: ReceiptOverlay) -> void: o.open({"lines": [], "total": 125000, "cash_after": 300000})},
+		{"make": DuelResultOverlay.new, "open": func(o: DuelResultOverlay) -> void: o.show_result({"fish_id": &"catfish_bruiser", "player_won": true})},
+		{"make": ModalDialog.new, "open": quit},
+	]
+
+
+# Revision 6.12: Settings > Privacy and Settings > Controls put their buttons
+# side by side, wider than a phone, and the card slid off the right edge.
+# Every popup stays whole on the screen and in its middle, in every language,
+# at the default and the largest sizes, with a camera hole above it.
+func test_every_popup_sits_whole_in_the_middle_of_the_screen() -> bool:
+	# Calibration plays its click track on the music engine.
+	AudioManager.initialize_procedural_audio()
+	GameState.set_setting(&"reduced_motion", true)
+	# A camera hole at the top, nothing at the bottom (an immersive Android).
+	PlatformService.set_simulated_insets(Vector4(0.0, 35.0, 0.0, 0.0))
+	var problems := PackedStringArray()
+	for language: String in TextDb.LANGUAGES:
+		GameState.set_setting(&"language", language)
+		for largest: bool in [false, true]:
+			GameState.set_setting(&"ui_scale", 1.3 if largest else 1.0)
+			GameState.set_setting(&"text_scale", 1.5 if largest else 1.0)
+			DisplaySettings.apply_all(tree)
+			# A tall phone (1220x2712) and a tablet.
+			for size: Vector2i in [Vector2i(1220, 2712), Vector2i(1536, 2048)]:
+				tree.root.size = size
+				await wait_frames(2)
+				var canvas := tree.root.get_visible_rect().size
+				var safe := Rect2(PlatformService.get_safe_rect())
+				for popup: Dictionary in _popups():
+					var overlay: OverlayPanel = (popup["make"] as Callable).call()
+					tree.root.add_child(overlay)
+					(popup["open"] as Callable).call(overlay)
+					await wait_frames(4)
+					var stack := overlay.get_node("Centre/Stack") as Control
+					var card := stack.get_global_rect()
+					var where := "%s %s %s %s" % [language, "largest" if largest else "default", size, overlay.get_script().get_global_name()]
+					if not safe.grow(1.0).encloses(card):
+						problems.append("%s: card %s leaves the safe area %s" % [where, card, safe])
+					# Shrinking the whole card is the last resort of the largest
+					# sizes; at the default ones everything fits as it is.
+					if not largest and stack.scale.x < 0.999:
+						problems.append("%s: card shrunk to %.2f to fit" % [where, stack.scale.x])
+					if absf(card.get_center().x - canvas.x * 0.5) > 1.0:
+						problems.append("%s: card centre x %.1f, screen %.1f" % [where, card.get_center().x, canvas.x * 0.5])
+					# A card short enough to sit clear of the hole either way is
+					# centred on the screen, not on the lopsided safe area.
+					var clear := canvas.y - 2.0 * maxf(safe.position.y, canvas.y - safe.end.y) - 2.0 * float(OverlayPanel.SCREEN_MARGIN_TABLET)
+					if card.size.y <= clear and absf(card.get_center().y - canvas.y * 0.5) > 1.0:
+						problems.append("%s: card centre y %.1f, screen %.1f" % [where, card.get_center().y, canvas.y * 0.5])
+					if overlay is PauseOverlay:
+						(overlay as PauseOverlay).resume()
+					elif overlay is ModalDialog:
+						overlay.on_cancel()
+					overlay.queue_free()
+					await wait_frames(1)
+	check_empty(problems, "every popup is whole on the screen and in its middle")
+	PlatformService.set_simulated_insets(Vector4.ZERO)
+	tree.root.size = Vector2i(1280, 720)
+	tree.paused = false
+	GameState.set_setting(&"language", "auto")
+	GameState.set_setting(&"ui_scale", 1.0)
+	GameState.set_setting(&"text_scale", 1.0)
+	GameState.set_setting(&"reduced_motion", false)
+	DisplaySettings.apply_all(tree)
 	await wait_frames(2)
 	return true
 

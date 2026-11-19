@@ -154,6 +154,12 @@ func _route(scene_id: StringName, context: Dictionary) -> void:
 	_context = context.duplicate(true)
 	_current_scene_id = scene_id
 	get_tree().change_scene_to_packed(packed)
+	# The old scene left the tree just now and the new one has not drawn yet:
+	# the letters the old one drew are dropped while the screen is black
+	# (revision 6.12). Text that stays on screen across scenes redraws.
+	UiSkin.release_glyph_caches()
+	for node: Node in get_tree().root.get_children():
+		node.propagate_call(&"queue_redraw")
 	# The swap happens at the end of the frame; wait until the new scene is in.
 	await get_tree().process_frame
 	await get_tree().process_frame

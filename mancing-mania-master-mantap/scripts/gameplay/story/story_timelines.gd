@@ -62,8 +62,20 @@ static func to_dialogue(steps: Array) -> Array[Dictionary]:
 	var lines: Array[Dictionary] = []
 	for step: Dictionary in steps:
 		if step.has("say"):
-			lines.append({"speaker": speaker_name(StringName(step["say"])), "text": TextDb.t(StringName(step["text"]))})
+			lines.append({"speaker": speaker_name(StringName(step["say"])), "text": line_text(StringName(step["text"]))})
 	return lines
+
+
+## A spoken or chat line in the player's language, with the player's own
+## numbers filled in where the copy asks for them.
+static func line_text(key: StringName) -> String:
+	return TextDb.tf(key, line_values())
+
+
+## The `{name}` values story lines may use: how often the catfish has won a
+## duel against Darto, quoted by the family in the epilogue.
+static func line_values() -> Dictionary:
+	return {"catfish_losses": int(GameState.get_fish_book_entry(&"catfish_bruiser").get("losses", 0))}
 
 
 static func speaker_name(who: StringName) -> String:
