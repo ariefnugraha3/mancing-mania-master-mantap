@@ -14,6 +14,11 @@ const DEVICE_TOUCH := &"touch"
 ## A buffered press older than this is dropped, so a stale tap cannot leak into
 ## the state that follows a transition (GDD 176.1).
 const PRESS_BUFFER_MSEC := 150
+## Some Android phones (MIUI / HyperOS) report one press of Back twice, about
+## 0.2 s apart, so the second report closed the very question the first one
+## opened. A Back this soon after the last one is the same press (revision
+## 6.12).
+const BACK_REPEAT_MSEC := 600
 
 var _device_type: StringName = DEVICE_KEYBOARD_MOUSE
 var _gameplay_enabled: bool = true
@@ -25,6 +30,7 @@ var _first_gesture_seen: bool = false
 ## The last thing the player used was a key, so prompts name keys instead of
 ## the on-screen buttons (the portrait screen always shows the buttons).
 var _keyboard_active: bool = false
+var _last_back_msec: int = -BACK_REPEAT_MSEC
 
 
 func _ready() -> void:
@@ -40,7 +46,7 @@ func _ready() -> void:
 	# Android Back never closes the game by itself (GDD 135); project.godot
 	# says so too, this keeps it true whatever the settings file holds.
 	get_tree().quit_on_go_back = false
-	get_window().go_back_requested.connect(handle_back_request, CONNECT_DEFERRED)
+	get_window().go_back_requested.connect(_on_go_back_requested, CONNECT_DEFERRED)
 
 
 func _input(event: InputEvent) -> void:
@@ -110,6 +116,16 @@ func is_gameplay_input_enabled() -> bool:
 	return _gameplay_enabled
 
 
+## The system's Back, once per press however often the phone reports it.
+func _on_go_back_requested() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_back_msec < BACK_REPEAT_MSEC:
+		GameLog.info(&"INPUT", "back reported twice, taken once", {"after_msec": now - _last_back_msec})
+		return
+	_last_back_msec = now
+	handle_back_request()
+
+
 ## Android Back button or back gesture (GDD 135), one step at a time:
 ## 1. ignored while a scene is loading;
 ## 2. the topmost overlay, prompt or dialogue line takes it exactly like Esc
@@ -120,17 +136,22 @@ func is_gameplay_input_enabled() -> bool:
 ## It never closes the game without asking.
 func handle_back_request() -> void:
 	if SceneRouter.is_transitioning():
+		GameLog.info(&"INPUT", "back ignored during a scene change")
 		return
 	var viewport := get_viewport()
 	viewport.push_input(_cancel_event(true))
 	var taken := viewport.is_input_handled()
 	viewport.push_input(_cancel_event(false))
-	if taken:
-		return
 	var scene := get_tree().current_scene
+	var scene_name := String(scene.name) if scene != null else ""
+	if taken:
+		GameLog.info(&"INPUT", "back closed what was on top", {"scene": scene_name})
+		return
 	if scene != null and scene.has_method(&"handle_back"):
+		GameLog.info(&"INPUT", "back handed to the scene", {"scene": scene_name})
 		scene.call(&"handle_back")
 		return
+	GameLog.info(&"INPUT", "back pressed pause", {"scene": scene_name})
 	press_action(InputActions.PAUSE)
 
 

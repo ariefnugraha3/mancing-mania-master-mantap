@@ -230,6 +230,27 @@ func test_android_back_on_the_menu_goes_one_step_back_and_asks_before_quitting()
 	return true
 
 
+# Revision 6.12: a MIUI / HyperOS phone reports one press of Back twice, about
+# 0.2 s apart. The second report must not close the question the first opened.
+func test_one_back_press_reported_twice_counts_once() -> bool:
+	if not check(await _boot_to_menu(), "boot reaches the Main Menu"):
+		return true
+	await wait_seconds(InputManager.BACK_REPEAT_MSEC / 1000.0)
+	var window := tree.root
+	window.go_back_requested.emit()
+	await wait_seconds(0.2)
+	window.go_back_requested.emit()
+	check(await wait_until(_dialog().is_open, 2.0), "Back on the bare menu asks first")
+	await wait_frames(3)
+	check(_dialog().is_open(), "the same press reported again leaves the question open")
+	await wait_seconds(InputManager.BACK_REPEAT_MSEC / 1000.0)
+	window.go_back_requested.emit()
+	await wait_frames(3)
+	check(not _dialog().is_open(), "a real second Back still keeps playing")
+	check(not tree.quit_on_go_back, "and nothing closed the game")
+	return true
+
+
 # --- Fishing scene (Milestone 2 exit gate) ----------------------------------
 
 ## New Game from the menu, then wait until the lake is on screen.

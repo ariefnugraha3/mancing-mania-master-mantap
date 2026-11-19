@@ -290,6 +290,7 @@ func handle_back() -> void:
 			ModalDialog.option(&"stay", TextDb.t(&"menu.quit_confirm.stay"), &"", true),
 			ModalDialog.option(&"quit", TextDb.t(&"menu.quit_confirm.quit"), UiTokens.TYPE_DANGER_BUTTON),
 		])
+	GameLog.info(&"MENU", "quit prompt answered", {"choice": String(choice)})
 	if choice == &"quit":
 		if GameState.has_active_game():
 			SaveManager.save_game(&"quit")
