@@ -493,6 +493,44 @@ func test_instant_dialogue_still_waits_for_the_player() -> bool:
 	return true
 
 
+## Revision 6.12: the dialogue card is one size for every line, with TAP TO
+## CONTINUE at its foot. A line too long for it grows it upward, the next one
+## brings it back, and a line typing itself out never changes it. The story
+## scene's card is placed by the same code.
+func test_the_dialogue_card_keeps_one_size() -> bool:
+	GameState.set_setting(&"dialogue_speed", "normal")
+	var box := DialogueBox.new()
+	tree.root.add_child(box)
+	await wait_frames(2)
+	var panel := box.get(&"_panel") as Control
+	var hint := box.get(&"_hint") as Control
+	var lines: Array[String] = ["Short.", "And unemployed men don't usually argue with dinner.", "word ".repeat(90).strip_edges(), "Short again."]
+	var heights: Array[float] = []
+	var bottoms: Array[float] = []
+	var gaps: Array[float] = []
+	for text: String in lines:
+		box.play([{"speaker": "BRUISER CATFISH", "text": text}] as Array[Dictionary])
+		await wait_frames(3)
+		var typing := panel.size.y
+		box.advance()
+		await wait_frames(3)
+		check_near(panel.size.y, typing, 0.5, "\"%s...\" does not resize the card while it types" % text.left(12))
+		heights.append(panel.size.y)
+		bottoms.append(panel.get_global_rect().end.y)
+		gaps.append(panel.get_global_rect().end.y - hint.get_global_rect().end.y)
+		box.skip()
+	check_near(heights[0], DialogueBox.CARD_HEIGHT, 0.5, "a short line gets the standard card")
+	check_near(heights[1], DialogueBox.CARD_HEIGHT, 0.5, "a two-line line gets the same card")
+	check(heights[2] > DialogueBox.CARD_HEIGHT + 20.0, "a very long line grows it (%.0f)" % heights[2])
+	check_near(heights[3], DialogueBox.CARD_HEIGHT, 0.5, "and the next short line brings it back")
+	for index: int in lines.size():
+		check_near(bottoms[index], bottoms[0], 0.5, "the card's foot stays put (line %d)" % index)
+		check_near(gaps[index], gaps[0], 0.5, "TAP TO CONTINUE stays at the foot (line %d)" % index)
+	box.queue_free()
+	await wait_frames(1)
+	return true
+
+
 func test_relaxed_dialogue_is_slower_than_normal() -> bool:
 	check(DialogueBox.CHARS_PER_SEC.has("relaxed"), "RELAXED has its own speed")
 	check(float(DialogueBox.CHARS_PER_SEC["relaxed"]) < float(DialogueBox.CHARS_PER_SEC["normal"]), "and it is slower")

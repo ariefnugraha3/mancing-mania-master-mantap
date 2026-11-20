@@ -294,6 +294,50 @@ func test_lines_wait_for_the_player_and_advance_on_tap() -> bool:
 	return true
 
 
+## A tap on the speech card itself, its TAP TO CONTINUE prompt included, moves
+## the story on like a tap anywhere else; the card used to swallow it.
+func test_a_tap_on_the_story_card_moves_the_story_on() -> bool:
+	var scene: Node = (load(STORY_SCENE) as PackedScene).instantiate()
+	var controller := scene.get_node("StoryController") as StoryController
+	var ui := scene.get_node("StoryCanvas/StoryUI") as StoryUi
+	scene.set_script(null)
+	tree.root.add_child(scene)
+	controller.setup(scene.get_node("StageRoot"), ui)
+	var taps := [0]
+	ui.advanced.connect(func() -> void: taps[0] += 1)
+	controller.play(&"story_first_fish")
+	check(await wait_until(func() -> bool: return ui.get_line_text() != "", 5.0), "the first line appears")
+	await wait_frames(3)
+	var card := scene.get_node("StoryCanvas/StoryUI/DialoguePanel") as Control
+	var prompt := card.find_child("ContinuePrompt", true, false) as Control
+	# On a phone the interface takes a tap first, before the story sees it:
+	# nothing on the card may catch one.
+	var catching := PackedStringArray()
+	for node: Node in [card] + card.find_children("*", "Control", true, false):
+		if (node as Control).mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			catching.append(String(card.get_path_to(node)))
+	check_empty(catching, "nothing on the card catches a tap")
+	var spots := {"the card": card.get_global_rect().get_center(), "TAP TO CONTINUE": prompt.get_global_rect().get_center()}
+	for spot: String in spots:
+		for kind: String in ["finger", "mouse"]:
+			taps[0] = 0
+			if kind == "finger":
+				for pressed: bool in [true, false]:
+					var touch := InputEventScreenTouch.new()
+					touch.position = spots[spot]
+					touch.pressed = pressed
+					tree.root.push_input(touch)
+			else:
+				_send_click(spots[spot])
+			check(taps[0] >= 1, "a %s tap on %s moves the story on" % [kind, spot])
+			await wait_frames(2)
+	controller.skip()
+	await wait_frames(3)
+	scene.queue_free()
+	await wait_frames(2)
+	return true
+
+
 ## The prologue's title shot on the lake road: Darto alone at the lake.
 ## Rini stays home (she was once re-spawned there, on top of Darto).
 func test_prologue_title_shot_leaves_rini_at_home() -> bool:

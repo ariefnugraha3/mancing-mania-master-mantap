@@ -8,7 +8,10 @@ extends CanvasLayer
 
 signal finished()
 
-const BOX_WIDTH := 640.0
+## The speech card, here and in the story scene (StoryUi): this wide at most,
+## at least this tall, at the bottom of the safe area.
+const CARD_WIDTH := 640.0
+const CARD_HEIGHT := 190.0
 ## Text appears this many characters per second at the "normal" setting.
 const CHARS_PER_SEC: Dictionary = {"relaxed": 30.0, "normal": 55.0, "fast": 110.0, "instant": 0.0}
 
@@ -29,8 +32,10 @@ const AUTO_ADVANCE_SEC := 0.25
 func _ready() -> void:
 	layer = 42
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	var root := SafeAreaRoot.new()
-	root.name = "SafeRoot"
+	var root := Control.new()
+	root.name = "Root"
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
 	_panel = PanelContainer.new()
 	_panel.name = "Box"
@@ -49,8 +54,7 @@ func _ready() -> void:
 	_text = Label.new()
 	_text.name = "Text"
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size.y = 56.0
-	_text.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY + 2))
+	style_line(_text)
 	column.add_child(_text)
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_END
@@ -67,8 +71,39 @@ func _ready() -> void:
 	foot.add_child(_hint)
 	foot.add_child(AdvanceArrow.new())
 	root.resized.connect(_layout)
+	PlatformService.safe_area_changed.connect(_layout)
 	_layout.call_deferred()
 	visible = false
+
+
+## The line's label in a speech card. It fills the card's spare height, so the
+## TAP TO CONTINUE row always sits at the bottom of the card, and it is laid
+## out with the whole line from the first letter: a line that types itself
+## out never re-wraps or grows the card halfway through.
+static func style_line(label: Label) -> void:
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	label.custom_minimum_size.y = 56.0
+	label.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY + 2))
+
+
+## Places a speech card the same way everywhere: at the bottom centre of the
+## safe area, CARD_WIDTH at most and CARD_HEIGHT tall. The size lives in the
+## anchors, never in `size`, so a card that needs more room for a long line
+## grows upward and goes back to CARD_HEIGHT for the next one.
+static func place_card(card: Control, area: Vector2) -> void:
+	var safe := Rect2(PlatformService.get_safe_rect())
+	var edge := float(UiTokens.SPACE_12)
+	var bottom_inset := area.y - safe.end.y + edge
+	var width := minf(CARD_WIDTH, safe.size.x - edge * 2.0)
+	card.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	card.offset_left = -width * 0.5
+	card.offset_right = width * 0.5
+	card.offset_bottom = -bottom_inset
+	card.offset_top = -bottom_inset - CARD_HEIGHT
 
 
 func _process(delta: float) -> void:
@@ -182,11 +217,4 @@ func _close() -> void:
 
 
 func _layout() -> void:
-	var root := _panel.get_parent() as Control
-	var width := minf(BOX_WIDTH, root.size.x)
-	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_panel.reset_size()
-	var height := maxf(_panel.get_combined_minimum_size().y, 150.0)
-	_panel.size = Vector2(width, height)
-	# Centred by the size it really took, which is never under its minimum.
-	_panel.position = Vector2((root.size.x - _panel.size.x) * 0.5, root.size.y - _panel.size.y - UiTokens.SPACE_8)
+	place_card(_panel, (_panel.get_parent() as Control).size)

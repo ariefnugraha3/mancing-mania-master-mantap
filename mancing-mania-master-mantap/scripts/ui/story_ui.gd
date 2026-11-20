@@ -11,7 +11,7 @@ signal advanced()
 
 const PHONE_WIDTH := 340.0
 const PHONE_MAX_HEIGHT := 480.0
-const PANEL_HEIGHT := 158.0
+const PANEL_HEIGHT := DialogueBox.CARD_HEIGHT
 
 @onready var _panel: PanelContainer = $DialoguePanel
 @onready var _speaker: Label = $DialoguePanel/Column/SpeakerLabel
@@ -36,9 +36,7 @@ func _ready() -> void:
 	_panel.add_theme_stylebox_override(&"panel", UiSkin.card(UiTokens.CREAM_50, 22, UiTokens.SPACE_16, 4))
 	_speaker.theme_type_variation = UiTokens.TYPE_NAME_TAG
 	_speaker.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_line.custom_minimum_size.y = 56.0
-	_line.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY + 2))
+	DialogueBox.style_line(_line)
 	_prompt.text = TextDb.t(&"story.continue")
 	_prompt.theme_type_variation = UiTokens.TYPE_SMALL
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -54,6 +52,9 @@ func _ready() -> void:
 	arrow.name = "AdvanceArrow"
 	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(arrow)
+	# Like the phone, the card never takes a tap: a tap on the line or on its
+	# TAP TO CONTINUE prompt moves the story on as a tap anywhere else does.
+	_quiet(_panel)
 	_panel.visible = false
 	_phone = ChatPhone.new()
 	_phone.name = "Phone"
@@ -101,6 +102,13 @@ func _ready() -> void:
 	resized.connect(_layout)
 	PlatformService.safe_area_changed.connect(_layout)
 	_layout.call_deferred()
+
+
+static func _quiet(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child: Node in node.get_children():
+		_quiet(child)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -261,15 +269,8 @@ func _layout() -> void:
 	var edge := float(UiTokens.SPACE_12)
 	var top_inset := safe.position.y + edge
 	var bottom_inset := area.y - safe.end.y + edge
-	var width := minf(640.0, safe.size.x - edge * 2.0)
-	# Anchored to the bottom and growing upward, so a long line never pushes
-	# the card off the screen.
-	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_panel.offset_left = -width * 0.5
-	_panel.offset_right = width * 0.5
-	_panel.offset_bottom = -bottom_inset
-	_panel.offset_top = -bottom_inset - PANEL_HEIGHT
+	# The same card, in the same place, as the dialogue box in play.
+	DialogueBox.place_card(_panel, area)
 	var phone_width := minf(PHONE_WIDTH, safe.size.x - edge * 2.0)
 	# As tall as fits above the dialogue card, so a line can play under it.
 	var phone_room := area.y - top_inset - bottom_inset - PANEL_HEIGHT - edge
