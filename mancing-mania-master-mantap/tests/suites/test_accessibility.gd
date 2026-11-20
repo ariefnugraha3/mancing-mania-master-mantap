@@ -575,6 +575,27 @@ func test_quality_presets_change_resolution_and_aa_only() -> bool:
 	return true
 
 
+## Revision 6.12: a phone or tablet draws at most 60 frames a second, and the
+## 3D world at most the preset's pixels per canvas point; text stays sharp. A
+## desktop window keeps the presets as they were.
+func test_phones_cap_the_frame_rate_and_the_3d_resolution() -> bool:
+	check_eq(DisplaySettings.max_fps_for_device(true), 60, "a phone draws at most 60 frames a second")
+	check_eq(DisplaySettings.max_fps_for_device(false), 0, "a desktop is left to its V-Sync")
+	DisplaySettings.apply_all(tree)
+	check_eq(Engine.max_fps, 0, "and the test runner (a desktop) has no cap")
+
+	var quality := DisplaySettings.QUALITY
+	var phone := 1220.0 / 390.0
+	check_near(DisplaySettings.scale_3d_for_device(quality["medium"], true, phone), 2.0 / phone, 0.001, "MEDIUM on a 1220 px phone draws the world at 64%")
+	check(DisplaySettings.scale_3d_for_device(quality["low"], true, phone) < DisplaySettings.scale_3d_for_device(quality["medium"], true, phone), "LOW is lighter than MEDIUM on a phone")
+	check(DisplaySettings.scale_3d_for_device(quality["high"], true, phone) > DisplaySettings.scale_3d_for_device(quality["medium"], true, phone), "and HIGH sharper")
+	check_near(DisplaySettings.scale_3d_for_device(quality["medium"], true, 1.5), 1.0, 0.001, "a low-density screen keeps full size")
+	check_near(DisplaySettings.scale_3d_for_device(quality["low"], true, 8.0), DisplaySettings.MIN_SCALE_3D, 0.001, "and nothing drops below the floor")
+	for preset: String in quality:
+		check_near(DisplaySettings.scale_3d_for_device(quality[preset], false, phone), float(quality[preset]["scale_3d"]), 0.001, "a desktop keeps %s as it was" % preset.to_upper())
+	return true
+
+
 ## Revision 6.11: with the Compatibility renderer, MSAA on a phone's GPU leaks
 ## a framebuffer every frame until Android kills the game, so phones and
 ## tablets never get it, at any preset, and no scene can switch it on.

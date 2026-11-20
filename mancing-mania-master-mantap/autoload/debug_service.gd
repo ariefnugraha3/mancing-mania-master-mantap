@@ -11,6 +11,8 @@ const DebugOverlayScript := preload("res://scripts/ui/debug_overlay.gd")
 
 const VERSION_TAPS_TO_OPEN := 5
 const VERSION_TAP_WINDOW_MSEC := 3000
+## How often a debug build on a phone logs its frame rate and load.
+const PERF_LOG_SEC := 5.0
 const RESULT_IDS: Array[StringName] = [&"win", &"loss"]
 
 ## Test hook: behave exactly like a release build.
@@ -33,6 +35,35 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if is_debug_tools_allowed():
 		_run_command_line_tools()
+		if DisplaySettings.runs_on_phone():
+			_start_perf_log()
+
+
+## Debug builds on a phone write a [PERF] line every PERF_LOG_SEC, read
+## with adb logcat while the game is played (revision 6.12).
+func _start_perf_log() -> void:
+	var timer := Timer.new()
+	timer.name = "PerfLog"
+	timer.wait_time = PERF_LOG_SEC
+	timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	timer.timeout.connect(_log_perf)
+	add_child(timer)
+	timer.start()
+
+
+func _log_perf() -> void:
+	var root := get_tree().root
+	var render := Vector2(root.size) * root.scaling_3d_scale
+	GameLog.info(&"PERF", "frame", {
+		"scene": String(SceneRouter.get_current_scene_id()),
+		"fps": int(Performance.get_monitor(Performance.TIME_FPS)),
+		"cpu_ms": snappedf(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, 0.1),
+		"draws": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		"objects": int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)),
+		"tris": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+		"render_3d": "%dx%d" % [render.x, render.y],
+		"max_fps": Engine.max_fps,
+	})
 
 
 func _unhandled_input(event: InputEvent) -> void:

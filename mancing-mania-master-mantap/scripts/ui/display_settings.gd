@@ -10,15 +10,29 @@ extends RefCounted
 ##   real shadows at any level, only the fake shadow discs, and no screen
 ##   effects (VISUAL_STYLE_GUIDE 6.1). MSAA is for desktop only: phones and
 ##   tablets never use it at any level (revision 6.11, see msaa_for()).
+## - On a phone or tablet the game draws at most PHONE_MAX_FPS frames a second,
+##   and the 3D world at most `phone_density` pixels per canvas point
+##   (revision 6.12, see scale_3d_for_device()). Text and buttons stay sharp:
+##   they are drawn at the screen's full resolution.
 
+## `phone_density`: the most 3D pixels per canvas point on a phone or tablet.
+## A phone screen packs about 3 pixels into each point; drawing the 3D world
+## at every one of them made the GPU fill 3.3 million pixels a frame.
 const QUALITY: Dictionary = {
-	"low": {"scale_3d": 0.75, "scatter": 0.5, "msaa": Viewport.MSAA_DISABLED},
-	"medium": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_2X},
-	"high": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_4X},
+	"low": {"scale_3d": 0.75, "scatter": 0.5, "msaa": Viewport.MSAA_DISABLED, "phone_density": 1.5},
+	"medium": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_2X, "phone_density": 2.0},
+	"high": {"scale_3d": 1.0, "scatter": 1.0, "msaa": Viewport.MSAA_4X, "phone_density": 2.75},
 }
+## A phone or tablet never draws more frames than this. Many phones refresh at
+## 90 or 120 Hz, and an uncapped game draws every one of those frames: up to
+## twice the work, and the heat, for no gain in a game like this one.
+const PHONE_MAX_FPS := 60
+## The 3D world never drops below this share of the screen's resolution.
+const MIN_SCALE_3D := 0.4
 
 static var _base_font_sizes: Dictionary = {}
 static var _applied_text_scale: float = 1.0
+static var _watching_window: bool = false
 ## The device language as LANGUAGE "auto" sees it. Empty means ask the OS;
 ## the test runner pins it so results never depend on the machine.
 static var system_language_override: String = ""
@@ -102,8 +116,15 @@ static func apply_quality(tree: SceneTree) -> void:
 		return
 	var quality := get_quality()
 	var root := tree.root
-	root.scaling_3d_scale = float(quality["scale_3d"])
+	var on_phone := runs_on_phone()
+	root.scaling_3d_scale = scale_3d_for_device(quality, on_phone, pixels_per_point(root))
 	root.msaa_3d = msaa_for(quality)
+	Engine.max_fps = max_fps_for_device(on_phone)
+	# The window settles its size after boot on some devices: the 3D share
+	# follows it.
+	if not _watching_window:
+		_watching_window = true
+		root.size_changed.connect(func() -> void: root.scaling_3d_scale = scale_3d_for_device(get_quality(), runs_on_phone(), pixels_per_point(root)))
 	# The root viewport is never rendered direct to screen: on Android with the
 	# Compatibility renderer that draws the whole game upside down (revision
 	# 6.12, seen on a phone).
@@ -124,6 +145,33 @@ static func msaa_for_device(quality: Dictionary, on_phone: bool) -> Viewport.MSA
 	if on_phone:
 		return Viewport.MSAA_DISABLED
 	return quality["msaa"]
+
+
+## The share of the screen's resolution the 3D world is drawn at. On a phone
+## or tablet it is capped at the preset's `phone_density` pixels per canvas
+## point (revision 6.12): on a 1220 x 2712 phone, MEDIUM draws the world at
+## 64%, about 1.4 million pixels instead of 3.3 million, and the bilinear
+## upscale of this soft, flat-coloured art is hard to tell from full size.
+## A desktop window keeps the preset's own share.
+static func scale_3d_for_device(quality: Dictionary, on_phone: bool, points_to_pixels: float) -> float:
+	var scale := float(quality["scale_3d"])
+	if on_phone and points_to_pixels > 0.0:
+		scale = minf(scale, float(quality["phone_density"]) / points_to_pixels)
+	return clampf(scale, MIN_SCALE_3D, 1.0)
+
+
+## Screen pixels per canvas point at UI SCALE 100% (about 3 on a phone).
+static func pixels_per_point(root: Window) -> float:
+	var design := Vector2(root.content_scale_size)
+	if design.x <= 0.0 or design.y <= 0.0:
+		return 1.0
+	return maxf(minf(float(root.size.x) / design.x, float(root.size.y) / design.y), 1.0)
+
+
+## Frames a second the game may draw: PHONE_MAX_FPS on a phone or tablet, no
+## cap (0) on a desktop, where the monitor's V-Sync sets the pace.
+static func max_fps_for_device(on_phone: bool) -> int:
+	return PHONE_MAX_FPS if on_phone else 0
 
 
 ## A phone or tablet: the Android or iOS app, or the Web build in a phone's
