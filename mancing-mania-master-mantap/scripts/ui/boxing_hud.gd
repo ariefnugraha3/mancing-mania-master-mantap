@@ -281,9 +281,12 @@ func _layout() -> void:
 
 	var under_bars := bars_top + bar_block + gap
 	var widget_width := minf(WIDGET_SIZE.x, area.x)
-	_place(_hint, Rect2(0.0, under_bars, area.x, 32.0))
+	# The hint may wrap to two lines on a phone (in Indonesian it does), so
+	# the attack sign starts under both and never over the second.
+	var hint_height := ceilf(_hint.get_theme_font(&"font").get_height(_hint.get_theme_font_size(&"font_size")) * 2.0)
+	_place(_hint, Rect2(0.0, under_bars, area.x, hint_height))
 	_hint.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_place(_widget, Rect2((area.x - widget_width) * 0.5, under_bars + 34.0, widget_width, WIDGET_SIZE.y))
+	_place(_widget, Rect2((area.x - widget_width) * 0.5, under_bars + hint_height + 2.0, widget_width, WIDGET_SIZE.y))
 	UiTokens.place_banner(_banner_title, _banner_body, area.y * 0.16, area.x)
 
 	# Bottom: the thumb buttons under the fight.
@@ -317,6 +320,4 @@ func _layout_controls() -> void:
 
 
 func _place(control: Control, rect: Rect2) -> void:
-	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	control.position = rect.position
-	control.size = rect.size
+	UiTokens.place_at(control, rect)

@@ -1131,6 +1131,52 @@ func test_dance_portrait_lanes_are_full_touch_targets() -> bool:
 
 # --- Suwit, Wheel and Result (GDD 168.6, 168.10, 168.11) --------------------
 
+## Revision 6.12: on a phone the fish's tell card is one size and inside the
+## screen for every word it can show, in either language, the longest (the
+## Charm's REAL MOVE) included. It used to stretch past the right edge.
+func test_suwit_tell_card_keeps_one_size_on_screen() -> bool:
+	if not check(await _enter_duel(&"suwit", &"gourami_shady"), "a hooked fish reaches the table"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("SuwitCanvas") as SuwitHud
+	var tell := scene.get_node("SuwitCanvas/SafeRoot/TellWidget") as Control
+	var label := hud.get(&"_tell_label") as Label
+	var window := tree.root
+	var original := window.size
+	window.size = Vector2i(720, 1280)
+	await wait_frames(4)
+	# Held still, so the countdown does not write over the words under test.
+	tree.paused = true
+	tell.visible = true
+	var canvas := window.get_visible_rect().size
+	var language := TextDb.get_language()
+	var first := Vector2.ZERO
+	for each: String in TextDb.LANGUAGES:
+		TextDb.set_language(each)
+		var texts: Array[String] = [TextDb.t(&"suwit.tell")]
+		for move: StringName in SuwitController.MOVES:
+			var word := TextDb.t(StringName("suwit.move.%s" % move))
+			texts.append(word)
+			texts.append(TextDb.tf(&"suwit.real_move", {"move": word}))
+		for text: String in texts:
+			label.text = text
+			hud.call(&"_fit_tell_text")
+			await wait_frames(2)
+			var rect := tell.get_global_rect()
+			if first == Vector2.ZERO:
+				first = rect.size
+			check(rect.position.x >= -0.5 and rect.end.x <= canvas.x + 0.5, "\"%s\": the card stays on screen (%.0f..%.0f of %.0f)" % [text, rect.position.x, rect.end.x, canvas.x])
+			check(rect.size.distance_to(first) < 0.5, "\"%s\": the card keeps one size (%s vs %s, font %d)" % [text, rect.size, first, label.get_theme_font_size(&"font_size")])
+			check(label.get_line_count() <= 2, "\"%s\": two lines at most" % text)
+			var font := label.get_theme_font(&"font")
+			check(OverlayPanel.longest_word_width(font, label.get_theme_font_size(&"font_size"), text) <= label.size.x + 0.5, "\"%s\": every word fits" % text)
+	TextDb.set_language(language)
+	tree.paused = false
+	window.size = original
+	await wait_frames(3)
+	return true
+
+
 func test_suwit_scene_follows_the_blueprint_and_plays() -> bool:
 	if not check(await _enter_duel(&"suwit", &"gourami_shady", func() -> void: GameState.debug_set_upgrade_level(&"charm", 1)), "a hooked fish reaches the table"):
 		return true

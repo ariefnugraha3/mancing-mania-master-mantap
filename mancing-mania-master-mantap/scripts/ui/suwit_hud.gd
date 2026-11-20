@@ -11,6 +11,11 @@ signal charm_pressed()
 signal pause_pressed()
 
 const BUTTON_SIZE := Vector2(110.0, 130.0)
+## The fish's tell card: one size whatever it says (revision 6.12). Its word
+## wraps to at most two lines and shrinks, down to TELL_MIN_FONT, until the
+## longest word fits; the card never grows past the edge of the screen.
+const TELL_ICON := 84.0
+const TELL_MIN_FONT := 13
 
 @onready var _safe_root: Control = $SafeRoot
 @onready var _dots: HBoxContainer = $SafeRoot/ScoreDots
@@ -93,6 +98,7 @@ func refresh(snapshot: Dictionary) -> void:
 		_tell.visible = counting
 		_tell_icon.move = &""
 		_tell_label.text = TextDb.t(&"suwit.tell")
+	_fit_tell_text()
 	var picked: StringName = snapshot["player_move"]
 	for move: StringName in _buttons:
 		_buttons[move].disabled = not counting or (picked != &"" and picked != move)
@@ -152,15 +158,32 @@ func _build_tell() -> void:
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tell.add_child(column)
 	_tell_icon = MoveIcon.new()
-	_tell_icon.custom_minimum_size = Vector2(96.0, 96.0)
+	_tell_icon.custom_minimum_size = Vector2(TELL_ICON, TELL_ICON)
 	_tell_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(_tell_icon)
 	_tell_label = Label.new()
 	_tell_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tell_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_tell_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_tell_label.max_lines_visible = 2
 	_tell_label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
 	_tell_label.add_theme_font_override(&"font", UiSkin.bold_font())
 	column.add_child(_tell_label)
 	_tell.visible = false
+
+
+## The tell's word at the largest size, from FONT_BUTTON down, whose longest
+## word fits the card and whose whole text fits two lines.
+func _fit_tell_text() -> void:
+	var font := _tell_label.get_theme_font(&"font")
+	var room := _tell.size.x - _tell.get_theme_stylebox(&"panel").get_minimum_size().x
+	var font_size := UiTokens.FONT_BUTTON
+	while font_size > TELL_MIN_FONT:
+		var lines := font.get_multiline_string_size(_tell_label.text, HORIZONTAL_ALIGNMENT_CENTER, room, font_size).y / font.get_height(font_size)
+		if OverlayPanel.longest_word_width(font, font_size, _tell_label.text) <= room and lines <= 2.05:
+			break
+		font_size -= 1
+	_tell_label.add_theme_font_size_override(&"font_size", font_size)
 
 
 func _build_dots() -> void:
@@ -242,17 +265,24 @@ func _layout() -> void:
 	var charm_width := minf(row_width, 320.0)
 	_place(_charm, Rect2((area.x - charm_width) * 0.5, area.y - charm_height, charm_width, charm_height))
 	_place(_row, Rect2((area.x - row_width) * 0.5, _charm.position.y - button.y - UiTokens.SPACE_16, row_width, button.y))
-	# The tell sits beside the fish, never over its face.
-	var tell_size := Vector2(minf(170.0, area.x * 0.44), 150.0)
+	# The tell sits beside the fish, never over its face: one fixed card with
+	# room for the hand and two lines of its largest text.
+	var line := _tell_label.get_theme_font(&"font").get_height(UiTokens.FONT_BUTTON) + float(_tell_label.get_theme_constant(&"line_spacing"))
+	var two_lines := line * 2.0
+	_tell_label.custom_minimum_size.y = two_lines
+	var column_gap := float((_tell.get_child(0) as BoxContainer).get_theme_constant(&"separation"))
+	var tell_size := Vector2(minf(170.0, area.x * 0.44), _tell.get_theme_stylebox(&"panel").get_minimum_size().y + TELL_ICON + column_gap + two_lines)
 	var under_dots := dots_top + 48.0
 	_place(_tell, Rect2(area.x - tell_size.x, under_dots, tell_size.x, tell_size.y))
+	_fit_tell_text()
 	_place(_countdown, Rect2(0.0, under_dots, area.x * 0.45, 80.0))
-	UiTokens.place_banner(_banner, _banner_body, area.y * 0.2, area.x)
+	# The intro banner's first line starts under the tell card, never over it.
+	var title_line := _banner.get_theme_font(&"font").get_height(_banner.get_theme_font_size(&"font_size"))
+	var banner_top := maxf(area.y * 0.2, _tell.position.y + _tell.size.y + UiTokens.SPACE_8 + title_line - UiTokens.BANNER_TITLE_HEIGHT)
+	UiTokens.place_banner(_banner, _banner_body, banner_top, area.x)
 	_keys.visible = InputManager.is_keyboard_active()
 	_place(_keys, Rect2(0.0, _row.position.y - 30.0, area.x, 28.0))
 
 
 func _place(control: Control, rect: Rect2) -> void:
-	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	control.position = rect.position
-	control.size = rect.size
+	UiTokens.place_at(control, rect)

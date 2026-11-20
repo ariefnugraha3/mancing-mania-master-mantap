@@ -103,19 +103,33 @@ const TYPE_CARD_PANEL := &"CardPanel"
 const TYPE_WELL_PANEL := &"WellPanel"
 
 
+## A duel banner's headline box: two lines of the headline, text at its foot.
+const BANNER_TITLE_HEIGHT := 104.0
+
+
 ## Places a duel banner: the headline may wrap to two lines on a phone, so it
 ## sits at the bottom of a two-line box and the body line starts under it.
+## A headline that needs more room grows upward, never over the body.
 static func place_banner(title: Label, body: Label, top: float, width: float) -> void:
-	for label: Label in [title, body]:
-		label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		label.size.x = width
-		label.position.x = 0.0
 	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	title.position.y = top
-	title.size.y = 104.0
+	title.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	place_at(title, Rect2(0.0, top, width, BANNER_TITLE_HEIGHT))
 	body.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	body.position.y = top + 108.0
-	body.size.y = 72.0
+	place_at(body, Rect2(0.0, top + BANNER_TITLE_HEIGHT + 4.0, width, 72.0))
+
+
+## Puts `control` at `rect` of its parent (revision 6.12). The rect goes into
+## the anchors and offsets, never into `size`: a wrapping label whose text is
+## set before the first layout (width 0) measures one letter per line, and a
+## size written while it is that tall stays that tall for good. That dropped
+## each duel's fish name to the bottom of the screen. Written as offsets, the
+## box takes its own size back as soon as the text has a width to wrap in.
+static func place_at(control: Control, rect: Rect2) -> void:
+	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	control.offset_left = rect.position.x
+	control.offset_top = rect.position.y
+	control.offset_right = rect.end.x
+	control.offset_bottom = rect.end.y
 
 
 ## Anchors a control to a layout preset at its full minimum size.

@@ -531,6 +531,37 @@ func test_the_dialogue_card_keeps_one_size() -> bool:
 	return true
 
 
+## Revision 6.12: a wrapping label whose text is set before its first layout
+## keeps the box it is given. Each duel's fish name used to drop to the bottom
+## of the screen: at width 0 it measured one letter per line, and the size
+## written while it was that tall stuck.
+func test_a_banner_written_before_its_layout_keeps_its_place() -> bool:
+	var layer := CanvasLayer.new()
+	tree.root.add_child(layer)
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(root)
+	var title := Label.new()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.add_theme_font_size_override(&"font_size", 44)
+	root.add_child(title)
+	var body := Label.new()
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	root.add_child(body)
+	title.text = "BRUISER CATFISH"
+	body.text = "BOXING. FIRST TO THREE."
+	await wait_frames(2)
+	UiTokens.place_banner(title, body, 100.0, 366.0)
+	await wait_frames(3)
+	check_near(title.size.y, UiTokens.BANNER_TITLE_HEIGHT, 0.5, "the headline keeps its two-line box (%.0f)" % title.size.y)
+	check_near(title.position.y, 100.0, 0.5, "where it was put")
+	check_near(title.size.x, 366.0, 0.5, "as wide as the screen")
+	check_near(body.position.y, 100.0 + UiTokens.BANNER_TITLE_HEIGHT + 4.0, 0.5, "and the body sits under it")
+	layer.queue_free()
+	await wait_frames(1)
+	return true
+
+
 func test_relaxed_dialogue_is_slower_than_normal() -> bool:
 	check(DialogueBox.CHARS_PER_SEC.has("relaxed"), "RELAXED has its own speed")
 	check(float(DialogueBox.CHARS_PER_SEC["relaxed"]) < float(DialogueBox.CHARS_PER_SEC["normal"]), "and it is slower")

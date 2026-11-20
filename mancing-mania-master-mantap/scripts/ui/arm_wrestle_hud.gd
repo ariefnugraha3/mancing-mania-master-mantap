@@ -251,6 +251,4 @@ func _layout() -> void:
 
 
 func _place(control: Control, rect: Rect2) -> void:
-	control.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	control.position = rect.position
-	control.size = rect.size
+	UiTokens.place_at(control, rect)
