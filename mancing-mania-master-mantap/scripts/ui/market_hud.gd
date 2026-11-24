@@ -309,13 +309,12 @@ func _layout() -> void:
 	# The tabs are at least TAB_HEIGHT tall, more with large text.
 	var tab_height := maxf(TAB_HEIGHT, _tab_bar.get_combined_minimum_size().y)
 	var sheet_bottom := area.y - leave_height - UiTokens.SPACE_12
-	# The sheet starts a third of the way down, and rises higher when its page
-	# needs the room (large UI and text sizes on a small phone).
-	var page := _panels[_current_tab]
+	# The sheet starts a third of the way down on every tab, so it never jumps
+	# as the player moves between tabs (revision 6.12). A page with more than
+	# fits scrolls inside it; it used to raise the sheet instead, and a page
+	# not yet shown measured itself wrongly (no width to wrap in yet).
 	var chrome := _tab_content.get_theme_stylebox(&"panel").get_minimum_size().y
-	var page_needs := page.fixed_height() + chrome
-	var top := minf(roundf(area.y * LEDGER_TOP_RATIO), sheet_bottom - tab_height - page_needs)
-	top = maxf(top, row + UiTokens.SPACE_8)
+	var top := maxf(roundf(area.y * LEDGER_TOP_RATIO), row + UiTokens.SPACE_8)
 	var ledger := Rect2(left, top, width, sheet_bottom - top)
 	# The shop's name hangs under the header, and one line of guidance rests
 	# just above the tabs. When the sheet rises high, the name gives way.

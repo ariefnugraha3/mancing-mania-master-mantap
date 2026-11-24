@@ -157,6 +157,27 @@ func test_fishing_sfx_render_cleanly() -> bool:
 	return true
 
 
+## Revision 6.12: the sounds of the small happenings at the fishing spot.
+## The drizzle is the one long sound; the rest are short calls.
+func test_fishing_event_sfx_render_cleanly() -> bool:
+	var mix_rate := AudioManager.get_mix_rate()
+	for sfx_id: StringName in AudioManager.EVENT_SFX_IDS:
+		var preset := AudioManager.get_preset(sfx_id)
+		if not check(preset != null, "%s preset exists" % sfx_id):
+			continue
+		check_eq(preset.id, sfx_id, "%s preset id matches its file" % sfx_id)
+		check(SfxRenderer.SUPPORTED_SYNTH_TYPES.has(preset.synth_type), "%s uses a supported synth type" % sfx_id)
+		var samples := SfxRenderer.render(preset, mix_rate, 7)
+		check(not SynthDsp.has_invalid_samples(samples), "%s has no NaN/Inf" % sfx_id)
+		var peak := SynthDsp.peak(samples)
+		check(peak <= 1.0 and peak >= 0.03, "%s peak %.3f is audible and within full scale" % [sfx_id, peak])
+		var duration := float(samples.size()) / float(mix_rate)
+		var longest := 7.0 if sfx_id == &"event_rain" else 1.0
+		check(duration >= 0.02 and duration <= longest, "%s lasts %.3f s" % [sfx_id, duration])
+		check(AudioManager.get_sfx_stream(sfx_id) != null, "%s is playable through the manager" % sfx_id)
+	return true
+
+
 func test_real_bite_is_unmistakable_from_a_nibble() -> bool:
 	var mix_rate := AudioManager.get_mix_rate()
 	var bite := SfxRenderer.render(AudioManager.get_preset(&"sfx_real_bite"), mix_rate)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"event_rain"
+synth_type = &"noise_sweep"
+base_gain_db = -17.0
+attack_sec = 1.2
+decay_sec = 4.0
+sustain = 0.75
+release_sec = 1.6
+pitch_hz = 4200.0
+noise_amount = 1.0
+filter_cutoff_hz = 6500.0
+seed_mode = &"fixed"

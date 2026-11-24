@@ -190,7 +190,7 @@ func test_late_strike_lets_the_fish_escape() -> bool:
 	check_eq(_count("failed:missed_strike"), 1, "missed strike is reported once")
 	check_eq(GameState.get_stat(&"failed_strikes"), 1, "failed strike counted")
 	check_eq(GameState.get_bucket_total_count(), 0, "nothing enters the bucket")
-	check_eq(GameState.get_cash(), 8430, "nothing is lost")
+	check_eq(GameState.get_cash(), 10000, "nothing is lost")
 
 	_controller.attempt_strike()
 	check_eq(_controller.get_state(), FishingController.STATE_ESCAPED, "a strike after the escape does nothing")
@@ -548,4 +548,116 @@ func test_full_loop_with_a_simple_player() -> bool:
 	check_eq(_events.find("state:casting") < _events.find("state:waiting"), true, "casting before waiting")
 	check_eq(_events.find("state:strike_window") < _events.find("state:reeling"), true, "strike before reeling")
 	check_eq(_events.find("state:reeling") < _events.find("state:landed"), true, "reeling before landing")
+	return true
+
+
+# --- Small happenings (revision 6.12) ------------------------------------------
+
+func _happenings(location_id: StringName, seed: int = 7) -> FishingEvents:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	return FishingEvents.new(location_id, rng)
+
+
+## Only quiet fishing counts: the first one comes 10-18 s in, the next ones
+## 20-40 s after the last one ended ("often").
+func test_happenings_come_often_and_only_when_quiet() -> bool:
+	var events := _happenings(&"cempaka")
+	var first := events.get_quiet_left()
+	check(first >= FishingEvents.FIRST_GAP_SEC.x and first <= FishingEvents.FIRST_GAP_SEC.y, "the first comes %.1f s in" % first)
+	check_eq(events.advance(first + 5.0, false, false), &"", "nothing while it is not quiet")
+	check_near(events.get_quiet_left(), first, 0.001, "and the wait does not run down")
+	var started := events.advance(first + 0.1, true, false)
+	check(started != &"", "one starts once the quiet has lasted")
+	check_eq(events.advance(60.0, true, false), &"", "only one at a time")
+	events.finish()
+	var gap := events.get_quiet_left()
+	check(gap >= FishingEvents.GAP_SEC.x and gap <= FishingEvents.GAP_SEC.y, "the next is %.1f s away" % gap)
+
+	# Ten minutes of quiet fishing, each happening about 8 s long.
+	var count := 0
+	var clock := 0.0
+	events = _happenings(&"cempaka", 11)
+	while clock < 600.0:
+		clock += 0.5
+		if events.advance(0.5, true, true) != &"":
+			count += 1
+			clock += 8.0
+			events.finish()
+	check(count >= 14 and count <= 30, "%d happenings in ten minutes" % count)
+	return true
+
+
+## Never the same one twice running; the rare ones keep others between them;
+## each spot only gets what fits it.
+func test_happenings_vary_and_fit_the_spot() -> bool:
+	for location_id: StringName in ContentIds.LOCATION_IDS:
+		var events := _happenings(location_id, location_id.hash())
+		var seen: Dictionary = {}
+		for round: int in 400:
+			var next := events.advance(100.0, true, round % 2 == 0)
+			if next == &"":
+				continue
+			seen[next] = true
+			var spots: Array = FishingEvents.EVENTS[next]["spots"]
+			check(spots.is_empty() or spots.has(location_id), "%s fits %s" % [next, location_id])
+			if next == FishingEvents.DRAGONFLY:
+				check(round % 2 == 0, "the dragonfly only comes to a float in the water")
+			var history := events.get_history()
+			var spacing := int(FishingEvents.EVENTS[next]["spacing"])
+			var before := history.slice(maxi(history.size() - 1 - spacing, 0), history.size() - 1)
+			check(not before.has(next), "%s keeps %d others between (%s)" % [next, spacing, before])
+			events.finish()
+		var expected := 0
+		for event_id: StringName in FishingEvents.EVENTS:
+			var spots: Array = FishingEvents.EVENTS[event_id]["spots"]
+			if spots.is_empty() or spots.has(location_id):
+				expected += 1
+		check_eq(seen.size(), expected, "%s gets every happening that fits it" % location_id)
+	check(not _happenings(&"mawar").candidates(true).has(FishingEvents.MOTOR), "no motorbike rides along the pier")
+	check(FishingEvents.is_sea(&"mawar") and FishingEvents.is_sea(&"anggrek") and not FishingEvents.is_sea(&"cempaka"), "gulls by the sea, kingfishers inland")
+	return true
+
+
+## Every line a happening can show exists in English and Indonesian.
+func test_happening_lines_exist_in_both_languages() -> bool:
+	var keys: Array[String] = ["fishing.event.tap", "fishing.event.frog.croak", "fishing.event.bottle.spotted",
+		"fishing.event.bottle.missed", "fishing.event.bottle.title", "fishing.event.bottle.cash", "fishing.event.family.title",
+		"speaker.neighbour", "speaker.kids", "speaker.frog"]
+	for pool: StringName in FishingEventDirector.DARTO_LINES:
+		for line: int in int(FishingEventDirector.DARTO_LINES[pool]):
+			keys.append("fishing.event.%s.%d" % [pool, line + 1])
+	for kind: String in ["motor", "kites"]:
+		for line: int in FishingEventDirector.EXCHANGES:
+			keys.append("fishing.event.%s.%d.them" % [kind, line + 1])
+			keys.append("fishing.event.%s.%d.darto" % [kind, line + 1])
+	for line: int in FishingEventDirector.HECKLES:
+		keys.append("fishing.event.heckle.%d.them" % (line + 1))
+		keys.append("fishing.event.heckle.%d.darto" % (line + 1))
+	var visits: Array[String] = ["free"]
+	for visit: int in FishingEventDirector.COLLECTOR_VISITS:
+		visits.append(str(visit + 1))
+	for visit: String in visits:
+		for part: String in ["them", "darto", "them2"]:
+			keys.append("fishing.event.collector.%s.%s" % [visit, part])
+	for kind: String in ["empty", "full"]:
+		for line: int in FishingEventDirector.CAT_LINES:
+			keys.append("fishing.event.cat.%s.%d" % [kind, line + 1])
+	keys.append_array(["fishing.event.cat.meow", "fishing.event.ducks.quack", "fishing.event.ducks.late",
+		"speaker.collector", "speaker.duck", "speaker.cat"])
+	for note: int in FishingEventDirector.BOTTLE_NOTES:
+		keys.append("fishing.event.bottle.note.%d" % (note + 1))
+	for stage: StringName in FishingEventDirector.FAMILY:
+		var senders: Array = FishingEventDirector.FAMILY[stage]
+		for index: int in senders.size():
+			keys.append("fishing.event.family.%s.%d" % [stage, index + 1])
+			keys.append("speaker.%s" % senders[index])
+	var english := TextDb.get_table(TextDb.ENGLISH)
+	var indonesian := TextDb.get_table(TextDb.INDONESIAN)
+	var missing := PackedStringArray()
+	for key: String in keys:
+		if not english.has(key) or not indonesian.has(key):
+			missing.append(key)
+	check_empty(missing, "every happening line is in both tables")
+	check(TextDb.tf(&"fishing.event.bottle.cash", {"amount": "Rp 1.000"}).contains("Rp 1.000"), "the bottle names its money")
 	return true

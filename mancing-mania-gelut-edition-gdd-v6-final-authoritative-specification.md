@@ -74,6 +74,27 @@ Petunjuk tutorial tinju tetap muncul di duel tinju berikutnya sampai pemain mena
 
 Gameplay, balance, cerita, dan save schema tidak berubah. Bagian yang direvisi: header, Section 115, 125, 135, 186, 195.12.
 
+**Revisi 6.12 (2026-11-21):** atas permintaan pemilik proyek, game dirapikan untuk dimainkan di HP sungguhan, dan waktu menunggu ikan kini punya kejadian kecil:
+
+- **Kejadian kecil saat menunggu ikan** (Section 25.1): ikan melompat, raja udang atau camar menyambar ikan, katak di daun teratai, capung hinggap di pelampung, sandal hanyut, botol berisi pesan yang bisa diketuk, pesan HP dari Nisa atau Rini, gerimis, tetangga lewat naik motor, dan anak-anak bermain layangan, ditambah empat kejadian lucu: ikan nongol mengejek umpan Darto, penagih CepatCash lewat (Darto pura-pura jadi orang-orangan sawah), parade bebek dengan anak bebek yang ketinggalan, dan kucing oren yang menghakimi isi ember. Muncul kira-kira setiap 20–40 detik memancing yang tenang, dan langsung mengalah begitu ikan menggigit.
+- **Popup selalu utuh di tengah layar**, di bahasa dan ukuran UI atau teks mana pun. Footer bertumpuk bila tombolnya tidak muat, label panjang hanya pindah baris di batas kata, dan kartu yang masih terlalu lebar diperkecil, bukan keluar layar. Kartu unlock di adegan cerita juga di tengah.
+- **Kartu dialog satu ukuran** (190 pt, muat nama dan tiga baris) di dialog permainan dan adegan cerita, dengan KETUK UNTUK LANJUT selalu di kaki kartu. Baris yang terlalu panjang menumbuhkan kartu ke atas, lalu kartu kembali ke ukurannya di baris berikutnya. Ketukan di kartu cerita kini memajukan cerita.
+- **Nama ikan di awal duel** berada di tengah layar. Sebelumnya jatuh ke bawah layar karena ukurannya dicatat saat teksnya belum punya lebar. Kartu isyarat ikan di Suwit berukuran tetap dan tidak keluar layar. Petunjuk tinju dua baris tidak lagi tertimpa tanda serangan.
+- **HP lebih dingin**: HP dan tablet menggambar paling banyak 60 frame per detik, dan dunia 3D paling banyak `phone_density` piksel per poin kanvas (RENDAH 1,5, SEDANG 2,0, TINGGI 2,75). Di HP 1220 × 2712, SEDANG menggambar dunia 3D di 64%; teks dan tombol tetap di resolusi penuh (Section 189.3, 190).
+- **Memori**: font Chewy memakai MSDF, cache glyph dibuang saat pindah scene, dan tanda "!" gigitan hanya memakai Chewy. Render langsung ke layar dicoba lalu dibatalkan, karena di Android dengan renderer Compatibility seluruh game tergambar terbalik.
+- **Sentuhan**: halaman Warung dan daftar Settings bisa di-scroll dengan jari dari mana saja. Cincin fokus emas hanya muncul untuk keyboard dan gamepad, tidak setelah ketukan (Section 167). Tombol HOLD TO SKIP di kredit berada di tengah.
+- **Tombol Back Android**: HP MIUI/HyperOS mengirim satu tekanan Back dua kali berjarak sekitar 0,2 detik, sehingga pertanyaan keluar langsung tertutup lagi. Back dalam 600 ms setelah Back sebelumnya dihitung sebagai tekanan yang sama (Section 135).
+- **Ember berkapasitas** (Section 70, 76, 77, 165.6): ember baru muat 5 tangkapan (ikan atau sampah). Upgrade baru **Ember Besar** membuatnya 10, 15, dan 20, seharga Rp 10.000, Rp 30.000, dan Rp 70.000. Ember yang penuh menolak lemparan berikutnya sampai Darto menjual di Warung; HUD menampilkan isi/kapasitas dan EMBER PENUH. Ini mengganti aturan lama "Bucket unlimited" atas permintaan pemilik proyek.
+- **Transisi antarlayar** menampilkan spinner dan MEMUAT... di atas layar gelap, bukan layar gelap kosong.
+- **Pesan keluarga dan isi botol** di kejadian kecil tampil di kotak dialog bawah (dengan KETUK UNTUK LANJUT), seperti dialog ikan. Kotak itu tertutup sendiri bila ikan menggigit.
+- **Roda Nasib** memakai ikon khusus tiap duel (Section 38), dan chip ember di HUD melebar mengikuti teks isi/kapasitas.
+- **Cara Bermain**: satu judul tab di antara dua tombol besar (56 pt) yang langsung pindah ke tab sebelumnya atau berikutnya; popup sama besar di setiap tab. **Warung**: lembar bertab sama tinggi di setiap tab; halaman yang lebih panjang di-scroll di dalamnya.
+- **Utang awal Rp 2.000.000** (Section 12, 14, 15, 16, 22, 25.1, 77, 79, 149, 161, 165.6–165.7, 171.2, 177, 179.4–179.5, 183, 198): naik dari Rp 1.800.000 atas permintaan pemilik proyek, agar angkanya bulat. Milestone cerita ikut digeser sebanding, supaya setiap adegan tetap muncul di titik permainan yang sama: 100rb (tetap, kartunya menyebut Rp 100.000), 350rb (dulu 300rb), 700rb (600rb), 1,1jt (1jt; "You're past halfway" tetap benar), 1,5jt (1,4jt), dan 1,85jt (1,65jt; kartu "DEBT REMAINING: Rp 150,000" tetap benar). Keempat tempat baru terbuka di ambang yang sama dengan milestone-nya, dan pesan keluarga saat memancing berganti tahap di 350rb dan 1,1jt. ID event tidak diganti (misalnya `story_debt_1000k` kini terpicu di Rp 1.100.000) agar save lama tetap cocok. Harga ikan, upgrade, dan perlengkapan tidak berubah: model ekonomi (`tools/sim`) menunjukkan lama melunasi naik 8–11% dan masih di bawah target Section 179.4, sedangkan total upgrade Rp 815.000 tetap sekitar 41% dari utang.
+- **Save dari utang lama**: save yang masih mencicil menyimpan jumlah yang sudah dibayar dan kini berutang sisa dari Rp 2.000.000; save yang sudah melunasi Rp 1.800.000 tetap lunas (dibayar Rp 2.000.000, sisa Rp 0), sehingga ending tidak pernah berutang lagi.
+- **Teks**: dialog dan tombol bahasa Indonesia disunting pemilik proyek (SENTAK menjadi TARIK). Dalam bahasa Indonesia, Darto memakai "aku" hanya kepada Rini dan Nisa; kepada siapa pun selain itu (Bu Yati, ikan, tetangga, penagih, dan saat bicara sendiri) ia memakai "saya". Bu Yati selalu memakai "saya", kepada siapa pun. Kalimat Rini di epilog menyebut berapa kali lele mengalahkan Darto (`{catfish_losses}`), dan Rini di prolog berangkat kerja, bukan pergi. `TEKS_BAHASA_INDONESIA.md` memuat semua dialog kejadian kecil saat memancing beserta tempat munculnya.
+
+Ekonomi berubah lewat utang awal Rp 2.000.000 dengan milestone yang digeser sebanding, batas ember dan upgrade Ember Besar, serta botol berisi pesan (Rp 500–2.000, jarang). Save lama tetap terbaca: Ember Besar mulai di level 0, dan ember lama yang berisi lebih dari 5 tidak dikurangi (hanya lemparan berikutnya yang menunggu penjualan). Duel dan naskah cerita tidak berubah, kecuali dua kalimat yang menyebut jumlah utang. Bagian yang direvisi: header, Section 15, 16, 25.1, 38, 70, 76, 77, 79, 133.3, 135, 149, 159, 165.6, 165.7, 167, 168, 171.2, 177, 179.4, 179.5, 183, 189.3, 190, 198, dan daftar larangan scope.
+
 **Revisi UI 6.1 (2026-11-14):** seluruh UI 2D (menu, tombol, overlay, HUD, Market, dialog, Wheel) dirombak ke gaya **"cozy warung card"** agar serasi dengan dunia diorama: palet hangat yang sama, sudut lebih bulat, setiap benda yang bisa ditekan punya "bibir" (lip) gelap di bawahnya dan tenggelam saat ditekan, judul pita (ribbon) di atas kartu, ikon prosedural, logo emblem, dan teks judul bergaya cat papan. Tetap tanpa file font/gambar UI eksternal. Bagian yang direvisi: Section 167.2–167.6, 167.9, 185.20. Perubahan art direction setelah RC1 ini disetujui eksplisit oleh pemilik proyek (Section 194.4); build berikutnya harus melewati QA dan human playtest ulang sebagai `v1.0.0-rc2` sebelum Gold Master.
 
 **Judul sebelumnya:** *Mancing Mania: Gelut Edition* (hingga revisi 6.7); judul kerja awal *Baku Hantam Empang*  
@@ -648,7 +669,7 @@ UI ponsel menunjukkan:
 
 Kemudian:
 
-**TOTAL DEBT: Rp 1,800,000**
+**TOTAL DEBT: Rp 2,000,000**
 
 Darto memandang layar.
 
@@ -815,7 +836,7 @@ Rp 10,000.
 
 Setelah pembayaran:
 
-**Debt Remaining: Rp 1,790,000**
+**Debt Remaining: Rp 1,990,000**
 
 Tidak ada confetti.
 
@@ -849,7 +870,9 @@ Tidak ada bunga hutang bertambah.
 
 Debt ditetapkan melalui restrukturisasi naratif menjadi:
 
-# Rp 1,800,000
+# Rp 2,000,000
+
+(Revisi 6.12: dulu Rp 1,800,000.)
 
 Angka tersebut tidak berubah kecuali player membayar.
 
@@ -861,6 +884,8 @@ memberikan motivasi tanpa menciptakan tekanan anxiety yang bertentangan dengan c
 
 # 16. DEBT MILESTONES
 
+**Revisi 6.12:** dengan utang Rp 2,000,000, milestone 2–6 digeser sebanding (dulu 300k, 600k, 1,000k, 1,400k, 1,650k). ID event tetap memakai nama lama (`story_debt_300k`, `story_debt_600k`, `story_debt_1000k`, `story_debt_1400k`, `story_debt_1650k`) agar save lama cocok; ambangnya ada di `trigger_value` data cerita.
+
 ## Milestone 1 — Rp 100,000 Paid
 
 Darto mulai percaya aktivitas memancing bisa menghasilkan.
@@ -869,7 +894,7 @@ Rini belum terlalu yakin.
 
 ---
 
-## Milestone 2 — Rp 300,000 Paid
+## Milestone 2 — Rp 350,000 Paid
 
 Rini menerima notifikasi pembayaran.
 
@@ -887,7 +912,7 @@ Rini:
 
 ---
 
-## Milestone 3 — Rp 600,000 Paid
+## Milestone 3 — Rp 700,000 Paid
 
 Nisa menelepon.
 
@@ -897,7 +922,7 @@ Fish Collection diperkenalkan secara naratif.
 
 ---
 
-## Milestone 4 — Rp 1,000,000 Paid
+## Milestone 4 — Rp 1,100,000 Paid
 
 Darto telah membayar lebih dari separuh.
 
@@ -905,7 +930,7 @@ Rini mulai berbicara mengenai masa depan, bukan hanya hutang.
 
 ---
 
-## Milestone 5 — Rp 1,400,000 Paid
+## Milestone 5 — Rp 1,500,000 Paid
 
 Bu Yati mengatakan ada pembeli yang menyukai hasil tangkapan Darto.
 
@@ -913,9 +938,9 @@ Fish sale tidak lagi terasa seperti aktivitas sementara.
 
 ---
 
-## Milestone 6 — Rp 1,650,000 Paid
+## Milestone 6 — Rp 1,850,000 Paid
 
-Darto hampir selesai.
+Darto hampir selesai: sisa utang Rp 150,000.
 
 Tidak ada musik kemenangan besar.
 
@@ -927,7 +952,7 @@ Hidup tidak tiba-tiba berubah karena progress bar hampir penuh.
 
 ---
 
-## Milestone 7 — Rp 1,800,000 Paid
+## Milestone 7 — Rp 2,000,000 Paid
 
 Debt:
 
@@ -1122,7 +1147,7 @@ Sebagian dari Rp18.430 pada cutscene digunakan secara implisit untuk kebutuhan r
 
 Debt:
 
-**Rp 1,800,000**
+**Rp 2,000,000**
 
 Upgrade:
 
@@ -1252,6 +1277,56 @@ Minimum final wait:
 1.75 detik.
 
 Semua upgrade pada game menggunakan sistem **additive terhadap base stat** kecuali disebut sebaliknya.
+
+## 25.1 Kejadian kecil saat menunggu (revisi 6.12)
+
+Menatap danau tanpa ada yang terjadi terasa membosankan, jadi sekitar tempat memancing kini hidup. Kejadian kecil muncul selama **memancing yang tenang**: Darto diam atau menunggu gigitan, tidak ada dialog, banner, atau menu di layar, dan pelajaran pertama (`fishing_seen` dan adegan ikan pertama) sudah lewat. Hanya waktu tenang itu yang dihitung.
+
+**Jarak antarkejadian** ("sering"): kejadian pertama 10–18 detik setelah tiba di tempat memancing, lalu 20–40 detik setelah kejadian sebelumnya selesai, dipilih acak setiap kali. Hanya satu kejadian berjalan dalam satu waktu. Kejadian yang sama tidak pernah muncul dua kali berturut-turut, dan kejadian yang lebih langka menunggu beberapa kejadian lain di antaranya.
+
+| Kejadian | Bobot | Tempat | Jeda (kejadian lain di antaranya) | Isi |
+|---|---|---|---|---|
+| Ikan melompat | 3,0 | semua | 1 | Ikan dari daftar ikan tempat itu melompat keluar air dan menyelam lagi. |
+| Burung menyambar | 2,0 | semua | 2 | Raja udang (camar di Muara Anggrek dan Dermaga Mawar) masuk dari samping, menyambar ikan kecil, lalu terbang. |
+| Katak | 2,0 | Cempaka, Kenanga, Melati | 2 | Katak di daun teratai dekat tepi berbunyi dua kali, lalu melompat ke air. |
+| Capung | 2,0 | semua kecuali Dermaga Mawar | 2 | Hinggap di pelampung; hanya saat pelampung di air. Langsung terbang bila ada gigitan. |
+| Sandal hanyut | 1,0 | semua | 4 | Sandal hanyut melintas di kejauhan. |
+| Botol berisi pesan | 1,2 | semua | 4 | Botol hanyut dekat tepi dengan tombol AMBIL yang mengikutinya. Bisa diketuk. |
+| Pesan keluarga | 1,6 | semua | 3 | Pesan HP dari Nisa atau Rini di kotak dialog bawah, dengan nama pembicara PESAN DARI NISA / RINI dan KETUK UNTUK LANJUT. |
+| Gerimis | 0,9 | semua | 5 | 14 detik hujan rintik: tetes hujan, cincin di air, layar sedikit redup, suara hujan. |
+| Tetangga naik motor | 1,3 | semua kecuali Dermaga Mawar | 3 | Lewat di jalan belakang Darto, membunyikan klakson, lalu menyapa; Darto menjawab. |
+| Anak-anak main layangan | 1,3 | semua kecuali Dermaga Mawar | 3 | Dua anak berjalan di padang sambil menerbangkan layangan di atas air; mereka berseru, Darto menjawab. |
+| Ikan nongol ngeledek | 2,0 | semua | 2 | Ikan dari daftar ikan tempat itu menyembul dekat Darto, mengejek (*"Itu umpanmu? Serius?"*), Darto menjawab (*"Lagi diskon."*), lalu ikan pamer dan menyelam. Empat pasang ejekan. |
+| Penagih CepatCash | 1,0 | semua kecuali Dermaga Mawar | 4 | Penagih berjaket hijau dengan pengeras suara dan papan CEPATCASH berhenti di jalan setapak di kiri Darto: tiga baris (penagih, Darto, penagih), misalnya Darto pura-pura jadi orang-orangan sawah. Setelah utang lunas, penagih menawarkan pinjaman baru dan Darto menolak mentah-mentah. |
+| Parade bebek | 1,4 | semua kecuali Dermaga Mawar | 3 | Induk bebek dan empat anak berenang berbaris. Anak terakhir tertinggal, lalu panik mengejar (*"KWEK! Kwek kwek kwek!"*). |
+| Kucing oren | 1,4 | semua (di Dermaga Mawar lewat papan dermaga) | 3 | Kucing oren menghampiri ember, mengendus, menatap Darto, lalu pergi setelah "Meong." Komentar Darto bergantung pada isi ember: kosong atau berisi. |
+
+**Kata-kata** muncul di kartu ucapan di atas tombol bawah (nama pembicara dan satu baris, 2,6 detik per baris). Sebagian kejadian diberi satu komentar Darto; motor, layangan, dan ikan pengejek berupa satu sapaan dan satu jawaban, sedangkan penagih tiga baris.
+
+**Pesan keluarga** mengikuti cerita:
+
+- awal (belum Rp 350.000 terbayar);
+- tengah (Rp 350.000 terbayar, bersama milestone `story_debt_300k`);
+- akhir (Rp 1.100.000 terbayar, bersama milestone `story_debt_1000k`);
+- bebas (utang lunas).
+
+Setiap tahap punya tiga pesan.
+
+**Botol berisi pesan** adalah satu-satunya kejadian yang memberi hadiah. Bila diketuk sebelum hanyut (11,5 detik), Darto mengambilnya, dan isinya dibaca di kotak dialog bawah (revisi 6.12) dengan nama pembicara PESAN DALAM BOTOL:
+
+- 65%: uang Rp 500, 1.000, 1.500, atau 2.000. Uangnya langsung masuk dan game disimpan.
+- 35%: salah satu dari empat catatan lucu.
+
+Bila tidak diketuk, botolnya hanyut dan Darto berkomentar. Dampaknya ke ekonomi sangat kecil: rata-rata kurang dari Rp 1.000 per 5 menit memancing.
+
+**Kejadian tidak pernah mengganggu memancing.** Begitu ada peringatan gigitan, jendela strike, atau reel, kata-kata dan tombol AMBIL langsung hilang, dan capung di pelampung terbang. Kejadian di latar (gerimis, layangan, motor) selesai tanpa kata-kata. Pause menghentikan kejadian bersama permainan. Ketukan pada tombol AMBIL tidak pernah dihitung sebagai LEMPAR atau TARIK.
+
+**Aset**:
+
+- Model kecil dibuat oleh `tools/generators/event_prop_builder.gd`, mengikuti aturan props (VISUAL_STYLE_GUIDE 4, 8): raja udang, camar, katak, daun teratai, capung, botol, dua layangan, dua anak, pengendara motor, bebek, anak bebek, kucing oren, dan penagih CepatCash. Papan CEPATCASH di motor penagih adalah teks 3D (Label3D). Di layar mancing semuanya digambar lebih besar dari aslinya, seperti dunia chibi lainnya.
+- Suara disintesis dari kode (`event_bird_call`, `event_gull_call`, `event_frog_croak`, `event_horn`, `event_rain`, `event_coin`, `event_duck_quack`, `event_cat_meow`). Cipratan memakai suara memancing yang sudah ada.
+
+**Test dan QA**: test runner mematikan kejadian kecuali di test yang mengujinya. `FishingEventDirector.start(id)` memulai kejadian tertentu untuk test dan QA.
 
 ---
 
@@ -1600,6 +1675,17 @@ Masing-masing:
 25%.
 
 **Revisi 6.7:** daftar di atas adalah Wheel Danau Cempaka. Setiap tempat baru punya Wheel sendiri (duel khas tempat itu 4 segmen, dua duel lama masing-masing 2 segmen; Section 198.4). Wheel yang dipakai adalah Wheel tempat asal ikan.
+
+**Revisi 6.12:** setiap segmen memakai ikon khusus duelnya, digambar IconPainter dalam gaya stiker yang sama dengan ikon UI lain, menggantikan bentuk polos (lingkaran, kotak, segitiga, dan seterusnya). Ikon ikut berputar bersama segmen dan namanya:
+
+- Tinju Empang: sarung tinju;
+- Panco Maut: lengan berotot;
+- Joget Koplo: not musik;
+- Suwit: tangan dua jari;
+- Silat Kali: keris;
+- Tarik Tambang: tali tambang dengan pita;
+- Adu Gasing: gasing kayu;
+- Panjat Pinang: batang pinang dengan bendera dan hadiah.
 
 Outcome dipilih **sebelum animasi dimulai** menggunakan game RNG.
 
@@ -2452,13 +2538,15 @@ Darto:
 
 # 70. BUCKET SYSTEM
 
-Bucket unlimited.
+**Revisi 6.12:** Bucket punya kapasitas, atas permintaan pemilik proyek.
 
-Tidak ada capacity limit.
+- Game baru: muat **5 tangkapan** (ikan dan sampah dihitung sama).
+- Upgrade **Ember Besar** (Section 76): 10, 15, lalu 20.
+- Bucket yang penuh menolak lemparan berikutnya: HUD menampilkan EMBER PENUH dan Jual tangkapan di Warung dulu, baru mancing lagi; tombol LEMPAR berbunyi ditolak. Chip bucket di HUD menampilkan isi/kapasitas (misalnya 3/5) dan berwarna oranye saat penuh.
+- Tangkapan yang sedang berjalan selalu masuk: lemparan hanya bisa dimulai bila bucket belum penuh, jadi satu tangkapan tidak pernah melewati kapasitas.
+- Save lama yang isinya lebih dari kapasitas tidak dikurangi; Darto cukup menjual dulu.
 
-Alasan desain:
-
-capacity management akan memaksa player terlalu sering meninggalkan danau dan mengganggu cozy flow.
+Alasan desain (lama, kini diganti): capacity management dianggap memaksa player terlalu sering meninggalkan danau. Dengan kapasitas 5 yang naik murah ke 10, kunjungan ke Warung menjadi ritme bermain, dan Ember Besar menjadi upgrade pertama yang terasa.
 
 Isi Bucket disimpan dalam save.
 
@@ -2584,6 +2672,20 @@ Sale receipt menunjukkan breakdown.
 
 # 76. UPGRADES
 
+## BIG BUCKET (EMBER BESAR, revisi 6.12)
+
+Kapasitas bucket:
+
++5 / level (5 → 10 → 15 → 20).
+
+Prices:
+
+10k / 30k / 70k.
+
+Lv1 sengaja murah: satu bucket berisi 5 lele saja sudah sekitar Rp 90.000.
+
+---
+
 ## SUPER PELLET BAIT
 
 Wait time:
@@ -2680,9 +2782,13 @@ Charm:
 
 180k.
 
-# TOTAL: Rp 705,000
+Big Bucket (revisi 6.12):
 
-Ini sengaja cukup besar dibanding hutang Rp1.8 juta sehingga player harus membuat trade-off.
+110k.
+
+# TOTAL: Rp 815,000
+
+Ini sengaja cukup besar dibanding hutang Rp2 juta (sekitar 41%) sehingga player harus membuat trade-off.
 
 ---
 
@@ -2715,7 +2821,7 @@ Header:
 
 Original:
 
-Rp1,800,000.
+Rp2,000,000.
 
 Paid:
 
@@ -4438,8 +4544,8 @@ Rumah Darto tidak pernah disebut namanya di layar. Jika kelak disebut, namanya "
 
 ## 133.3 Format
 
-- **English**: Rp 1,800,000, 2.92 kg, jam 3:17 PM.
-- **Indonesia**: Rp 1.800.000, 2,92 kg, jam 15.17.
+- **English**: Rp 2,000,000, 2.92 kg, jam 3:17 PM.
+- **Indonesia**: Rp 2.000.000, 2,92 kg, jam 15.17.
 
 `Money.format_rp()` dan `Money.decimal()` mengikuti bahasa aktif.
 
@@ -4977,17 +5083,17 @@ Ini harus terasa secara tematis.
 
 Pada awal game Darto melihat:
 
-Rp1,800,000
+Rp2,000,000
 
 sebagai sesuatu yang mustahil.
 
-Ending tidak memberikan Rp1,800,000 sekaligus.
+Ending tidak memberikan Rp2,000,000 sekaligus.
 
 Player harus secara literal melihat angka itu turun:
 
-1,800,000  
-1,742,000  
-1,621,500  
+2,000,000  
+1,942,000  
+1,821,500  
 ...  
 350,000  
 84,000  
@@ -5250,10 +5356,10 @@ Jika implementasi dan dokumen lama bertentangan dengan bagian ini, versi ini yan
 3. Rini adalah istri Darto.
 4. Nisa adalah anak mereka.
 5. Bu Yati adalah merchant utama.
-6. Hutang awal adalah Rp1,800,000.
+6. Hutang awal adalah Rp2,000,000 (revisi 6.12; dulu Rp1,800,000).
 7. Hutang tidak memiliki bunga gameplay.
 8. Basic bait unlimited.
-9. Bucket unlimited.
+9. Bucket berkapasitas 5, naik sampai 20 dengan Ember Besar (revisi 6.12).
 10. Semua upgrade additive kecuali rule secara eksplisit menyatakan lain.
 11. Don Arowana base Rp240k + 1.25× = Rp300k.
 12. Trash distribution mengikuti tabel definitive.
@@ -5352,7 +5458,7 @@ AI/developer WAJIB:
 - tidak menambahkan multiplayer, online account, login, leaderboard online, cloud backend, chat, PvP, co-op, atau networking gameplay;
 - tidak mengubah Danau Cempaka menjadi open world;
 - tidak menambahkan free-roam character locomotion jika tidak dibutuhkan oleh scene;
-- tidak menambahkan inventory capacity pada Bucket;
+- tidak menambahkan batas inventory lain selain kapasitas Bucket (revisi 6.12);
 - tidak menambahkan durability, hunger, thirst, stamina overworld, fuel, repair cost, atau survival mechanic;
 - tidak menambahkan random economic reward pada Wheel of Fate;
 - tidak mengganti daftar ikan, harga, peluang, upgrade, atau debt progression tanpa revisi GDD;
@@ -5482,7 +5588,7 @@ v1.0 WAJIB memiliki:
 - Suwit;
 - Market;
 - Sell All dan category sell;
-- 5 upgrade families × 3 levels;
+- 6 upgrade families × 3 levels (Ember Besar sejak revisi 6.12);
 - Debt Ledger;
 - all debt narrative milestones;
 - Fish Book;
@@ -5544,7 +5650,6 @@ Tidak termasuk v1.0:
 - housing decoration system;
 - equipment durability;
 - bait inventory economy;
-- bucket capacity;
 - realistic day/night cycle;
 - dynamic weather simulation;
 - procedural quest generation;
@@ -5648,21 +5753,22 @@ Wheel memiliki 8 visual segments tetapi hanya empat outcome unik dengan peluang 
 
 ## 165.6 ECONOMY CONTENT
 
-Tepat 5 upgrade family, masing-masing Lv0–Lv3:
+Tepat 6 upgrade family, masing-masing Lv0–Lv3:
 
-1. Super Pellet Bait.
-2. Carbon Fibre Rod.
-3. Herbal Tonic.
-4. Black Coffee.
-5. Agate Charm Ring.
+1. Big Bucket / Ember Besar (revisi 6.12).
+2. Super Pellet Bait.
+3. Carbon Fibre Rod.
+4. Herbal Tonic.
+5. Black Coffee.
+6. Agate Charm Ring.
 
 Total purchasable upgrade steps:
 
-**15.**
+**18.**
 
 Debt awal:
 
-**Rp 1,800,000.**
+**Rp 2,000,000.**
 
 ## 165.7 NARRATIVE EVENT MANIFEST
 
@@ -5674,11 +5780,11 @@ Event naratif v1.0:
 | `story_first_fish` | first scripted Catfish land | yes |
 | `story_first_market` | first Market visit | yes/tutorial |
 | `story_debt_100k` | lifetime debt paid >=100k | yes |
-| `story_debt_300k` | >=300k | yes |
-| `story_debt_600k` | >=600k | yes |
-| `story_debt_1000k` | >=1,000k | yes |
-| `story_debt_1400k` | >=1,400k | yes |
-| `story_debt_1650k` | >=1,650k | yes |
+| `story_debt_300k` | >=350k (revisi 6.12) | yes |
+| `story_debt_600k` | >=700k (revisi 6.12) | yes |
+| `story_debt_1000k` | >=1,100k (revisi 6.12) | yes |
+| `story_debt_1400k` | >=1,500k (revisi 6.12) | yes |
+| `story_debt_1650k` | >=1,850k (revisi 6.12) | yes |
 | `story_debt_paid` | remaining debt == 0 | yes |
 | `story_arowana_first_win` | first Don Arowana win | optional/special |
 | `story_final_family` | after `story_debt_paid` | yes |
@@ -6463,7 +6569,7 @@ Langkah timeline dipetakan ke ponsel seperti ini:
 
 | Langkah | Tampil sebagai |
 |---|---|
-| `phone` ("TOTAL DEBT: Rp 1,800,000") | kartu akun di tengah chat: label kecil, nominal besar |
+| `phone` ("TOTAL DEBT: Rp 2,000,000") | kartu akun di tengah chat: label kecil, nominal besar |
 | `note` (CepatCash) | pesan dari akun bisnis CepatCash; judul notifikasi menjadi baris tebal |
 | `chat` | bubble di thread orang itu: lawan bicara di kiri (krem), Darto di kanan (hijau muda, centang baca) |
 | `call` | layar panggilan suara: avatar besar dengan cincin berdenyut, durasi berjalan, tombol speaker, mute, dan tutup merah |
@@ -6759,7 +6865,7 @@ func add_play_time(seconds: float) -> void
 Rules:
 
 - negative cash tidak pernah valid;
-- debt remaining di-clamp `0..1_800_000`;
+- debt remaining di-clamp `0..2_000_000`;
 - `pay_debt()` mengembalikan actual amount paid;
 - UI tidak mengubah dictionary internal langsung.
 
@@ -7327,9 +7433,9 @@ Timestamp menggunakan ISO-8601 UTC string.
 
 ```json
 {
-  "original": 1800000,
+  "original": 2000000,
   "paid": 0,
-  "remaining": 1800000
+  "remaining": 2000000
 }
 ```
 
@@ -8721,7 +8827,7 @@ Jika FPS drop:
 
 Ini adalah rule authoritative.
 
-**Revisi 6.7:** empat event pembuka tempat (`story_unlock_kenanga`, `story_unlock_melati`, `story_unlock_anggrek`, `story_unlock_mawar`) ikut aturan ini dengan prioritas 300 dan butuh event utang setara (300k, 600k, 1000k, 1400k) sudah dilihat. Menyelesaikan atau melewati event itu langsung membuka tempatnya (Section 198.6).
+**Revisi 6.7:** empat event pembuka tempat (`story_unlock_kenanga`, `story_unlock_melati`, `story_unlock_anggrek`, `story_unlock_mawar`) ikut aturan ini dengan prioritas 300 dan butuh event utang setara (`story_debt_300k`, `story_debt_600k`, `story_debt_1000k`, `story_debt_1400k`; sejak revisi 6.12 di Rp 350.000, 700.000, 1.100.000, dan 1.500.000) sudah dilihat. Menyelesaikan atau melewati event itu langsung membuka tempatnya (Section 198.6).
 
 ## 177.1 MARKET VISIT DEFINITION
 
@@ -9077,11 +9183,11 @@ Ini guideline, bukan guaranteed payout.
 
 Target full debt payoff untuk average player:
 
-**sekitar 5–8 jam total playtime**, tergantung prioritas upgrade dan skill.
+**sekitar 5,5–9 jam total playtime**, tergantung prioritas upgrade dan skill (revisi 6.12: dulu 5–8 jam untuk utang Rp1,8 juta; utang naik 11%, harga tidak berubah).
 
 Completionist yang membeli banyak/all upgrade sebelum debt selesai:
 
-**sekitar 7–11 jam**.
+**sekitar 7,5–12 jam**.
 
 Skilled lucky player tidak seharusnya secara konsisten menyelesaikan story <3.5 jam.
 
@@ -9094,12 +9200,14 @@ Average player guideline:
 | Lifetime Debt Paid | Expected cumulative playtime |
 |---|---|
 | 100k | 15–35 min |
-| 300k | 45–90 min |
-| 600k | 1.5–2.7 h |
-| 1,000k | 2.7–4.3 h |
-| 1,400k | 3.7–5.8 h |
-| 1,650k | 4.5–7.0 h |
-| 1,800k | 5.0–8.0 h |
+| 350k | 50–100 min |
+| 700k | 1.7–3.0 h |
+| 1,100k | 3.0–4.8 h |
+| 1,500k | 4.1–6.4 h |
+| 1,850k | 5.0–7.8 h |
+| 2,000k | 5.5–9.0 h |
+
+Revisi 6.12: milestone dan rentang digeser sebanding dengan utang Rp 2,000,000. Model `tools/sim` menempatkan setiap milestone di bagian permainan yang sama seperti sebelumnya (sekitar 8%, 21%, 38%, 57%, 76%, 93% dari lama melunasi).
 
 Karena player boleh membeli upgrade, debt pacing tidak linear.
 
@@ -9116,7 +9224,7 @@ Target:
 
 Required test:
 
-10,000 progression runs dengan Arowana reward forced to zero; median debt completion tetap <=9.5 h untuk average profile.
+10,000 progression runs dengan Arowana reward forced to zero; median debt completion tetap <=10.5 h untuk average profile (revisi 6.12: dulu <=9.5 h).
 
 ## 179.7 UPGRADE ROI TARGET
 
@@ -9553,7 +9661,7 @@ Target:
 - Market set/UI;
 - Sell All/category sell;
 - all prices;
-- five upgrade families;
+- six upgrade families (Ember Besar sejak revisi 6.12);
 - Debt Ledger;
 - Fish Book data/UI;
 - Records;
@@ -10068,7 +10176,7 @@ Phone UI:
 
 Pause 1.0 sec.
 
-> TOTAL DEBT: Rp 1,800,000
+> TOTAL DEBT: Rp 2,000,000
 
 Notification:
 
@@ -10292,7 +10400,7 @@ Minimum tutorial payment: Rp10,000.
 
 Setelah pembayaran:
 
-> DEBT REMAINING: Rp 1,790,000
+> DEBT REMAINING: Rp 1,990,000
 
 Procedural single soft ding.
 
@@ -10376,7 +10484,7 @@ Tidak ada musik kemenangan.
 
 ## 183.7 `story_debt_300k` — “PAYMENTS ARE GOOD”
 
-Trigger: lifetime debt paid >= Rp300,000.
+Trigger: lifetime debt paid >= Rp350,000 (revisi 6.12; dulu Rp300,000).
 
 Phone notification setelah Market selesai.
 
@@ -10408,7 +10516,7 @@ Tidak ada dialogue tambahan.
 
 ## 183.8 `story_debt_600k` — “THE GOLDEN ONE”
 
-Trigger: lifetime debt paid >= Rp600,000.
+Trigger: lifetime debt paid >= Rp700,000 (revisi 6.12; dulu Rp600,000).
 
 Phone call dari Nisa.
 
@@ -10509,7 +10617,7 @@ System unlock:
 
 ## 183.9 `story_debt_1000k` — “AFTER”
 
-Trigger: lifetime debt paid >= Rp1,000,000.
+Trigger: lifetime debt paid >= Rp1,100,000 (revisi 6.12; dulu Rp1,000,000). Darto sudah lewat separuh, sesuai kalimat Rini.
 
 Rini dan Darto phone call/message hybrid; staging di Market bench.
 
@@ -10579,7 +10687,7 @@ No hug montage, no dramatic music.
 
 ## 183.10 `story_debt_1400k` — “REGULAR”
 
-Trigger: lifetime debt paid >= Rp1,400,000.
+Trigger: lifetime debt paid >= Rp1,500,000 (revisi 6.12; dulu Rp1,400,000).
 
 Bu Yati sedang menulis angka pada papan kecil.
 
@@ -10649,7 +10757,7 @@ Bu Yati:
 
 ## 183.11 `story_debt_1650k` — “ALMOST”
 
-Trigger: lifetime debt paid >= Rp1,650,000.
+Trigger: lifetime debt paid >= Rp1,850,000 (revisi 6.12; dulu Rp1,650,000). Sisa utang tetap Rp150,000, seperti kartu adegannya.
 
 Scene pendek di danau setelah keluar Market.
 
@@ -11185,7 +11293,7 @@ UPGRADES CAN WAIT — OR NOT. YOUR CHOICE.
 
 Bucket:
 
-> YOUR BUCKET HAS NO CAPACITY LIMIT. THIS IS A MERCY.
+> YOUR BUCKET HOLDS {capacity}. SELL AT THE MARKET TO MAKE ROOM.
 
 Fish Book unlock:
 
@@ -14744,7 +14852,7 @@ Critical item bertanda **[CRITICAL]** memblokir Gold Master jika belum checked.
 - [ ] sale values verified.
 - [ ] Don Arowana effective sale Rp300,000 verified.
 - [ ] upgrade prices/effects verified.
-- [ ] debt starts Rp1,800,000.
+- [ ] debt starts Rp2,000,000.
 - [ ] debt never negative.
 - [ ] debt can finish without Arowana.
 - [ ] no gambling-money gameplay.
@@ -15540,10 +15648,10 @@ Tempat terbuka satu per satu mengikuti pembayaran utang, jadi pemain selalu puny
 | Jenjang | ID | English | Indonesia | Terbuka | Perlengkapan (harga) | Sifat air |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `cempaka` | Cempaka Lake | Danau Cempaka | dari awal | — | tenang (aturan lama) |
-| 2 | `kenanga` | Kenanga River | Sungai Kenanga | utang lunas Rp 300.000 | Kail Arus / Current Hook (Rp 25.000) | arus: marker reel terus turun, gigitan lebih cepat, jendela strike 10% lebih sempit |
-| 3 | `melati` | Melati Reservoir | Waduk Melati | utang lunas Rp 600.000 | Senar Panjang / Long Line (Rp 60.000) | air dalam: menunggu 25% lebih lama, ikan "big one" 2× lebih sering, berat ×1,15 |
-| 4 | `anggrek` | Anggrek Estuary | Muara Anggrek | utang lunas Rp 1.000.000 | Sepatu Lumpur / Mud Boots (Rp 100.000) | pasang surut: berganti setiap 4 lemparan; pasang = sampah ×0,5, surut = sampah ×2 |
-| 5 | `mawar` | Mawar Pier | Dermaga Mawar | utang lunas Rp 1.400.000 | Joran Laut / Sea Rod (Rp 180.000) | ombak: tegangan senar naik 14/detik saat ombak datang (periode 3,2 detik) selama reel ditahan |
+| 2 | `kenanga` | Kenanga River | Sungai Kenanga | utang lunas Rp 350.000 | Kail Arus / Current Hook (Rp 25.000) | arus: marker reel terus turun, gigitan lebih cepat, jendela strike 10% lebih sempit |
+| 3 | `melati` | Melati Reservoir | Waduk Melati | utang lunas Rp 700.000 | Senar Panjang / Long Line (Rp 60.000) | air dalam: menunggu 25% lebih lama, ikan "big one" 2× lebih sering, berat ×1,15 |
+| 4 | `anggrek` | Anggrek Estuary | Muara Anggrek | utang lunas Rp 1.100.000 | Sepatu Lumpur / Mud Boots (Rp 100.000) | pasang surut: berganti setiap 4 lemparan; pasang = sampah ×0,5, surut = sampah ×2 |
+| 5 | `mawar` | Mawar Pier | Dermaga Mawar | utang lunas Rp 1.500.000 | Joran Laut / Sea Rod (Rp 180.000) | ombak: tegangan senar naik 14/detik saat ombak datang (periode 3,2 detik) selama reel ditahan |
 
 Aturan:
 

@@ -15,6 +15,8 @@ signal market_pressed()
 signal bucket_pressed()
 ## The map chip: opens WHERE TO? (revision 6.7).
 signal map_pressed()
+## The tap target of a small happening (the drifting bottle, revision 6.12).
+signal event_tapped()
 
 ## The bottom thumb row: the contextual button and the Market button.
 const THUMB_ROW_HEIGHT := 84.0
@@ -47,12 +49,22 @@ var _map_widget: GameButton
 var _map_label: Label
 var _tide_widget: PanelContainer
 var _tide_label: Label
+## The small happenings (revision 6.12): who says what, the tap target that
+## follows a drifting bottle, and the grey of a passing drizzle.
+var _event_card: PanelContainer
+var _event_speaker: Label
+var _event_text: Label
+var _event_left: float = 0.0
+var _event_tap: GameButton
+var _gloom: ColorRect
+var _gloom_tween: Tween
 
 
 func _ready() -> void:
 	_build_top_bar()
 	_build_prompt()
 	_build_buttons()
+	_build_event_widgets()
 	_safe_root.resized.connect(_layout)
 	PlatformService.viewport_class_changed.connect(_on_layout_changed)
 	InputManager.input_device_changed.connect(_on_layout_changed)
@@ -65,6 +77,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if _event_left > 0.0:
+		_event_left -= delta
+		if _event_left <= 0.0:
+			_event_card.visible = false
 	if _banner_left > 0.0:
 		_banner_left -= delta
 		if _banner_left <= 0.0:
@@ -112,8 +128,15 @@ func set_cash(cash: int) -> void:
 ## The bucket chip shows the bucket badge and the count; the full wording is
 ## its tooltip and accessibility name.
 func set_bucket_count(count: int) -> void:
-	_bucket_label.text = str(count)
-	_bucket_widget.tooltip_text = TextDb.tf(&"fishing.hud.bucket", {"count": count})
+	# Count over capacity (revision 6.12), in the warning colour once full.
+	var capacity := GameState.get_bucket_capacity()
+	_bucket_label.text = "%d/%d" % [count, capacity]
+	_bucket_label.modulate = Color(UiTokens.TERRACOTTA_500, 1.0) if count >= capacity else Color.WHITE
+	_bucket_widget.tooltip_text = TextDb.tf(&"fishing.hud.bucket", {"count": count, "capacity": capacity})
+	# The chip grows with "count/capacity", like the map chip with its name:
+	# the badge and label sit over the button and do not size it.
+	_bucket_widget.custom_minimum_size.x = maxf(86.0, _bucket_label.get_combined_minimum_size().x + 64.0)
+	_refresh_prompt()
 
 
 func set_market_available(available: bool) -> void:
@@ -134,8 +157,113 @@ func set_state(state: StringName) -> void:
 	_refresh_buttons()
 
 
+## A banner or a hint has the prompt for now.
+func is_message_showing() -> bool:
+	return _banner_left > 0.0 or _hint_left > 0.0
+
+
 func set_strike_ratio(ratio: float) -> void:
 	_strike_bar.value = ratio
+
+
+# --- Small happenings (revision 6.12) -----------------------------------------
+
+## One line of a happening, in a speech card above the thumb row. `speaker`
+## may be empty.
+func show_event_caption(speaker: String, text: String, seconds: float) -> void:
+	_event_speaker.text = speaker
+	_event_speaker.visible = speaker != ""
+	_event_text.text = text
+	_event_card.visible = true
+	_event_left = seconds
+
+
+func hide_event_caption() -> void:
+	_event_card.visible = false
+	_event_left = 0.0
+
+
+func get_event_caption() -> String:
+	return _event_text.text if _event_card.visible else ""
+
+
+## Shows the GRAB IT button over `canvas_point` (where the bottle is on
+## screen), kept inside the safe area and clear of the thumb row.
+func place_event_tap(canvas_point: Vector2) -> void:
+	_event_tap.visible = true
+	var area := _safe_root.size
+	var size := _event_tap.get_combined_minimum_size()
+	var local := canvas_point - _safe_root.get_global_rect().position - Vector2(size.x * 0.5, size.y + UiTokens.SPACE_32)
+	local.x = clampf(local.x, 0.0, maxf(area.x - size.x, 0.0))
+	local.y = clampf(local.y, _top_bar.size.y + UiTokens.SPACE_8, maxf(area.y - THUMB_ROW_HEIGHT - size.y - UiTokens.SPACE_8, 0.0))
+	UiTokens.place_at(_event_tap, Rect2(local, size))
+
+
+func hide_event_tap() -> void:
+	_event_tap.visible = false
+
+
+func is_event_tap_visible() -> bool:
+	return _event_tap.visible
+
+
+func get_event_tap() -> GameButton:
+	return _event_tap
+
+
+## Greys the screen a little for a drizzle; 0 clears it.
+func set_gloom(amount: float, seconds: float) -> void:
+	if _gloom_tween != null:
+		_gloom_tween.kill()
+	_gloom_tween = create_tween()
+	_gloom_tween.tween_property(_gloom, ^"color:a", amount, seconds)
+
+
+func _build_event_widgets() -> void:
+	_gloom = ColorRect.new()
+	_gloom.name = "Gloom"
+	_gloom.color = Color(0.32, 0.38, 0.46, 0.0)
+	_gloom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gloom.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_gloom)
+	move_child(_gloom, 0)
+
+	_event_card = PanelContainer.new()
+	_event_card.name = "EventCaption"
+	_event_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_event_card.add_theme_stylebox_override(&"panel", UiSkin.card(UiTokens.CREAM_50, 18, UiTokens.SPACE_12, 3))
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_theme_constant_override(&"separation", UiTokens.SPACE_4)
+	_event_card.add_child(column)
+	_event_speaker = Label.new()
+	_event_speaker.theme_type_variation = UiTokens.TYPE_NAME_TAG
+	_event_speaker.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	column.add_child(_event_speaker)
+	_event_text = Label.new()
+	_event_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_event_text.add_theme_font_size_override(&"font_size", DisplaySettings.text_size(UiTokens.FONT_BODY))
+	column.add_child(_event_text)
+	_event_card.visible = false
+	_safe_root.add_child(_event_card)
+
+	_event_tap = GameButton.new()
+	_event_tap.name = "EventTapButton"
+	_event_tap.theme_type_variation = UiTokens.TYPE_CTA_BUTTON
+	_event_tap.text = TextDb.t(&"fishing.event.tap")
+	_event_tap.focus_mode = Control.FOCUS_NONE
+	_event_tap.custom_minimum_size = Vector2(132.0, float(UiTokens.TOUCH_TARGET_PREFERRED))
+	_event_tap.pressed.connect(func() -> void: event_tapped.emit())
+	_event_tap.visible = false
+	_safe_root.add_child(_event_tap)
+
+
+## The speech card: centred above the thumb row, growing upward with its text.
+func _place_event_card(row_top: float) -> void:
+	var area := _safe_root.size
+	var width := minf(area.x, 440.0)
+	_event_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	UiTokens.place_at(_event_card, Rect2((area.x - width) * 0.5, row_top - UiTokens.SPACE_12 - 1.0, width, 1.0))
 
 
 func update_reel(reel: ReelSimulation, held: bool, delta: float) -> void:
@@ -176,7 +304,9 @@ func _refresh_prompt() -> void:
 	var learning := not GameState.is_tutorial_seen(&"fishing_seen")
 	match _state:
 		FishingController.STATE_IDLE:
-			if learning:
+			if GameState.is_bucket_full():
+				_show(TextDb.t(&"fishing.prompt.bucket_full"), TextDb.t(&"fishing.prompt.bucket_full_sub"), false)
+			elif learning:
 				_show(TextDb.t(_by_device(&"fishing.prompt.cast_keyboard", &"fishing.prompt.cast_touch")), "", false)
 			else:
 				_show("", "", false)
@@ -371,6 +501,7 @@ func _layout() -> void:
 	var reel_size := _reel_hud.custom_minimum_size
 	var free_top := _top_bar.size.y + UiTokens.SPACE_16
 	var free_bottom := row.position.y - UiTokens.SPACE_16
+	_place_event_card(row.position.y)
 	_reel_hud.set_home(Vector2(area.x - reel_size.x, maxf(free_top, (free_top + free_bottom - reel_size.y) * 0.5)))
 
 

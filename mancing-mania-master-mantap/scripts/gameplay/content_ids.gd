@@ -64,7 +64,10 @@ const TRASH_IDS: Array[StringName] = [
 	&"trash_tyre",
 ]
 
+## Big Bucket comes first on the Market's UPGRADES page: the bucket is the
+## first limit a new player meets (revision 6.12).
 const UPGRADE_IDS: Array[StringName] = [
+	&"bucket",
 	&"bait",
 	&"rod",
 	&"tonic",
@@ -134,8 +137,11 @@ const TUTORIAL_IDS: Array[StringName] = [
 	&"travel_seen",
 ]
 
-const DEBT_ORIGINAL: int = 1_800_000
-const STARTING_CASH: int = 8_430
+const DEBT_ORIGINAL: int = 2_000_000
+## The starting debt before revision 6.12. A save that cleared it stays
+## cleared; a save still paying keeps what it paid and owes the new total.
+const LEGACY_DEBT_ORIGINAL: int = 1_800_000
+const STARTING_CASH: int = 10_000
 const UPGRADE_MAX_LEVEL: int = 3
 ## Legends are tier 5. A tier-5 fish attacks on a shorter cooldown and asks
 ## for a rematch at arm wrestling (GDD Section 49).

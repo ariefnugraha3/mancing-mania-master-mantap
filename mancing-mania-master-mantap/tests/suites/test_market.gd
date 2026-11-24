@@ -113,22 +113,27 @@ func test_spot_fish_sell_at_the_market() -> bool:
 
 func test_a_catch_is_not_cash_until_it_is_sold() -> bool:
 	GameState.add_bucket_item(&"arowana_don", 2)
-	check_eq(GameState.get_cash(), 8430, "a full bucket does not change cash")
+	check_eq(GameState.get_cash(), 10000, "a full bucket does not change cash")
 	_market.get_sell_preview()
 	_market.get_sell_preview()
-	check_eq(GameState.get_cash(), 8430, "previewing a sale pays nothing")
+	check_eq(GameState.get_cash(), 10000, "previewing a sale pays nothing")
 	check_eq(GameState.get_bucket_quantity(&"arowana_don"), 2, "previewing removes nothing")
 	check_eq(_events.size(), 0, "a preview is not a transaction")
 	return true
 
 
-## Selling is the only place in the game that turns a catch into cash.
+## Selling is the only place in the game that turns a catch into cash. The one
+## other way money comes in is the message bottle at the fishing spot
+## (revision 6.12, GDD 25.1): a little money, now and then.
 func test_only_the_market_adds_cash() -> bool:
 	var callers := PackedStringArray()
 	for root: String in ["res://autoload", "res://scripts"]:
 		_find_calls(root, "GameState.add_cash(", callers)
-	check_eq(callers, PackedStringArray(["res://scripts/gameplay/market/market_controller.gd"]),
-		"GameState.add_cash is called only by the MarketController")
+	callers.sort()
+	check_eq(callers, PackedStringArray([
+		"res://scripts/gameplay/fishing/fishing_event_director.gd",
+		"res://scripts/gameplay/market/market_controller.gd"]),
+		"GameState.add_cash is called only by the MarketController and the message bottle")
 	return true
 
 
@@ -152,18 +157,18 @@ func test_sell_all() -> bool:
 	var sale := _market.sell_all()
 	check_eq(sale["total"], 107100, "3 catfish + 1 carp + 2 cans + 1 sandal")
 	check_eq(sale["items_sold"], 7, "items sold")
-	check_eq(sale["cash_before"], 8430, "cash before")
-	check_eq(sale["cash_after"], 115530, "cash after")
-	check_eq(GameState.get_cash(), 115530, "cash increased by the total")
+	check_eq(sale["cash_before"], 10000, "cash before")
+	check_eq(sale["cash_after"], 117100, "cash after")
+	check_eq(GameState.get_cash(), 117100, "cash increased by the total")
 	check_eq(GameState.get_bucket_total_count(), 0, "bucket is empty")
 	check_eq(GameState.get_stat(&"lifetime_sales"), 107100, "lifetime sales")
 	check_eq(_events, ["done:sell"], "one transaction reported")
-	check_eq(_saved()["cash"], 115530, "sale was autosaved (cash)")
+	check_eq(_saved()["cash"], 117100, "sale was autosaved (cash)")
 	check_eq(_saved()["bucket"]["catfish_bruiser"], 0, "sale was autosaved (bucket)")
 
 	var again := _market.sell_all()
 	check_eq(again["total"], 0, "selling an empty bucket pays nothing")
-	check_eq(GameState.get_cash(), 115530, "cash unchanged")
+	check_eq(GameState.get_cash(), 117100, "cash unchanged")
 	check_eq(_events.size(), 1, "an empty sale is not a transaction")
 	return true
 
@@ -176,12 +181,12 @@ func test_category_sell_removes_only_that_category() -> bool:
 	check_eq(fish_sale["total"], 68000, "fish sale total")
 	check_eq(GameState.get_bucket_quantity(&"gourami_shady"), 0, "fish removed")
 	check_eq(GameState.get_bucket_quantity(&"trash_tyre"), 3, "trash kept")
-	check_eq(GameState.get_cash(), 76430, "cash after fish sale")
+	check_eq(GameState.get_cash(), 78000, "cash after fish sale")
 
 	var trash_sale := _market.sell_category(MarketController.CATEGORY_TRASH)
 	check_eq(trash_sale["total"], 3000, "trash sale total")
 	check_eq(GameState.get_bucket_total_count(), 0, "bucket empty after both")
-	check_eq(GameState.get_cash(), 79430, "cash after trash sale")
+	check_eq(GameState.get_cash(), 81000, "cash after trash sale")
 	check_eq(_market.sell_category(&"antiques")["total"], 0, "unknown category sells nothing")
 	return true
 
@@ -190,9 +195,9 @@ func test_category_sell_removes_only_that_category() -> bool:
 
 # MKT-006
 func test_upgrade_needs_enough_cash() -> bool:
-	check(not _market.purchase_upgrade(&"rod"), "Rp 8,430 cannot buy an Rp 18,000 rod")
+	check(not _market.purchase_upgrade(&"rod"), "Rp 10,000 cannot buy an Rp 18,000 rod")
 	check_eq(GameState.get_upgrade_level(&"rod"), 0, "level unchanged")
-	check_eq(GameState.get_cash(), 8430, "cash unchanged")
+	check_eq(GameState.get_cash(), 10000, "cash unchanged")
 	check_eq(_events.size(), 0, "a blocked purchase is not a transaction")
 	check(not _market.purchase_upgrade(&"jetpack"), "unknown upgrade is refused")
 	return true
@@ -245,10 +250,10 @@ func test_shop_shows_real_effects() -> bool:
 
 # MKT-009
 func test_debt_payment_is_capped_by_cash() -> bool:
-	check_eq(_market.get_max_debt_payment(), 8430, "the most that can be paid is the cash on hand")
-	check_eq(_market.pay_debt(100000), 8430, "paying more than the cash pays only the cash")
+	check_eq(_market.get_max_debt_payment(), 10000, "the most that can be paid is the cash on hand")
+	check_eq(_market.pay_debt(100000), 10000, "paying more than the cash pays only the cash")
 	check_eq(GameState.get_cash(), 0, "cash is spent, never negative")
-	check_eq(GameState.get_debt_remaining(), 1791570, "debt went down by what was paid")
+	check_eq(GameState.get_debt_remaining(), 1990000, "debt went down by what was paid")
 	check_eq(_market.pay_debt(25000), 0, "nothing left to pay with")
 	check_eq(_market.pay_debt(-500), 0, "negative payments are refused")
 	check_eq(_events, ["done:debt"], "only the real payment was a transaction")
@@ -258,10 +263,10 @@ func test_debt_payment_is_capped_by_cash() -> bool:
 # MKT-010
 func test_debt_cannot_be_overpaid() -> bool:
 	GameState.add_cash(5_000_000)
-	check_eq(_market.pay_debt(5_000_000), 1_800_000, "payment stops at the remaining debt")
+	check_eq(_market.pay_debt(5_000_000), 2_000_000, "payment stops at the remaining debt")
 	check_eq(GameState.get_debt_remaining(), 0, "debt is exactly zero")
-	check_eq(GameState.get_debt_paid(), 1_800_000, "everything paid")
-	check_eq(GameState.get_cash(), 8430 + 5_000_000 - 1_800_000, "the rest stays in cash")
+	check_eq(GameState.get_debt_paid(), 2_000_000, "everything paid")
+	check_eq(GameState.get_cash(), 10000 + 5_000_000 - 2_000_000, "the rest stays in cash")
 	check_eq(_market.pay_debt(1000), 0, "a cleared debt accepts no more payments")
 	check_eq(_market.get_max_debt_payment(), 0, "nothing more can be paid")
 	check_eq(_saved()["debt"]["remaining"], 0, "payment was autosaved")
@@ -294,7 +299,7 @@ func test_failed_autosave_is_reported_and_state_is_kept() -> bool:
 	var sale := _market.sell_all()
 	SaveManager.simulate_write_failure = false
 	check_eq(sale["total"], 26000, "the sale still happened")
-	check_eq(GameState.get_cash(), 34430, "runtime state is kept")
+	check_eq(GameState.get_cash(), 36000, "runtime state is kept")
 	check(_events.has("save_failed"), "the failed save is reported, not hidden")
 	check(SaveManager.has_unsaved_changes(), "unsaved changes are flagged")
 	return true
@@ -326,7 +331,7 @@ func test_one_event_per_market_visit() -> bool:
 	_pay(100000)
 	check_eq(StoryDirector.resolve_market_exit_event(), &"story_debt_100k", "the visit gets its event")
 	StoryDirector.complete_event(&"story_debt_100k", true)
-	_pay(200000)
+	_pay(250000)
 	check(StoryDirector.get_pending_events().has(&"story_debt_300k"), "another milestone was reached in the same visit")
 	check_eq(StoryDirector.resolve_market_exit_event(), &"", "but this visit already had its one event")
 
@@ -344,7 +349,7 @@ static func _milestones(events: Array) -> Array:
 # STORY-004
 func test_higher_priority_goes_first_and_the_other_waits() -> bool:
 	StoryDirector.begin_market_visit()
-	_pay(300000)
+	_pay(350000)
 	check_eq(_milestones(StoryDirector.get_pending_events()).size(), 2, "two thresholds crossed by one payment")
 	check(StoryDirector.get_pending_events().has(&"story_unlock_kenanga"), "the river's opening waits in the queue too")
 	var first := StoryDirector.resolve_market_exit_event()
@@ -360,7 +365,7 @@ func test_higher_priority_goes_first_and_the_other_waits() -> bool:
 # STORY-005, STORY-006, STORY-011
 func test_paying_everything_reaches_the_finale_without_arowana() -> bool:
 	StoryDirector.begin_market_visit()
-	check_eq(_pay(1_800_000), 1_800_000, "the whole debt is paid from ordinary sales money")
+	check_eq(_pay(2_000_000), 2_000_000, "the whole debt is paid from ordinary sales money")
 	check_eq(GameState.get_fish_book_entry(&"arowana_don")["wins"], 0, "Don Arowana was never beaten")
 	var pending := StoryDirector.get_pending_events()
 	check(pending.has(&"story_debt_paid"), "the finale event is queued")
@@ -391,7 +396,7 @@ func test_paying_everything_reaches_the_finale_without_arowana() -> bool:
 func test_arowana_event_ranks_between_milestones_and_finale() -> bool:
 	StoryDirector.begin_market_visit()
 	GameState.record_fish_win(&"arowana_don", 6.2, &"boxing")
-	_pay(1_650_000)
+	_pay(1_850_000)
 	check_eq(StoryDirector.resolve_market_exit_event(), &"story_arowana_first_win", "the Arowana scene outranks the debt milestones")
 	StoryDirector.complete_event(&"story_arowana_first_win", false)
 	check_eq(GameState.get_story_value(&"arowana_first_win_seen"), true, "its flag is set")
@@ -406,7 +411,7 @@ func test_arowana_event_ranks_between_milestones_and_finale() -> bool:
 func test_fish_book_unlocks_with_the_600k_milestone() -> bool:
 	check_eq(GameState.get_story_value(&"fish_book_unlocked"), false, "the Fish Book starts locked")
 	StoryDirector.begin_market_visit()
-	_pay(600000)
+	_pay(700000)
 	check_eq(GameState.get_story_value(&"fish_book_unlocked"), false, "reaching the amount alone does not unlock it")
 	check_eq(StoryDirector.resolve_market_exit_event(), &"story_debt_600k", "the 600k milestone is chosen")
 	StoryDirector.complete_event(&"story_debt_600k", true)
@@ -420,7 +425,7 @@ func test_leaving_the_market_resolves_and_saves() -> bool:
 	StoryDirector.begin_market_visit()
 	check(StoryDirector.is_event_seen(&"story_first_market"), "the first visit counts as the Market tutorial event")
 	check_eq(GameState.get_story_value(&"chapter"), "chapter_1", "chapter one begins")
-	_pay(600000)
+	_pay(700000)
 	_market.leave_market()
 	check_eq(_events[_events.size() - 1], "left:story_debt_600k", "leaving reports the resolved event")
 	check(not StoryDirector.is_event_seen(&"story_debt_600k"), "the Story scene has not played it yet")
@@ -440,7 +445,7 @@ func test_leaving_the_market_resolves_and_saves() -> bool:
 func test_story_queue_survives_save_and_load() -> bool:
 	StoryDirector.begin_market_visit()
 	StoryDirector.begin_market_visit()
-	_pay(300000)
+	_pay(350000)
 	check(SaveManager.save_game(&"test"), "saved")
 	var pending_before := StoryDirector.get_pending_events()
 	GameState.clear_game()
@@ -515,7 +520,7 @@ func test_market_session_round_trips_through_the_save() -> bool:
 	after.erase("last_played_at_utc")
 	after.erase("system")
 	check_eq(JSON.stringify(after, "", true), JSON.stringify(before, "", true), "state after reload equals state before")
-	check_eq(GameState.get_cash(), 8430 + 312000 - 18000 - 12000 - 120000, "cash")
+	check_eq(GameState.get_cash(), 10000 + 312000 - 18000 - 12000 - 120000, "cash")
 	check_eq(GameState.get_bucket_quantity(&"trash_sandal"), 2, "unsold trash is still in the bucket")
 	check_eq(GameState.get_upgrade_level(&"rod"), 1, "rod level")
 	check_eq(GameState.get_debt_paid(), 120000, "debt paid")

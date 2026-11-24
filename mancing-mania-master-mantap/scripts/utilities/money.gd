@@ -1,8 +1,8 @@
 class_name Money
 extends RefCounted
 ## Rupiah and number formatting used by every player-visible amount, in the
-## player's language: English writes "Rp 1,800,000" and "2.92 kg",
-## Indonesian writes "Rp 1.800.000" and "2,92 kg".
+## player's language: English writes "Rp 2,000,000" and "2.92 kg",
+## Indonesian writes "Rp 2.000.000" and "2,92 kg".
 
 
 static func format_rp(amount: int) -> String:

@@ -44,7 +44,8 @@ const STRATEGIES := {
 	"balanced": [&"bait", &"rod", &"tonic", &"bait", &"rod"],
 	"completionist": [&"bait", &"rod", &"tonic", &"coffee", &"charm", &"bait", &"rod", &"tonic", &"coffee", &"charm", &"bait", &"rod", &"tonic", &"coffee", &"charm"],
 }
-const MILESTONES: Array[int] = [100000, 300000, 600000, 1000000, 1400000, 1650000, 1800000]
+## The lifetime-debt story milestones (data/story), ending at the whole debt.
+const MILESTONES: Array[int] = [100000, 350000, 700000, 1100000, 1500000, 1850000, ContentIds.DEBT_ORIGINAL]
 
 var _runs: int = 10000
 ## What-if multiplier on every fish's sale value except Don Arowana's; 1.0 is
@@ -201,8 +202,8 @@ func _progressions(profile: String, strategy: String, context: Dictionary, no_ar
 	var summary := {"runs": _runs, "median_first_hour_earned": _median(earn_rates)}
 	for milestone: int in MILESTONES:
 		summary["hours_to_%dk" % (milestone / 1000)] = _median(times[milestone])
-	summary["p10_hours_to_1800k"] = _percentile(times[1800000], 0.1)
-	summary["p90_hours_to_1800k"] = _percentile(times[1800000], 0.9)
+	summary["p10_hours_to_paid"] = _percentile(times[ContentIds.DEBT_ORIGINAL], 0.1)
+	summary["p90_hours_to_paid"] = _percentile(times[ContentIds.DEBT_ORIGINAL], 0.9)
 	return summary
 
 

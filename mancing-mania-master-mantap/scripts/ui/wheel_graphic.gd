@@ -11,6 +11,13 @@ const DUEL_COLORS: Dictionary = {
 	&"silat": UiTokens.RED_500, &"tambang": UiTokens.BLUE_400,
 	&"gasing": DioramaStyle.CRUST, &"pinang": DioramaStyle.PINE,
 }
+## Each duel's icon on its segments (revision 6.12).
+const DUEL_ICONS: Dictionary = {
+	&"boxing": IconPainter.GLOVE, &"arm_wrestle": IconPainter.DUEL_ARM,
+	&"dance": IconPainter.MUSIC, &"suwit": IconPainter.SCISSORS,
+	&"silat": IconPainter.DUEL_KERIS, &"tambang": IconPainter.DUEL_ROPE,
+	&"gasing": IconPainter.DUEL_TOP, &"pinang": IconPainter.DUEL_POLE,
+}
 ## Width of the cream rim around the segments.
 const RIM := 14.0
 
@@ -69,41 +76,13 @@ func _draw() -> void:
 		draw_polyline(points + PackedVector2Array([centre]), UiTokens.INK_900, 3.0, true)
 		if index == highlight:
 			draw_polyline(points + PackedVector2Array([centre]), UiTokens.CREAM_50, 6.0, true)
-		# Pattern by duel, so segments differ by more than colour.
+		# The duel's own icon (revision 6.12), turned with its segment like
+		# the name, so segments differ by more than colour.
 		var mark := centre + Vector2(cos(middle), sin(middle)) * radius * 0.42
-		var shape := PackedVector2Array()
-		match duel:
-			&"boxing":
-				for corner: int in 16:
-					var turn := TAU * float(corner) / 16.0
-					shape.append(mark + Vector2(cos(turn), sin(turn)) * radius * 0.07)
-			&"arm_wrestle":
-				var half := radius * 0.06
-				shape = PackedVector2Array([mark + Vector2(-half, -half), mark + Vector2(half, -half), mark + Vector2(half, half), mark + Vector2(-half, half)])
-			&"dance":
-				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0.8) * radius * 0.07, mark + Vector2(-1, 0.8) * radius * 0.07])
-			&"suwit":
-				shape = PackedVector2Array([mark + Vector2(0, -1) * radius * 0.08, mark + Vector2(1, 0) * radius * 0.08, mark + Vector2(0, 1) * radius * 0.08, mark + Vector2(-1, 0) * radius * 0.08])
-			&"silat":
-				# A five-pointed star.
-				for corner: int in 10:
-					var turn := -PI * 0.5 + PI * 0.2 * float(corner)
-					shape.append(mark + Vector2(cos(turn), sin(turn)) * radius * (0.085 if corner % 2 == 0 else 0.036))
-			&"tambang":
-				# A rope: a long bar.
-				var length := radius * 0.09
-				var thick := radius * 0.025
-				shape = PackedVector2Array([mark + Vector2(-length, -thick), mark + Vector2(length, -thick), mark + Vector2(length, thick), mark + Vector2(-length, thick)])
-			&"gasing":
-				# A spinning top: a diamond on its point.
-				shape = PackedVector2Array([mark + Vector2(0, -0.05) * radius, mark + Vector2(0.075, 0.0) * radius, mark + Vector2(0, 0.09) * radius, mark + Vector2(-0.075, 0.0) * radius])
-			&"pinang":
-				# A pole: a tall bar.
-				var tall := radius * 0.09
-				var narrow := radius * 0.022
-				shape = PackedVector2Array([mark + Vector2(-narrow, -tall), mark + Vector2(narrow, -tall), mark + Vector2(narrow, tall), mark + Vector2(-narrow, tall)])
-		draw_colored_polygon(shape, UiTokens.CREAM_50)
-		draw_polyline(shape + PackedVector2Array([shape[0]]), UiTokens.INK_900, 2.5, true)
+		var icon_size := radius * 0.26
+		draw_set_transform(mark, middle + PI * 0.5, Vector2.ONE)
+		IconPainter.paint(get_canvas_item(), DUEL_ICONS.get(duel, IconPainter.SPARKLE), Rect2(Vector2(-icon_size, -icon_size) * 0.5, Vector2(icon_size, icon_size)))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 		var label := TextDb.t(StringName("duel.%s.upper" % duel))
 		var font := UiSkin.bold_font()

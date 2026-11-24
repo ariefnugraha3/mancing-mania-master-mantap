@@ -202,7 +202,7 @@ func test_a_spot_without_its_gear_is_normalized_away() -> bool:
 
 
 func test_spot_openings_wait_for_their_debt_milestone() -> bool:
-	var milestones: Dictionary[StringName, int] = {&"kenanga": 300000, &"melati": 600000, &"anggrek": 1000000, &"mawar": 1400000}
+	var milestones: Dictionary[StringName, int] = {&"kenanga": 350000, &"melati": 700000, &"anggrek": 1100000, &"mawar": 1500000}
 	for location_id: StringName in milestones:
 		var event := StoryDirector.get_event(GameData.get_location(location_id).unlock_event)
 		check_eq(event.trigger_type, StoryDirector.TRIGGER_DEBT_PAID, "%s opens on debt paid" % location_id)
@@ -220,7 +220,7 @@ func test_travel_overlay_lists_every_spot() -> bool:
 	await wait_frames(2)
 	for location_id: StringName in NEW_SPOTS:
 		check(overlay.get_go_button(location_id) == null, "%s has no GO before it opens" % location_id)
-	check_contains(PackedStringArray([TravelOverlay.status_text(&"kenanga")]), Money.format_rp(300000), "a closed spot says what opens it")
+	check_contains(PackedStringArray([TravelOverlay.status_text(&"kenanga")]), Money.format_rp(350000), "a closed spot says what opens it")
 	GameState.debug_open_location(&"kenanga")
 	GameState.set_current_location(ContentIds.START_LOCATION)
 	overlay.open()

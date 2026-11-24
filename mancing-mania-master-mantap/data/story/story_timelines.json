@@ -38,13 +38,9 @@
 					"cam": "darto"
 				},
 				{
-					"phone": "story.story_prologue_zero.01"
-				},
-				{
-					"pause": 1.0
-				},
-				{
-					"phone": "story.story_prologue_zero.02"
+					"note": [
+						"story.story_prologue_zero.02"
+					]
 				},
 				{
 					"note": [
@@ -55,6 +51,16 @@
 				{
 					"say": "darto",
 					"text": "story.story_prologue_zero.05"
+				},
+				{
+					"close_phone": true
+				},
+				{
+					"pause": 0.3
+				},
+				{
+					"say": "darto",
+					"text": "story.story_prologue_zero.23"
 				},
 				{
 					"cam": "rini"

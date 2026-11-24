@@ -30,10 +30,10 @@ func before_each() -> void:
 
 
 func test_new_game_starting_state() -> bool:
-	check_eq(GameState.get_cash(), 8430, "starting cash")
-	check_eq(GameState.get_debt_original(), 1_800_000, "debt original")
+	check_eq(GameState.get_cash(), 10000, "starting cash")
+	check_eq(GameState.get_debt_original(), 2_000_000, "debt original")
 	check_eq(GameState.get_debt_paid(), 0, "debt paid")
-	check_eq(GameState.get_debt_remaining(), 1_800_000, "debt remaining")
+	check_eq(GameState.get_debt_remaining(), 2_000_000, "debt remaining")
 	check_eq(GameState.get_bucket_total_count(), 0, "bucket empty")
 	for upgrade_id: StringName in ContentIds.UPGRADE_IDS:
 		check_eq(GameState.get_upgrade_level(upgrade_id), 0, "%s starts at Lv0" % upgrade_id)
@@ -45,34 +45,34 @@ func test_new_game_starting_state() -> bool:
 
 
 func test_cash_can_never_go_negative() -> bool:
-	GameState.add_cash(1570)
-	check_eq(GameState.get_cash(), 10000, "cash after add")
-	check(GameState.can_spend(10000), "can spend everything")
-	check(not GameState.can_spend(10001), "cannot overspend")
-	check(not GameState.spend_cash(10001), "overspend is refused")
-	check_eq(GameState.get_cash(), 10000, "refused spend changes nothing")
+	GameState.add_cash(2000)
+	check_eq(GameState.get_cash(), 12000, "cash after add")
+	check(GameState.can_spend(12000), "can spend everything")
+	check(not GameState.can_spend(12001), "cannot overspend")
+	check(not GameState.spend_cash(12001), "overspend is refused")
+	check_eq(GameState.get_cash(), 12000, "refused spend changes nothing")
 	check(GameState.spend_cash(4000), "valid spend")
-	check_eq(GameState.get_cash(), 6000, "cash after spend")
+	check_eq(GameState.get_cash(), 8000, "cash after spend")
 	check(not GameState.spend_cash(-50), "negative spend is refused")
 	GameState.add_cash(-999)
-	check_eq(GameState.get_cash(), 6000, "negative add is ignored")
+	check_eq(GameState.get_cash(), 8000, "negative add is ignored")
 	return true
 
 
 func test_pay_debt_is_capped_by_cash_and_remaining() -> bool:
-	check_eq(GameState.pay_debt(10000), 8430, "payment capped by cash")
+	check_eq(GameState.pay_debt(15000), 10000, "payment capped by cash")
 	check_eq(GameState.get_cash(), 0, "cash spent")
-	check_eq(GameState.get_debt_paid(), 8430, "paid after first payment")
-	check_eq(GameState.get_debt_remaining(), 1_791_570, "remaining after first payment")
+	check_eq(GameState.get_debt_paid(), 10000, "paid after first payment")
+	check_eq(GameState.get_debt_remaining(), 1_990_000, "remaining after first payment")
 	check_eq(GameState.pay_debt(500), 0, "nothing to pay with")
 	check_eq(GameState.pay_debt(-100), 0, "negative payment ignored")
 
 	GameState.add_cash(5_000_000)
-	check_eq(GameState.pay_debt(5_000_000), 1_791_570, "payment capped by remaining debt")
+	check_eq(GameState.pay_debt(5_000_000), 1_990_000, "payment capped by remaining debt")
 	check_eq(GameState.get_debt_remaining(), 0, "debt cleared")
-	check_eq(GameState.get_debt_paid(), 1_800_000, "everything paid")
-	check_eq(GameState.get_cash(), 5_000_000 - 1_791_570, "only the debt was charged")
-	check_eq(GameState.get_stat(&"lifetime_debt_paid"), 1_800_000, "lifetime stat follows the ledger")
+	check_eq(GameState.get_debt_paid(), 2_000_000, "everything paid")
+	check_eq(GameState.get_cash(), 5_000_000 - 1_990_000, "only the debt was charged")
+	check_eq(GameState.get_stat(&"lifetime_debt_paid"), 2_000_000, "lifetime stat follows the ledger")
 	check_eq(GameState.pay_debt(1000), 0, "no payment once the debt is zero")
 	return true
 
@@ -223,7 +223,7 @@ func test_settings_survive_a_new_game() -> bool:
 	GameState.set_setting(&"quality_preset", "high")
 	GameState.add_cash(50000)
 	GameState.new_game()
-	check_eq(GameState.get_cash(), 8430, "progress was reset")
+	check_eq(GameState.get_cash(), 10000, "progress was reset")
 	check_eq(GameState.get_setting(&"sfx_volume"), 0.3, "volume kept")
 	check_eq(GameState.get_setting(&"quality_preset"), "high", "quality kept")
 	return true
@@ -242,11 +242,11 @@ func test_signals_report_new_values() -> bool:
 	GameState.bucket_changed.connect(on_bucket)
 	GameState.upgrade_changed.connect(on_upgrade)
 
-	GameState.add_cash(91570)
+	GameState.add_cash(90000)
 	check_eq(seen["cash"], 100000, "cash_changed value")
 	GameState.pay_debt(25000)
 	check_eq(seen["paid"], 25000, "debt_changed paid")
-	check_eq(seen["remaining"], 1_775_000, "debt_changed remaining")
+	check_eq(seen["remaining"], 1_975_000, "debt_changed remaining")
 	GameState.add_bucket_item(&"gourami_shady", 2)
 	check_eq(seen["bucket"], 2, "bucket_changed total")
 	GameState.buy_next_upgrade(&"bait")
@@ -271,7 +271,7 @@ func test_export_matches_the_save_schema() -> bool:
 	# The export is a copy: changing it must not reach the live state.
 	exported["cash"] = 1
 	exported["bucket"]["catfish_bruiser"] = 99
-	check_eq(GameState.get_cash(), 8430 + 50000 - 20000, "export is detached (cash)")
+	check_eq(GameState.get_cash(), 10000 + 50000 - 20000, "export is detached (cash)")
 	check_eq(GameState.get_bucket_quantity(&"catfish_bruiser"), 0, "export is detached (bucket)")
 	return true
 

@@ -365,9 +365,9 @@ func test_prologue_title_shot_leaves_rini_at_home() -> bool:
 
 
 ## The story phone is a chat app (GDD 168.3): the prologue opens the CepatCash
-## business chat with the balance and debt as account cards and the reminder
-## as a message; a chat opens that person's thread with Darto on the right;
-## a call shows the call view.
+## business chat with the debt and the reminder as message bubbles, then closes
+## the phone before Darto's next line; a chat opens that person's thread with
+## Darto on the right; a call shows the call view.
 func test_the_phone_is_a_chat_app() -> bool:
 	var scene: Node = (load(STORY_SCENE) as PackedScene).instantiate()
 	var controller := scene.get_node("StoryController") as StoryController
@@ -379,12 +379,16 @@ func test_the_phone_is_a_chat_app() -> bool:
 	var phone := ui.get_phone()
 	check(await wait_until(func() -> bool: return phone.is_open(), 6.0), "the phone comes out")
 	check_eq(phone.get_contact(), ChatPhone.CEPATCASH, "on the CepatCash chat")
-	check(phone.get_chat_text().contains("Rp 18,430"), "the balance is an account card")
+	check_eq(phone.get_message_count(), 1, "the debt is a message bubble from CepatCash")
+	check(phone.get_chat_text().contains("Rp 2,000,000"), "with the remaining debt")
+	check(not phone.get_chat_text().contains("18,430"), "and no bank balance card")
 	ui.advanced.emit()
-	check(await wait_until(func() -> bool: return phone.get_chat_text().contains("Rp 1,800,000"), 4.0), "the debt card follows")
-	ui.advanced.emit()
-	check(await wait_until(func() -> bool: return phone.get_message_count() == 1, 3.0), "the reminder is a message from CepatCash")
+	check(await wait_until(func() -> bool: return phone.get_message_count() == 2, 3.0), "the reminder follows as a second message")
 	check(phone.get_chat_text().contains("outstandingly disappointed"), "with its text")
+	ui.advanced.emit()
+	check(await wait_until(func() -> bool: return ui.get_line_text() == "...Fair.", 3.0), "Darto reacts while the phone is open")
+	ui.advanced.emit()
+	check(await wait_until(func() -> bool: return not phone.is_open() and ui.get_line_text() == "But I only have ten thousand left.", 4.0), "the phone closes before Darto mentions his Rp 10,000")
 	controller.skip()
 	await wait_frames(3)
 	scene.queue_free()

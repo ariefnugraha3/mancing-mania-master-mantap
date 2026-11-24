@@ -15,6 +15,12 @@ extends Resource
 @export var false_strike_delay_sec: float = 0.8
 @export var bait_wait_reduction_per_level: float = 0.18
 
+@export_group("Bucket")
+## How many catches (fish and trash) the bucket holds before Darto must sell
+## at the Market; each Big Bucket level adds more (revision 6.12).
+@export var bucket_base_capacity: int = 5
+@export var bucket_capacity_per_level: float = 5.0
+
 @export_group("Reel")
 @export var marker_hold_velocity: float = 0.72
 @export var marker_release_velocity: float = -0.58

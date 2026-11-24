@@ -21,6 +21,8 @@ var _stress_sound_left: float = 0.0
 var _leaving: bool = false
 var _dialogue: DialogueBox
 var _travel: TravelOverlay
+## The small happenings while Darto waits (revision 6.12).
+var _events: FishingEventDirector
 ## Seconds after arriving at a new spot before Darto says his lines.
 const ARRIVAL_DELAY_SEC := 0.8
 const ARRIVAL_LINES := 3
@@ -55,6 +57,10 @@ func _ready() -> void:
 	_travel.name = "TravelOverlay"
 	add_child(_travel)
 	_travel.travel_requested.connect(_travel_to)
+	_events = FishingEventDirector.new()
+	_events.name = "EventDirector"
+	add_child(_events)
+	_events.setup(_world, _hud, _dialogue, GameState.get_current_location())
 
 	var location := GameData.get_location(GameState.get_current_location())
 	AudioManager.set_ambience_state(location.ambience if location != null else &"lake")
@@ -70,6 +76,7 @@ func _process(delta: float) -> void:
 	var state := _controller.get_state()
 	if state == FishingController.STATE_IDLE or state == FishingController.STATE_WAITING:
 		_check_phone()
+	_events.update(delta, _is_quiet(state), _world.is_float_in_water())
 	if state == FishingController.STATE_STRIKE_WINDOW:
 		_hud.set_strike_ratio(_controller.get_strike_window_ratio())
 	elif state == FishingController.STATE_REELING:
@@ -96,6 +103,22 @@ func _notification(what: int) -> void:
 			_pause.open(true)
 
 
+## Quiet fishing, when a small happening may come: Darto idle or waiting for
+## a bite, no dialogue, message or menu on screen, and the first lessons done.
+func _is_quiet(state: StringName) -> bool:
+	if state != FishingController.STATE_IDLE and state != FishingController.STATE_WAITING:
+		return false
+	if _dialogue.is_playing() or _hud.is_message_showing():
+		return false
+	if get_tree().get_first_node_in_group(OverlayPanel.OPEN_GROUP) != null:
+		return false
+	return GameState.is_tutorial_seen(&"fishing_seen") and StoryDirector.is_event_seen(FIRST_FISH_EVENT)
+
+
+func get_event_director() -> FishingEventDirector:
+	return _events
+
+
 # --- Input ------------------------------------------------------------------
 
 func _read_input() -> void:
@@ -111,15 +134,24 @@ func _read_input() -> void:
 	if InputManager.consume_action_once(&"fish_cast"):
 		match _controller.get_state():
 			FishingController.STATE_IDLE:
-				_controller.start_cast()
+				if GameState.is_bucket_full():
+					_refuse_cast()
+				else:
+					_controller.start_cast()
 			FishingController.STATE_WAITING, FishingController.STATE_BITE_WARNING, FishingController.STATE_STRIKE_WINDOW:
 				_controller.attempt_strike()
 
 
 func _open_bucket() -> void:
 	if not GameState.is_tutorial_seen(&"market_seen") and GameState.get_bucket_total_count() > 0:
-		_hud.show_hint(TextDb.t(&"fishing.bucket.tutorial"), 3.5)
+		_hud.show_hint(TextDb.tf(&"fishing.bucket.tutorial", {"capacity": GameState.get_bucket_capacity()}), 3.5)
 	_bucket_peek.open()
+
+
+## A full bucket: no cast until Darto sells at the Market (revision 6.12).
+func _refuse_cast() -> void:
+	AudioManager.play_ui(&"ui_disabled")
+	_hud.show_hint(TextDb.t(&"fishing.bucket.full"), 2.5)
 
 
 func _go_to_market() -> void:
@@ -201,6 +233,9 @@ func _quit_to_menu() -> void:
 
 func _on_state_changed(state: StringName) -> void:
 	_hud.set_state(state)
+	# A bite needs the player: a happening steps aside at once.
+	if state != FishingController.STATE_IDLE and state != FishingController.STATE_CASTING and state != FishingController.STATE_WAITING:
+		_events.interrupt()
 	match state:
 		FishingController.STATE_IDLE:
 			_world.show_idle()

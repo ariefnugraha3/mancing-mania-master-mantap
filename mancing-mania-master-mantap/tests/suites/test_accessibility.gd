@@ -264,6 +264,39 @@ func _popups() -> Array[Dictionary]:
 # side by side, wider than a phone, and the card slid off the right edge.
 # Every popup stays whole on the screen and in its middle, in every language,
 # at the default and the largest sizes, with a camera hole above it.
+## Revision 6.12: How To Play is one size on every tab, and its thumb-sized
+## buttons go straight to the previous and next tab; the tab's title stays on
+## one line.
+func test_how_to_play_keeps_one_size_and_steps_tab_by_tab() -> bool:
+	var window := tree.root
+	var original := window.size
+	window.size = Vector2i(720, 1280)
+	# Measured at rest: the opening pop would scale the card meanwhile.
+	GameState.set_setting(&"reduced_motion", true)
+	var overlay := HowToOverlay.new()
+	tree.root.add_child(overlay)
+	overlay.open()
+	await wait_frames(4)
+	var panel := overlay.get(&"_panel") as Control
+	var first := panel.get_global_rect().size
+	var next := overlay.get_next_button()
+	check(next.size.x >= 56.0 and next.size.y >= 56.0, "NEXT is thumb-sized (%s)" % next.size)
+	check(overlay.get_previous_button().disabled, "PREVIOUS waits on the first tab")
+	var title := overlay.find_child("TabTitle", true, false) as Label
+	for step: int in HowToOverlay.TAB_IDS.size() - 1:
+		next.pressed.emit()
+		await wait_frames(3)
+		check_eq(overlay.get_tabs().current_tab, step + 1, "NEXT goes straight to tab %d" % (step + 2))
+		check(panel.get_global_rect().size.distance_to(first) < 0.5, "tab %d keeps the popup's size (%s vs %s)" % [step + 2, panel.get_global_rect().size, first])
+		check_eq(title.get_line_count(), 1, "\"%s\" stays on one line" % title.text)
+	check(next.disabled, "NEXT stops on the last tab")
+	GameState.set_setting(&"reduced_motion", false)
+	overlay.queue_free()
+	window.size = original
+	await wait_frames(2)
+	return true
+
+
 func test_every_popup_sits_whole_in_the_middle_of_the_screen() -> bool:
 	# Calibration plays its click track on the music engine.
 	AudioManager.initialize_procedural_audio()

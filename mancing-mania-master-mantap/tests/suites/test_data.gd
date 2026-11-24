@@ -49,7 +49,7 @@ func test_content_manifest_counts() -> bool:
 	# Revision 6.7: 6 lake fish + 20 spot fish, 4 + 4 duels, 5 spots.
 	check_eq(ContentIds.FISH_IDS.size(), 26, "fish roster size")
 	check_eq(ContentIds.TRASH_IDS.size(), 3, "trash list size")
-	check_eq(ContentIds.UPGRADE_IDS.size(), 5, "upgrade families")
+	check_eq(ContentIds.UPGRADE_IDS.size(), 6, "upgrade families (Big Bucket joined in revision 6.12)")
 	check_eq(ContentIds.DUEL_IDS.size(), 8, "duel modes")
 	check_eq(ContentIds.LOCATION_IDS.size(), 5, "fishing spots")
 	check_eq(ContentIds.LEGEND_FISH_IDS.size(), 5, "one legend per spot")
@@ -57,7 +57,7 @@ func test_content_manifest_counts() -> bool:
 	check_eq(GameData.get_all_fish().size(), 26, "fish resources")
 	check_eq(GameData.get_all_locations().size(), 5, "spot resources")
 	check_eq(GameData.get_all_trash().size(), 3, "trash resources")
-	check_eq(GameData.get_all_upgrades().size(), 5, "upgrade resources")
+	check_eq(GameData.get_all_upgrades().size(), 6, "upgrade resources")
 	return true
 
 

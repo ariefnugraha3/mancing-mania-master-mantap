@@ -69,6 +69,7 @@ var _shadow_visible: bool = false
 var _catch: Node3D
 var _catch_tween: Tween
 var _reel_was_held: bool = false
+var _event_stage: FishingEventStage
 
 
 func _ready() -> void:
@@ -116,6 +117,42 @@ func _process(delta: float) -> void:
 
 
 # --- Called by the fishing scene --------------------------------------------
+
+## The small happenings around the spot play on this stage (revision 6.12).
+func get_event_stage() -> FishingEventStage:
+	if _event_stage == null:
+		_event_stage = FishingEventStage.new()
+		_event_stage.name = "EventStage"
+		add_child(_event_stage)
+		_event_stage.setup(self, _darto_spot, _float_spot)
+	return _event_stage
+
+
+func get_float_position() -> Vector3:
+	return _float_root.global_position
+
+
+## True while the float sits on the water waiting for a bite.
+func is_float_in_water() -> bool:
+	return _float_mode == FloatMode.FLOATING
+
+
+func splash_at(at: Vector3, large: bool = false) -> void:
+	_burst(_splash_large if large else _splash_small, at)
+
+
+func ripple_at(at: Vector3) -> void:
+	_spawn_ripple(at)
+
+
+func get_bucket_position() -> Vector3:
+	return _bucket.global_position
+
+
+## Where a catch lands on the bank beside Darto.
+func get_bank_spot() -> Vector3:
+	return _bank_spot()
+
 
 func show_idle() -> void:
 	_set_float_mode(FloatMode.HIDDEN)

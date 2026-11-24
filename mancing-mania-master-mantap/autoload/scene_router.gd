@@ -40,7 +40,6 @@ const SCENE_PATHS: Dictionary[StringName, String] = {
 
 const FADE_OUT_SEC := 0.18
 const FADE_IN_SEC := 0.24
-const LOADING_LABEL_DELAY_SEC := 0.5
 const FADE_COLOR := Color(0.208, 0.184, 0.161)
 
 var _current_scene_id: StringName = SCENE_BOOT
@@ -49,17 +48,27 @@ var _busy: bool = false
 var _layer: CanvasLayer
 var _fade_rect: ColorRect
 var _loading_label: Label
+## The spinner and LOADING... over the dark screen of every scene change
+## (revision 6.12): they show as the screen darkens and fade with it.
+var _loading: Control
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_overlay()
+	set_process(true)
 	# Display settings follow the save: UI and text scale, graphics quality.
 	GameState.settings_changed.connect(func(key: StringName) -> void: DisplaySettings.apply_setting(get_tree(), key))
 	GameState.state_replaced.connect(func() -> void: DisplaySettings.apply_all(get_tree()))
 	# The language right away, so the boot screen's first words are in it.
 	DisplaySettings.apply_language()
 	DisplaySettings.apply_all.call_deferred(get_tree())
+
+
+func _process(_delta: float) -> void:
+	var dark := _fade_rect.color.a
+	_loading.visible = dark > 0.35
+	_loading.modulate.a = clampf((dark - 0.35) / 0.5, 0.0, 1.0)
 
 
 # --- Public API (GDD 169.4) -------------------------------------------------
@@ -140,10 +149,10 @@ func _route(scene_id: StringName, context: Dictionary) -> void:
 	transition_started.emit(from_scene, scene_id)
 	InputManager.set_gameplay_input_enabled(false)
 	get_tree().paused = false
+	_loading_label.text = TextDb.t(&"common.loading")
 
 	await _fade_to(1.0, FADE_OUT_SEC)
 	var packed := await _load_scene(SCENE_PATHS[scene_id])
-	_loading_label.visible = false
 	if packed == null:
 		GameLog.error(&"ROUTER", "scene failed to load", {"scene": scene_id})
 		await _fade_to(0.0, FADE_IN_SEC)
@@ -177,10 +186,7 @@ func _load_scene(path: String) -> PackedScene:
 	var request_error := ResourceLoader.load_threaded_request(path)
 	if request_error != OK:
 		return load(path) as PackedScene
-	var started_msec := Time.get_ticks_msec()
 	while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		if Time.get_ticks_msec() - started_msec > int(LOADING_LABEL_DELAY_SEC * 1000.0):
-			_loading_label.visible = true
 		await get_tree().process_frame
 	if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_LOADED:
 		return null
@@ -210,13 +216,24 @@ func _build_overlay() -> void:
 	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_layer.add_child(_fade_rect)
 
+	_loading = CenterContainer.new()
+	_loading.name = "Loading"
+	_loading.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_loading.visible = false
+	_layer.add_child(_loading)
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_theme_constant_override(&"separation", 14)
+	_loading.add_child(column)
+	var spinner := LoadingSpinner.new()
+	spinner.name = "Spinner"
+	spinner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(spinner)
 	_loading_label = Label.new()
 	_loading_label.name = "LoadingLabel"
 	_loading_label.text = TextDb.t(&"common.loading")
-	_loading_label.visible = false
 	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_loading_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_loading_label.add_theme_color_override(&"font_color", Color(1.0, 0.969, 0.902))
-	_loading_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading_label.add_theme_color_override(&"font_color", LoadingSpinner.COLOR)
 	_loading_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_layer.add_child(_loading_label)
+	column.add_child(_loading_label)

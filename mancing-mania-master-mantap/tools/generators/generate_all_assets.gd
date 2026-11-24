@@ -20,6 +20,7 @@ const BUILDERS: Array[String] = [
 	"res://tools/generators/material_builder.gd",
 	"res://tools/generators/ui_art_builder.gd",
 	"res://tools/generators/prop_builder.gd",
+	"res://tools/generators/event_prop_builder.gd",
 	"res://tools/generators/fish_builder.gd",
 	"res://tools/generators/character_builder.gd",
 	"res://tools/generators/environment_builder.gd",

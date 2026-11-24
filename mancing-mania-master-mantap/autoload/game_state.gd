@@ -177,6 +177,18 @@ func get_bucket_total_count() -> int:
 	return total
 
 
+## How many catches the bucket holds: 5, then 10, 15 and 20 with Big Bucket
+## (revision 6.12).
+func get_bucket_capacity() -> int:
+	return UpgradeEffects.bucket_capacity(get_upgrade_level(&"bucket"))
+
+
+## A full bucket stops the next cast until Darto sells at the Market. A save
+## from before the limit may hold more; it simply waits for a sale.
+func is_bucket_full() -> bool:
+	return get_bucket_total_count() >= get_bucket_capacity()
+
+
 ## Empties the given items and returns what was removed as { item_id: quantity }.
 func clear_bucket_items(item_ids: Array[StringName]) -> Dictionary:
 	var removed := {}

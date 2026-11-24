@@ -64,6 +64,10 @@ func _run_all() -> void:
 	display.set("system_language_override", "en")
 	display.call("apply_language")
 
+	# The small happenings at the fishing spot would cover what a test checks;
+	# a test of the happenings switches them back on.
+	(load("res://scripts/gameplay/fishing/fishing_event_director.gd") as GDScript).set("enabled", false)
+
 	# Tests feed deliberately broken data; keep the expected complaints quiet.
 	GameLog.muted = true
 

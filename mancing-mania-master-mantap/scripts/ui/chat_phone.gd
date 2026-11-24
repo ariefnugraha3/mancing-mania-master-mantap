@@ -158,7 +158,7 @@ func add_message(text: String, outgoing: bool, title: String = "") -> void:
 	_add(_bubble(text, outgoing, title, first_of_run), true)
 
 
-## An account card in the middle of the chat: "TOTAL DEBT: Rp 1,800,000" shows
+## An account card in the middle of the chat: "TOTAL DEBT: Rp 2,000,000" shows
 ## its label small and its amount large.
 func add_info(text: String) -> void:
 	_start_row("info")

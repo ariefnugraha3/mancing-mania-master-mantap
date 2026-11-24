@@ -378,8 +378,15 @@ static func _normalize_debt(source: Dictionary, stats_source: Dictionary) -> Dic
 	var paid_valid := _is_number(source.get("paid")) and paid >= 0 and paid <= original
 	var remaining_valid := _is_number(source.get("remaining")) and remaining >= 0 and remaining <= original
 
-	if _read_int(source.get("original"), -1) != original:
+	var stored_original := _read_int(source.get("original"), -1)
+	if stored_original != original:
 		_note("debt.original repaired")
+	# Revision 6.12 raised the debt from Rp 1,800,000. A save that had already
+	# cleared the old debt must not owe the difference after the finale.
+	var legacy_cleared := (remaining_valid and remaining == 0) or (paid_valid and paid >= ContentIds.LEGACY_DEBT_ORIGINAL)
+	if stored_original == ContentIds.LEGACY_DEBT_ORIGINAL and legacy_cleared:
+		_note("cleared legacy debt kept cleared")
+		return {"original": original, "paid": original, "remaining": 0}
 
 	if paid_valid and remaining_valid and paid + remaining == original:
 		pass

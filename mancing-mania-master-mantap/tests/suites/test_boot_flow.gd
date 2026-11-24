@@ -116,8 +116,8 @@ func test_new_game_creates_a_valid_save() -> bool:
 	_button("NewGameButton").pressed.emit()
 	check(await wait_until(_save_file_is_valid, 5.0), "New Game wrote a valid schema-v5 save")
 	check(GameState.has_active_game(), "a game is active")
-	check_eq(GameState.get_cash(), 8430, "starting cash")
-	check_eq(GameState.get_debt_remaining(), 1800000, "starting debt")
+	check_eq(GameState.get_cash(), 10000, "starting cash")
+	check_eq(GameState.get_debt_remaining(), 2000000, "starting debt")
 	await wait_frames(3)
 	check(await _skip_prologue(), "New Game opens with the prologue")
 	check(await wait_until(func() -> bool: return _finished_transitions.has(&"fishing"), BOOT_TIMEOUT_SEC), "which continues to the lake")
@@ -126,7 +126,7 @@ func test_new_game_creates_a_valid_save() -> bool:
 
 func test_continue_reloads_the_saved_state() -> bool:
 	GameState.new_game()
-	GameState.add_cash(41570)
+	GameState.add_cash(40000)
 	GameState.pay_debt(30000)
 	GameState.add_bucket_item(&"snakehead_sergeant", 2)
 	check(SaveManager.save_game(&"test"), "prepared a save")
@@ -159,17 +159,17 @@ func test_new_game_over_a_save_needs_two_confirmations() -> bool:
 
 	_button("NewGameButton").pressed.emit()
 	check(await wait_until(_dialog().is_open, 3.0), "first confirmation opens")
-	check_eq(GameState.get_cash(), 508430, "nothing is replaced by the first click")
+	check_eq(GameState.get_cash(), 510000, "nothing is replaced by the first click")
 	_dialog().footer.get_child(1).pressed.emit()
 	await wait_frames(4)
 	check(_dialog().is_open(), "second confirmation opens")
-	check_eq(GameState.get_cash(), 508430, "nothing is replaced after one confirmation")
+	check_eq(GameState.get_cash(), 510000, "nothing is replaced after one confirmation")
 
 	# Backing out at the second step keeps the save.
 	_dialog().footer.get_child(0).pressed.emit()
 	await wait_frames(4)
 	check(not _dialog().is_open(), "cancel closes the dialog")
-	check_eq(read_json(SaveManager.get_save_path())["cash"], 508430, "save on disk is untouched")
+	check_eq(read_json(SaveManager.get_save_path())["cash"], 510000, "save on disk is untouched")
 	return true
 
 
@@ -450,6 +450,52 @@ func _enter_market(bucket: Dictionary = {}) -> bool:
 	return reached and tree.current_scene != null and tree.current_scene.name == &"Market"
 
 
+## Revision 6.12: the Market's sheet is the same height on every tab, on a
+## phone and on the test window; a page that needs more scrolls inside it.
+func test_market_sheet_keeps_one_height_on_every_tab() -> bool:
+	if not check(await _enter_market({&"catfish_bruiser": 3}), "reach the Market"):
+		return true
+	var scene := tree.current_scene
+	var hud := scene.get_node("MarketCanvas") as MarketHud
+	var sheet := scene.get_node(LEDGER + "TabContent") as Control
+	var window := tree.root
+	var original := window.size
+	for size: Vector2i in [original, Vector2i(720, 1280)]:
+		window.size = size
+		await wait_frames(4)
+		var first := Rect2()
+		for tab_id: StringName in MarketHud.TAB_ORDER:
+			hud.select_tab(tab_id, false)
+			await wait_frames(4)
+			var rect := sheet.get_global_rect()
+			if first == Rect2():
+				first = rect
+			check(rect.position.distance_to(first.position) < 0.5 and rect.size.distance_to(first.size) < 0.5,
+				"%s: the %s sheet is %s, like SELL's %s" % [size, tab_id, rect, first])
+	window.size = original
+	await wait_frames(3)
+	return true
+
+
+## Revision 6.12: a change of screen shows a spinner and LOADING... over the
+## dark screen, never a blank one.
+func test_a_scene_change_shows_a_spinner() -> bool:
+	if not check(await _boot_to_menu(), "boot reaches the Main Menu"):
+		return true
+	var loading := SceneRouter.get_node("RouterTransitionLayer/Loading") as Control
+	check(not loading.visible, "no spinner while a scene is up")
+	SceneRouter.goto_credits(true)
+	check(await wait_until(func() -> bool: return loading.visible and loading.modulate.a > 0.9, 3.0), "the spinner shows while the screen is dark")
+	check(loading.find_child("Spinner", true, false) is LoadingSpinner, "a turning spinner")
+	check_eq((loading.find_child("LoadingLabel", true, false) as Label).text, TextDb.t(&"common.loading"), "and LOADING... under it")
+	check(await wait_until(func() -> bool: return _finished_transitions.has(&"credits"), BOOT_TIMEOUT_SEC), "the next screen arrives")
+	await wait_frames(3)
+	check(not loading.visible, "and the spinner goes with the dark")
+	SceneRouter.goto_main_menu()
+	await wait_until(func() -> bool: return _finished_transitions.count(&"main_menu") >= 2, BOOT_TIMEOUT_SEC)
+	return true
+
+
 func test_market_scene_follows_the_scene_blueprint() -> bool:
 	if not check(await _enter_market(), "the Market button at the lake reaches the Market"):
 		return true
@@ -514,7 +560,7 @@ func test_market_visit_in_the_real_scene() -> bool:
 	check(hud.debt_panel.get_pay_button(100000).disabled, "PAY 100,000 is disabled without the cash")
 	check(not hud.debt_panel.get_pay_button(25000).disabled, "PAY 25,000 is affordable")
 	tutorial_pay.pressed.emit()
-	check_eq(GameState.get_debt_remaining(), 1790000, "debt remaining Rp 1,790,000 (GDD 183.5)")
+	check_eq(GameState.get_debt_remaining(), 1990000, "debt remaining Rp 1,990,000 (GDD 183.5)")
 	check_eq(GameState.get_cash(), start_cash + 45000, "the payment came out of cash")
 	check(GameState.is_tutorial_seen(&"market_seen"), "the Market tutorial is done after the first payment")
 	check_eq(hud.get_hint_text(), TextDb.t(&"market.hint.upgrades"), "last hint: upgrades are optional")
@@ -556,8 +602,8 @@ func test_leaving_the_market_plays_the_fish_book_call() -> bool:
 	await wait_frames(2)
 	check_eq(hud.fish_book_panel.body.get_child_count(), 1, "the Fish Book is closed before the story opens it")
 
-	GameState.debug_set_cash(600000)
-	check_eq(controller.pay_debt(600000), 600000, "pay Rp 600,000")
+	GameState.debug_set_cash(700000)
+	check_eq(controller.pay_debt(700000), 700000, "pay Rp 700,000")
 	check(not notice.is_open(), "no story interrupts the visit itself")
 	(scene.get_node(LEDGER + "LeaveMarketButton") as BaseButton).pressed.emit()
 	check(await wait_until(func() -> bool: return _finished_transitions.count(&"story") >= 2, BOOT_TIMEOUT_SEC), "leaving plays the story")
@@ -1126,6 +1172,131 @@ func test_dance_portrait_lanes_are_full_touch_targets() -> bool:
 	check(widths.max() - widths.min() < 1.0 and widths[0] >= 80.0, "four equal, wide lanes (%d pt)" % int(widths[0]))
 	window.size = original
 	await wait_frames(3)
+	return true
+
+
+# --- The bucket limit (revision 6.12) ------------------------------------------
+
+## A new game's bucket holds 5 catches; Big Bucket makes it 10, 15 and 20. A
+## full bucket refuses the next cast and says why, until a sale makes room.
+func test_a_full_bucket_waits_for_the_market() -> bool:
+	if not check(await _enter_lake(), "New Game reaches the lake"):
+		return true
+	var scene := tree.current_scene
+	var controller := scene.get_node("FishingController") as FishingController
+	var hud := scene.get_node("FishingCanvas") as FishingHud
+	var capacities: Array[int] = []
+	for level: int in 4:
+		capacities.append(UpgradeEffects.bucket_capacity(level))
+	check_eq(capacities, [5, 10, 15, 20] as Array[int], "the bucket holds 5, 10, 15, 20")
+	var upgrade := GameData.get_upgrade(&"bucket")
+	check_eq(upgrade.prices, [10000, 30000, 70000] as Array[int], "Big Bucket costs Rp 10.000, 30.000, 70.000")
+	check(UpgradeEffects.describe(&"bucket", 0).contains("5"), "the shop names the size even before the first level")
+	check_eq(GameState.get_bucket_capacity(), 5, "a new game starts at 5")
+
+	GameState.add_bucket_item(&"catfish_bruiser", 5)
+	check(GameState.is_bucket_full(), "five catches fill it")
+	await wait_frames(2)
+	var chip := hud.get_node("SafeRoot/TopBar/BucketWidget") as Control
+	var count_label := chip.find_children("*", "Label", true, false)[0] as Label
+	check_eq(count_label.text, "5/5", "the chip reads count over capacity")
+	# Inside the chip's padding, clear of its rim on the right.
+	check(count_label.get_global_rect().end.x <= chip.get_global_rect().end.x - float(UiTokens.SPACE_8) + 0.5, "inside the chip (%s in %s)" % [count_label.get_global_rect(), chip.get_global_rect()])
+	InputManager.press_action(&"fish_cast")
+	await wait_frames(4)
+	check_eq(controller.get_state(), FishingController.STATE_IDLE, "CAST does nothing with a full bucket")
+	check(hud.is_message_showing(), "and the HUD says the bucket is full")
+
+	GameState.remove_bucket_item(&"catfish_bruiser", 1)
+	check(not GameState.is_bucket_full(), "a sale makes room")
+	await wait_seconds(2.8)
+	InputManager.press_action(&"fish_cast")
+	check(await wait_until(func() -> bool: return controller.get_state() != FishingController.STATE_IDLE, 2.0), "and CAST works again")
+	controller.cancel_to_idle()
+
+	GameState.debug_set_upgrade_level(&"bucket", 1)
+	check_eq(GameState.get_bucket_capacity(), 10, "Big Bucket Lv1 holds 10")
+	return true
+
+
+# --- Small happenings at the fishing spot (revision 6.12) --------------------
+
+## The happenings come by themselves once the first lessons are done, each one
+## plays out in the real scene and leaves nothing behind, a bottle tapped in
+## time pays out, and a bite clears their words at once.
+func test_fishing_happenings_play_and_step_aside_for_a_bite() -> bool:
+	if not check(await _enter_lake(), "New Game reaches the lake"):
+		return true
+	var scene := tree.current_scene
+	var director := scene.get_node("EventDirector") as FishingEventDirector
+	var hud := scene.get_node("FishingCanvas") as FishingHud
+	var controller := scene.get_node("FishingController") as FishingController
+	var stage := (scene.get_node("World") as FishingWorld).get_event_stage()
+	var dialogue := scene.get_node("DialogueBox") as DialogueBox
+	FishingEventDirector.enabled = true
+	Engine.time_scale = 6.0
+
+	check_eq(director.get_events().get_history().size(), 0, "nothing happens before the first lessons are done")
+	GameState.set_tutorial_seen(&"fishing_seen")
+	StoryDirector.complete_event(&"story_first_fish", false)
+	check(await wait_until(func() -> bool: return not director.get_events().get_history().is_empty(), 10.0), "then one comes by itself")
+	await _until_happening_ends(director, dialogue, 30.0)
+
+	for event_id: StringName in FishingEvents.EVENTS:
+		if event_id == FishingEvents.DRAGONFLY:
+			continue
+		director.start(event_id)
+		check(await _until_happening_ends(director, dialogue, 30.0), "%s plays out" % event_id)
+		await wait_until(func() -> bool: return not stage.is_busy(), 5.0)
+		check(not stage.is_busy(), "%s leaves nothing behind" % event_id)
+
+	var cash := GameState.get_cash()
+	director.start(FishingEvents.BOTTLE)
+	check(await wait_until(hud.is_event_tap_visible, 3.0), "GRAB IT follows the bottle")
+	check(tree.root.get_visible_rect().encloses(hud.get_event_tap().get_global_rect()), "on screen")
+	hud.get_event_tap().pressed.emit()
+	await wait_frames(3)
+	check(not hud.is_event_tap_visible(), "a tap takes the bottle")
+	var gained := GameState.get_cash() - cash
+	check(gained == 0 or FishingEventDirector.BOTTLE_CASH.has(gained), "it held a note or a little money (Rp %d)" % gained)
+	check(await wait_until(dialogue.is_playing, 2.0), "what it held reads in the dialogue box")
+	check_eq(str(dialogue.get_current_line().get("speaker", "")), TextDb.t(&"fishing.event.bottle.title"), "under the bottle's title")
+	await _until_happening_ends(director, dialogue, 10.0)
+
+	# The family's texts read in the dialogue box too, and a bite closes it.
+	DebugService.set_fast_wait(true)
+	director.start(FishingEvents.FAMILY)
+	check(await wait_until(dialogue.is_playing, 2.0), "a family text opens the dialogue box")
+	check(str(dialogue.get_current_line().get("speaker", "")).ends_with("RINI") or str(dialogue.get_current_line().get("speaker", "")).ends_with("NISA"), "from Rini or Nisa")
+	controller.start_cast()
+	check(await wait_until(func() -> bool: return controller.get_state() == FishingController.STATE_BITE_WARNING or controller.get_state() == FishingController.STATE_STRIKE_WINDOW, 10.0), "a bite comes while it is open")
+	check(not dialogue.is_playing(), "and the bite closes it, so the strike is never missed")
+	check(InputManager.is_gameplay_input_enabled(), "with the controls back")
+	controller.cancel_to_idle()
+	await _until_happening_ends(director, dialogue, 10.0)
+
+	# A bite while the children call out: their words go at once.
+	director.start(FishingEvents.KITES)
+	check(await wait_until(func() -> bool: return hud.get_event_caption() != "", 10.0), "the children call out")
+	controller.start_cast()
+	check(await wait_until(func() -> bool: return controller.get_state() == FishingController.STATE_BITE_WARNING or controller.get_state() == FishingController.STATE_STRIKE_WINDOW, 10.0), "a bite comes")
+	check_eq(hud.get_event_caption(), "", "the bite clears the happening's words")
+	Engine.time_scale = 1.0
+	FishingEventDirector.enabled = false
+	DebugService.set_fast_wait(false)
+	DebugService.clear_forces()
+	return true
+
+
+## Waits for the running happening to end, tapping through its dialogue box.
+func _until_happening_ends(director: FishingEventDirector, dialogue: DialogueBox, timeout_sec: float) -> bool:
+	var deadline := Time.get_ticks_msec() + int(timeout_sec * 1000.0)
+	while director.get_events().get_running() != &"":
+		if Time.get_ticks_msec() > deadline:
+			return false
+		if dialogue.is_playing():
+			dialogue.advance()
+		await tree.process_frame
 	return true
 
 

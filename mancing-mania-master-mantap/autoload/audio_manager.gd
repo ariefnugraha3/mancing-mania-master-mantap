@@ -25,6 +25,13 @@ const FISHING_SFX_IDS: Array[StringName] = [
 	&"sfx_strike_success", &"sfx_reel_tick", &"sfx_line_stress", &"sfx_line_break",
 	&"sfx_large_splash",
 ]
+## The small happenings at the fishing spot (revision 6.12): a kingfisher's
+## chirp, a gull, a frog, a neighbour's horn, a passing drizzle and the coin
+## from a bottle. Splashes reuse the fishing sounds.
+const EVENT_SFX_IDS: Array[StringName] = [
+	&"event_bird_call", &"event_gull_call", &"event_frog_croak", &"event_horn", &"event_rain", &"event_coin",
+	&"event_duck_quack", &"event_cat_meow",
+]
 ## Market sounds (GDD 175.7): sale, purchase and the debt payment chime.
 const MARKET_SFX_IDS: Array[StringName] = [&"ui_sell", &"ui_purchase", &"ui_debt_ding"]
 ## Boxing sounds (GDD 175.8).

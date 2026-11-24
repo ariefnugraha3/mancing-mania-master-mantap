@@ -48,7 +48,7 @@ Salinan GDD Section 195. `[x]` = diverifikasi untuk build `1.0.0-rc.1` pada 14 N
 
 - [x] **[CRITICAL]** fishing, tinju, panco, joget, Suwit lulus (suite masing-masing + `boot`).
 - [x] Wheel 25/25/25/25 (100.000 putaran, `docs/balance_report.md`).
-- [x] harga jual, Arowana Rp300.000, harga dan efek upgrade, hutang awal Rp1.800.000, hutang tidak pernah negatif (`market` suite).
+- [x] harga jual, Arowana Rp300.000, harga dan efek upgrade, hutang awal Rp2.000.000 (revisi 6.12), hutang tidak pernah negatif (`market` suite).
 - [x] hutang bisa lunas tanpa Arowana (`story` dan `market` suite, simulasi).
 - [x] tidak ada gameplay uang judi; tidak ada kode IAP/iklan.
 

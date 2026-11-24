@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AudioPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/audio_preset.gd" id="1_preset"]
+
+[resource]
+script = ExtResource("1_preset")
+id = &"event_coin"
+synth_type = &"chime"
+base_gain_db = -11.0
+attack_sec = 0.003
+decay_sec = 0.35
+sustain = 0.0
+release_sec = 0.3
+pitch_hz = 990.0
+noise_amount = 0.08
+filter_cutoff_hz = 4200.0
+seed_mode = &"fixed"

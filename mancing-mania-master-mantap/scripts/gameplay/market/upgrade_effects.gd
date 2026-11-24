@@ -10,6 +10,9 @@ extends RefCounted
 
 ## The effect of an upgrade at `level` as one line of player-facing text.
 static func describe(upgrade_id: StringName, level: int) -> String:
+	# The bucket always has a size, even before the first upgrade.
+	if upgrade_id == &"bucket":
+		return TextDb.tf(&"upgrade.effect.bucket", {"count": bucket_capacity(level)})
 	if level <= 0:
 		return TextDb.t(&"upgrade.effect.none")
 	match upgrade_id:
@@ -25,6 +28,12 @@ static func describe(upgrade_id: StringName, level: int) -> String:
 		&"charm":
 			return TextDb.tf(&"upgrade.effect.charm", {"charges": charm_charges(level)})
 	return ""
+
+
+## How many catches the bucket holds with Big Bucket: 5 + 5 x level.
+static func bucket_capacity(level: int) -> int:
+	var balance := GameData.get_fishing_balance()
+	return balance.bucket_base_capacity + roundi(balance.bucket_capacity_per_level * float(_clamp(level)))
 
 
 ## Wait time multiplier from Super Pellet Bait: 1 - 0.18 x level.

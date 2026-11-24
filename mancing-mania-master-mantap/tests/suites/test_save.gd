@@ -81,9 +81,9 @@ func test_new_game_creates_schema_v6_file() -> bool:
 	expected_keys.sort()
 	check_eq(_sorted_keys(file), expected_keys, "top-level keys")
 	check_eq(file.get("version"), 6, "version (revision 6.7)")
-	check_eq(file.get("cash"), 8430, "starting cash")
-	check_eq(file["debt"], {"original": 1800000.0, "paid": 0.0, "remaining": 1800000.0}, "debt block")
-	check_eq(file["upgrades"].size(), 5, "upgrade entries")
+	check_eq(file.get("cash"), 10000, "starting cash")
+	check_eq(file["debt"], {"original": 2000000.0, "paid": 0.0, "remaining": 2000000.0}, "debt block")
+	check_eq(file["upgrades"].size(), 6, "upgrade entries (Big Bucket joined in revision 6.12)")
 	check_eq(file["bucket"].size(), 29, "bucket entries (26 fish and 3 trash)")
 	check_eq(file["fish_book"].size(), 26, "fish book entries")
 	check_eq(file["stats"].size(), 24, "stat entries (revision 6.7 added five)")
@@ -131,7 +131,7 @@ func test_save_then_load_restores_exact_state() -> bool:
 	var before := GameState.export_save_state()
 	check(SaveManager.save_game(&"test"), "save succeeds")
 	GameState.clear_game()
-	check_eq(GameState.get_cash(), 8430, "state really was cleared")
+	check_eq(GameState.get_cash(), 10000, "state really was cleared")
 
 	check(SaveManager.load_game(), "load succeeds")
 	check_eq(SaveManager.get_last_load_status(), SaveManager.STATUS_OK, "load status")
@@ -259,25 +259,25 @@ func test_negative_cash_is_clamped_and_backed_up() -> bool:
 
 func test_broken_debt_invariant_is_repaired() -> bool:
 	var data := _valid_save()
-	data["debt"] = {"original": 1800000, "paid": 300000, "remaining": 999}
+	data["debt"] = {"original": 2000000, "paid": 300000, "remaining": 999}
 	var fixed := SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 1800000, "paid": 300000, "remaining": 1500000}, "remaining recomputed from paid")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 300000, "remaining": 1700000}, "remaining recomputed from paid")
 
-	data["debt"] = {"original": 1800000, "paid": -5, "remaining": 1200000}
+	data["debt"] = {"original": 2000000, "paid": -5, "remaining": 1200000}
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 1800000, "paid": 600000, "remaining": 1200000}, "paid recomputed from remaining")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 800000, "remaining": 1200000}, "paid recomputed from remaining")
 
 	data["debt"] = {"original": 12, "paid": 400000, "remaining": 1400000}
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"]["original"], 1800000, "original restored")
+	check_eq(fixed["debt"]["original"], 2000000, "original restored")
 	check_eq(fixed["stats"]["lifetime_debt_paid"], 400000, "lifetime stat aligned with the ledger")
 
-	data["debt"] = {"original": 1800000, "paid": "lots", "remaining": null}
+	data["debt"] = {"original": 2000000, "paid": "lots", "remaining": null}
 	data["stats"]["lifetime_debt_paid"] = 250000
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 1800000, "paid": 250000, "remaining": 1550000}, "debt recovered from the lifetime stat")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 250000, "remaining": 1750000}, "debt recovered from the lifetime stat")
 
-	data["debt"] = {"original": 1800000, "paid": 9900000, "remaining": -4}
+	data["debt"] = {"original": 2000000, "paid": 9900000, "remaining": -4}
 	data["stats"]["lifetime_debt_paid"] = -1
 	check(SaveManager.validate_save(data).is_empty(), "debt with no recoverable field rejects the save")
 
@@ -287,13 +287,36 @@ func test_broken_debt_invariant_is_repaired() -> bool:
 	return true
 
 
+## Revision 6.12 raised the debt from Rp 1,800,000 to Rp 2,000,000. A save
+## still paying keeps what it paid and owes the new total; a save that had
+## cleared the old debt stays cleared, so the ending never owes money again.
+func test_saves_from_the_old_debt_follow_the_new_total() -> bool:
+	var data := _valid_save()
+	data["debt"] = {"original": 1800000, "paid": 500000, "remaining": 1300000}
+	data["stats"]["lifetime_debt_paid"] = 500000
+	var fixed := SaveManager.validate_save(data)
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 500000, "remaining": 1500000}, "a debt in progress keeps what was paid")
+	check_eq(fixed["stats"]["lifetime_debt_paid"], 500000, "and its milestones stay where they were")
+
+	data["debt"] = {"original": 1800000, "paid": 1800000, "remaining": 0}
+	data["stats"]["lifetime_debt_paid"] = 1800000
+	fixed = SaveManager.validate_save(data)
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 2000000, "remaining": 0}, "a cleared debt stays cleared")
+	check_eq(fixed["stats"]["lifetime_debt_paid"], 2000000, "its lifetime stat follows the ledger")
+
+	data["debt"] = {"original": 1800000, "paid": 1800000, "remaining": "?"}
+	fixed = SaveManager.validate_save(data)
+	check_eq(fixed["debt"]["remaining"], 0, "the whole old debt paid counts as cleared")
+	return true
+
+
 # --- SAVE-006 ---------------------------------------------------------------
 
 func test_upgrade_levels_are_clamped() -> bool:
 	var data := _valid_save()
 	data["upgrades"] = {"bait": -2, "rod": 7, "tonic": 2, "coffee": "x", "jetpack": 3}
 	var fixed := SaveManager.validate_save(data)
-	check_eq(fixed["upgrades"], {"bait": 0, "rod": 3, "tonic": 2, "coffee": 0, "charm": 0}, "clamped upgrades")
+	check_eq(fixed["upgrades"], {"bucket": 0, "bait": 0, "rod": 3, "tonic": 2, "coffee": 0, "charm": 0}, "clamped upgrades")
 	return true
 
 
@@ -386,12 +409,12 @@ func test_interrupted_write_keeps_previous_save() -> bool:
 	GameState.add_cash(5000)
 	check(not SaveManager.save_game(&"test"), "interrupted save reports failure")
 	check(SaveManager.has_unsaved_changes(), "unsaved changes are flagged")
-	check_eq(GameState.get_cash(), 14430, "runtime state is kept after a failed save")
+	check_eq(GameState.get_cash(), 16000, "runtime state is kept after a failed save")
 	SaveManager.simulate_interrupted_write = false
 
 	GameState.clear_game()
 	check(SaveManager.load_game(), "previous save still loads")
-	check_eq(GameState.get_cash(), 9430, "previous save was retained")
+	check_eq(GameState.get_cash(), 11000, "previous save was retained")
 	check(not FileAccess.file_exists(STORAGE_DIR.path_join(SaveManager.TEMP_FILE)), "stale temp file was removed")
 	return true
 
@@ -589,9 +612,22 @@ func test_debug_mutations_are_not_saved_implicitly() -> bool:
 	DebugService.set_cash(999999)
 	check(DebugService.is_dev_dirty(), "debug mutation marks DEV DIRTY STATE")
 	check(SaveManager.save_game(&"sale"), "implicit save is skipped without an error")
-	check_eq(_saved_file()["cash"], 8430, "file still holds the clean value")
+	check_eq(_saved_file()["cash"], 10000, "file still holds the clean value")
 
 	check(DebugService.save_debug_state(), "explicit SAVE DEBUG STATE succeeds")
 	check(not DebugService.is_dev_dirty(), "dirty flag cleared")
 	check_eq(_saved_file()["cash"], 999999, "debug state written on explicit request")
+	return true
+
+
+## Revision 6.12: a save from before Big Bucket has no "bucket" upgrade level;
+## it loads at level 0 (5 catches), and a bucket already over 5 is kept.
+func test_saves_from_before_big_bucket_load_at_level_zero() -> bool:
+	var data := SaveSchema.make_default(42)
+	var upgrades: Dictionary = data["upgrades"]
+	upgrades.erase("bucket")
+	data["bucket"]["catfish_bruiser"] = 9
+	var normalized := SaveSchema.normalize(data)
+	check_eq(int(normalized["upgrades"]["bucket"]), 0, "Big Bucket starts at level 0")
+	check_eq(int(normalized["bucket"]["catfish_bruiser"]), 9, "nothing in the bucket is lost")
 	return true

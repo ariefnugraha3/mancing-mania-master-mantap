@@ -54,6 +54,13 @@ const SCISSORS := &"ui_icon_scissors"
 const PAPER := &"ui_icon_paper"
 const ARROW_DOWN := &"ui_icon_arrow_down"
 const MAP := &"ui_icon_map"
+## The duels' own icons on the Wheel of Fate (revision 6.12); boxing, dance
+## and Rock Paper Scissors use GLOVE, MUSIC and SCISSORS.
+const DUEL_ARM := &"ui_icon_duel_arm"
+const DUEL_KERIS := &"ui_icon_duel_keris"
+const DUEL_ROPE := &"ui_icon_duel_rope"
+const DUEL_TOP := &"ui_icon_duel_top"
+const DUEL_POLE := &"ui_icon_duel_pole"
 ## The game's round emblem above the title (revision 6.8).
 const EMBLEM := &"ui_logo_emblem"
 
@@ -62,6 +69,7 @@ const ALL: Array[StringName] = [
 	CASH, BUCKET, MARKET, PAUSE, WARNING, ROD, PLAY, SPARKLE, BOOK, GEAR, HEART, BACK, CLOSE, MUSIC,
 	SOUND, DOOR, CHECK, KEYS, FISH, LEDGER, ARROW_UP, TROPHY, RETRY, SHIELD, ARROW_LEFT, ARROW_RIGHT,
 	GLOVE, HAND, ROCK, SCISSORS, PAPER, ARROW_DOWN, MAP, EMBLEM,
+	DUEL_ARM, DUEL_KERIS, DUEL_ROPE, DUEL_TOP, DUEL_POLE,
 ]
 
 # Line weights and depth, in grid units (1/24 of the icon).
@@ -275,6 +283,16 @@ func _design(id: StringName) -> void:
 			_design_rock()
 		SCISSORS:
 			_design_scissors()
+		DUEL_ARM:
+			_design_duel_arm()
+		DUEL_KERIS:
+			_design_duel_keris()
+		DUEL_ROPE:
+			_design_duel_rope()
+		DUEL_TOP:
+			_design_duel_top()
+		DUEL_POLE:
+			_design_duel_pole()
 
 
 ## The game's emblem (revision 6.8), above "CATCH AND BRAWL": a round
@@ -522,6 +540,85 @@ func _design_glove() -> void:
 	_line(_arc(Vector2(13.4, 9.0), 5.0, -1.2, -0.15), RED.lerp(Color.WHITE, 0.5), 1.3)
 	_part(_stroke(_poly([8.2, 15.6, 5.4, 12.6, 6.6, 8.6]), 4.2), RED, 0.8, false)
 	_line(_arc(Vector2(13.6, 17.4), 6.0, -2.3, -1.6), _shade(RED), 0.9)
+
+
+# --- Duel icons (revision 6.12) --------------------------------------------------
+
+## Arm wrestling: a flexed arm, the bicep bulging and the fist up.
+func _design_duel_arm() -> void:
+	_part(_rrect(Rect2(15.8, 12.4, 7.0, 10.2), 2.0), SLEEVE, 1.0)
+	var arm := _stroke(_poly([17.6, 17.8, 9.4, 17.8, 6.8, 9.8]), 5.4)
+	arm = _merge(arm, _ellipse(Vector2(12.6, 14.6), 4.8, 3.8, -0.15))
+	_part(arm, SKIN, 1.2)
+	_line(_arc(Vector2(12.2, 15.2), 2.6, -2.7, -1.5), _shade(SKIN), 0.9)
+	_part(_rrect(Rect2(2.8, 2.2, 8.4, 7.8), 2.8), SKIN, 0.9)
+	for knuckle: int in 3:
+		var x := 4.9 + 2.1 * float(knuckle)
+		_line(_poly([x, 2.8, x, 5.0]), _shade(SKIN), 0.8)
+
+
+## Silat: a keris, the wavy dagger of pencak silat, held at a slant: a broad
+## steel blade with three waves (luk), an uneven gold guard and a bent hilt.
+func _design_duel_keris() -> void:
+	var tilt := Transform2D(0.62, Vector2(12.0, 12.0)) * Transform2D(0.0, Vector2(-12.0, -12.0))
+	var steel := Color("8ea3bb")
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	for step: int in 15:
+		var t := float(step) / 14.0
+		var middle := Vector2(12.0 + sin(t * TAU * 1.5) * 1.1, 14.4 - t * 13.0)
+		var half := lerpf(2.9, 0.5, t)
+		left.append(middle - Vector2(half, 0.0))
+		right.append(middle + Vector2(half, 0.0))
+	var blade := left
+	blade.append(Vector2(12.0, 0.6))
+	right.reverse()
+	blade.append_array(right)
+	_part(tilt * _rounded(blade, 0.5), steel, 0.9)
+	var ridge := PackedVector2Array()
+	for step: int in 8:
+		var t := float(step) / 7.0 * 0.75
+		ridge.append(Vector2(12.0 + sin(t * TAU * 1.5) * 1.1, 13.6 - t * 13.0))
+	_line(tilt * ridge, steel.lerp(Color.WHITE, 0.6), 0.9)
+	_part(tilt * _rounded(_poly([6.4, 13.6, 18.2, 12.6, 17.0, 16.0, 8.6, 16.6]), 1.0), GOLD, 0.9)
+	var hilt := PackedVector2Array([Vector2(12.4, 16.2), Vector2(12.6, 19.2)])
+	hilt.append_array(_curve(Vector2(12.6, 19.2), Vector2(12.8, 22.4), Vector2(16.2, 22.2), 6))
+	_part(tilt * _stroke(hilt, 3.6), WOOD, 1.0)
+
+
+## Tug of war: a thick rope sagging between two pulls, a red ribbon on its
+## middle.
+func _design_duel_rope() -> void:
+	var path := PackedVector2Array([Vector2(1.8, 8.6)])
+	path.append_array(_curve(Vector2(1.8, 8.6), Vector2(12.0, 16.8), Vector2(22.2, 8.6), 14))
+	var tan := Color("d9b277")
+	_part(_stroke(path, 4.2), tan, 1.0)
+	for twist: int in 6:
+		var at := path[2 + twist * 2]
+		_line(_poly([at.x - 1.0, at.y - 1.6, at.x + 1.0, at.y + 1.6]), _shade(tan), 0.8)
+	_part(_rounded(_poly([10.0, 11.4, 14.0, 11.4, 15.4, 19.0, 12.0, 16.8, 8.6, 19.0]), 0.8), RED, 0.9)
+
+
+## Spinning tops: a wooden top on its point with a gold band and a stem, and
+## two swishes of the spin.
+func _design_duel_top() -> void:
+	var body := _rounded(_poly([12.0, 21.8, 3.2, 11.6, 5.8, 7.6, 18.2, 7.6, 20.8, 11.6]), 2.0)
+	_part(body, CRUST, 1.4)
+	_flat(_intersect_one(body, _rect(Rect2(0, 10.4, 24, 2.6))), GOLD)
+	_part(_rrect(Rect2(10.6, 2.4, 2.8, 6.0), 1.2), WOOD, 0.8)
+	_line(_arc(Vector2(12, 14.4), 11.0, -0.85, -0.2), TEAL, 1.3)
+	_line(_arc(Vector2(12, 14.4), 11.0, PI + 0.2, PI + 0.85), TEAL, 1.3)
+
+
+## Greased pole: a tall trunk with a red flag on top and a hoop of prizes.
+func _design_duel_pole() -> void:
+	_part(_rrect(Rect2(10.6, 4.2, 2.8, 19.0), 1.2), WOOD, 0.9)
+	_part(_rounded(_poly([13.2, 1.2, 20.8, 3.6, 13.2, 6.0]), 0.6), RED, 0.6)
+	for side: int in 2:
+		var x := 6.0 if side == 0 else 18.0
+		_line(_poly([x, 8.6, x, 11.0]), INK, 0.7)
+		_part(_rrect(Rect2(x - 1.9, 10.6, 3.8, 3.6), 0.8), BLUE if side == 0 else GREEN, 0.7)
+	_part(_rrect(Rect2(4.2, 7.0, 15.6, 2.4), 1.2), GOLD, 0.8)
 
 
 func _design_rock() -> void:

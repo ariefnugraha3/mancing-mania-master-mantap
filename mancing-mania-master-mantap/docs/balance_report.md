@@ -120,3 +120,30 @@ Masih berlaku (lihat `docs/implementation_decisions.md`): empat ikan pertama kal
 ## D-068 — Panco: istirahat
 
 Dengan angka GDD, terus menekan selalu memberi dorongan lebih besar daripada berhenti untuk memulihkan stamina, sehingga petunjuk "stop briefly to recover" tidak pernah menguntungkan. Hold Assist tetap bisa mengalahkan setiap ikan (`a11y.test_hold_assist_beats_every_fish_with_the_same_costs`). Pilihan untuk pemilik: naikkan pemulihan stamina saat istirahat, atau turunkan batas tenaga minimum 42%. Revisi GDD.
+
+## Revisi 6.12 — Utang Rp 2.000.000
+
+Utang awal naik dari Rp 1.800.000 ke Rp 2.000.000 (+11%). Milestone digeser sebanding: 100k, 350k, 700k, 1.100k, 1.500k, 1.850k, lunas. Harga ikan, upgrade, dan perlengkapan tidak berubah. Model yang sama (hanya Danau Cempaka, tanpa batas ember), 2.000 run per baris:
+
+| Profil | Strategi | Utang Rp 1,8 jt (jam) | Utang Rp 2 jt (jam) | Selisih |
+|---|---|---|---|---|
+| novice | debt_first | 2.53 | 2.80 | +11% |
+| novice | completionist | 2.58 | 2.78 | +8% |
+| average | debt_first | 1.75 | 1.94 | +11% |
+| average | balanced | 1.67 | 1.84 | +10% |
+| average | completionist | 1.92 | 2.06 | +8% |
+| average | tanpa Arowana | 2.04 | 2.26 | +11% |
+| skilled | debt_first | 1.26 | 1.39 | +11% |
+
+Bagian permainan saat setiap milestone tercapai (pemain rata-rata, bayar utang dulu), dari lama melunasi:
+
+| Milestone | Utang Rp 1,8 jt | Utang Rp 2 jt |
+|---|---|---|
+| 1 (100k) | 9% | 8% |
+| 2 (300k → 350k) | 21% | 21% |
+| 3 (600k → 700k) | 37% | 38% |
+| 4 (1.000k → 1.100k) | 58% | 57% |
+| 5 (1.400k → 1.500k) | 78% | 76% |
+| 6 (1.650k → 1.850k) | 92% | 93% |
+
+Adegan cerita tetap muncul di titik permainan yang sama. Lama melunasi naik 8–11%, masih jauh di bawah target Section 179.4 (temuan utama di atas tetap berlaku), jadi harga tidak perlu dinaikkan.

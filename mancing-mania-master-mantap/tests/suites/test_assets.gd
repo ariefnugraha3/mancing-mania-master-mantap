@@ -541,3 +541,15 @@ func test_people_are_chibi_and_stand_on_a_soft_shadow() -> bool:
 	counter.free()
 	return true
 
+
+## Revision 6.12: every duel on the Wheel of Fate has its own icon, drawn by
+## the icon painter like the rest of the UI, instead of a plain shape.
+func test_every_duel_has_its_own_wheel_icon() -> bool:
+	var used: Dictionary = {}
+	for duel_id: StringName in ContentIds.DUEL_IDS:
+		var icon: StringName = WheelGraphic.DUEL_ICONS.get(duel_id, &"")
+		check(IconPainter.ALL.has(icon), "%s has a painted icon (%s)" % [duel_id, icon])
+		check(not used.has(icon), "%s's icon is its own" % duel_id)
+		used[icon] = true
+	return true
+

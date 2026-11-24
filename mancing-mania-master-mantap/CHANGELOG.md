@@ -2,6 +2,80 @@
 
 Format mengikuti Semantic Versioning (GDD Section 186.2). Tag milestone mengikuti GDD Section 191.3.
 
+## Unreleased — Revisi 6.12: kejadian kecil saat memancing, dan siap dimainkan di HP
+
+Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.12, Section 25.1, 135, 167, 189.3, 190.
+
+### Ditambah
+
+- **Kejadian kecil saat menunggu ikan** (Section 25.1):
+  - ikan melompat;
+  - raja udang atau camar menyambar ikan;
+  - katak di daun teratai;
+  - capung di pelampung;
+  - sandal hanyut;
+  - botol berisi pesan yang bisa diketuk (Rp 500–2.000 atau catatan lucu);
+  - pesan HP dari Nisa atau Rini yang mengikuti cerita;
+  - gerimis;
+  - tetangga lewat naik motor;
+  - anak-anak bermain layangan;
+  - **empat kejadian lucu**: ikan nongol mengejek umpan Darto; penagih CepatCash berhenti di belakang Darto, yang pura-pura jadi orang-orangan sawah atau mengaku sudah pindah (setelah utang lunas, penagih menawarkan pinjaman baru); parade bebek dengan anak bebek yang ketinggalan; kucing oren yang menghakimi isi ember.
+
+  Muncul kira-kira setiap 20–40 detik memancing yang tenang, menyesuaikan tempat, dan langsung mengalah saat ikan menggigit.
+- **Aset dan suara kejadian kecil**: 15 model baru dari `event_prop_builder.gd` (burung, katak, teratai, capung, botol, layangan, anak-anak, pengendara motor, bebek, anak bebek, kucing oren, penagih) dan 8 suara buatan kode (kicau, camar, katak, klakson, hujan, koin, kwek, meong).
+- **Teks**: 91 teks baru (English dan Bahasa Indonesia), dan `TEKS_BAHASA_INDONESIA.md` yang memuat semua dialog kejadian kecil saat memancing beserta tempat munculnya.
+- **Log performa**: build debug di HP mencatat baris `[PERF]` setiap 5 detik (fps, waktu CPU, draw call, ukuran 3D).
+- **Test**:
+  - jadwal dan variasi kejadian;
+  - kejadian di scene memancing sungguhan;
+  - botol dan gigitan;
+  - suara kejadian;
+  - kartu dialog satu ukuran;
+  - ketukan kartu cerita;
+  - Back ganda;
+  - kartu isyarat Suwit;
+  - banner nama ikan;
+  - batas fps dan resolusi 3D di HP;
+  - popup di tengah;
+  - scroll dengan jari;
+  - cincin fokus;
+  - filter `--test=` di runner.
+
+### Diubah
+
+- **Utang awal Rp 2.000.000** (dulu Rp 1.800.000). Milestone cerita digeser sebanding: Rp 100.000, 350.000, 700.000, 1.100.000, 1.500.000, 1.850.000, lalu lunas. Kenanga, Melati, Anggrek, dan Mawar terbuka di Rp 350.000, 700.000, 1.100.000, dan 1.500.000. Harga ikan, upgrade, dan perlengkapan tetap; model ekonomi menunjukkan lama melunasi naik 8–11% dan setiap adegan cerita tetap muncul di titik permainan yang sama. Prolog menampilkan TOTAL UTANG: Rp 2.000.000, dan "lebih kecil dari satu koma delapan juta" menjadi "lebih kecil dari dua juta".
+- Save lama yang masih mencicil menyimpan jumlah yang sudah dibayar dan berutang sisa dari Rp 2.000.000; save yang sudah lunas tetap lunas.
+- **Ember berkapasitas**: game baru muat 5 tangkapan. Upgrade baru **Ember Besar** membuatnya 10, 15, dan 20 (Rp 10.000, Rp 30.000, Rp 70.000), dan tampil paling atas di halaman UPGRADE. Ember penuh menolak lemparan berikutnya dengan EMBER PENUH sampai Darto menjual di Warung; chip ember menampilkan isi/kapasitas. Total biaya upgrade kini Rp 815.000.
+- **Transisi antarlayar** menampilkan spinner dan MEMUAT... di atas layar gelap.
+- **Pesan keluarga dan isi botol** tampil di kotak dialog bawah, seperti dialog ikan, dan tertutup sendiri bila ikan menggigit.
+- **Cara Bermain**: tombol besar sebelum/berikutnya yang langsung pindah tab, satu judul tab, dan popup sama besar di setiap tab.
+- **Warung**: lembar bertab sama tinggi di setiap tab.
+- **Roda Nasib**: setiap segmen memakai ikon khusus duelnya (sarung tinju, lengan berotot, not musik, tangan dua jari, keris, tali tambang, gasing, batang pinang), menggantikan bentuk polos. Lima ikon baru digambar IconPainter.
+- HP dan tablet menggambar paling banyak **60 frame per detik**, dan dunia 3D paling banyak `phone_density` piksel per poin kanvas. Di HP 1220 × 2712, preset SEDANG menggambar dunia 3D di 64% (sekitar 1,4 juta piksel per frame, sebelumnya 3,3 juta). Teks dan tombol tetap tajam, dan preset desktop tidak berubah.
+- **Kartu dialog** permainan dan adegan cerita kini satu ukuran (190 pt) dengan KETUK UNTUK LANJUT di kakinya, dan keduanya memakai kode yang sama.
+- **Memori**: font Chewy memakai MSDF, cache glyph dibuang saat pindah scene, dan tanda "!" gigitan hanya memakai Chewy.
+- **Teks**: dialog dan tombol bahasa Indonesia disunting pemilik proyek (SENTAK menjadi TARIK). Darto memakai "aku" hanya kepada Rini dan Nisa, dan "saya" kepada yang lain (25 kalimat diganti). Bu Yati selalu memakai "saya". Kalimat Rini di epilog menyebut kekalahan Darto melawan lele (`{catfish_losses}`), dan Rini di prolog berangkat kerja (*Off to work. Back after my shift.*).
+
+### Diperbaiki
+
+- **Popup** selalu utuh di tengah layar di semua bahasa dan ukuran; kartu unlock cerita juga di tengah.
+- **Nama ikan di awal duel** jatuh ke bawah layar (terpotong di empat duel); kini di tengah. Penempatan HUD memakai `UiTokens.place_at` agar kotak kembali ke ukurannya.
+- **Kartu isyarat ikan di Suwit** keluar layar dan berubah-ubah ukurannya.
+- **Petunjuk tinju dua baris** tertimpa tanda serangan.
+- **Ketukan di kartu dialog adegan cerita**, termasuk KETUK UNTUK LANJUT, tidak memajukan cerita.
+- **Tombol Back Android di HP MIUI/HyperOS** terkirim dua kali, sehingga pertanyaan keluar langsung tertutup. Back dalam 600 ms dihitung sekali.
+- **Tampilan terbalik di Android** setelah percobaan render langsung ke layar; percobaan itu dibatalkan.
+- **Halaman Upgrade di Warung** tidak bisa di-scroll.
+- **HOLD TO SKIP di kredit** tidak di tengah.
+- **Chip ember** di HUD memancing: teks isi/kapasitas meluber keluar chip; chip kini melebar mengikuti teksnya.
+- **Cincin fokus kuning** muncul setelah ketukan.
+
+### Perlu dicek di HP sungguhan
+
+- Kejadian kecil terlihat jelas dan tidak terasa berlebihan, termasuk botol yang mudah diketuk.
+- Main 10 menit sebelum dan sesudah batas 60 fps: suhu HP dan baris `[PERF]` di `adb logcat`.
+- Dunia 3D di 64% masih terlihat tajam.
+
 ## Unreleased — Revisi Android 6.11: tidak crash di HP Android
 
 Status: **IMPLEMENTATION COMPLETE — QA NOT YET PASSED**; masuk ke `1.0.0-rc.2`. Detail authoritative: GDD header revisi 6.11, Section 115, 125, 135, 186, 195.12. Sumber: `ANDROID_STABILITY_AND_RELEASE_GUIDE.md`.
