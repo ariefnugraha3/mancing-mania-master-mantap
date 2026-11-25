@@ -559,8 +559,8 @@ func _happenings(location_id: StringName, seed: int = 7) -> FishingEvents:
 	return FishingEvents.new(location_id, rng)
 
 
-## Only quiet fishing counts: the first one comes 10-18 s in, the next ones
-## 20-40 s after the last one ended ("often").
+## Only quiet fishing counts: the first one comes 3-6 s in, the next ones
+## 8-16 s after the last one ended so happenings show while waiting for a bite.
 func test_happenings_come_often_and_only_when_quiet() -> bool:
 	var events := _happenings(&"cempaka")
 	var first := events.get_quiet_left()
@@ -584,7 +584,7 @@ func test_happenings_come_often_and_only_when_quiet() -> bool:
 			count += 1
 			clock += 8.0
 			events.finish()
-	check(count >= 14 and count <= 30, "%d happenings in ten minutes" % count)
+	check(count >= 24 and count <= 42, "%d happenings in ten minutes" % count)
 	return true
 
 
@@ -637,6 +637,8 @@ func test_happening_lines_exist_in_both_languages() -> bool:
 	var visits: Array[String] = ["free"]
 	for visit: int in FishingEventDirector.COLLECTOR_VISITS:
 		visits.append(str(visit + 1))
+	for visit: int in FishingEventDirector.COLLECTOR_OVERDUE_VISITS:
+		visits.append("overdue.%d" % (visit + 1))
 	for visit: String in visits:
 		for part: String in ["them", "darto", "them2"]:
 			keys.append("fishing.event.collector.%s.%s" % [visit, part])
@@ -660,4 +662,65 @@ func test_happening_lines_exist_in_both_languages() -> bool:
 			missing.append(key)
 	check_empty(missing, "every happening line is in both tables")
 	check(TextDb.tf(&"fishing.event.bottle.cash", {"amount": "Rp 1.000"}).contains("Rp 1.000"), "the bottle names its money")
+	return true
+
+
+func test_overdue_debt_slows_bites_and_increases_collector_visits() -> bool:
+	var normal_wait := EncounterRoller.wait_time(0.5, 0, null, 1.0)
+	var overdue_wait := EncounterRoller.wait_time(0.5, 0, null, ContentIds.DEBT_HARASS_WAIT_MULTIPLIER)
+	check_near(overdue_wait, normal_wait * ContentIds.DEBT_HARASS_WAIT_MULTIPLIER, 0.001, "overdue debt slows bite wait by 1.45x")
+
+	var calm_events := _happenings(&"cempaka", 77)
+	var overdue_events := _happenings(&"cempaka", 77)
+	overdue_events.overdue = true
+	var calm_visits := 0
+	var overdue_visits := 0
+	for _i: int in 250:
+		if calm_events.advance(100.0, true, true) == FishingEvents.COLLECTOR:
+			calm_visits += 1
+		calm_events.finish()
+		if overdue_events.advance(100.0, true, true) == FishingEvents.COLLECTOR:
+			overdue_visits += 1
+		overdue_events.finish()
+	check(overdue_visits > calm_visits * 2, "overdue collector visits much more often (%d vs %d)" % [overdue_visits, calm_visits])
+
+	var original_size := tree.root.size
+	tree.root.size = Vector2i(720, 1280)
+	var scene: Node = (load("res://scenes/fishing/fishing.tscn") as PackedScene).instantiate()
+	tree.root.add_child(scene)
+	await wait_frames(4)
+	var hud := scene.get_node("FishingCanvas") as FishingHud
+	var cash_rect := (scene.get_node("FishingCanvas/SafeRoot/TopBar/CashWidget") as Control).get_global_rect()
+	var bucket_rect := (scene.get_node("FishingCanvas/SafeRoot/TopBar/BucketWidget") as Control).get_global_rect()
+	var debt_rect := hud.get_debt_widget().get_global_rect()
+	var pause_rect := (scene.get_node("FishingCanvas/SafeRoot/PauseButton") as Control).get_global_rect()
+	check(hud.get_debt_widget().visible, "debt chip shows while debt remains")
+	check(absf(bucket_rect.position.y - cash_rect.position.y) <= 8.0, "bucket chip shares top row with cash (%.1f vs %.1f)" % [bucket_rect.position.y, cash_rect.position.y])
+	check(absf(bucket_rect.get_center().y - pause_rect.get_center().y) <= 12.0, "bucket chip aligns with pause button")
+	check(debt_rect.size.y < cash_rect.size.y - 6.0, "debt chip is compact (%.1f < %.1f)" % [debt_rect.size.y, cash_rect.size.y])
+	check(not hud.get_debt_text().begins_with("! "), "calm debt chip has no warning prefix")
+	var popover := hud.get_info_popover()
+	check(popover != null and not popover.visible, "info popover starts hidden")
+	hud.toggle_cash_info()
+	await wait_frames(2)
+	check(popover.visible and popover.get_title_text() == TextDb.t(&"hud.info.cash.title"), "tapping cash shows cash floating info")
+	check(popover.get_global_rect().position.y >= cash_rect.end.y - 1.0, "cash info sits under the cash chip")
+	hud.toggle_debt_info()
+	await wait_frames(2)
+	check(popover.visible and popover.get_title_text() == TextDb.t(&"hud.info.debt.title"), "tapping debt switches to debt floating info")
+	hud.toggle_debt_info()
+	check(not popover.visible, "tapping debt again hides the floating info")
+	GameState.record_unpaid_sale()
+	GameState.record_unpaid_sale()
+	await wait_frames(1)
+	check(hud.get_debt_text().begins_with("! "), "overdue debt chip shows warning prefix")
+	hud.toggle_debt_info()
+	check(popover.visible and popover.get_title_text() == TextDb.t(&"hud.info.debt_overdue.title"), "overdue debt info warns about the collector")
+	GameState.debug_set_debt_remaining(0)
+	await wait_frames(1)
+	check(not hud.get_debt_widget().visible, "debt chip hides once debt is cleared")
+	check(not popover.visible, "debt info hides once debt is cleared")
+	scene.queue_free()
+	tree.root.size = original_size
+	await wait_frames(2)
 	return true

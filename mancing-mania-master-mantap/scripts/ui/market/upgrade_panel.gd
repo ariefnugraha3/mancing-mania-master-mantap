@@ -44,9 +44,20 @@ func refresh() -> void:
 			next_label.visible = false
 			button.text = TextDb.t(&"market.upgrade.max")
 			button.disabled = true
+		elif GameState.is_upgrade_locked_by_debt(upgrade_id):
+			var required := GameState.get_upgrade_debt_requirement(upgrade_id)
+			next_label.visible = true
+			next_label.text = TextDb.tf(&"market.upgrade.locked_note", {
+				"effect": UpgradeEffects.describe(upgrade_id, level + 1),
+				"amount": Money.format_rp(required),
+			})
+			next_label.add_theme_color_override(&"font_color", UiTokens.RED_500.darkened(0.18))
+			button.text = TextDb.tf(&"market.upgrade.locked_debt", {"amount": Money.format_rp(required)})
+			button.disabled = true
 		else:
 			next_label.visible = true
 			next_label.text = TextDb.tf(&"market.upgrade.next", {"effect": UpgradeEffects.describe(upgrade_id, level + 1)})
+			next_label.add_theme_color_override(&"font_color", UiTokens.INK_900)
 			button.text = TextDb.tf(&"market.upgrade.buy", {"price": Money.format_rp(price)})
 			button.disabled = not GameState.can_buy_upgrade(upgrade_id)
 	for location_id: StringName in _gear:
@@ -115,6 +126,7 @@ func _make_card(upgrade: UpgradeData) -> PanelContainer:
 	var button := make_button("", UiTokens.TYPE_CTA_BUTTON)
 	button.name = "BuyButton"
 	button.min_height = UiTokens.TOUCH_TARGET_MIN
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.pressed.connect(func() -> void: upgrade_requested.emit(upgrade.id))
 	column.add_child(button)
 

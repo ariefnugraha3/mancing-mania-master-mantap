@@ -209,20 +209,95 @@ func test_all_upgrade_prices_and_the_level_cap() -> bool:
 		&"bait": [12000, 30000, 68000], &"rod": [18000, 44000, 96000], &"tonic": [15000, 38000, 82000],
 		&"coffee": [14000, 34000, 74000], &"charm": [20000, 50000, 110000],
 	}
-	GameState.add_cash(1_000_000)
+	GameState.add_cash(1_400_000)
+	check(_market.purchase_upgrade(&"bait"), "bait Lv1 open before paying debt")
+	check(not _market.purchase_upgrade(&"bait"), "bait Lv2 blocked until Rp 100,000 debt is paid")
+	check_eq(_market.pay_debt(350_000), 350_000, "paying Rp 350,000 debt opens Lv2 and Lv3")
 	var start := GameState.get_cash()
 	var spent := 0
 	for upgrade_id: StringName in prices:
-		for level: int in 3:
+		var start_level := GameState.get_upgrade_level(upgrade_id)
+		for level: int in range(start_level, 3):
 			var before := GameState.get_cash()
 			check(_market.purchase_upgrade(upgrade_id), "%s Lv%d purchase" % [upgrade_id, level + 1])
 			check_eq(before - GameState.get_cash(), prices[upgrade_id][level], "%s Lv%d price" % [upgrade_id, level + 1])
 			spent += int(prices[upgrade_id][level])
 		check_eq(GameState.get_upgrade_level(upgrade_id), 3, "%s reached Lv3" % upgrade_id)
 		check(not _market.purchase_upgrade(upgrade_id), "%s has no Lv4" % upgrade_id)
-	check_eq(spent, 705000, "all fifteen steps cost Rp 705,000")
-	check_eq(GameState.get_cash(), start - 705000, "exactly that much was charged")
+	check_eq(spent + 12000, 705000, "all fifteen steps cost Rp 705,000")
+	check_eq(GameState.get_cash(), start - spent, "exactly that much was charged")
 	check_eq(_saved()["upgrades"]["charm"], 3, "purchases were autosaved")
+	return true
+
+
+func test_unpaid_sales_trigger_collector_fee_and_reset_on_payment() -> bool:
+	GameState.add_bucket_item(&"catfish_bruiser", 1)
+	var sale1 := _market.sell_all()
+	check_eq(sale1["unpaid_sales"], 1, "first unpaid sale counted")
+	check_eq(sale1["collector_fee"], 0, "no fee on first unpaid sale")
+	check(not GameState.is_debt_overdue(), "still not overdue after one sale")
+
+	GameState.add_bucket_item(&"catfish_bruiser", 1)
+	var sale2 := _market.sell_all()
+	check_eq(sale2["unpaid_sales"], 2, "second unpaid sale counted")
+	check_eq(sale2["collector_fee"], 0, "no fee yet on second unpaid sale")
+	check(GameState.is_debt_overdue(), "collector harassment begins after two unpaid sales")
+
+	var cash_before := GameState.get_cash()
+	GameState.add_bucket_item(&"gourami_shady", 2)
+	var sale3 := _market.sell_all()
+	check_eq(sale3["unpaid_sales"], 3, "third unpaid sale counted")
+	check_eq(sale3["total"], 68000, "gross sale total stays intact")
+	check_eq(sale3["collector_fee"], ContentIds.DEBT_REMINDER_FEE, "Rp 10,000 reminder fee deducted")
+	check_eq(sale3["net_total"], 58000, "net payout after fee")
+	check_eq(GameState.get_cash(), cash_before + 58000, "cash increased by net payout")
+	check_eq(GameState.get_debt_remaining(), ContentIds.DEBT_ORIGINAL, "reminder fee does not reduce debt")
+
+	# Small trash sale caps the fee at 50% so Darto never walks away with nothing.
+	var cash_before_trash := GameState.get_cash()
+	GameState.add_bucket_item(&"trash_tyre", 1)
+	var sale4 := _market.sell_all()
+	check_eq(sale4["total"], 1000, "trash tyre gross")
+	check_eq(sale4["collector_fee"], 500, "fee capped at half of small sale")
+	check_eq(GameState.get_cash(), cash_before_trash + 500, "Darto still receives half")
+
+	check_eq(_market.pay_debt(ContentIds.DEBT_MIN_RELIEF_PAYMENT), ContentIds.DEBT_MIN_RELIEF_PAYMENT, "pay relief amount")
+	check_eq(GameState.get_unpaid_sales(), 0, "payment resets unpaid sale counter")
+	check(not GameState.is_debt_overdue(), "overdue state cleared")
+
+	GameState.add_bucket_item(&"catfish_bruiser", 1)
+	var sale5 := _market.sell_all()
+	check_eq(sale5["collector_fee"], 0, "no fee on next sale after paying debt")
+	return true
+
+
+func test_debt_panel_milestones_and_receipt_shortcut() -> bool:
+	check(MarketDebtPanel.next_milestone_text(0).contains("100"), "first goal targets 100k")
+	check(MarketDebtPanel.next_milestone_text(100_000).contains("350"), "second goal targets 350k")
+	check(MarketDebtPanel.next_milestone_text(350_000).contains("700"), "third goal targets 700k")
+	check(MarketDebtPanel.next_milestone_text(700_000).contains("1,100") or MarketDebtPanel.next_milestone_text(700_000).contains("1.100"), "fourth goal targets 1.1M")
+	check(MarketDebtPanel.next_milestone_text(1_850_000).contains("2,000") or MarketDebtPanel.next_milestone_text(1_850_000).contains("2.000"), "final goal targets 2M")
+	check_eq(MarketDebtPanel.next_milestone_text(ContentIds.DEBT_ORIGINAL), "", "no next goal once paid")
+
+	var receipt := ReceiptOverlay.new()
+	tree.root.add_child(receipt)
+	await wait_frames(2)
+	var jumped := [false]
+	receipt.pay_debt_requested.connect(func() -> void: jumped[0] = true)
+	receipt.open({"lines": [], "total": 68000, "collector_fee": 10000, "unpaid_sales": 3, "cash_after": 68000})
+	await wait_frames(2)
+	check(receipt.get_pay_debt_button().visible, "PAY DEBT button shows while debt remains")
+	receipt.get_pay_debt_button().pressed.emit()
+	check(jumped[0], "pressing PAY DEBT emits pay_debt_requested")
+	check(not receipt.is_open(), "and closes the receipt")
+
+	GameState.debug_set_debt_remaining(0)
+	receipt.open({"lines": [], "total": 20000, "collector_fee": 0, "unpaid_sales": 0, "cash_after": 20000})
+	await wait_frames(2)
+	check(not receipt.get_pay_debt_button().visible, "PAY DEBT button hides once debt is cleared")
+	receipt.hide_overlay()
+	receipt.queue_free()
+	await wait_frames(1)
 	return true
 
 

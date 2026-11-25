@@ -32,6 +32,7 @@ const DARTO_LINES: Dictionary = {
 ## and Darto's word to the cat (an empty or a full bucket).
 const HECKLES := 4
 const COLLECTOR_VISITS := 3
+const COLLECTOR_OVERDUE_VISITS := 2
 const CAT_LINES := 2
 ## Exchanges with a neighbour or the children (keys .<n>.them / .<n>.darto).
 const EXCHANGES := 3
@@ -77,6 +78,7 @@ func update(delta: float, quiet: bool, float_in_water: bool) -> void:
 		_hud.place_event_tap(_camera.unproject_position(_bottle.global_position))
 	if not enabled:
 		return
+	_events.overdue = GameState.is_debt_overdue()
 	var next := _events.advance(delta, quiet, float_in_water)
 	if next != &"":
 		_run(next)
@@ -305,9 +307,14 @@ func _heckle() -> void:
 
 
 ## CepatCash's collector stops behind Darto. Once the debt is gone he offers
-## a new loan instead.
+## a new loan instead; while Darto is overdue he blasts his megaphone louder.
 func _collector() -> void:
-	var visit := "free" if GameState.get_debt_remaining() <= 0 else str(1 + _random.randi() % COLLECTOR_VISITS)
+	var visit := "free"
+	if GameState.get_debt_remaining() > 0:
+		if GameState.is_debt_overdue():
+			visit = "overdue.%d" % (1 + _random.randi() % COLLECTOR_OVERDUE_VISITS)
+		else:
+			visit = str(1 + _random.randi() % COLLECTOR_VISITS)
 	var length := _stage.collector(LINE_SEC * 3.0 + 0.4)
 	var collector := TextDb.t(&"speaker.collector")
 	await _wait(2.2)

@@ -133,18 +133,57 @@ func test_upgrade_purchases() -> bool:
 	check(not GameState.buy_next_upgrade(&"rod"), "purchase without cash is refused")
 	check_eq(GameState.get_upgrade_level(&"rod"), 0, "level unchanged")
 
-	GameState.add_cash(200000)
+	GameState.add_cash(600000)
 	var cash := GameState.get_cash()
-	check(GameState.buy_next_upgrade(&"rod"), "buy rod Lv1")
+	check(GameState.buy_next_upgrade(&"rod"), "buy rod Lv1 without debt milestone")
 	check_eq(GameState.get_cash(), cash - 18000, "Lv1 price charged")
+	check(GameState.is_upgrade_locked_by_debt(&"rod"), "Lv2 is locked behind Rp 100,000 debt milestone")
+	check_eq(GameState.get_upgrade_debt_requirement(&"rod"), 100000, "Lv2 debt requirement is Rp 100,000")
+	check(not GameState.can_buy_upgrade(&"rod"), "cannot buy Lv2 before paying Rp 100,000 debt")
+	check(not GameState.buy_next_upgrade(&"rod"), "Lv2 purchase refused while debt-locked")
+
+	GameState.pay_debt(100000)
+	check(not GameState.is_upgrade_locked_by_debt(&"rod"), "paying Rp 100,000 debt unlocks Lv2")
 	check(GameState.buy_next_upgrade(&"rod"), "buy rod Lv2")
+	check(GameState.is_upgrade_locked_by_debt(&"rod"), "Lv3 is locked behind Rp 350,000 debt milestone")
+	check_eq(GameState.get_upgrade_debt_requirement(&"rod"), 350000, "Lv3 debt requirement is Rp 350,000")
+	check(not GameState.buy_next_upgrade(&"rod"), "Lv3 purchase refused while debt-locked")
+
+	GameState.pay_debt(250000)
+	check(not GameState.is_upgrade_locked_by_debt(&"rod"), "paying Rp 350,000 total debt unlocks Lv3")
 	check(GameState.buy_next_upgrade(&"rod"), "buy rod Lv3")
-	check_eq(GameState.get_cash(), cash - 158000, "all three rod prices charged")
+	check_eq(GameState.get_cash(), cash - 350000 - 158000, "debt and all three rod prices charged")
 	check_eq(GameState.get_upgrade_level(&"rod"), 3, "rod at max")
 	check(not GameState.can_buy_upgrade(&"rod"), "nothing above max level")
 	check(not GameState.buy_next_upgrade(&"rod"), "max level purchase is refused")
 	check(not GameState.buy_next_upgrade(&"jetpack"), "unknown upgrade is refused")
-	check_eq(GameState.get_cash(), cash - 158000, "refused purchases cost nothing")
+	check_eq(GameState.get_cash(), cash - 350000 - 158000, "refused purchases cost nothing")
+	return true
+
+
+func test_debt_delinquency_tracking_and_relief() -> bool:
+	check_eq(GameState.get_unpaid_sales(), 0, "starts with zero unpaid sales")
+	check(not GameState.is_debt_overdue(), "not overdue at start")
+	check(not GameState.is_debt_fee_active(), "fee inactive at start")
+
+	check_eq(GameState.record_unpaid_sale(), 1, "first unpaid sale recorded")
+	check(not GameState.is_debt_overdue(), "one unpaid sale is not overdue yet")
+	check_eq(GameState.record_unpaid_sale(), 2, "second unpaid sale triggers collector")
+	check(GameState.is_debt_overdue(), "overdue after two unpaid sales")
+	check(not GameState.is_debt_fee_active(), "fee starts on third unpaid sale")
+	check_eq(GameState.record_unpaid_sale(), 3, "third unpaid sale activates fee")
+	check(GameState.is_debt_fee_active(), "fee active at three unpaid sales")
+
+	GameState.add_cash(20000)
+	check_eq(GameState.pay_debt(5000), 5000, "small payment accepted")
+	check(GameState.is_debt_overdue(), "payment under Rp 10,000 does not clear overdue")
+	check_eq(GameState.pay_debt(10000), 10000, "relief payment accepted")
+	check_eq(GameState.get_unpaid_sales(), 0, "Rp 10,000 payment resets unpaid sales")
+	check(not GameState.is_debt_overdue(), "overdue cleared after relief payment")
+
+	GameState.debug_set_debt_remaining(0)
+	check_eq(GameState.record_unpaid_sale(), 0, "sales after debt is cleared never increment unpaid_sales")
+	check(not GameState.is_debt_overdue(), "cleared debt is never overdue")
 	return true
 
 

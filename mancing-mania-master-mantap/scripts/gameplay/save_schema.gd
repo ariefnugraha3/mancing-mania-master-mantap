@@ -86,6 +86,7 @@ static func make_default(save_seed: int) -> Dictionary:
 			"original": ContentIds.DEBT_ORIGINAL,
 			"paid": 0,
 			"remaining": ContentIds.DEBT_ORIGINAL,
+			"unpaid_sales": 0,
 		},
 		"upgrades": default_upgrades(),
 		"bucket": default_bucket(),
@@ -386,7 +387,7 @@ static func _normalize_debt(source: Dictionary, stats_source: Dictionary) -> Dic
 	var legacy_cleared := (remaining_valid and remaining == 0) or (paid_valid and paid >= ContentIds.LEGACY_DEBT_ORIGINAL)
 	if stored_original == ContentIds.LEGACY_DEBT_ORIGINAL and legacy_cleared:
 		_note("cleared legacy debt kept cleared")
-		return {"original": original, "paid": original, "remaining": 0}
+		return {"original": original, "paid": original, "remaining": 0, "unpaid_sales": 0}
 
 	if paid_valid and remaining_valid and paid + remaining == original:
 		pass
@@ -405,7 +406,11 @@ static func _normalize_debt(source: Dictionary, stats_source: Dictionary) -> Dic
 			remaining = original - paid
 		else:
 			return {}
-	return {"original": original, "paid": paid, "remaining": remaining}
+	# Saves from before collector pressure simply start at 0 (no repair note).
+	var unpaid_sales := 0
+	if remaining > 0 and source.has("unpaid_sales"):
+		unpaid_sales = _take_int(source, "unpaid_sales", 0, 0, 1_000_000, "debt.unpaid_sales")
+	return {"original": original, "paid": paid, "remaining": remaining, "unpaid_sales": unpaid_sales}
 
 
 static func _normalize_upgrades(source: Dictionary) -> Dictionary:

@@ -19,7 +19,7 @@ const NIBBLE_WINDOW := Vector2(0.18, 0.82)
 ## fish, its water and, on tidal water, the tide of cast `cast_index`
 ## (revision 6.7).
 static func roll(seed: int, bait_level: int, forced_item: StringName = &"", wait_override_sec: float = -1.0,
-		location_id: StringName = ContentIds.START_LOCATION, cast_index: int = 0) -> Dictionary:
+		location_id: StringName = ContentIds.START_LOCATION, cast_index: int = 0, wait_scale: float = 1.0) -> Dictionary:
 	var balance := GameData.get_fishing_balance()
 	var location := GameData.get_location(location_id)
 	var trash_chance := location.trash_probability(balance.trash_probability, cast_index) if location != null else balance.trash_probability
@@ -38,7 +38,7 @@ static func roll(seed: int, bait_level: int, forced_item: StringName = &"", wait
 		"weight_kg": 0.0,
 		"is_big_one": false,
 		"strike_window_sec": balance.trash_strike_window_sec,
-		"wait_sec": wait_time(RNGService.roll_float(&"wait", seed), bait_level, location),
+		"wait_sec": wait_time(RNGService.roll_float(&"wait", seed), bait_level, location, wait_scale),
 		"nibble_times": [],
 		"location": location_id,
 	}
@@ -88,13 +88,13 @@ static func pick_trash(roll_value: float) -> StringName:
 
 ## Seconds from the end of the cast to the real bite (GDD Section 25). Deep
 ## water waits longer, fast water shorter (the spot's wait multiplier).
-static func wait_time(roll_value: float, bait_level: int, location: LocationData = null) -> float:
+static func wait_time(roll_value: float, bait_level: int, location: LocationData = null, wait_scale: float = 1.0) -> float:
 	var balance := GameData.get_fishing_balance()
 	var base := lerpf(balance.base_wait_min_sec, balance.base_wait_max_sec, roll_value)
 	if location != null:
 		base *= location.wait_multiplier
 	var multiplier := 1.0 - balance.bait_wait_reduction_per_level * float(clampi(bait_level, 0, ContentIds.UPGRADE_MAX_LEVEL))
-	return maxf(base * multiplier, balance.wait_min_final_sec)
+	return maxf(base * multiplier * maxf(wait_scale, 0.1), balance.wait_min_final_sec)
 
 
 ## Cosmetic weight inside the species range (GDD Section 82).

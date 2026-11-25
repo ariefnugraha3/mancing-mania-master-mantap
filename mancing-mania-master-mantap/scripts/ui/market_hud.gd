@@ -52,12 +52,14 @@ const CASH_COUNT_SEC := 0.45
 var _tab_buttons: Dictionary[StringName, GameButton] = {}
 var _panels: Dictionary[StringName, MarketPanel] = {}
 var _current_tab: StringName = TAB_SELL
+var _cash_chip: PanelContainer
 var _cash_label: Label
 var _title: Label
 var _hint_label: Label
 var _hint_left: float = 0.0
 var _shown_cash: float = 0.0
 var _cash_tween: Tween
+var _info_popover: HudInfoPopover
 
 
 func _ready() -> void:
@@ -75,6 +77,8 @@ func _ready() -> void:
 	_build_header()
 	_build_tabs()
 	_build_hint()
+	_info_popover = HudInfoPopover.new()
+	_safe_root.add_child(_info_popover)
 	_tab_content.add_theme_stylebox_override(&"panel", _ledger_style())
 
 	_leave_button.text = TextDb.t(&"market.leave")
@@ -89,6 +93,7 @@ func _ready() -> void:
 	_safe_root.resized.connect(_layout)
 	PlatformService.viewport_class_changed.connect(_on_viewport_class_changed)
 	GameState.cash_changed.connect(_on_cash_changed)
+	GameState.debt_changed.connect(_on_debt_changed)
 	_show_cash(float(GameState.get_cash()))
 	select_tab(TAB_SELL, false)
 	_layout.call_deferred()
@@ -108,9 +113,11 @@ func select_tab(tab_id: StringName, announce: bool = true) -> void:
 	if not _panels.has(tab_id):
 		return
 	_current_tab = tab_id
+	if _info_popover != null:
+		_info_popover.hide_info()
 	for id: StringName in _panels:
 		_panels[id].visible = id == tab_id
-		_style_tab(_tab_buttons[id], id == tab_id)
+	_refresh_tab_styles()
 	_panels[tab_id].refresh()
 	_panels[tab_id].scroll_to_top()
 	if is_node_ready():
@@ -185,13 +192,15 @@ func _build_header() -> void:
 	_header.add_theme_constant_override(&"separation", UiTokens.SPACE_12)
 	_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var cash_chip := PanelContainer.new()
-	cash_chip.name = "CashWidget"
-	cash_chip.add_theme_stylebox_override(&"panel", HudChip.make_style())
-	cash_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cash_chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_header.add_child(cash_chip)
-	_cash_label = HudChip.add_content(cash_chip, UiIcon.ICON_CASH)
+	_cash_chip = PanelContainer.new()
+	_cash_chip.name = "CashWidget"
+	_cash_chip.add_theme_stylebox_override(&"panel", HudChip.make_style())
+	_cash_chip.mouse_filter = Control.MOUSE_FILTER_STOP
+	_cash_chip.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_cash_chip.gui_input.connect(_on_cash_chip_input)
+	_cash_chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_header.add_child(_cash_chip)
+	_cash_label = HudChip.add_content(_cash_chip, UiIcon.ICON_CASH)
 	_cash_label.custom_minimum_size.x = 92.0
 
 	# The header holds the cash chip and Pause; the shop's painted name hangs
@@ -249,27 +258,41 @@ func _build_hint() -> void:
 	_safe_root.add_child(_hint_label)
 
 
-func _style_tab(button: GameButton, active: bool) -> void:
-	button.add_theme_stylebox_override(&"normal", _tab_box(active, false))
-	button.add_theme_stylebox_override(&"hover", _tab_box(active, true))
-	button.add_theme_stylebox_override(&"pressed", _tab_box(true, false))
+func _on_debt_changed(_paid: int, _remaining: int) -> void:
+	_refresh_tab_styles()
+
+
+func _refresh_tab_styles() -> void:
+	var overdue := GameState.is_debt_overdue()
+	for id: StringName in _panels:
+		_style_tab(_tab_buttons[id], id == _current_tab, id == TAB_DEBT and overdue)
+
+
+func _style_tab(button: GameButton, active: bool, urgent: bool = false) -> void:
+	button.add_theme_stylebox_override(&"normal", _tab_box(active, false, urgent))
+	button.add_theme_stylebox_override(&"hover", _tab_box(active, true, urgent))
+	button.add_theme_stylebox_override(&"pressed", _tab_box(true, false, urgent))
 	button.add_theme_stylebox_override(&"focus", UiSkin.focus_box(16))
-	if active:
+	if active or urgent:
 		button.add_theme_font_override(&"font", UiSkin.bold_font())
 	else:
 		button.remove_theme_font_override(&"font")
-	var text_color := UiTokens.INK_900 if active else UiTokens.INK_700
+	var text_color := UiTokens.INK_900 if active else (UiTokens.RED_500.darkened(0.2) if urgent else UiTokens.INK_700)
 	for color_name: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color"]:
 		button.add_theme_color_override(color_name, text_color)
 
 
 ## A ledger folder tab: the open one is the colour of the page, stands a
 ## little taller and has no bottom edge, so it reads as part of the page.
-func _tab_box(active: bool, hover: bool) -> StyleBoxFlat:
+func _tab_box(active: bool, hover: bool, urgent: bool = false) -> StyleBoxFlat:
 	var box := UiSkin.tab(active, hover)
 	if not active:
 		# Closed tabs keep the page's top rim, so only the open one joins it.
 		box.border_width_bottom = LEDGER_RIM
+		if urgent:
+			var tint := UiTokens.TERRACOTTA_500.lerp(UiTokens.CREAM_50, 0.72)
+			box.bg_color = tint.lightened(0.06) if hover else tint
+			box.border_color = UiTokens.TERRACOTTA_500
 	box.content_margin_left = 2.0
 	box.content_margin_right = 2.0
 	box.content_margin_top = 6.0 if active else 8.0
@@ -336,6 +359,15 @@ func _layout() -> void:
 	_place(_tab_content, Rect2(
 		ledger.position + Vector2(0.0, tab_height - overlap),
 		ledger.size - Vector2(0.0, tab_height - overlap)))
+	if _info_popover != null:
+		_info_popover.reposition()
+
+
+func _on_cash_chip_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_cash_chip.accept_event()
+		if _info_popover != null:
+			_info_popover.toggle_for(_cash_chip, TextDb.t(&"hud.info.cash.title"), TextDb.t(&"hud.info.cash.body"), false)
 
 
 func _place(control: Control, rect: Rect2) -> void:

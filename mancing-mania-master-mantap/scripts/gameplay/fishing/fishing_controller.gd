@@ -93,8 +93,10 @@ func start_cast() -> void:
 	var wait_override := DEBUG_FAST_WAIT_SEC if DebugService.is_fast_wait_enabled() else -1.0
 	# The cast count before this cast decides the tide on tidal water.
 	var cast_index := int(GameState.get_stat(&"total_casts"))
+	# Overdue debt brings CepatCash's loud collector to the bank, scaring fish away.
+	var wait_scale := ContentIds.DEBT_HARASS_WAIT_MULTIPLIER if GameState.is_debt_overdue() else 1.0
 	_encounter = EncounterRoller.roll(
-		RNGService.next_encounter_seed(), GameState.get_upgrade_level(&"bait"), forced, wait_override, location_id, cast_index)
+		RNGService.next_encounter_seed(), GameState.get_upgrade_level(&"bait"), forced, wait_override, location_id, cast_index, wait_scale)
 	GameState.increment_stat(&"total_casts")
 	_timer = 0.0
 	_float_released = false

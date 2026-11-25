@@ -30,11 +30,10 @@ const COLLECTOR := &"collector"
 const DUCKS := &"ducks"
 const CAT := &"cat"
 
-## Seconds of quiet fishing between two happenings, picked afresh each time
-## ("often": one every 20-40 s).
-const GAP_SEC := Vector2(20.0, 40.0)
-## The first one comes a little sooner after arriving at a spot.
-const FIRST_GAP_SEC := Vector2(10.0, 18.0)
+## Seconds of quiet fishing between two happenings, picked afresh each time.
+const GAP_SEC := Vector2(8.0, 16.0)
+## The first one comes soon after arriving so it appears while waiting for a bite.
+const FIRST_GAP_SEC := Vector2(3.0, 6.0)
 ## Retry soon when nothing could happen just now (no float in the water for
 ## the dragonfly, say).
 const RETRY_SEC := 2.0
@@ -64,6 +63,12 @@ const EVENTS: Dictionary = {
 	CAT: {"weight": 1.4, "spots": [], "float": false, "spacing": 3},
 }
 
+## When Darto has skipped paying debt, the CepatCash collector shows up far
+## more often to disturb the water.
+const OVERDUE_COLLECTOR_WEIGHT := 8.0
+const OVERDUE_COLLECTOR_SPACING := 1
+
+var overdue: bool = false
 var _rng: RandomNumberGenerator
 var _location: StringName
 var _quiet_left: float = 0.0
@@ -128,7 +133,7 @@ func candidates(float_in_water: bool) -> Array[StringName]:
 			continue
 		if bool(event["float"]) and not float_in_water:
 			continue
-		var spacing := int(event["spacing"])
+		var spacing := OVERDUE_COLLECTOR_SPACING if (overdue and event_id == COLLECTOR) else int(event["spacing"])
 		if _history.slice(maxi(_history.size() - spacing, 0)).has(event_id):
 			continue
 		found.append(event_id)
@@ -140,15 +145,21 @@ func choose(float_in_water: bool) -> StringName:
 	var found := candidates(float_in_water)
 	var total := 0.0
 	for event_id: StringName in found:
-		total += float(EVENTS[event_id]["weight"])
+		total += _weight_of(event_id)
 	if total <= 0.0:
 		return &""
 	var roll := _rng.randf() * total
 	for event_id: StringName in found:
-		roll -= float(EVENTS[event_id]["weight"])
+		roll -= _weight_of(event_id)
 		if roll <= 0.0:
 			return event_id
 	return found.back()
+
+
+func _weight_of(event_id: StringName) -> float:
+	if overdue and event_id == COLLECTOR:
+		return OVERDUE_COLLECTOR_WEIGHT
+	return float(EVENTS[event_id]["weight"])
 
 
 static func is_sea(location_id: StringName) -> bool:

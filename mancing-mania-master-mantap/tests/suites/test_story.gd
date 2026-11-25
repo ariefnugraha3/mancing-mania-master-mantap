@@ -444,6 +444,8 @@ func test_cepatcash_keeps_its_distance() -> bool:
 	for seed_value: int in [1, 50, 999, 123456]:
 		var gap := CePatCash.interval_for(seed_value)
 		check(gap >= CePatCash.MIN_INTERVAL_SEC and gap <= CePatCash.MAX_INTERVAL_SEC, "gaps stay within 18-35 minutes")
+		var overdue_gap := CePatCash.interval_for(seed_value, true)
+		check(overdue_gap >= CePatCash.OVERDUE_MIN_INTERVAL_SEC and overdue_gap <= CePatCash.OVERDUE_MAX_INTERVAL_SEC, "overdue gaps shorten to 3-5 minutes")
 	CePatCash.reset()
 	GameState.debug_set_debt_remaining(0)
 	CePatCash.poll(0.0)

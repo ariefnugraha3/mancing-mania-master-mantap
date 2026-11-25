@@ -55,6 +55,7 @@ func _ready() -> void:
 	_hud.upgrade_panel.gear_requested.connect(_controller.purchase_gear)
 	_hud.debt_panel.payment_requested.connect(_controller.pay_debt)
 	_hud.debt_panel.savings_requested.connect(_controller.deposit_savings)
+	_receipt.pay_debt_requested.connect(_on_receipt_pay_debt)
 	_pause.quit_requested.connect(_quit_to_menu)
 	# Anything that changes the numbers from outside a transaction (the debug
 	# overlay, for one) still reaches the pages.
@@ -143,6 +144,10 @@ func _on_tab_changed(_tab_id: StringName) -> void:
 	_refresh()
 
 
+func _on_receipt_pay_debt() -> void:
+	_hud.select_tab(MarketHud.TAB_DEBT)
+
+
 ## Several values can change in one transaction; the pages refresh once, on
 ## the next frame.
 func _queue_refresh(_first: Variant = null, _second: Variant = null) -> void:
@@ -182,6 +187,8 @@ func _on_transaction_completed(kind: StringName, result: Dictionary) -> void:
 	_refresh()
 	if first_payment:
 		_hud.show_hint(TextDb.t(&"market.hint.upgrades"), UPGRADE_HINT_SEC)
+	elif kind == MarketController.KIND_DEBT and bool(result.get("cleared_overdue", false)):
+		_hud.show_hint(TextDb.t(&"market.debt.collector_cleared"), UPGRADE_HINT_SEC)
 
 
 ## The save after a transaction failed. The game state is kept in memory and

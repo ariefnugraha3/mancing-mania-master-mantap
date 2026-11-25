@@ -127,6 +127,33 @@ func get_debt_remaining() -> int:
 	return int(_data["debt"]["remaining"])
 
 
+## Consecutive Warung sales made without paying debt. Zero once debt is clear.
+func get_unpaid_sales() -> int:
+	if get_debt_remaining() <= 0:
+		return 0
+	return int(_data["debt"].get("unpaid_sales", 0))
+
+
+## True when CepatCash's collector is harassing Darto at the fishing spot.
+func is_debt_overdue() -> bool:
+	return get_debt_remaining() > 0 and get_unpaid_sales() >= ContentIds.DEBT_HARASS_AFTER_SALES
+
+
+## True when the next (or current) sale triggers CepatCash's reminder fee.
+func is_debt_fee_active() -> bool:
+	return get_debt_remaining() > 0 and get_unpaid_sales() >= ContentIds.DEBT_FEE_AFTER_SALES
+
+
+## Counts a Warung sale while debt remains unpaid; returns the updated count.
+func record_unpaid_sale() -> int:
+	if get_debt_remaining() <= 0:
+		return 0
+	var debt: Dictionary = _data["debt"]
+	debt["unpaid_sales"] = int(debt.get("unpaid_sales", 0)) + 1
+	debt_changed.emit(get_debt_paid(), get_debt_remaining())
+	return int(debt["unpaid_sales"])
+
+
 ## Pays up to `amount` toward the debt and returns what was actually paid.
 ## The payment is capped by both the cash on hand and the remaining debt.
 func pay_debt(amount: int) -> int:
@@ -139,6 +166,8 @@ func pay_debt(amount: int) -> int:
 	var debt: Dictionary = _data["debt"]
 	debt["paid"] = get_debt_paid() + payment
 	debt["remaining"] = get_debt_original() - int(debt["paid"])
+	if payment >= ContentIds.DEBT_MIN_RELIEF_PAYMENT or int(debt["remaining"]) <= 0:
+		debt["unpaid_sales"] = 0
 	_data["stats"]["lifetime_debt_paid"] = int(debt["paid"])
 	cash_changed.emit(get_cash())
 	debt_changed.emit(get_debt_paid(), get_debt_remaining())
@@ -209,12 +238,31 @@ func get_upgrade_level(upgrade_id: StringName) -> int:
 	return int(_data["upgrades"].get(String(upgrade_id), 0))
 
 
+## Debt that must have been paid before the next level of `upgrade_id` opens.
+func get_upgrade_debt_requirement(upgrade_id: StringName) -> int:
+	if not ContentIds.UPGRADE_IDS.has(upgrade_id):
+		return 0
+	var next_level := get_upgrade_level(upgrade_id) + 1
+	if next_level > ContentIds.UPGRADE_MAX_LEVEL:
+		return 0
+	return ContentIds.upgrade_required_debt_paid(next_level)
+
+
+func is_upgrade_locked_by_debt(upgrade_id: StringName) -> bool:
+	var required := get_upgrade_debt_requirement(upgrade_id)
+	return required > 0 and get_debt_paid() < required
+
+
 func can_buy_upgrade(upgrade_id: StringName) -> bool:
+	if is_upgrade_locked_by_debt(upgrade_id):
+		return false
 	var price := _next_upgrade_price(upgrade_id)
 	return price >= 0 and can_spend(price)
 
 
 func buy_next_upgrade(upgrade_id: StringName) -> bool:
+	if is_upgrade_locked_by_debt(upgrade_id):
+		return false
 	var price := _next_upgrade_price(upgrade_id)
 	if price < 0 or not spend_cash(price):
 		return false
@@ -460,6 +508,8 @@ func debug_set_debt_remaining(value: int) -> void:
 	var debt: Dictionary = _data["debt"]
 	debt["remaining"] = clampi(value, 0, get_debt_original())
 	debt["paid"] = get_debt_original() - int(debt["remaining"])
+	if int(debt["remaining"]) <= 0:
+		debt["unpaid_sales"] = 0
 	_data["stats"]["lifetime_debt_paid"] = int(debt["paid"])
 	debt_changed.emit(get_debt_paid(), get_debt_remaining())
 	stats_changed.emit()

@@ -6,6 +6,8 @@ extends RefCounted
 ## wherever it is shown.
 
 const BADGE_SIZE := 38.0
+const COMPACT_BADGE_SIZE := 28.0
+const COMPACT_FONT_SIZE := 15
 
 ## Badge colour per icon: gold for money, periwinkle for the bucket, crust for
 ## the Market, teal for the rod. The badge shows a pastel of it.
@@ -13,6 +15,7 @@ const BADGE_COLORS: Dictionary = {
 	IconPainter.CASH: UiTokens.SUN_500,
 	IconPainter.BUCKET: UiTokens.BLUE_400,
 	IconPainter.MARKET: UiTokens.TERRACOTTA_500,
+	IconPainter.LEDGER: UiTokens.TERRACOTTA_500,
 	IconPainter.ROD: UiTokens.LAKE_500,
 	IconPainter.FISH: UiTokens.LAKE_500,
 }
@@ -26,6 +29,31 @@ static func make_style() -> StyleBoxFlat:
 	if UiTokens.is_high_contrast():
 		box.border_color = UiTokens.INK_900
 	box.content_margin_right = UiTokens.SPACE_16
+	return box
+
+
+## Warning chip (overdue debt): soft terracotta blush with a terracotta rim so
+## urgency reads over the lake without breaking the warm palette.
+static func warning_style() -> StyleBoxFlat:
+	var fill := UiTokens.TERRACOTTA_500.lerp(UiTokens.CREAM_50, 0.78)
+	fill.a = 1.0 if UiTokens.is_high_contrast() else 0.98
+	var box := UiSkin.pill(fill, 4, UiTokens.RADIUS_CHIP, Vector2(UiTokens.SPACE_8, 4.0), UiTokens.hud_border(UiTokens.BORDER_WIDTH))
+	box.border_color = UiTokens.INK_900 if UiTokens.is_high_contrast() else UiTokens.TERRACOTTA_500
+	box.content_margin_right = UiTokens.SPACE_16
+	return box
+
+
+## Smaller secondary HUD chip (e.g. remaining debt): lighter footprint than the
+## primary cash and bucket chips while keeping its icon and number legible.
+static func make_compact_style(warning: bool = false) -> StyleBoxFlat:
+	var fill := UiTokens.TERRACOTTA_500.lerp(UiTokens.CREAM_50, 0.78) if warning else UiTokens.CREAM_50
+	fill.a = 1.0 if UiTokens.is_high_contrast() else (0.98 if warning else 0.94)
+	var box := UiSkin.pill(fill, 3, 18, Vector2(6.0, 2.0), UiTokens.hud_border(2))
+	if UiTokens.is_high_contrast():
+		box.border_color = UiTokens.INK_900
+	elif warning:
+		box.border_color = UiTokens.TERRACOTTA_500
+	box.content_margin_right = float(UiTokens.SPACE_12)
 	return box
 
 
@@ -63,25 +91,30 @@ static func style_bar(bar: ProgressBar, fill: Color, radius: int = 11) -> void:
 
 
 ## Adds a badged icon and a label, centred, to a chip or button. Returns the label.
-static func add_content(parent: Control, icon_id: StringName) -> Label:
+static func add_content(parent: Control, icon_id: StringName, badge_size: float = BADGE_SIZE, font_size: int = UiTokens.FONT_BUTTON, separation: int = UiTokens.SPACE_8) -> Label:
 	var row := HBoxContainer.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override(&"separation", UiTokens.SPACE_8)
+	row.add_theme_constant_override(&"separation", separation)
 	if parent is Button:
 		row.set_anchors_preset(Control.PRESET_FULL_RECT)
 		row.offset_left = UiTokens.SPACE_8
 		row.offset_right = -UiTokens.SPACE_16
 		row.offset_bottom = -float(UiTokens.LIP)
 	parent.add_child(row)
-	row.add_child(make_badge(icon_id))
+	row.add_child(make_badge(icon_id, badge_size))
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_override(&"font", UiSkin.bold_font())
-	label.add_theme_font_size_override(&"font_size", UiTokens.FONT_BUTTON)
+	label.add_theme_font_size_override(&"font_size", font_size)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	return label
+
+
+## Compact variant of add_content() paired with make_compact_style().
+static func add_compact_content(parent: Control, icon_id: StringName) -> Label:
+	return add_content(parent, icon_id, COMPACT_BADGE_SIZE, COMPACT_FONT_SIZE, 6)
 
 
 ## A badge over a short bold caption, centred in a square-ish button (the

@@ -6,6 +6,9 @@ extends RefCounted
 
 const MIN_INTERVAL_SEC := 18.0 * 60.0
 const MAX_INTERVAL_SEC := 35.0 * 60.0
+## Overdue debt brings reminders far more often until Darto pays at the Warung.
+const OVERDUE_MIN_INTERVAL_SEC := 3.0 * 60.0
+const OVERDUE_MAX_INTERVAL_SEC := 5.0 * 60.0
 
 static var _next_at: float = -1.0
 static var _shown: int = 0
@@ -15,20 +18,25 @@ static var _shown: int = 0
 static func poll(play_time_sec: float) -> Dictionary:
 	if GameState.get_debt_remaining() <= 0 or bool(GameState.get_story_value(&"postgame_unlocked")):
 		return {}
+	var overdue := GameState.is_debt_overdue()
 	if _next_at < 0.0:
-		_next_at = play_time_sec + interval_for(int(play_time_sec))
+		_next_at = play_time_sec + interval_for(int(play_time_sec), overdue)
 		return {}
+	if overdue and _next_at > play_time_sec + OVERDUE_MAX_INTERVAL_SEC:
+		_next_at = play_time_sec + interval_for(int(play_time_sec) + _shown, true)
 	if play_time_sec < _next_at:
 		return {}
-	_next_at = play_time_sec + interval_for(int(play_time_sec) + _shown + 1)
+	_next_at = play_time_sec + interval_for(int(play_time_sec) + _shown + 1, overdue)
 	var notice := notice_for(_shown)
 	_shown += 1
 	return notice
 
 
-static func interval_for(seed_value: int) -> float:
+static func interval_for(seed_value: int, overdue: bool = false) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(seed_value)
+	if overdue:
+		return rng.randf_range(OVERDUE_MIN_INTERVAL_SEC, OVERDUE_MAX_INTERVAL_SEC)
 	return rng.randf_range(MIN_INTERVAL_SEC, MAX_INTERVAL_SEC)
 
 

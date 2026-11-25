@@ -37,6 +37,8 @@ const TRACK_HEIGHT_TABLET := 360.0
 @onready var _pause_button: GameButton = $SafeRoot/PauseButton
 
 var _cash_label: Label
+var _debt_widget: PanelContainer
+var _debt_label: Label
 var _bucket_label: Label
 var _prompt_label: Label
 var _sub_label: Label
@@ -58,6 +60,7 @@ var _event_left: float = 0.0
 var _event_tap: GameButton
 var _gloom: ColorRect
 var _gloom_tween: Tween
+var _info_popover: HudInfoPopover
 
 
 func _ready() -> void:
@@ -65,12 +68,16 @@ func _ready() -> void:
 	_build_prompt()
 	_build_buttons()
 	_build_event_widgets()
+	_info_popover = HudInfoPopover.new()
+	_safe_root.add_child(_info_popover)
 	_safe_root.resized.connect(_layout)
 	PlatformService.viewport_class_changed.connect(_on_layout_changed)
 	InputManager.input_device_changed.connect(_on_layout_changed)
 	GameState.cash_changed.connect(set_cash)
+	GameState.debt_changed.connect(set_debt)
 	GameState.bucket_changed.connect(set_bucket_count)
 	set_cash(GameState.get_cash())
+	set_debt(GameState.get_debt_paid(), GameState.get_debt_remaining())
 	set_bucket_count(GameState.get_bucket_total_count())
 	set_state(FishingController.STATE_IDLE)
 	_layout.call_deferred()
@@ -125,6 +132,72 @@ func set_cash(cash: int) -> void:
 	_cash_label.text = Money.format_rp(cash)
 
 
+## Remaining debt chip; hidden once the debt is cleared, and styled as a
+## warning while CepatCash's collector is actively harassing Darto.
+func set_debt(_paid: int, remaining: int) -> void:
+	if _debt_widget == null:
+		return
+	var active := remaining > 0
+	_debt_widget.visible = active
+	if active:
+		var overdue := GameState.is_debt_overdue()
+		_debt_label.text = ("! " if overdue else "") + Money.format_rp(remaining)
+		_debt_widget.add_theme_stylebox_override(&"panel", HudChip.make_compact_style(overdue))
+		if overdue:
+			_debt_label.add_theme_color_override(&"font_color", UiTokens.RED_500.darkened(0.2))
+		else:
+			_debt_label.remove_theme_color_override(&"font_color")
+		_debt_widget.tooltip_text = TextDb.t(&"fishing.hud.debt_overdue" if overdue else &"fishing.hud.debt")
+	elif _info_popover != null and _info_popover.get_target() == _debt_widget:
+		_info_popover.hide_info()
+	_layout.call_deferred()
+	_refresh_prompt()
+
+
+func get_debt_widget() -> PanelContainer:
+	return _debt_widget
+
+
+func get_debt_text() -> String:
+	return _debt_label.text if _debt_widget != null and _debt_widget.visible else ""
+
+
+func get_info_popover() -> HudInfoPopover:
+	return _info_popover
+
+
+func toggle_cash_info() -> void:
+	if _info_popover == null:
+		return
+	_info_popover.toggle_for(_cash_widget, TextDb.t(&"hud.info.cash.title"), TextDb.t(&"hud.info.cash.body"), false)
+
+
+func toggle_debt_info() -> void:
+	if _info_popover == null or not _debt_widget.visible:
+		return
+	var remaining := Money.format_rp(GameState.get_debt_remaining())
+	var overdue := GameState.is_debt_overdue()
+	if overdue:
+		_info_popover.toggle_for(
+			_debt_widget,
+			TextDb.t(&"hud.info.debt_overdue.title"),
+			TextDb.tf(&"hud.info.debt_overdue.body", {
+				"remaining": remaining,
+				"fee": Money.format_rp(ContentIds.DEBT_REMINDER_FEE),
+				"relief": Money.format_rp(ContentIds.DEBT_MIN_RELIEF_PAYMENT),
+			}),
+			true)
+	else:
+		_info_popover.toggle_for(
+			_debt_widget,
+			TextDb.t(&"hud.info.debt.title"),
+			TextDb.tf(&"hud.info.debt.body", {
+				"paid": Money.format_rp(GameState.get_debt_paid()),
+				"remaining": remaining,
+			}),
+			false)
+
+
 ## The bucket chip shows the bucket badge and the count; the full wording is
 ## its tooltip and accessibility name.
 func set_bucket_count(count: int) -> void:
@@ -146,6 +219,8 @@ func set_market_available(available: bool) -> void:
 
 func set_state(state: StringName) -> void:
 	_state = state
+	if state != FishingController.STATE_IDLE and _info_popover != null:
+		_info_popover.hide_info()
 	if state == FishingController.STATE_REELING:
 		_reel_hud.show_reel()
 	else:
@@ -308,6 +383,8 @@ func _refresh_prompt() -> void:
 				_show(TextDb.t(&"fishing.prompt.bucket_full"), TextDb.t(&"fishing.prompt.bucket_full_sub"), false)
 			elif learning:
 				_show(TextDb.t(_by_device(&"fishing.prompt.cast_keyboard", &"fishing.prompt.cast_touch")), "", false)
+			elif GameState.is_debt_overdue():
+				_show(TextDb.t(&"fishing.prompt.debt_overdue"), TextDb.t(&"fishing.prompt.debt_overdue_sub"), false)
 			else:
 				_show("", "", false)
 		FishingController.STATE_WAITING:
@@ -378,7 +455,9 @@ func _build_top_bar() -> void:
 	_top_bar.add_theme_constant_override(&"h_separation", UiTokens.SPACE_8)
 	_top_bar.add_theme_constant_override(&"v_separation", UiTokens.SPACE_8)
 	_cash_widget.add_theme_stylebox_override(&"panel", HudChip.make_style())
-	_cash_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cash_widget.mouse_filter = Control.MOUSE_FILTER_STOP
+	_cash_widget.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_cash_widget.gui_input.connect(_on_cash_chip_input)
 	_cash_label = HudChip.add_content(_cash_widget, UiIcon.ICON_CASH)
 	_cash_label.custom_minimum_size.x = 92.0
 
@@ -386,6 +465,16 @@ func _build_top_bar() -> void:
 	_bucket_widget.focus_mode = Control.FOCUS_NONE
 	_bucket_label = HudChip.add_content(_bucket_widget, UiIcon.ICON_BUCKET)
 	_bucket_widget.pressed.connect(func() -> void: bucket_pressed.emit())
+
+	_debt_widget = PanelContainer.new()
+	_debt_widget.name = "DebtWidget"
+	_debt_widget.mouse_filter = Control.MOUSE_FILTER_STOP
+	_debt_widget.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_debt_widget.gui_input.connect(_on_debt_chip_input)
+	_debt_widget.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_debt_widget.add_theme_stylebox_override(&"panel", HudChip.make_compact_style(false))
+	_debt_label = HudChip.add_compact_content(_debt_widget, IconPainter.LEDGER)
+	_top_bar.add_child(_debt_widget)
 
 	_map_widget = GameButton.new()
 	_map_widget.name = "MapWidget"
@@ -503,6 +592,20 @@ func _layout() -> void:
 	var free_bottom := row.position.y - UiTokens.SPACE_16
 	_place_event_card(row.position.y)
 	_reel_hud.set_home(Vector2(area.x - reel_size.x, maxf(free_top, (free_top + free_bottom - reel_size.y) * 0.5)))
+	if _info_popover != null:
+		_info_popover.reposition()
+
+
+func _on_cash_chip_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_cash_widget.accept_event()
+		toggle_cash_info()
+
+
+func _on_debt_chip_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_debt_widget.accept_event()
+		toggle_debt_info()
 
 
 func _place(control: Control, rect: Rect2) -> void:

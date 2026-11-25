@@ -22,11 +22,22 @@ const CUSTOM_STEPS: Dictionary[StringName, int] = {
 }
 const ACTION_FONT_SIZE := 18
 const STEP_BUTTON_WIDTH := 62.0
+## Debt milestones shown on the ledger so the player always sees what paying
+## debt unlocks next (upgrades, fishing spots, Fish Book and debt freedom).
+const MILESTONES: Array[Dictionary] = [
+	{"target": 100_000, "key": &"market.debt.next_goal.100k"},
+	{"target": 350_000, "key": &"market.debt.next_goal.350k"},
+	{"target": 700_000, "key": &"market.debt.next_goal.700k"},
+	{"target": 1_100_000, "key": &"market.debt.next_goal.1100k"},
+	{"target": 1_500_000, "key": &"market.debt.next_goal.1500k"},
+	{"target": 1_850_000, "key": &"market.debt.next_goal.1850k"},
+]
 
 var _original_label: Label
 var _paid_label: Label
 var _remaining_label: Label
 var _progress: ProgressBar
+var _milestone_label: Label
 var _note_label: Label
 var _available_label: Label
 var _tutorial_button: GameButton
@@ -57,6 +68,10 @@ func build() -> void:
 	_progress.custom_minimum_size.y = 24.0
 	_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(_progress)
+	_milestone_label = make_label("", UiTokens.TYPE_SMALL)
+	_milestone_label.name = "MilestoneLabel"
+	_milestone_label.add_theme_font_override(&"font", UiSkin.bold_font())
+	body.add_child(_milestone_label)
 	_note_label = make_label("", UiTokens.TYPE_SMALL)
 	body.add_child(_note_label)
 
@@ -159,11 +174,28 @@ func get_save_all_button() -> GameButton:
 	return _save_all_button
 
 
+## Describes the next reward waiting on the debt ladder, or the final payoff.
+static func next_milestone_text(paid: int, original: int = ContentIds.DEBT_ORIGINAL) -> String:
+	if paid >= original:
+		return ""
+	for step: Dictionary in MILESTONES:
+		var target := int(step["target"])
+		if paid < target and target < original:
+			return TextDb.tf(step["key"] as StringName, {
+				"target": Money.format_rp(target),
+				"need": Money.format_rp(target - paid),
+			})
+	return TextDb.tf(&"market.debt.next_goal.final", {
+		"target": Money.format_rp(original),
+		"need": Money.format_rp(original - paid),
+	})
+
+
 func refresh() -> void:
 	var savings := is_savings_mode()
 	set_heading(TextDb.t(&"market.savings.title" if savings else &"market.debt.title"))
 	_savings_root.visible = savings
-	for row: Control in [_original_label.get_parent(), _paid_label.get_parent(), _remaining_label.get_parent(), _progress, _note_label]:
+	for row: Control in [_original_label.get_parent(), _paid_label.get_parent(), _remaining_label.get_parent(), _progress, _milestone_label, _note_label]:
 		row.visible = not savings
 	if savings:
 		actions.visible = false
@@ -185,7 +217,27 @@ func refresh() -> void:
 	_remaining_label.text = Money.format_rp(remaining)
 	_progress.max_value = float(maxi(original, 1))
 	_progress.value = float(paid)
-	_note_label.text = TextDb.t(&"market.debt.cleared" if cleared else &"market.debt.terms")
+	var goal_text := next_milestone_text(paid, original)
+	_milestone_label.text = goal_text
+	_milestone_label.visible = not cleared and goal_text != ""
+	if cleared:
+		_note_label.text = TextDb.t(&"market.debt.cleared")
+		_note_label.remove_theme_color_override(&"font_color")
+	elif GameState.is_debt_fee_active():
+		_note_label.text = TextDb.tf(&"market.debt.overdue_fee", {
+			"fee": Money.format_rp(ContentIds.DEBT_REMINDER_FEE),
+			"relief": Money.format_rp(ContentIds.DEBT_MIN_RELIEF_PAYMENT),
+		})
+		_note_label.add_theme_color_override(&"font_color", UiTokens.RED_500.darkened(0.18))
+	elif GameState.is_debt_overdue():
+		_note_label.text = TextDb.tf(&"market.debt.overdue", {
+			"fee": Money.format_rp(ContentIds.DEBT_REMINDER_FEE),
+			"relief": Money.format_rp(ContentIds.DEBT_MIN_RELIEF_PAYMENT),
+		})
+		_note_label.add_theme_color_override(&"font_color", UiTokens.RED_500.darkened(0.18))
+	else:
+		_note_label.text = TextDb.t(&"market.debt.terms")
+		_note_label.remove_theme_color_override(&"font_color")
 
 	actions.visible = not cleared
 	_available_label.text = TextDb.tf(&"market.debt.available", {"amount": Money.format_rp(available)})

@@ -143,11 +143,30 @@ const DEBT_ORIGINAL: int = 2_000_000
 const LEGACY_DEBT_ORIGINAL: int = 1_800_000
 const STARTING_CASH: int = 10_000
 const UPGRADE_MAX_LEVEL: int = 3
+## Upgrade levels 2 and 3 require paying debt first, so cash cannot bypass the
+## main goal forever.
+const UPGRADE_DEBT_GATES: Dictionary[int, int] = {
+	2: 100_000,
+	3: 350_000,
+}
+## Consecutive Warung sales without a debt payment trigger CepatCash pressure:
+## at 2 sales the collector harasses Darto at the water (slower bites); at 3+
+## sales the collector also deducts a reminder fee from each sale until Darto
+## pays at least DEBT_MIN_RELIEF_PAYMENT (or clears the debt).
+const DEBT_HARASS_AFTER_SALES: int = 2
+const DEBT_FEE_AFTER_SALES: int = 3
+const DEBT_REMINDER_FEE: int = 10_000
+const DEBT_MIN_RELIEF_PAYMENT: int = 10_000
+const DEBT_HARASS_WAIT_MULTIPLIER: float = 1.45
 ## Legends are tier 5. A tier-5 fish attacks on a shorter cooldown and asks
 ## for a rematch at arm wrestling (GDD Section 49).
 const BOSS_TIER: int = 5
 ## Don Arowana: the legend of the first spot, with his own story beat.
 const BOSS_FISH_ID: StringName = &"arowana_don"
+
+
+static func upgrade_required_debt_paid(target_level: int) -> int:
+	return int(UPGRADE_DEBT_GATES.get(target_level, 0))
 
 
 static func get_bucket_item_ids() -> Array[StringName]:

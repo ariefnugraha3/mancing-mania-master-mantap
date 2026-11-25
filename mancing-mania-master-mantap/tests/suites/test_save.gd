@@ -82,7 +82,7 @@ func test_new_game_creates_schema_v6_file() -> bool:
 	check_eq(_sorted_keys(file), expected_keys, "top-level keys")
 	check_eq(file.get("version"), 6, "version (revision 6.7)")
 	check_eq(file.get("cash"), 10000, "starting cash")
-	check_eq(file["debt"], {"original": 2000000.0, "paid": 0.0, "remaining": 2000000.0}, "debt block")
+	check_eq(file["debt"], {"original": 2000000.0, "paid": 0.0, "remaining": 2000000.0, "unpaid_sales": 0.0}, "debt block")
 	check_eq(file["upgrades"].size(), 6, "upgrade entries (Big Bucket joined in revision 6.12)")
 	check_eq(file["bucket"].size(), 29, "bucket entries (26 fish and 3 trash)")
 	check_eq(file["fish_book"].size(), 26, "fish book entries")
@@ -100,6 +100,16 @@ func test_new_game_creates_schema_v6_file() -> bool:
 
 	var catfish: Dictionary = file["fish_book"]["catfish_bruiser"]
 	check_eq(_sorted_keys(catfish), ["best_weight_kg", "discovered", "duel_wins", "encounters", "favourite_duel", "losses", "wins"], "fish book entry keys")
+	return true
+
+
+func test_legacy_save_without_unpaid_sales_loads_cleanly() -> bool:
+	var raw := SaveSchema.make_default(99)
+	(raw["debt"] as Dictionary).erase("unpaid_sales")
+	var state := SaveSchema.normalize(raw)
+	check(not state.is_empty(), "old v6 save without unpaid_sales validates")
+	check_empty(SaveSchema.last_repairs, "missing unpaid_sales defaults cleanly without repair notice")
+	check_eq(state["debt"]["unpaid_sales"], 0, "unpaid_sales defaults to 0")
 	return true
 
 
@@ -261,11 +271,11 @@ func test_broken_debt_invariant_is_repaired() -> bool:
 	var data := _valid_save()
 	data["debt"] = {"original": 2000000, "paid": 300000, "remaining": 999}
 	var fixed := SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 2000000, "paid": 300000, "remaining": 1700000}, "remaining recomputed from paid")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 300000, "remaining": 1700000, "unpaid_sales": 0}, "remaining recomputed from paid")
 
 	data["debt"] = {"original": 2000000, "paid": -5, "remaining": 1200000}
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 2000000, "paid": 800000, "remaining": 1200000}, "paid recomputed from remaining")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 800000, "remaining": 1200000, "unpaid_sales": 0}, "paid recomputed from remaining")
 
 	data["debt"] = {"original": 12, "paid": 400000, "remaining": 1400000}
 	fixed = SaveManager.validate_save(data)
@@ -275,7 +285,7 @@ func test_broken_debt_invariant_is_repaired() -> bool:
 	data["debt"] = {"original": 2000000, "paid": "lots", "remaining": null}
 	data["stats"]["lifetime_debt_paid"] = 250000
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 2000000, "paid": 250000, "remaining": 1750000}, "debt recovered from the lifetime stat")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 250000, "remaining": 1750000, "unpaid_sales": 0}, "debt recovered from the lifetime stat")
 
 	data["debt"] = {"original": 2000000, "paid": 9900000, "remaining": -4}
 	data["stats"]["lifetime_debt_paid"] = -1
@@ -295,13 +305,13 @@ func test_saves_from_the_old_debt_follow_the_new_total() -> bool:
 	data["debt"] = {"original": 1800000, "paid": 500000, "remaining": 1300000}
 	data["stats"]["lifetime_debt_paid"] = 500000
 	var fixed := SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 2000000, "paid": 500000, "remaining": 1500000}, "a debt in progress keeps what was paid")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 500000, "remaining": 1500000, "unpaid_sales": 0}, "a debt in progress keeps what was paid")
 	check_eq(fixed["stats"]["lifetime_debt_paid"], 500000, "and its milestones stay where they were")
 
 	data["debt"] = {"original": 1800000, "paid": 1800000, "remaining": 0}
 	data["stats"]["lifetime_debt_paid"] = 1800000
 	fixed = SaveManager.validate_save(data)
-	check_eq(fixed["debt"], {"original": 2000000, "paid": 2000000, "remaining": 0}, "a cleared debt stays cleared")
+	check_eq(fixed["debt"], {"original": 2000000, "paid": 2000000, "remaining": 0, "unpaid_sales": 0}, "a cleared debt stays cleared")
 	check_eq(fixed["stats"]["lifetime_debt_paid"], 2000000, "its lifetime stat follows the ledger")
 
 	data["debt"] = {"original": 1800000, "paid": 1800000, "remaining": "?"}

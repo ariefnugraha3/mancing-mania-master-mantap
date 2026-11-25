@@ -92,6 +92,7 @@ func purchase_gear(location_id: StringName) -> bool:
 func pay_debt(amount: int) -> int:
 	if _is_locked() or amount <= 0:
 		return 0
+	var was_overdue := GameState.is_debt_overdue()
 	var paid := GameState.pay_debt(amount)
 	if paid <= 0:
 		return 0
@@ -99,6 +100,7 @@ func pay_debt(amount: int) -> int:
 		"paid": paid,
 		"remaining": GameState.get_debt_remaining(),
 		"total_paid": GameState.get_debt_paid(),
+		"cleared_overdue": was_overdue and not GameState.is_debt_overdue(),
 	}, &"debt")
 	return paid
 
@@ -166,9 +168,18 @@ func _sell(item_ids: Array[StringName]) -> Dictionary:
 	var total := 0
 	for item_id: StringName in removed:
 		total += int(removed[item_id]) * GameData.get_item_sale_value(item_id)
+	var unpaid_sales := GameState.record_unpaid_sale()
+	var collector_fee := 0
+	if unpaid_sales >= ContentIds.DEBT_FEE_AFTER_SALES:
+		# Cap at half the sale so tiny trash-only sales never leave Darto with nothing.
+		collector_fee = mini(ContentIds.DEBT_REMINDER_FEE, total / 2)
+	var net_total := maxi(total - collector_fee, 0)
 	sale["total"] = total
+	sale["collector_fee"] = collector_fee
+	sale["net_total"] = net_total
+	sale["unpaid_sales"] = unpaid_sales
 	sale["cash_before"] = GameState.get_cash()
-	GameState.add_cash(total)
+	GameState.add_cash(net_total)
 	sale["cash_after"] = GameState.get_cash()
 	GameState.increment_stat(&"lifetime_sales", total)
 	_finish_transaction(KIND_SELL, sale, &"sale")
@@ -209,7 +220,8 @@ func _build_sale(item_ids: Array[StringName]) -> Dictionary:
 
 func _empty_sale() -> Dictionary:
 	return {
-		"lines": [], "total": 0, "items_sold": 0, "fish_total": 0, "trash_total": 0,
+		"lines": [], "total": 0, "collector_fee": 0, "net_total": 0, "unpaid_sales": 0,
+		"items_sold": 0, "fish_total": 0, "trash_total": 0,
 		"cash_before": GameState.get_cash(), "cash_after": GameState.get_cash(),
 	}
 

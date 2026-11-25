@@ -447,6 +447,18 @@
 
 ---
 
+- **PENAGIH:** PAK DARTO! Jualan ikan terus tapi cicilan CepatCash nol?!
+- **DARTO:** Pelanin suaranya! Ikannya pada kabur semua!
+- **PENAGIH:** Cicil Rp 10.000 aja saya langsung mingkem! Sebelum itu, saya bawa toa!
+
+---
+
+- **PENAGIH:** Pengingat dari CepatCash! Nunggak terus, kami potong biaya pengingat di Warung Bu Yati!
+- **DARTO:** Masa mau nongkrong di sebelah ember saya seharian sih?!
+- **PENAGIH:** Saya sudah bawa gorengan sama kursi lipat, Pak! Sampai jumpa di Warung!
+
+---
+
 - **BEBEK:** Kwek. Kwek.
 - **DARTO:** Bebek saja keluarganya lebih tertata.
 - **DARTO:** Mereka berenang berbaris. Saya lempar kail saja nggak lurus.
