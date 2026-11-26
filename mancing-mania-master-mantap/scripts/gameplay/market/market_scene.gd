@@ -65,12 +65,24 @@ func _ready() -> void:
 	GameState.upgrade_changed.connect(_queue_refresh)
 	GameState.locations_changed.connect(_queue_refresh)
 
-	StoryDirector.begin_market_visit()
+	var reload_ctx := SceneRouter.consume_reload_context()
+	var preserve_visit := bool(reload_ctx.get("preserve_visit", false))
+	if not preserve_visit:
+		StoryDirector.begin_market_visit()
 	AudioManager.set_ambience_state(&"market")
 	AudioManager.set_music_state(&"market")
 	_refresh()
+	if preserve_visit and reload_ctx.has("market_tab"):
+		_hud.select_tab(StringName(reload_ctx["market_tab"]), false)
 	_hud.focus_default()
-	_open_conversation()
+	if not preserve_visit:
+		_open_conversation()
+
+
+## Preserves the active visit and tab when reloading the Market (e.g. after a
+## language change from Pause -> Settings).
+func get_reload_context() -> Dictionary:
+	return {"preserve_visit": true, "market_tab": _hud.get_current_tab()}
 
 
 ## First visit: Bu Yati's welcome (GDD 183.5). Later visits: sometimes a

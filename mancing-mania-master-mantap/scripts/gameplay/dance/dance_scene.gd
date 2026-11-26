@@ -125,7 +125,10 @@ func _start_song() -> void:
 
 ## Any pause restarts the duel from its count-in with the same chart.
 func _on_pause_closed() -> void:
-	if _leaving or _phase != PHASE_PLAYING:
+	if _leaving or _pause.is_reloading_language() or SceneRouter.is_transitioning():
+		_music.stop_song()
+		return
+	if _phase != PHASE_PLAYING:
 		return
 	_music.stop_song()
 	_world.reset()

@@ -87,7 +87,8 @@ func refresh() -> void:
 ## leaving `list_room` for at least a line or two of the list.
 func fixed_height(list_room: float = 72.0) -> float:
 	var separation := float(get_theme_constant(&"separation"))
-	return _heading.get_combined_minimum_size().y + 2.0 + list_room 		+ actions.get_combined_minimum_size().y + separation * 3.0
+	var actions_height := maxf(actions.get_combined_minimum_size().y, actions.size.y)
+	return _heading.get_combined_minimum_size().y + 2.0 + list_room + actions_height + separation * 3.0
 
 
 ## Moves the action strip into the scrolling page (or back under it), so a

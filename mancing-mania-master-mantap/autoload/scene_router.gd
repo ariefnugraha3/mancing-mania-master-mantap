@@ -44,6 +44,7 @@ const FADE_COLOR := Color(0.208, 0.184, 0.161)
 
 var _current_scene_id: StringName = SCENE_BOOT
 var _context: Dictionary = {}
+var _reload_context: Dictionary = {}
 var _busy: bool = false
 var _layer: CanvasLayer
 var _fade_rect: ColorRect
@@ -110,8 +111,37 @@ func goto_credits(from_menu: bool = false) -> void:
 	_route(SCENE_CREDITS, {"from_menu": from_menu})
 
 
-func reload_current_scene() -> void:
-	_route(_current_scene_id, _context)
+func reload_current_scene(extra_context: Dictionary = {}) -> void:
+	var target := _resolve_current_scene_id()
+	if target == &"" or target == SCENE_BOOT:
+		return
+	var next_reload := {}
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method(&"get_reload_context"):
+		var preserved: Variant = scene.call(&"get_reload_context")
+		if typeof(preserved) == TYPE_DICTIONARY:
+			next_reload.merge(preserved as Dictionary, true)
+	next_reload.merge(extra_context, true)
+	_route(target, _context, next_reload)
+
+
+## One-shot state preserved across reload_current_scene() (e.g. active tab when
+## switching language). Reading it clears it so later scene loads start fresh.
+func consume_reload_context() -> Dictionary:
+	var copy := _reload_context.duplicate(true)
+	_reload_context.clear()
+	return copy
+
+
+func _resolve_current_scene_id() -> StringName:
+	if _current_scene_id != SCENE_BOOT and has_scene(_current_scene_id):
+		return _current_scene_id
+	var scene := get_tree().current_scene
+	if scene != null and not scene.scene_file_path.is_empty():
+		for scene_id: StringName in SCENE_PATHS:
+			if SCENE_PATHS[scene_id] == scene.scene_file_path:
+				return scene_id
+	return _current_scene_id
 
 
 # --- Extras -----------------------------------------------------------------
@@ -136,7 +166,7 @@ func is_transitioning() -> bool:
 
 # --- Internals --------------------------------------------------------------
 
-func _route(scene_id: StringName, context: Dictionary) -> void:
+func _route(scene_id: StringName, context: Dictionary, reload_context: Dictionary = {}) -> void:
 	if _busy:
 		GameLog.info(&"ROUTER", "ignored route during transition", {"to": scene_id})
 		return
@@ -161,6 +191,7 @@ func _route(scene_id: StringName, context: Dictionary) -> void:
 		return
 
 	_context = context.duplicate(true)
+	_reload_context = reload_context.duplicate(true)
 	_current_scene_id = scene_id
 	get_tree().change_scene_to_packed(packed)
 	# The old scene left the tree just now and the new one has not drawn yet:

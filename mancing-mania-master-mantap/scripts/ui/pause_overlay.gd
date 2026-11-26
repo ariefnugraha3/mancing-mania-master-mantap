@@ -15,6 +15,7 @@ var _controls: Label
 var _settings: SettingsOverlay
 var _dialog: ModalDialog
 var _busy: bool = false
+var _reloading_language: bool = false
 
 
 func build_content() -> void:
@@ -60,6 +61,7 @@ func build_content() -> void:
 
 	_settings = SettingsOverlay.new()
 	_settings.name = "PauseSettings"
+	_settings.language_changed.connect(_on_language_changed)
 	add_child(_settings)
 	_dialog = ModalDialog.new()
 	_dialog.name = "PauseDialog"
@@ -97,9 +99,28 @@ func _on_controls_pressed() -> void:
 	_controls.visible = not _controls.visible
 
 
+func is_reloading_language() -> bool:
+	return _reloading_language
+
+
 func _on_settings_pressed() -> void:
 	if not _busy:
 		_settings.open()
+
+
+## Switching language from Pause reloads the active scene with the loading fade
+## so every HUD label, panel and prompt updates immediately.
+func _on_language_changed() -> void:
+	if _busy:
+		return
+	_busy = true
+	_reloading_language = true
+	SaveManager.flush_pending_autosave()
+	_settings.hide_overlay()
+	hide_overlay()
+	AudioManager.set_paused(false)
+	SceneRouter.reload_current_scene()
+	_busy = false
 
 
 ## Music and Sound switch between silent and the default level, and the choice

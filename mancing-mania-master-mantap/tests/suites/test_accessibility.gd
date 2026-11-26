@@ -155,6 +155,48 @@ func test_option_rows_cycle_and_autosave() -> bool:
 	return true
 
 
+func test_changing_language_from_pause_reloads_scene_immediately() -> bool:
+	StoryDirector.complete_event(&"story_first_market", true)
+	check(SaveManager.save_game(&"test"), "a save exists")
+	_finished_transitions.clear()
+	SceneRouter.goto_market()
+	if not check(await wait_until(func() -> bool: return _finished_transitions.has(&"market"), SCENE_TIMEOUT_SEC), "reach the Market"):
+		return true
+	await wait_frames(3)
+	var hud := tree.current_scene.get_node("MarketCanvas") as MarketHud
+	hud.select_tab(MarketHud.TAB_DEBT, false)
+	var visit_before := int(GameState.get_story_value(StoryDirector.KEY_VISIT_SERIAL))
+	check_eq((hud.find_child("Title", true, false) as Label).text, "MARKET", "starts in English")
+
+	var pause := tree.current_scene.get_node("PauseOverlay") as PauseOverlay
+	pause.open()
+	await wait_frames(2)
+	var settings := pause.find_child("PauseSettings", true, false) as SettingsOverlay
+	settings.open()
+	await wait_frames(2)
+	var lang_button := settings.get_option_button(&"language")
+	# Pinned system language is "en", so auto -> en keeps the same effective language.
+	lang_button.pressed.emit()
+	await wait_frames(2)
+	check(not SceneRouter.is_transitioning(), "auto -> en on an English device does not reload unnecessarily")
+	# en -> id changes the active language and immediately reloads the Market in Indonesian.
+	lang_button.pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"market") >= 2, SCENE_TIMEOUT_SEC), "switching language reloads the Market immediately")
+	await wait_frames(3)
+	check(not tree.paused, "scene is unpaused after reload")
+	check_eq(TextDb.get_language(), "id", "Indonesian is now active")
+	var reloaded_hud := tree.current_scene.get_node("MarketCanvas") as MarketHud
+	check_eq((reloaded_hud.find_child("Title", true, false) as Label).text, "WARUNG BU YATI", "Market text is immediately in Indonesian")
+	check_eq(reloaded_hud.get_current_tab(), MarketHud.TAB_DEBT, "active Market tab is preserved across reload")
+	check_eq(int(GameState.get_story_value(StoryDirector.KEY_VISIT_SERIAL)), visit_before, "Market visit serial did not increment on reload")
+
+	GameState.set_setting(&"language", "auto")
+	DisplaySettings.apply_all(tree)
+	tree.current_scene.queue_free()
+	await wait_frames(2)
+	return true
+
+
 # --- UI and text scale (GDD 189.2, 189.3; A11Y-001, A11Y-002) ---------------
 
 func test_ui_scale_scales_controls_not_the_world() -> bool:

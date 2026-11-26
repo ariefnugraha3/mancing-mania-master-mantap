@@ -155,12 +155,13 @@ func _add_option_row(key: StringName) -> void:
 	button.custom_minimum_size.x = 150.0
 	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	button.pressed.connect(func() -> void:
+		var language_before := TextDb.get_language()
 		GameState.set_setting(key, next_value(key, GameState.get_setting(key)))
 		if key == &"fullscreen_web":
 			PlatformService.request_fullscreen(bool(GameState.get_setting(key)))
 		_refresh()
 		if key == &"language":
-			_on_language_changed())
+			_on_language_changed(language_before))
 	row.add_child(button)
 	_option_buttons[key] = button
 
@@ -245,10 +246,13 @@ func open() -> void:
 	focus_later(_close_button)
 
 
-## The new language is already active (DisplaySettings). The main menu
-## listens and reloads itself; with no listener the screen behind stays as
-## it is until it is left, and the note says so in the new language.
-func _on_language_changed() -> void:
+## The new language is already active (DisplaySettings). Only emit when the
+## effective language actually changed (so cycling auto -> en on an English
+## device stays in Settings until a different language is chosen). Both the
+## Main Menu and in-game Pause reload the scene immediately in the new language.
+func _on_language_changed(previous_language: String) -> void:
+	if TextDb.get_language() == previous_language:
+		return
 	if language_changed.get_connections().is_empty():
 		_language_note.text = TextDb.t(&"settings.language_note")
 		_language_note.visible = true

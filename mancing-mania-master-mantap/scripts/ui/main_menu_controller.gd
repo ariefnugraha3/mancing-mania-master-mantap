@@ -75,7 +75,10 @@ func _ready() -> void:
 	_settings.name = "SettingsOverlay"
 	_settings.save_reset.connect(_refresh)
 	# A new language redraws the whole menu in it.
-	_settings.language_changed.connect(func() -> void: SceneRouter.goto_main_menu())
+	_settings.language_changed.connect(func() -> void:
+		SaveManager.flush_pending_autosave()
+		_settings.hide_overlay()
+		SceneRouter.goto_main_menu())
 	add_child(_settings)
 	_how_to = HowToOverlay.new()
 	_how_to.name = "HowToOverlay"
