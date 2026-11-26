@@ -13,7 +13,6 @@ const FIRST_BOSS_WIN_KEY := &"arowana_first_win_seen"
 @onready var _title: Label = $ResultCanvas/SafeRoot/ResultTitle
 @onready var _detail: Label = $ResultCanvas/SafeRoot/DetailLabel
 @onready var _continue: GameButton = $ResultCanvas/SafeRoot/ContinueButton
-@onready var _progress: ProgressBar = $ResultCanvas/SafeRoot/AutoContinueProgress
 
 var _dialogue: DialogueBox
 
@@ -45,8 +44,6 @@ func _ready() -> void:
 	_continue.icon_id = IconPainter.PLAY
 	_continue.pressed.connect(_controller.continue_from_result)
 	_continue.disabled = true
-	_progress.show_percentage = false
-	_progress.max_value = ResultController.AUTO_CONTINUE_SEC
 	_safe_root.resized.connect(_layout)
 	_layout.call_deferred()
 
@@ -77,7 +74,6 @@ func _ready() -> void:
 		SaveManager.save_game(&"story")
 	_continue.disabled = false
 	InputManager.give_focus(_continue)
-	_controller.start_auto_continue()
 
 
 ## Darto stands at his fishing spot facing the camera, the bucket on his
@@ -99,11 +95,6 @@ func _stage_cast() -> void:
 	_camera.frame(spot + Vector3(0.0, 0.35, 0.0) + right * 0.05, 5.6)
 
 
-func _process(_delta: float) -> void:
-	_progress.value = ResultController.AUTO_CONTINUE_SEC - _controller.get_auto_continue_left()
-	_progress.visible = _controller.is_counting()
-
-
 func _layout() -> void:
 	var area := _safe_root.size
 	# Both lines wrap on a narrow phone instead of running off the screen
@@ -120,7 +111,6 @@ func _layout() -> void:
 	# CONTINUE takes the dialogue box's place once the talking is done.
 	var button_y := area.y - UiTokens.TOUCH_TARGET_PREFERRED - 40.0
 	_place(_continue, Rect2((area.x - button_width) * 0.5, button_y, button_width, UiTokens.TOUCH_TARGET_PREFERRED))
-	_place(_progress, Rect2((area.x - button_width) * 0.5, button_y + UiTokens.TOUCH_TARGET_PREFERRED + 8.0, button_width, 8.0))
 
 
 ## Places a wrapped label: width first, then height. A wrapped label's

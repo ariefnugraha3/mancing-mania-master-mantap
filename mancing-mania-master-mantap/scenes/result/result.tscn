@@ -50,6 +50,3 @@ mouse_filter = 2
 
 [node name="ContinueButton" type="Button" parent="ResultCanvas/SafeRoot"]
 script = ExtResource("7_button")
-
-[node name="AutoContinueProgress" type="ProgressBar" parent="ResultCanvas/SafeRoot"]
-mouse_filter = 2

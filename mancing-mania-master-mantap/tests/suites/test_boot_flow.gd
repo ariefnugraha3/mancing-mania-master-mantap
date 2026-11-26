@@ -1424,21 +1424,23 @@ func test_wheel_and_result_follow_their_blueprints() -> bool:
 	if not check(result_scene != null, "the Result scene opens"):
 		return true
 	for path: String in ["ResultController", "World/ResultStageAnchor", "World/DartoResultPose", "World/FishResultPose", "World/ResultCamera",
-		"ResultCanvas/SafeRoot/ResultTitle", "ResultCanvas/SafeRoot/DetailLabel", "ResultCanvas/SafeRoot/ContinueButton", "ResultCanvas/SafeRoot/AutoContinueProgress"]:
+		"ResultCanvas/SafeRoot/ResultTitle", "ResultCanvas/SafeRoot/DetailLabel", "ResultCanvas/SafeRoot/ContinueButton"]:
 		check(result_scene.has_node(path), "node %s exists (GDD 168.11)" % path)
+	check(not result_scene.has_node("ResultCanvas/SafeRoot/AutoContinueProgress"), "auto-continue progress bar is removed")
 	var box := result_scene.get_node("DialogueBox") as DialogueBox
 	check(box.is_playing(), "the fish has its say first")
 	check_eq(box.get_current_line()["speaker"], "GOLDEN CARP", "the carp speaks")
-	check((result_scene.get_node("ResultCanvas/SafeRoot/ContinueButton") as BaseButton).disabled, "CONTINUE waits for the dialogue")
+	var continue_btn := result_scene.get_node("ResultCanvas/SafeRoot/ContinueButton") as BaseButton
+	check(continue_btn.disabled, "CONTINUE waits for the dialogue")
 	box.advance()
 	box.advance()
 	box.advance()
 	box.advance()
 	check(not box.is_playing(), "tapping through ends the dialogue")
 	await wait_frames(2)
-	var controller := result_scene.get_node("ResultController") as ResultController
-	check(controller.is_counting(), "then the five-second auto continue runs")
-	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, 8.0), "and returns to the lake by itself")
+	check(not continue_btn.disabled, "CONTINUE enables once the dialogue ends")
+	continue_btn.pressed.emit()
+	check(await wait_until(func() -> bool: return _finished_transitions.count(&"fishing") >= 2, BOOT_TIMEOUT_SEC), "pressing CONTINUE returns to the lake")
 	return true
 
 
